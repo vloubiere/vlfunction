@@ -12,12 +12,14 @@ License: What license it uses
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
-Imports:
+Depends:
     data.table,
-    GenomicRanges,
-    GenomicFeatures,
-    rtracklayer,
     TxDb.Dmelanogaster.UCSC.dm3.ensGene,
+    GenomicFeatures,
+    GenomicRanges,
+    rtracklayer,
     org.Dm.eg.db,
     AnnotationDbi,
     circlize
+Imports:
+Suggests:

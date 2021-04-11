@@ -29,13 +29,15 @@
 # rownames(mat) = paste0("row", seq_len(nr))
 # colnames(mat) = paste0("column", seq_len(nc))
 
-vboxplot <- function(x,
+vl_boxplot <- function(x,
                      formula,
                      outline= F,
                      xlab= "",
                      ylab= "",
-                     xlim= c(1, length(unique(obj$variable))),
-                     ylim= if(outline) range(unlist(obj$value)) else range(c(obj$Q1, obj$Q5)))
+                     xlim= c(0.5, max(obj$at)+0.5),
+                     ylim= if(outline) range(unlist(obj$value)) else range(c(obj$Q1, obj$Q5)),
+                     col= "white", 
+                     at= NULL)
 {
   # Format data to a bindable DT list
   if(!missing(formula))
@@ -47,48 +49,115 @@ vboxplot <- function(x,
     x <- split(mf[[response]], mf[-response])
   }
   if(is.matrix(x) | is.data.frame(x))
-    dat <- data.table::melt.data.table(data.table::as.data.table(x), measure.vars = colnames(x))
+    dat <- data.table::as.data.table(x)
+    dat <- data.table::melt.data.table(dat, measure.vars = colnames(dat))
   if(is.list(x))
     dat <- data.table::rbindlist(lapply(x, function(x) data.table::data.table(value= x)), idcol = "variable")
+  nvar <- length(unique(dat$variable))
+  if(length(col)==1)
+    col <- rep(col, nvar) else if(length(col) != nvar)
+      stop(paste0("col vector should be length 1 or match variables length (",  nvar, ")"))
+  if(is.null(at))
+    at <- seq(nvar)
+  if(length(at) != nvar)
+    stop(paste0("at vector should be length 1 or match variables length (",  nvar, ")"))
 
-  # Compute violins
-  obj <- dat[, .(value= list(value)), variable]
-  obj[, c("Q1", "Q2", "Q3", "Q4", "Q5", "outliers"):=
+  # Compute boxplots
+  obj <- dat[, .(value= list(na.omit(value))), variable]
+  obj[, Cc:= col[.GRP], variable]
+  obj[, at:= at[.GRP], variable]
+  obj[, c("Q1", "Q2", "Q3", "Q4", "Q5", "outliers", "too_few_values", "few_values"):=
         {
-          .b <- boxplot(unlist(value), plot= F)
-          append(as.list(.b$stats[,1]), as.list(.b$out))
+          .c <- unlist(value)
+          .b <- boxplot(.c, plot= F)
+          list(.b$stats[1,1],
+               .b$stats[2,1],
+               .b$stats[3,1],
+               .b$stats[4,1],
+               .b$stats[5,1], 
+               list(if(length(.c)>2) .b$out else NA),
+               ifelse(length(.c)>2, F, T),
+               list(if(length(.c)>2) NA else .c))
         }, variable]
-  obj <- obj[, c("x", "y"):=
-               {
-                 .c <- density(unlist(value))
-                 keep <- .c$x>=Q1 & .c$x<=Q5
-                 .x <- (.c$y/max(.c$y)*0.35)[keep]
-                 .x <- c(.x[1], .x, .x[length(.x)])
-                 .x <- c(.GRP-.x, .GRP+rev(.x))
-                 .y <- .c$x[keep]
-                 .y <- c(Q1, .y, Q5)
-                 .y <- c(.y, rev(.y))
-                 .(list(.x),
-                   list(.y))
-               }, .(variable, Q1, Q5)]
+  
+  # Compute violins
+  obj[, c("x", "y"):= 
+        {
+          if(!too_few_values)
+          {
+            .c <- density(unlist(value))
+            keep <- .c$x>=Q1 & .c$x<=Q5
+            .x <- (.c$y/max(.c$y)*0.35)[keep]
+            .x <- c(.x[1], .x, .x[length(.x)])
+            .x <- c(at-.x, at+rev(.x))
+            .y <- .c$x[keep]
+            .y <- c(Q1, .y, Q5)
+            .y <- c(.y, rev(.y))
+          }else
+          {
+            .x <- .y <- NA
+          }
+          .(list(.x),
+            list(.y))
+        }, .(variable, at, Q1, Q5, too_few_values)]
 
-  # Plot
+  #------------------####
+  # PLOT
+  #------------------####
+  # plot
   plot(NA,
        xlim = xlim,
        ylim = ylim,
        xlab= xlab,
-       ylab= ylab)
-
-  obj[, polygon(unlist(x), unlist(y)), variable]
-  obj[, rect(.GRP-0.1, Q2[1], .GRP+0.1, Q4[1]), .(variable, Q1, Q5)]
-  obj[, segments(.GRP-0.1, Q3[1], .GRP+0.1, Q3[1], lwd= 2), .(variable, Q3)]
+       ylab= ylab, 
+       xaxt= "n")
+  axis(1, 
+       at= unique(obj$at), 
+       labels= unique(obj$variable))
+  
+  # violins
+  obj[, polygon(unlist(x), unlist(y), col= Cc[1]), .(Cc, variable)]
+  
+  # boxplots
+  obj[!(too_few_values), rect(at-0.1, Q2[1], at+0.1, Q4[1], col= "white"), .(variable, at, Q1, Q5)]
+  obj[!(too_few_values), segments(at-0.1, Q3[1], at+0.1, Q3[1], lwd= 2), .(variable, at, Q3)]
+  
+  # outliers
   if(outline)
-    obj[, points(jitter(.GRP),
+    obj[, points(jitter(at),
                  unlist(outliers),
                  cex= 0.5,
-                 col= adjustcolor("lightgrey", 0.6),
-                 pch= 19), variable]
-
+                 col= adjustcolor("lightgrey", 0.8),
+                 pch= 19), .(variable, at)]
+  
+  # Too few values treated differently
+  obj[, {
+    .c <- na.omit(unlist(few_values[[1]]))
+    if(length(.c)>0)
+    {
+      if(length(.c)>1) 
+      {
+        segments(at, # sd
+                 mean(.c)-sd(.c),
+                 at,
+                 mean(.c)+sd(.c),
+                 cex= 0.8,
+                 pch= 19,
+                 col= Cc[1])
+        points(at, # mean
+               mean(.c),
+               cex= 0.8, 
+               col= Cc[1])
+      }
+      points(jitter(rep(at, length(.c))),
+             .c,
+             cex= 0.5,
+             col= adjustcolor("lightgrey", 0.8),
+             pch= 19)
+    }
+  }, .(variable, at, Cc)]
+  
+  # Return object
   invisible(obj)
 }
 

@@ -39,23 +39,23 @@
 # rownames(mat) = paste0("row", seq_len(nr))
 # colnames(mat) = paste0("column", seq_len(nc))
 
-vheatmap <- function(mat,
-                     newdata= NULL,
-                     breaks= NULL,
-                     col= c("cornflowerblue", "white", "red"),
-                     cluster_rows= T,
-                     clustering_distance_rows= "euclidean",
-                     cutree_rows = 1,
-                     cluster_cols = T,
-                     clustering_distance_cols = "euclidean",
-                     cutree_cols = 1,
-                     clustering_method = "complete",
-                     kmeans_k = NA,
-                     display_numbers= F,
-                     display_numbers_FUN= function(x) round(x, 2),
-                     display_numbers_cex= 0.5,
-                     legend_title= "legend",
-                     scale = "none")
+vl_heatmap <- function(mat,
+                       newdata= NULL,
+                       breaks= NULL,
+                       col= c("cornflowerblue", "white", "red"),
+                       cluster_rows= T,
+                       clustering_distance_rows= "euclidean",
+                       cutree_rows = 1,
+                       cluster_cols = T,
+                       clustering_distance_cols = "euclidean",
+                       cutree_cols = 1,
+                       clustering_method = "complete",
+                       kmeans_k = NA,
+                       display_numbers= F,
+                       display_numbers_FUN= function(x) round(x, 2),
+                       display_numbers_cex= 0.5,
+                       legend_title= "legend",
+                       scale = "none")
 {
   if(!is.matrix(mat))
     stop("mat must be a matrix object")
@@ -76,7 +76,10 @@ vheatmap <- function(mat,
     colnames(newdata) <- colnames(mat)
   }
   if(!is.null(breaks) & length(breaks)!=length(col))
-    stop("breaks and col vector lengths should be the same")
+  {
+    col <- colorRampPalette(col)(length(breaks))
+    warning("color vector has been interpolated to match breaks vector length")
+  }
 
   #------------------------####
   # Format object
@@ -175,14 +178,21 @@ vheatmap <- function(mat,
   {
     Cc <- circlize::colorRamp2(breaks, colors= col)
   }
-  if(is.null(newdata)) DT[, Cc:= Cc(value)] else DT[, Cc:= Cc(newdata)]
+  if(is.null(newdata))
+    DT[!is.na(value), Cc:= Cc(value)] else 
+      DT[!is.na(value), Cc:= Cc(newdata)]
+  DT[is.na(Cc), Cc:= "lightgrey"]
 
   #------------------------####
   # PLOT
   #------------------------####
   # Image
   im <- as.matrix(data.table::dcast(DT, y~x, value.var = "Cc"), 1)
-  par(mar= c(8.1,8.1,5.1,6.1))
+  if(identical(c(5.1, 4.1, 4.1, 2.1), par("mar")))
+  {
+    par(mar= c(8.1,8.1,5.1,6.1))
+    reset <- T
+  }else{reset <- F}
   plot.new()
   rasterImage(im,
               xleft = 0,
@@ -240,7 +250,7 @@ vheatmap <- function(mat,
   ybottom <- 0.8
   xright <- 1.2
   ytop <- 1
-  rasterImage(matrix(Cc(seq(min(breaks), max(breaks), length.out = 101))),
+  rasterImage(matrix(rev(Cc(seq(min(breaks), max(breaks), length.out = 101)))),
               xleft,
               ybottom,
               xright,
@@ -264,7 +274,9 @@ vheatmap <- function(mat,
        cex= 0.8,
        offset= 0)
 
-  par(mar= c(5.1, 4.1, 4.1, 2.1))
+  if(reset)
+    par(mar= c(5.1, 4.1, 4.1, 2.1))
+  
   invisible(DT)
 }
 

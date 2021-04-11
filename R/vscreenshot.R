@@ -11,29 +11,48 @@
 #' @param gband gband ratio. default is 0.1
 #' @export
 
-# bed <- data.table::data.table(seqnames= "chrX",
-#                               start= 10e6,
-#                               end= 10.1e6)
-# tracks <- "desktop_genomic_files/GSM1257809_TBP_E2_4_518.bw"
+# source("/groups/stark/vloubiere/functions/my_screenshot_bw.R")
+# # 
+# bws <- list.files("/groups/stark/serebreni/ChIP_bws/", ".bw$", full.names = T)[-c(2,3)] # Remove 3rd track
+# bws <- bws[c(1,2,15,16,4,3,6,5,8,7,10,9,12,11,14,13)]
+# names <- c("BEAF-32", "DREF", "M1BP", "TAF1", "POLII", "POLII", "TBP", "TBP",
+#            "TFIIA", "TFIIA", "TFIIB", "TFIIB", "TFIIF", "TFIIF", "TFIIH", "TFIIH")
+# regions <- fread("/groups/stark/vloubiere/projects/MS_leo/db/pull_down_promoters/Pulldowns_CPs.txt")
+# sel <- regions[Type=="DRE"][1:20]
+# bed = sel[, .(seqnames= chr, start= pos-1000, end= pos+1000)]
+# tracks = bws
+# names = names
+# col= colorRampPalette(c("cornflowerblue", "red"))(length(bws))
+# n_genes = 9
+# max = NULL
+# gband = 0.15
+# vscreenshot(bed= bed, tracks)
+# file.show("/groups/stark/serebreni/ChIP_bws/screenshots_examples.pdf")
 
-vscreenshot <- function(bed,
-                        tracks,
-                        names= NULL,
-                        max= NULL,
-                        col= NULL,
-                        n_genes= 4,
-                        gband= 0.1)
+vl_screenshot <- function(bed,
+                          tracks,
+                          names= NULL,
+                          max= NULL,
+                          col= NULL,
+                          n_genes= 4,
+                          gband= 0.1)
 {
   if(class(bed)[1]=="GRanges")
     bed <- data.table::as.data.table(bed)
   if(!data.table::is.data.table(bed) | !all(c("seqnames", "start", "end") %in% colnames(bed)))
     stop("bed must be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns")
-  if(!is.null(names) & length(names) != length(tracks))
-    stop("names vector length should be the same as bw files vector length")
-  if(!is.null(col) & length(col) != length(tracks))
-    stop("colors vector length should be the same as bw files vector length")
   if(any(!file.exists(tracks)))
     stop("some bw files could not be found! full paths prodvided?")
+  if(is.null(names))
+    names <- gsub(".bw$", "", basename(tracks))
+  if(length(names) != length(tracks))
+    stop("names vector length should be the same as bw files vector length(", length(tracks), ")")
+  if(is.null(col))
+    col <- rep("black", length(tracks))
+  if(length(col) != length(tracks))
+    stop("Colors vector length should be the same as bw files vector length(", length(tracks), ")")
+  if(!is.null(max) & length(max) != length(tracks))
+    stop("max vector length should be the same as bw files vector length(", length(tracks), ")")
 
   #--------------------------#
   # Binning bed file
@@ -70,18 +89,14 @@ vscreenshot <- function(bed,
                    end,
                    region_ID,
                    x)]
-    rbind(res, add)
+    base::rbind(res, add)
   })
   q <- data.table::rbindlist(q, idcol = "feature_ID")
-  if(is.null(names))
-    q[, name:= gsub(".bw$", "", basename(tracks))[.GRP], feature_ID] else
-      q[, name:= names[.GRP], feature_ID]
+  q[, name:= names[.GRP], feature_ID]
+  q[, col:= col[.GRP], feature_ID]
   if(is.null(max))
     q[, max:= max(abs(c(0, score)), na.rm= T), feature_ID] else
       q[, max:= max[.GRP], feature_ID]
-  if(is.null(col))
-    q[, col:= "black", feature_ID] else
-      q[, col:= col[.GRP], feature_ID]
   q <- q[, .(y= if(strand==1) rev(seq(102L)) else if (strand==-1) seq(102L), # Negative tracks will be plotted upside down
              value= as.character(ifelse(seq(0, 101)>score/max*100, "white", col))), (q)]
   q[, y:= as.integer(y+(.GRP-1L)*102L), feature_ID]
@@ -103,23 +118,29 @@ vscreenshot <- function(bed,
                                         multiVals="first")]
     .t[is.na(SYMBOL), SYMBOL:= GENEID]
     data.table::setkeyv(.t, c("seqnames", "start", "end"))
-    ov <- data.table::foverlaps(.t, bins)
-    ov[, width:= as.integer(ifelse(i.end>max(end), max(end), i.end)- # Correct width
+    .g <- data.table::foverlaps(.t, bins)
+    .g[, width:= as.integer(ifelse(i.end>max(end), max(end), i.end)- # Correct width
                             ifelse(i.start<min(start), min(start), i.start)+1), region_ID]
-    data.table::setorderv(ov, c("width", "TXNAME"), c(-1, 1))
-    ov[, ord:= order(-width, TXNAME), x]
-    ov[, ord:= max(ord), TXNAME]
-    ov <- ov[ord<=n_genes] # Select given number of genes to plot
+    data.table::setorderv(.g, c("width", "TXNAME"), c(-1, 1))
+    .g[TXNAME==TXNAME[1], ord:= 1]
+    .g[, GRP:= .GRP, TXNAME]
+    for(i in unique(.g$GRP)[-1])
+    {
+      .ov <- .g[GRP<i & x %in% .g[GRP==i, x]]
+      .g[GRP==i, ord:= max(c(1, .ov$ord+1), na.rm= T)]
+    }
+    # unique(.g[, .(TXNAME, ord, SYMBOL)]) # Useful for debugging gene ordering
+    .g <- .g[ord<=n_genes] # Select given number of genes to plot
     # Add exons
     .e <- data.table::as.data.table(GenomicFeatures::exonsByOverlaps(TxDb,
                                                                      GenomicRanges::GRanges(bed),
                                                                      columns= "TXNAME"))
     .e <- .e[, .(TXNAME= as.character(unlist(TXNAME))), seqnames:strand]
-    ov$exon <- .e[ov, .N>0, .EACHI, on= c("seqnames", "start<=end", "end>=start", "TXNAME")]$V1
-    ov <- ov[, .(y= (1:10)+(ord-1)*10,
-                 res= if(exon) c(rep(1, 7),0,0,0) else c(rep(1, 7),1,0,1)), (ov)]
-    ov[strand=="+", value:= ifelse(res==0, "tomato", "white")]
-    ov[strand=="-", value:= ifelse(res==0, "cornflowerblue", "white")]
+    .g$exon <- .e[.g, .N>0, .EACHI, on= c("seqnames", "start<=end", "end>=start", "TXNAME")]$V1
+    .g <- .g[, .(y= (1:10)+(ord-1)*10,
+                res= if(exon) c(rep(1, 7),0,0,0) else c(rep(1, 7),1,0,1)), (.g)]
+    .g[strand=="+", value:= as.character(ifelse(res==0, "tomato", "white"))]
+    .g[strand=="-", value:= as.character(ifelse(res==0, "cornflowerblue", "white"))]
   }
 
   #--------------------------#
@@ -127,7 +148,7 @@ vscreenshot <- function(bed,
   #--------------------------#
   empty <- data.table::CJ(x= seq(max(q$x))[!seq(max(q$x)) %in% q$x], y= unique(q$y))
   empty[, value:= "white"]
-  res <- rbind(q, empty, fill= T)
+  res <- base::rbind(q, empty, fill= T)
   im <- as.matrix(data.table::dcast(res, y~x, value.var = "value"), 1)
 
   # image
@@ -154,11 +175,11 @@ vscreenshot <- function(bed,
   #--------------------------#
   # PLOT genes -> plotting it after allows constant tracks/gene band ratio
   #--------------------------#
-  if(nrow(ov)>0)
+  if(nrow(.g)>0)
   {
-    empty <- data.table::CJ(x= seq(max(ov$x))[!seq(max(ov$x)) %in% ov$x], y= unique(ov$y))
+    empty <- data.table::CJ(x= seq(max(q$x))[!seq(max(q$x)) %in% .g$x], y= unique(.g$y))
     empty[, value:= "white"]
-    gres <- rbind(ov, empty, fill= T)
+    gres <- base::rbind(.g, empty, fill= T)
     gim <- as.matrix(data.table::dcast(gres, y~x, value.var = "value"), 1)
     gim[1,] <- NA # Important to see bottom line of the last track
     rasterImage(gim, 0, 0, 1, gband, interpolate = F)
@@ -171,7 +192,7 @@ vscreenshot <- function(bed,
          xpd= T)
 
     # add symbols
-    ov[!is.na(SYMBOL),
+    .g[!is.na(SYMBOL),
        {
          if(diff(range(x))>=ncol(gim)/25)
             text(mean(range(x))/ncol(gim),
@@ -181,3 +202,4 @@ vscreenshot <- function(bed,
        }, .(TXNAME, region_ID)]
   }
 }
+
