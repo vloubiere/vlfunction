@@ -26,12 +26,16 @@
 # feat_cols <- c("blue", "green", "red", "pink", "purple", "gold", "black")
 
 vl_sanger_align <- function(refseq, 
-                           abfiles, 
-                           revcomp= NULL, 
-                           feat_sequences= NULL,
-                           feat_names= NULL,
-                           feat_cols= NULL)
+                            abfiles, 
+                            revcomp= NULL, 
+                            feat_sequences= NULL,
+                            feat_names= NULL,
+                            feat_cols= NULL)
 {
+  if(any(is.na(abfiles)))
+    stop("Some of the abfiles are NA!")
+  if(any(!file.exists(abfiles)) | )
+    stop("Some of the abfiles do not exist!")
   if(is.null(revcomp))
     revcomp <- rep(T, length(abfiles))
   if(length(revcomp) != length(abfiles))
@@ -48,8 +52,14 @@ vl_sanger_align <- function(refseq,
       stop("length feat colors should match the length of feat seqauences")
   }
 
-  # Import sequences
+  # Import sequences and check number of usable nt
   seq <- sapply(abfiles, function(x) sangerseqR::primarySeq(sangerseqR::readsangerseq(x)))
+  keep <- sapply(seq, 
+                 function(x) 
+                   length(which(unlist(strsplit(as.character(x), "")) %in% c("A", "T", "C", "G")))>100)
+  seq <- seq[keep]
+  abfiles <- abfiles[keep]
+  revcomp <- revcomp[keep]
   seq[revcomp] <- sapply(seq[revcomp], Biostrings::reverseComplement)
   seq <- Biostrings::DNAStringSet(c(refseq, sapply(seq, as.character)))
   
@@ -85,37 +95,40 @@ vl_sanger_align <- function(refseq,
   #-----------------------####
   # Add features
   #-----------------------####
-  feat <- data.table::data.table(name= feat_names,
-                                 seq= feat_sequences,
-                                 Cc= feat_cols)
-  feat[, {
-    # Add forward feature
-    .c <- data.table::as.data.table(Biostrings::matchPattern(Biostrings::DNAString(seq),
-                                                             subject = refseq)@ranges)
-    if(nrow(.c)>0)
-    {
-      arrows(.c$start/nrow(mat), 1.1, 
-             .c$end/nrow(mat), 1.1, 
-             lwd= 3, 
-             col = Cc[1], 
-             xpd= T, 
-             lend= 2, 
-             length = 0.025)
-    }
-    # Add reverse feature  
-    .c <- data.table::as.data.table(Biostrings::matchPattern(Biostrings::reverseComplement(Biostrings::DNAString(seq)),
-                                                             subject = refseq)@ranges)
-    if(nrow(.c)>0)
-    {
-      arrows(.c$start/nrow(mat), 1.1, 
-             .c$end/nrow(mat), 1.1, 
-             lwd= 3, 
-             col = Cc[1], 
-             xpd= T, 
-             lend= 2, 
-             length = 0.025)
-    }
-  }, (feat)]
+  if(!is.null(feat_sequences))
+  {
+    feat <- data.table::data.table(name= feat_names,
+                                   seq= feat_sequences,
+                                   Cc= feat_cols)
+    feat[, {
+      # Add forward feature
+      .c <- data.table::as.data.table(Biostrings::matchPattern(Biostrings::DNAString(seq),
+                                                               subject = refseq)@ranges)
+      if(nrow(.c)>0)
+      {
+        arrows(.c$start/nrow(mat), 1.1, 
+               .c$end/nrow(mat), 1.1, 
+               lwd= 3, 
+               col = Cc[1], 
+               xpd= T, 
+               lend= 2, 
+               length = 0.025)
+      }
+      # Add reverse feature  
+      .c <- data.table::as.data.table(Biostrings::matchPattern(Biostrings::reverseComplement(Biostrings::DNAString(seq)),
+                                                               subject = refseq)@ranges)
+      if(nrow(.c)>0)
+      {
+        arrows(.c$start/nrow(mat), 1.1, 
+               .c$end/nrow(mat), 1.1, 
+               lwd= 3, 
+               col = Cc[1], 
+               xpd= T, 
+               lend= 2, 
+               length = 0.025)
+      }
+    }, (feat)]
+  }
   
   print("DONE")
 }
