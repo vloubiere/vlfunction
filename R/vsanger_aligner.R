@@ -34,7 +34,7 @@ vl_sanger_align <- function(refseq,
 {
   if(any(is.na(abfiles)))
     stop("Some of the abfiles are NA!")
-  if(any(!file.exists(abfiles)) | )
+  if(any(!file.exists(abfiles)))
     stop("Some of the abfiles do not exist!")
   if(is.null(revcomp))
     revcomp <- rep(T, length(abfiles))
