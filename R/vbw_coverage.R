@@ -2,7 +2,7 @@
 #'
 #' Quantify bw file at a set of intervals. returns mean value/region
 #'
-#' @param bed Regions to plot. Can be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns"
+#' @param bed Regions to quantify. Can be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns"
 #' @param bw Path to target bw file (character vector)
 #' @export
 
@@ -10,13 +10,15 @@ vl_bw_coverage <- function(bed,
                            bw)
 {
   if(class(bed)[1]=="GRanges")
-    bed <- data.table::as.data.table()
-  if(!is.data.table(bed_DT))
-    stop("!is.data.table(bed_DT)")
-  if(!all(c("seqnames", "start", "end") %in% colnames(bed_DT)))
+    bed <- data.table::as.data.table(bed)
+  if(!is.data.table(bed))
+    stop("!is.data.table(bed)")
+  if(!all(c("seqnames", "start", "end") %in% colnames(bed)))
     stop("some bed keys are missing in bed colnames!")
   if(length(bw) != 1)
     stop("length(bw) != 1")
+  if(!file.exists(bw))
+    stop("bw file does not exist! EXIT")
   
   # Format
   .b <- data.table::copy(bed)

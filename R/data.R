@@ -14,13 +14,13 @@
 #' 
 #' @examples
 #' selection <- 1:100
-#' hit <- matchMotifs(Dmel_motifs_DB$All_pwms_log_odds[selection], GRanges("chrX", IRanges(10000000, 10000500)), genome= "dm3", p.cutoff= 5e-4, bg= "even", out= "scores")
+#' hit <- matchMotifs(vl_Dmel_motifs_DB$All_pwms_log_odds[selection], GRanges("chrX", IRanges(10000000, 10000500)), genome= "dm3", p.cutoff= 5e-4, bg= "even", out= "scores")
 #' counts <- as.matrix(motifCounts(hit))
-#' colnames(counts) <- name(Dmel_motifs_DB$All_pwms_log_odds[selection])
+#' colnames(counts) <- name(vl_Dmel_motifs_DB$All_pwms_log_odds[selection])
 #' counts <- as.data.table(counts)
 #'
 #' @source {"/groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/TF_clusters_PWMs.RData"}
-"Dmel_motifs_DB"
+"vl_Dmel_motifs_DB"
 
 #' Core Promoter motifs data base 
 #'
@@ -35,11 +35,11 @@
 #'   ...
 #' }
 #' 
-#' #' @examples
-#' hit <- matchMotifs(CP_motifs_DB$Pwms_log_odds, GRanges("chrX", IRanges(10000000, 10000500)), genome= "dm3", p.cutoff= 5e-4, bg= "even", out= "scores")
+#' @examples
+#' hit <- matchMotifs(vl_CP_motifs_DB$Pwms_log_odds, GRanges("chrX", IRanges(10000000, 10000500)), genome= "dm3", p.cutoff= 5e-4, bg= "even", out= "scores")
 #' counts <- as.matrix(motifCounts(hit))
-#' colnames(counts) <- name(CP_motifs_DB$Pwms_log_odds)
+#' colnames(counts) <- name(vl_CP_motifs_DB$Pwms_log_odds)
 #' counts <- as.data.table(counts)
 #'
 #' @source {"/groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/TF_clusters_PWMs.RData"}
-"CP_motifs_DB"
+"vl_CP_motifs_DB"

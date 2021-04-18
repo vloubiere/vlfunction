@@ -7,7 +7,7 @@
 vl_bw_coverage(bed, bw)
 }
 \arguments{
-\item{bed}{Regions to plot. Can be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns"}
+\item{bed}{Regions to quantify. Can be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns"}
 
 \item{bw}{Path to target bw file (character vector)}
 }

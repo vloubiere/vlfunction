@@ -4,8 +4,14 @@
 \alias{vl_sanger_align}
 \title{Aligns sanger ab files to a refseq}
 \usage{
-vl_sanger_align(refseq, abfiles, revcomp = NULL, feat_sequences = NULL,
-  feat_names = NULL, feat_cols = NULL)
+vl_sanger_align(
+  refseq,
+  abfiles,
+  revcomp = NULL,
+  feat_sequences = NULL,
+  feat_names = NULL,
+  feat_cols = NULL
+)
 }
 \arguments{
 \item{refseq}{A character string corresponding to the reference sequence}

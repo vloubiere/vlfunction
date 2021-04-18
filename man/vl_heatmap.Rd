@@ -4,13 +4,28 @@
 \alias{vl_heatmap}
 \title{Heatmap}
 \usage{
-vl_heatmap(mat, newdata = NULL, breaks = NULL,
-  col = c("cornflowerblue", "white", "red"), cluster_rows = T,
-  clustering_distance_rows = "euclidean", cutree_rows = 1,
-  cluster_cols = T, clustering_distance_cols = "euclidean",
-  cutree_cols = 1, clustering_method = "complete", kmeans_k = NA,
-  display_numbers = F, display_numbers_FUN = function(x) round(x, 2),
-  display_numbers_cex = 0.5, legend_title = "legend", scale = "none")
+vl_heatmap(
+  mat,
+  newdata = NULL,
+  breaks = NULL,
+  show_rownames = T,
+  show_colnames = T,
+  col = c("cornflowerblue", "white", "red"),
+  cluster_rows = T,
+  clustering_distance_rows = "euclidean",
+  cutree_rows = 1,
+  cluster_cols = T,
+  clustering_distance_cols = "euclidean",
+  cutree_cols = 1,
+  clustering_method = "complete",
+  kmeans_k = NA,
+  display_numbers = F,
+  display_numbers_FUN = function(x) round(x, 2),
+  display_numbers_cex = 0.5,
+  legend_title = "legend",
+  legend_pos = c(0.8, 1.15, 1, 1.2),
+  scale = "none"
+)
 }
 \arguments{
 \item{mat}{Matrix to plot. Row names and col names will be reported in return}
@@ -42,6 +57,8 @@ vl_heatmap(mat, newdata = NULL, breaks = NULL,
 \item{display_numbers_cex}{cex display numbers}
 
 \item{legend_title}{Character to plot as title legend}
+
+\item{legend_pos}{vector(bottom, left, top, right). default= c(0.8, 1.15, 1, 1.2),}
 
 \item{scale}{Scale matrix before clustering? Can be 'none' (default), 'column' or 'row'.}
 }

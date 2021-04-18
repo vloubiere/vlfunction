@@ -48,9 +48,11 @@ vl_boxplot <- function(x,
     response <- attr(attr(mf, "terms"), "response")
     x <- split(mf[[response]], mf[-response])
   }
-  if(is.matrix(x) | is.data.frame(x))
+  if(is.matrix(x) | is.data.frame(x) | is.vector(x))
+  {
     dat <- data.table::as.data.table(x)
     dat <- data.table::melt.data.table(dat, measure.vars = colnames(dat))
+  }
   if(is.list(x))
     dat <- data.table::rbindlist(lapply(x, function(x) data.table::data.table(value= x)), idcol = "variable")
   nvar <- length(unique(dat$variable))
@@ -124,7 +126,7 @@ vl_boxplot <- function(x,
   
   # outliers
   if(outline)
-    obj[, points(jitter(at),
+    obj[, points(jitter(rep(at, length(unlist(outliers)))),
                  unlist(outliers),
                  cex= 0.5,
                  col= adjustcolor("lightgrey", 0.8),
