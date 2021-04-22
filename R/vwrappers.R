@@ -158,7 +158,8 @@ vl_samtools_mapq_filter <- function(sam_bam, bam_output, q= 30, cores= 6)
          /software/2020/software/samtools/1.9-foss-2018b/bin/samtools view -@ ", cores-1, " -b -q ", q, " -o ", bam_output, " ", sam_bam)
 }
 
-
+# Sort bam file
+#' @export
 vl_samtools_bam_sort <- function(sam_bam, bam_output, cores= 6)
 {
   # Sort bam
@@ -166,6 +167,8 @@ vl_samtools_bam_sort <- function(sam_bam, bam_output, cores= 6)
          /software/2020/software/samtools/1.9-foss-2018b/bin/samtools sort -n -@ ", cores-1, " -o ", bam_output, " ", sam_bam)
 }
 
+# Check if bam file sorted
+#' @export
 vl_samtools_check_if_sorted <- function(sam_bam)
 {
   # Check bam
