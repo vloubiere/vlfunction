@@ -65,7 +65,7 @@ vl_extract_reads_VBC <- function(bam, output_prefix, rev_comp_i5)
 
 #' BOWTIE Alignment to custom genome
 #' @export
-bowtie1_align <- function(fq1, index_prefix, sam_output, o= NA, e= NA, execute= F, cores= 6, d= NA)
+vl_bowtie1_align <- function(fq1, index_prefix, sam_output, o= NA, e= NA, execute= F, cores= 6, d= NA)
 {
   paste0("module load bowtie/1.2.2-foss-2018b; /software/2020/software/bowtie/1.2.2-foss-2018b/bin/bowtie ", 
          index_prefix, " -p ", cores, " -m1 ", fq1, " -v 2 -m 1 --best --strata -S ", sam_output)
@@ -73,7 +73,7 @@ bowtie1_align <- function(fq1, index_prefix, sam_output, o= NA, e= NA, execute= 
 
 #' BOWTIE2 Alignment to custom genome
 #' @export
-bowtie2_align <- function(fq1, fq2= NA, index_prefix, sam_output, cores= 6)
+vl_bowtie2_align <- function(fq1, fq2= NA, index_prefix, sam_output, cores= 6)
 {
   if(is.na(fq2))
     files <- paste0(" -U ", fq1) else
@@ -84,21 +84,21 @@ bowtie2_align <- function(fq1, fq2= NA, index_prefix, sam_output, cores= 6)
 
 # Trim 3' fastq reads using trimgalore
 #' @export
-trim3_fastq <- function(fq, keep, output_folder, cores= 1)
+vl_trim3_fastq <- function(fq, keep, output_folder, cores= 1)
 {
   paste0("module load trim_galore/0.6.2-foss-2018b-python-3.6.6; /software/2020/software/trim_galore/0.6.2-foss-2018b-python-3.6.6/trim_galore --gzip --hardtrim3 ", keep, " --cores ", cores, " -o ", output_folder, " ", fq)
 }
 
 # Trim 5' fastq reads using trimgalore
 #' @export
-trim5_fastq <- function(fq, keep, output_folder, cores= 1)
+vl_trim5_fastq <- function(fq, keep, output_folder, cores= 1)
 {
   paste0("module load trim_galore/0.6.2-foss-2018b-python-3.6.6; /software/2020/software/trim_galore/0.6.2-foss-2018b-python-3.6.6/trim_galore --gzip --hardtrim5 ", keep, " --cores ", cores, " -o ", output_folder, " ", fq)
 }
 
 # bamtobed wrapper
 #' @export
-bamToBed <- function(bam, bed_output, cigar= F)
+vl_bamToBed <- function(bam, bed_output, cigar= F)
 {
   cmd <- "/software/2020/software/bedtools/2.27.1-foss-2018b/bin/bamToBed"
   if(cigar)
@@ -108,7 +108,7 @@ bamToBed <- function(bam, bed_output, cigar= F)
 
 # bamtobedpe wrapper
 #' @export
-bamToBedpe <- function(bam, bed_output, cigar= F)
+vl_bamToBedpe <- function(bam, bed_output, cigar= F)
 {
   cmd <- "/software/2020/software/bedtools/2.27.1-foss-2018b/bin/bamToBed"
   if(cigar)
@@ -118,7 +118,7 @@ bamToBedpe <- function(bam, bed_output, cigar= F)
 
 # intersectbed wrapper
 #' @export
-intersectBed <- function(a, b, same_strand=F, sorted= F)
+vl_intersectBed <- function(a, b, same_strand=F, sorted= F)
 {
   cmd <- paste0("/software/2020/software/bedtools/2.27.1-foss-2018b/bin/intersectBed -c ")
   if(sorted)
@@ -130,21 +130,21 @@ intersectBed <- function(a, b, same_strand=F, sorted= F)
 
 # closestbed wrapper
 #' @export
-closestBed <- function(a, b, k= 1)
+vl_closestBed <- function(a, b, k= 1)
 {
   paste0("/software/2020/software/bedtools/2.27.1-foss-2018b/bin/closestBed -d -k ", k, " -a ", a, " -b ", b)
 }
 
 # bigBedToBed wrapper
 #' @export
-bigBedToBed <- function(bb, bed)
+vl_bigBedToBed <- function(bb, bed)
 {
   paste0("/software/2020/software/kent_tools/20190507-linux.x86_64/bin/bigBedToBed ", bb, " ", bed)
 }
 
 # samtoBam wrapper
 #' @export
-samtools_samToBam <- function(sam_bam, bam_output, cores= 6)
+vl_samtools_samToBam <- function(sam_bam, bam_output, cores= 6)
 {
   paste0("module load samtools/1.9-foss-2018b;
          /software/2020/software/samtools/1.9-foss-2018b/bin/samtools view -@ ", cores-1, " -b -o ", bam_output, " ", sam_bam)
@@ -152,21 +152,21 @@ samtools_samToBam <- function(sam_bam, bam_output, cores= 6)
 
 # mapq filter sam wrapper
 #' @export
-samtools_mapq_filter <- function(sam_bam, bam_output, q= 30, cores= 6)
+vl_samtools_mapq_filter <- function(sam_bam, bam_output, q= 30, cores= 6)
 {
   paste0("module load samtools/1.9-foss-2018b;
          /software/2020/software/samtools/1.9-foss-2018b/bin/samtools view -@ ", cores-1, " -b -q ", q, " -o ", bam_output, " ", sam_bam)
 }
 
 
-samtools_bam_sort <- function(sam_bam, bam_output, cores= 6)
+vl_samtools_bam_sort <- function(sam_bam, bam_output, cores= 6)
 {
   # Sort bam
   paste0("module load samtools/1.9-foss-2018b;
          /software/2020/software/samtools/1.9-foss-2018b/bin/samtools sort -n -@ ", cores-1, " -o ", bam_output, " ", sam_bam)
 }
 
-samtools_check_if_sorted <- function(sam_bam)
+vl_samtools_check_if_sorted <- function(sam_bam)
 {
   # Check bam
   paste0("module load samtools/1.9-foss-2018b;
