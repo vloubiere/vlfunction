@@ -24,6 +24,8 @@ Depends:
     TxDb.Dmelanogaster.UCSC.dm3.ensGene,
     org.Dm.eg.db,
     AnnotationDbi,
-    circlize
+    circlize,
+    colorRamps,
+    grDevices
 Imports:
 Suggests:
