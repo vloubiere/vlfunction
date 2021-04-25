@@ -208,7 +208,7 @@ vl_heatmap <- function(mat,
   if(display_numbers)
     text(DT$x/(max(DT$x))-(0.5/ncol(im)),
          DT$y/(max(DT$y))-(0.5/nrow(im)),
-         display_numbers_FUN(if(is.null(newdata)) DT$value else DT$newdata),
+         display_numbers_FUN(DT$value),
          cex= display_numbers_cex,
          offset= 0)
 
