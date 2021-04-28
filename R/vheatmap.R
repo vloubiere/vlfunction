@@ -99,7 +99,7 @@ vl_heatmap <- function(mat,
   #------------------------####
   # Clustering rows
   #------------------------####
-  if(cluster_rows)
+  if(cluster_rows & nrow(mat)>1)
   {
     set.seed(3453)
     if(!is.na(kmeans_k))
@@ -158,7 +158,7 @@ vl_heatmap <- function(mat,
   #------------------------####
   # Clustering cols
   #------------------------####
-  if(cluster_cols)
+  if(cluster_cols & ncol(mat)>1)
   {
     set.seed(3453)
     if(clustering_distance_cols %in% c("pearson", "spearman"))
@@ -213,7 +213,7 @@ vl_heatmap <- function(mat,
          offset= 0)
 
   # Plot dendro and cuts
-  if(cluster_rows & is.null(newdata))
+  if(cluster_rows & is.null(newdata) & nrow(mat)>1)
     if(is.na(kmeans_k))
       segments(rdend$y/max(rdend$y)/10+1,
                1-(rdend$x/max(rdend$x)-(0.5/nrow(im))),
@@ -225,7 +225,7 @@ vl_heatmap <- function(mat,
     if(length(cr)>0)
       segments(0, cr, 1, cr)
 
-  if(cluster_cols)
+  if(cluster_cols & ncol(mat)>1)
     segments(cdend$x/max(cdend$x)-(0.5/ncol(im)),
              cdend$y/max(cdend$y)/10+1,
              cdend$xend/max(cdend$xend)-(0.5/ncol(im)),
