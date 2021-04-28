@@ -3,17 +3,21 @@
 \name{vl_sra_metadata}
 \alias{vl_sra_metadata}
 \title{get SRA metadata}
-\format{metadata data.table object
+\format{
+metadata data.table object
 \describe{
   \item{study_name}{GSE id}
   \item{run}{SRR ID}
   \item{library_layout}{"PAIRED - " or "SINGLE - "}
   \item{experiment_title}{experiment_title}
   \item{ftp}{List of ftp download link}
-}}
+}
+}
 \usage{
-vl_sra_metadata(GSE,
-  SRAdb = "/groups/stark/vloubiere/exp_data/SRAmetadb.sqlite")
+vl_sra_metadata(
+  GSE,
+  SRAdb = "/groups/stark/vloubiere/exp_data/SRAmetadb.sqlite"
+)
 }
 \arguments{
 \item{GSE}{GSE number of interest.}

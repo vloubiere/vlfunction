@@ -4,10 +4,17 @@
 \alias{vl_boxplot}
 \title{violin plot}
 \usage{
-vl_boxplot(x, formula, outline = F, xlab = "", ylab = "",
-  xlim = c(0.5, max(obj$at) + 0.5), ylim = if (outline)
-  range(unlist(obj$value)) else range(c(obj$Q1, obj$Q5)), col = "white",
-  at = NULL)
+vl_boxplot(
+  x,
+  formula,
+  outline = F,
+  xlab = "",
+  ylab = "",
+  xlim = c(0.5, max(obj$at) + 0.5),
+  ylim = if (outline) range(unlist(obj$value)) else range(c(obj$Q1, obj$Q5)),
+  col = "white",
+  at = NULL
+)
 }
 \arguments{
 \item{x}{Matrix, data.atble or data.frame containing data}

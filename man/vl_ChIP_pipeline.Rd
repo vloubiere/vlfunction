@@ -4,9 +4,19 @@
 \alias{vl_ChIP_pipeline}
 \title{Process ChIP-Seq/ATAC-Seq data}
 \usage{
-vl_ChIP_pipeline(fq1, fq2 = NULL, basename_prefix = "",
-  Rsubread_index_prefix = NULL, bam_folder = NULL, bw_folder,
-  extend = 300, maxMismatches = 2, nTrim3 = 0, nTrim5 = 0)
+vl_ChIP_pipeline(
+  fq1,
+  fq2 = NULL,
+  basename_prefix = "",
+  Rsubread_index_prefix = NULL,
+  bam_folder = NULL,
+  bw_folder,
+  extend = 300,
+  maxMismatches = 2,
+  nTrim3 = 0,
+  nTrim5 = 0,
+  use_samtools = T
+)
 }
 \arguments{
 \item{fq1}{fastq file path (read1)}
@@ -28,6 +38,8 @@ vl_ChIP_pipeline(fq1, fq2 = NULL, basename_prefix = "",
 \item{nTrim3}{default 0}
 
 \item{nTrim5}{default 0}
+
+\item{use_samtools}{If FALSE, avoids using samtools by saving alignments in a non-binary sam file. default= TRUE.}
 }
 \value{
 bam , bam_stats.txt, uniq.bed and .bw files

@@ -12,6 +12,7 @@
 #' @param maxMismatches default 2
 #' @param nTrim3 default 0
 #' @param nTrim5 default 0
+#' @param use_samtools If FALSE, avoids using samtools by saving alignments in a non-binary sam file. default= TRUE.
 #' @examples require(data.table)
 #' require(GenomicRanges)
 #' require(Rsubread)
@@ -57,7 +58,7 @@ vl_ChIP_pipeline <- function(fq1,
                   nTrim3 = nTrim3,
                   nTrim5 = nTrim5, 
                   nthreads= getDTthreads()-2, 
-                  output_format = ifelse(use_samtools,".bam", ".sam"))
+                  output_format = ifelse(use_samtools,"BAM", "SAM"))
   # Chromosome infos
   chr <- data.table::fread(list.files(dirname(Rsubread_index_prefix), ".reads$", full.names = T), 
                            col.names = c("length", "seqnames"))
@@ -113,7 +114,7 @@ vl_ChIP_pipeline <- function(fq1,
   print("Generate bw!")
   total_reads <- length(reads)
   cov <- GenomicRanges::coverage(reads)/total_reads*1e6
-  output <- paste0(bw_folder, basename_prefix, "_", .bn, ".bw")
+  output <- paste0(bw_folder, basename_prefix, .bn, ".bw")
   rtracklayer::export.bw(GRanges(cov), con= output)
 }
 
