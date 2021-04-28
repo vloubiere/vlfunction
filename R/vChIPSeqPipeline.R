@@ -40,11 +40,11 @@ vl_ChIP_pipeline <- function(fq1,
                              maxMismatches= 2,
                              nTrim3= 0,
                              nTrim5= 0,
-                             no_samtools= F)
+                             use_samtools= T)
 {
   # Compute output name
   .bn <- strsplit(basename(fq1), "[.]")[[1]][1]
-  output <- paste0(bam_folder, basename_prefix, .bn, ".bam")
+  output <- paste0(bam_folder, basename_prefix, .bn, ifelse(use_samtools,".bam", ".sam"))
   # Alignment
   print("START alignment!")
   Rsubread::align(index = Rsubread_index_prefix,
@@ -56,19 +56,31 @@ vl_ChIP_pipeline <- function(fq1,
                   unique= T, 
                   nTrim3 = nTrim3,
                   nTrim5 = nTrim5, 
-                  nthreads= getDTthreads()-2)
+                  nthreads= getDTthreads()-2, 
+                  output_format = ifelse(use_samtools,".bam", ".sam"))
   # Chromosome infos
   chr <- data.table::fread(list.files(dirname(Rsubread_index_prefix), ".reads$", full.names = T), 
                            col.names = c("length", "seqnames"))
   # Import reads
   print("Import reads!")
-  cmd <- paste("module load build-env/2020; module load samtools/1.9-foss-2018b; samtools view -@", 
-               getDTthreads()-1, 
-               output)
-  reads <- data.table::fread(cmd= cmd, fill= T)
+  if(use_samtools)
+  {
+    cmd <- paste("module load build-env/2020; module load samtools/1.9-foss-2018b; samtools view -@", 
+                 getDTthreads()-1, 
+                 output)
+    reads <- data.table::fread(cmd= cmd, fill= T)
+  }else
+  {
+    reads <- data.table::fread(output, fill= T)
+    reads <- reads[!grepl("^@", V1)]
+    reads[, V2:= as.numeric(V2)]
+    reads[, V4:= as.numeric(V4)]
+    reads[, V5:= as.numeric(V5)]
+  }
+
   # Clean
   print("Import done -> start cleaning reads!")
-  reads <- reads[V3 %in% chr$seqnames & V5>30]
+  reads <- reads[V3 %in% chr$seqnames & V5>=30]
   if(is.null(fq2))
   {
     reads <- unique(reads[V2 %in% c(0, 16), 
