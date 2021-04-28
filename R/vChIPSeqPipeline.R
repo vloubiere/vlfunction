@@ -39,11 +39,12 @@ vl_ChIP_pipeline <- function(fq1,
                              extend= 300,
                              maxMismatches= 2,
                              nTrim3= 0,
-                             nTrim5= 0)
+                             nTrim5= 0,
+                             no_samtools= F)
 {
   # Compute output name
   .bn <- strsplit(basename(fq1), "[.]")[[1]][1]
-  output <- paste0(bam_folder, basename_prefix, "_", .bn, ".bam")
+  output <- paste0(bam_folder, basename_prefix, .bn, ".bam")
   # Alignment
   print("START alignment!")
   Rsubread::align(index = Rsubread_index_prefix,
@@ -55,7 +56,7 @@ vl_ChIP_pipeline <- function(fq1,
                   unique= T, 
                   nTrim3 = nTrim3,
                   nTrim5 = nTrim5, 
-                  nthreads= getDTthreads()-2)
+                  nthreads= getDTthreads()-5)
   # Chromosome infos
   chr <- data.table::fread(list.files(dirname(Rsubread_index_prefix), ".reads$", full.names = T), 
                            col.names = c("length", "seqnames"))
