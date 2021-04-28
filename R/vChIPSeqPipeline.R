@@ -56,7 +56,7 @@ vl_ChIP_pipeline <- function(fq1,
                   unique= T, 
                   nTrim3 = nTrim3,
                   nTrim5 = nTrim5, 
-                  nthreads= getDTthreads()-5)
+                  nthreads= getDTthreads()-2)
   # Chromosome infos
   chr <- data.table::fread(list.files(dirname(Rsubread_index_prefix), ".reads$", full.names = T), 
                            col.names = c("length", "seqnames"))
