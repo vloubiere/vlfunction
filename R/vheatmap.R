@@ -9,9 +9,11 @@
 #' @param cluster_rows Should matrix rows be clustered? default is T
 #' @param clustering_distance_rows Method for clustering distance rows. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"
 #' @param cutree_rows Number of cuts for rows tree. default= 1z
+#' @param show_cl_number_rows if cutree rows, should row cluster number be shown? default is TRUE
 #' @param cluster_cols Should matrix cols be clustered? default is T
 #' @param clustering_distance_cols Method for clustering distance cols. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"
 #' @param cutree_cols Number of cuts for cols tree. default= 1z
+#' @param show_cl_number_cols if cutree cols, should col cluster number be shown? default is TRUE
 #' @param clustering_method Clustering method to use. Must be one of "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median" or "centroid".
 #' @param kmeans_k Number of row kmean clusters. If specified, takes over row clustering.
 #' @param display_numbers Display numbers on heatmap? Default= F
@@ -49,9 +51,11 @@ vl_heatmap <- function(mat,
                        cluster_rows= T,
                        clustering_distance_rows= "euclidean",
                        cutree_rows = 1,
+                       show_cl_number_rows= T,
                        cluster_cols = T,
                        clustering_distance_cols = "euclidean",
                        cutree_cols = 1,
+                       show_cl_number_cols= T,
                        clustering_method = "complete",
                        kmeans_k = NA,
                        display_numbers= F,
@@ -220,10 +224,20 @@ vl_heatmap <- function(mat,
                rdend$yend/max(rdend$yend)/10+1,
                1-(rdend$xend/max(rdend$xend)-(0.5/nrow(im))),
                xpd= T)
-    cr <- cumsum(unique(DT[, rcl, keyby= y])[, .N, rcl][, N])
-    cr <- cr[-length(cr)]/nrow(im)
-    if(length(cr)>0)
-      segments(0, cr, 1, cr)
+  cr <- cumsum(unique(DT[, rcl, keyby= y])[, .N, rcl][, N])
+  cr <- cr[-length(cr)]/nrow(im)
+  if(length(cr)>0) # Plot cutree lines and cluster numbers
+  {
+    segments(0, cr, 1, cr)
+    if(show_cl_number_rows)
+      text(x= 1, 
+           y= DT[, mean(y), rcl]$V1/(nrow(im))-(0.5/nrow(im)), 
+           labels = DT[, mean(y), rcl]$rcl, 
+           xpd= T, 
+           pos= 4, 
+           offset= 1,
+           cex= 2)
+  }
 
   if(cluster_cols & ncol(mat)>1)
     segments(cdend$x/max(cdend$x)-(0.5/ncol(im)),
@@ -231,10 +245,22 @@ vl_heatmap <- function(mat,
              cdend$xend/max(cdend$xend)-(0.5/ncol(im)),
              cdend$yend/max(cdend$yend)/10+1,
              xpd= T)
-    cc <- cumsum(unique(DT[, ccl, keyby= x])[, .N, ccl][, N])
-    cc <- cc[-length(cc)]/ncol(im)
-    if(length(cc)>0)
-      segments(cc, 0, cc, 1)
+  cc <- cumsum(unique(DT[, ccl, keyby= x])[, .N, ccl][, N])
+  cc <- cc[-length(cc)]/ncol(im)
+  if(length(cc)>0) # Plot cutcol lines and cluster numbers
+  {
+    segments(cc, 0, cc, 1)
+    if(show_cl_number_cols)
+      text(x= DT[, mean(x), ccl]$V1/ncol(im)-0.5/ncol(im), 
+           y= 1, 
+           labels = DT[, mean(x), ccl]$ccl, 
+           xpd= T, 
+           pos= 3, 
+           offset= 1,
+           cex= 2)
+  }
+    
+
 
   # Plot axes
   if(show_colnames)
