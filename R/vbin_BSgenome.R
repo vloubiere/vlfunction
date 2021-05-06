@@ -15,10 +15,10 @@ vl_binBSgenome <- function(BSgenome,
 {
   if(!class(BSgenome)=="BSgenome")
     stop("genome should be a BSgenome object!")
-  dat <- as.data.table(as.data.frame(GenomeInfoDb::seqinfo(BSgenome)), keep.rownames = "seqnames")
-  bins <- dat[, .(start= seq(1, seqlengths, bin_size)), .(seqnames, seqlengths)]
+  dat <- as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome.Dmelanogaster.UCSC.dm3)))
+  bins <- dat[, .(start= seq(1, end, bin_size)), .(seqnames, end, width)]
   bins[, end:= start+bin_size-1]
-  bins[end>seqlengths, end:= seqlengths]
-  bins <- bins[end-start>0, !"seqlengths"]
+  bins[end>width, end:= width]
+  bins <- bins[end-start>0, .(seqnames, start, end)]
   return(bins)
 }
