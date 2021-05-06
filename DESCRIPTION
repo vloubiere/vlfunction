@@ -20,6 +20,7 @@ Depends:
     GenomicRanges,
     rtracklayer,
     GenomicFeatures,
+    GenomeInfoDb,
     motifmatchr,
     TxDb.Dmelanogaster.UCSC.dm3.ensGene,
     org.Dm.eg.db,
