@@ -20,7 +20,7 @@ vl_collapse_DT_ranges <- function(bed,
                                   mingap= 1, 
                                   stranded= F)
 {
-  if(class(bed)=="GRanges")
+  if(class(bed)[1]=="GRanges")
     bed <- data.table::as.data.table(bed)
   if(!data.table::is.data.table(bed) | !all(c("seqnames", "start", "end") %in% colnames(bed)))
     stop("bed must be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns")

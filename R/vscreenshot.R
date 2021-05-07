@@ -37,7 +37,7 @@ vl_screenshot <- function(bed,
                           n_genes= 4,
                           gband= 0.1)
 {
-  if(class(bed)=="GRanges")
+  if(class(bed)[1]=="GRanges")
     bed <- data.table::as.data.table(bed)
   if(!data.table::is.data.table(bed) | !all(c("seqnames", "start", "end") %in% colnames(bed)))
     stop("bed must be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns")
