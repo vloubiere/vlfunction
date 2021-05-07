@@ -38,6 +38,6 @@ vl_collapse_DT_ranges <- function(bed,
       return(i)
     }))
   }, .(seqnames, strand)]
-  res <- DT[, .(min(start), max(end)), .(seqnames, idx, strand)]
-  return(res)
+  res <- DT[, .(start= min(start), end= max(end)), .(seqnames, idx, strand)]
+  return(res[, .(seqnames, start, end, strand)])
 }
