@@ -77,12 +77,12 @@ vl_screenshot <- function(bed,
   q <- parallel::mclapply(tracks, function(x)
   {
     .c <- data.table::as.data.table(rtracklayer::import.bw(x, selection= sel))
-    if(nrow(.c)==0)
-    {
-      warnings(paste("bw file", x, "contains no data and will be set to 0"))
-      .c <- as.data.table(bed)
-      .c[, score:= 0]
-    }
+    # if(nrow(.c)==0)
+    # {
+    #   warnings(paste("bw file", x, "contains no data and will be set to 0"))
+    #   .c <- as.data.table(bed)
+    #   .c[, score:= 0]
+    # }
     data.table::setkeyv(.c, c("seqnames", "start", "end"))
     res <- data.table::foverlaps(.c, bins, nomatch = 0)
     .strand <- res[which.max(abs(score)), sign(score)] # Compute strand
