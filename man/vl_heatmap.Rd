@@ -4,28 +4,16 @@
 \alias{vl_heatmap}
 \title{Heatmap}
 \usage{
-vl_heatmap(
-  mat,
-  newdata = NULL,
-  breaks = NULL,
-  show_rownames = T,
-  show_colnames = T,
-  col = c("cornflowerblue", "white", "red"),
-  cluster_rows = T,
-  clustering_distance_rows = "euclidean",
-  cutree_rows = 1,
-  cluster_cols = T,
-  clustering_distance_cols = "euclidean",
-  cutree_cols = 1,
-  clustering_method = "complete",
-  kmeans_k = NA,
-  display_numbers = F,
+vl_heatmap(mat, newdata = NULL, breaks = NULL, show_rownames = T,
+  show_colnames = T, col = c("cornflowerblue", "white", "red"),
+  cluster_rows = T, clustering_distance_rows = "euclidean",
+  cutree_rows = 1, show_cl_number_rows = T, cluster_cols = T,
+  clustering_distance_cols = "euclidean", cutree_cols = 1,
+  show_cl_number_cols = T, clustering_method = "complete",
+  kmeans_k = NA, display_numbers = F,
   display_numbers_FUN = function(x) round(x, 2),
-  display_numbers_cex = 0.5,
-  legend_title = "legend",
-  legend_pos = c(0.8, 1.15, 1, 1.2),
-  scale = "none"
-)
+  display_numbers_cex = 0.5, legend_title = "legend",
+  legend_pos = c(0.8, 1.15, 1, 1.2), scale = "none")
 }
 \arguments{
 \item{mat}{Matrix to plot. Row names and col names will be reported in return}
@@ -40,11 +28,15 @@ vl_heatmap(
 
 \item{cutree_rows}{Number of cuts for rows tree. default= 1z}
 
+\item{show_cl_number_rows}{if cutree rows, should row cluster number be shown? default is TRUE}
+
 \item{cluster_cols}{Should matrix cols be clustered? default is T}
 
 \item{clustering_distance_cols}{Method for clustering distance cols. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"}
 
 \item{cutree_cols}{Number of cuts for cols tree. default= 1z}
+
+\item{show_cl_number_cols}{if cutree cols, should col cluster number be shown? default is TRUE}
 
 \item{clustering_method}{Clustering method to use. Must be one of "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median" or "centroid".}
 

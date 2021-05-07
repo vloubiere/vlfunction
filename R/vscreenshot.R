@@ -37,7 +37,7 @@ vl_screenshot <- function(bed,
                           n_genes= 4,
                           gband= 0.1)
 {
-  if(class(bed)[1]=="GRanges")
+  if(class(bed)=="GRanges")
     bed <- data.table::as.data.table(bed)
   if(!data.table::is.data.table(bed) | !all(c("seqnames", "start", "end") %in% colnames(bed)))
     stop("bed must be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns")
@@ -59,7 +59,10 @@ vl_screenshot <- function(bed,
   #--------------------------#
   Nbins <- round(1000/nrow(bed))+1
   bins <- bed[,{
-    .s <- seq(start, end, round(((end-start)+1)/Nbins))
+    binsize <- round(((end-start)+1)/Nbins)
+    if(binsize==0)
+      binsize <- 1
+    .s <- seq(start, end, binsize)
     .e <- .s[-1]-1
     .s <- .s[-length(.s)]
     .(start= .s, end= .e, x= seq(.s))
