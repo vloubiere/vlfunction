@@ -58,9 +58,15 @@ vl_screenshot <- function(bed,
   # Binning bed file
   #--------------------------#
   Nbins <- round(1000/nrow(bed))+1
-  bins <- bed[, .(start= seq(start, end, length.out = Nbins)[-Nbins],
-                  end= seq(start, end, length.out = Nbins)[-1],
-                  x= seq(Nbins-1)+(Nbins+19)*(.GRP-1)), .(seqnames, region_ID= seq(nrow(bed)))]
+  bins <- bed[,{
+    .s <- seq(start, end, round(((end-start)+1)/Nbins))
+    .e <- .s[-1]-1
+    .s <- .s[-length(.s)]
+    .(start= .s, end= .e, x= seq(.s))
+  }, .(seqnames, region_ID= seq(nrow(bed)))]
+  inter <- cumsum(bins[, max(x), region_ID]$V1+19) # Interpolate x values (19 empty between lines)
+  inter <- inter-inter[1]
+  bins[, x:= x+inter[.GRP], region_ID]
   bins[, bin_ID:= .I] # Used to track unmatched bins
   data.table::setkeyv(bins, c("seqnames", "start", "end"))
   sel <- rtracklayer::BigWigSelection(GenomicRanges::GRanges(bed), "score")
@@ -71,6 +77,12 @@ vl_screenshot <- function(bed,
   q <- parallel::mclapply(tracks, function(x)
   {
     .c <- data.table::as.data.table(rtracklayer::import.bw(x, selection= sel))
+    if(nrow(.c)==0)
+    {
+      warnings(paste("bw file", x, "contains no data and will be set to 0"))
+      .c <- as.data.table(bed)
+      .c[, score:= 0]
+    }
     data.table::setkeyv(.c, c("seqnames", "start", "end"))
     res <- data.table::foverlaps(.c, bins, nomatch = 0)
     .strand <- res[which.max(abs(score)), sign(score)] # Compute strand
@@ -97,7 +109,7 @@ vl_screenshot <- function(bed,
   if(is.null(max))
     q[, max:= max(abs(c(0, score)), na.rm= T), feature_ID] else
       q[, max:= max[.GRP], feature_ID]
-  q <- q[, .(y= if(strand==1) rev(seq(102L)) else if (strand==-1) seq(102L), # Negative tracks will be plotted upside down
+  q <- q[, .(y= if(strand== (-1)) seq(102L) else rev(seq(102L)), # Negative tracks will be plotted upside down
              value= as.character(ifelse(seq(0, 101)>score/max*100, "white", col))), (q)]
   q[, y:= as.integer(y+(.GRP-1L)*102L), feature_ID]
 
