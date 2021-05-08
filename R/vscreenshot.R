@@ -97,27 +97,14 @@ vl_screenshot <- function(bed,
     data.table::setkeyv(.c, c("seqnames", "start", "end"))
     res <- data.table::foverlaps(.c, bins, nomatch = 0)
     .strand <- res[which.max(abs(score)), sign(score)] # Compute strand
-    # Table containing missing bins without overlaps
-    add <- bins[!(bin_ID %in% res$bin_ID),
-                .(seqnames,
-                  start,
-                  end,
-                  region_ID,
-                  x,
-                  strand= .strand,
-                  score= 0, # Missing bins assigned 0
-                  highlight_region)] 
-    # Overlapping bins
-    res <- res[, .(strand= .strand,
-                   score= max(abs(c(0, score)), na.rm= T)),
-                 .(seqnames,
-                   start,
-                   end,
-                   region_ID,
-                   x, 
-                   highlight_region)]
-    # Merge overlapping and non overlapping bins
-    base::rbind(res, add)
+    # Compute result
+    .c[bins, .(region_ID, 
+               x, 
+               score= max(abs(c(0, score)), na.rm= T), 
+               strand= .strand, 
+               highlight_region), 
+       .EACHI, 
+       on= c("seqnames", "start<=end", "end>=start")]
   })
   q <- data.table::rbindlist(q, idcol = "feature_ID")
   q[, name:= names[.GRP], feature_ID]
