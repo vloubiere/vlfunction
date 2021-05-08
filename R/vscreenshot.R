@@ -31,6 +31,8 @@
 
 vl_screenshot <- function(bed,
                           tracks,
+                          highlight_regions= NULL,
+                          highlight_col= "lightgrey",
                           names= NULL,
                           max= NULL,
                           col= NULL,
@@ -47,6 +49,12 @@ vl_screenshot <- function(bed,
     names <- gsub(".bw$", "", basename(tracks))
   if(length(names) != length(tracks))
     stop("names vector length should be the same as bw files vector length(", length(tracks), ")")
+  if(is.null(highlight_regions))
+    highlight_regions <- data.table::as.data.table(GRanges())
+  if(class(highlight_regions)[1]=="GRanges")
+    highlight_regions <- data.table::as.data.table(highlight_regions)
+  if(!data.table::is.data.table(highlight_regions) | !all(c("seqnames", "start", "end") %in% colnames(highlight_regions)))
+    stop("highlight_regions must be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns")
   if(is.null(col))
     col <- rep("black", length(tracks))
   if(length(col) != length(tracks))
@@ -71,18 +79,25 @@ vl_screenshot <- function(bed,
   inter <- inter-inter[1]
   bins[, x:= x+inter[.GRP], region_ID]
   bins[, bin_ID:= .I] # Used to track unmatched bins
+  
+  #--------------------------#
+  # Highlight regions
+  #--------------------------#
   data.table::setkeyv(bins, c("seqnames", "start", "end"))
-  sel <- rtracklayer::BigWigSelection(GenomicRanges::GRanges(bed), "score")
+  data.table::setkeyv(highlight_regions, c("seqnames", "start", "end"))
+  bins$highlight_region <- highlight_regions[bins, .N>0, .EACHI, on= c("seqnames", "end>=start", "start<=end")]$V1
 
   #--------------------------#
   # Quantif tracks
   #--------------------------#
+  sel <- rtracklayer::BigWigSelection(GenomicRanges::GRanges(bed), "score")
   q <- parallel::mclapply(tracks, function(x)
   {
     .c <- data.table::as.data.table(rtracklayer::import.bw(x, selection= sel))
     data.table::setkeyv(.c, c("seqnames", "start", "end"))
     res <- data.table::foverlaps(.c, bins, nomatch = 0)
     .strand <- res[which.max(abs(score)), sign(score)] # Compute strand
+    # Table containing missing bins without overlaps
     add <- bins[!(bin_ID %in% res$bin_ID),
                 .(seqnames,
                   start,
@@ -90,14 +105,18 @@ vl_screenshot <- function(bed,
                   region_ID,
                   x,
                   strand= .strand,
-                  score= 0)] # Missing bins assigned 0
+                  score= 0, # Missing bins assigned 0
+                  highlight_region)] 
+    # Overlapping bins
     res <- res[, .(strand= .strand,
                    score= max(abs(c(0, score)), na.rm= T)),
                  .(seqnames,
                    start,
                    end,
                    region_ID,
-                   x)]
+                   x, 
+                   highlight_region)]
+    # Merge overlapping and non overlapping bins
     base::rbind(res, add)
   })
   q <- data.table::rbindlist(q, idcol = "feature_ID")
@@ -107,7 +126,7 @@ vl_screenshot <- function(bed,
     q[, max:= max(abs(c(0, score)), na.rm= T), feature_ID] else
       q[, max:= max[.GRP], feature_ID]
   q <- q[, .(y= if(strand== (-1)) seq(102L) else rev(seq(102L)), # Negative tracks will be plotted upside down
-             value= as.character(ifelse(seq(0, 101)>score/max*100, "white", col))), (q)]
+             value= as.character(ifelse(seq(0, 101)>score/max*100, ifelse(highlight_region, highlight_col, "white"), col))), (q)]
   q[, y:= as.integer(y+(.GRP-1L)*102L), feature_ID]
 
   #--------------------------#
