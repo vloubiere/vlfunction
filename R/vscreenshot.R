@@ -4,6 +4,8 @@
 #'
 #' @param bed Regions to plot. Can be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns"
 #' @param tracks Vector of bw files to plot. Use full paths to avoid pbs.
+#' @param highlight_regions Granges or data.table object specifying regions to highlight
+#' @param highlight_col Color to use for highlighting regions. default is "lightgrey"
 #' @param names Track names to plot. If specified, must be the same length as bw vector. By default, bw basenames will be used.
 #' @param max Max values to clip the data. If specified, must be the same length as bw vector. By default, uses max values/track.
 #' @param col Ploting colors. If specified, must be the same length as bw vector. By default, uses "black"
