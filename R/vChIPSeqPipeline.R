@@ -46,7 +46,7 @@ vl_ChIP_pipeline <- function(fq1,
 {
   if(!is.data.table(chrom_sizes))
     stop("chrom sizes must be a data.table object")
-  if(!all(c("seqnames", "seqlengths") %in% colnames(chrom_sizes))
+  if(!all(c("seqnames", "seqlengths") %in% colnames(chrom_sizes)))
      stop("chrom sizes data.table object should contain seqnames and seqlengths columns!")
      
   # Compute output name
