@@ -4,13 +4,18 @@
 \alias{vl_screenshot}
 \title{bw screenshot}
 \usage{
-vl_screenshot(bed, tracks, names = NULL, max = NULL, col = NULL,
-  n_genes = 4, gband = 0.1)
+vl_screenshot(bed, tracks, highlight_regions = NULL,
+  highlight_col = "lightgrey", names = NULL, max = NULL,
+  col = NULL, n_genes = 4, gband = 0.1)
 }
 \arguments{
 \item{bed}{Regions to plot. Can be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns"}
 
 \item{tracks}{Vector of bw files to plot. Use full paths to avoid pbs.}
+
+\item{highlight_regions}{Granges or data.table object specifying regions to highlight}
+
+\item{highlight_col}{Color to use for highlighting regions. default is "lightgrey"}
 
 \item{names}{Track names to plot. If specified, must be the same length as bw vector. By default, bw basenames will be used.}
 

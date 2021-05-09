@@ -33,6 +33,7 @@
 
 vl_ChIP_pipeline <- function(fq1,
                              fq2= NULL,
+                             chrom_sizes,
                              basename_prefix= "",
                              Rsubread_index_prefix= NULL,
                              bam_folder= NULL,
@@ -43,6 +44,11 @@ vl_ChIP_pipeline <- function(fq1,
                              nTrim5= 0,
                              use_samtools= T)
 {
+  if(!is.data.table(chrom_sizes))
+    stop("chrom sizes must be a data.table object")
+  if(!all(c("seqnames", "seqlengths") %in% colnames(chrom_sizes))
+     stop("chrom sizes data.table object should contain seqnames and seqlengths columns!")
+     
   # Compute output name
   .bn <- strsplit(basename(fq1), "[.]")[[1]][1]
   output <- paste0(bam_folder, basename_prefix, .bn, ifelse(use_samtools,".bam", ".sam"))
@@ -59,9 +65,7 @@ vl_ChIP_pipeline <- function(fq1,
                   nTrim5 = nTrim5, 
                   nthreads= getDTthreads()-2, 
                   output_format = ifelse(use_samtools,"BAM", "SAM"))
-  # Chromosome infos
-  chr <- data.table::fread(list.files(dirname(Rsubread_index_prefix), ".reads$", full.names = T), 
-                           col.names = c("length", "seqnames"))
+  
   # Import reads
   print("Import reads!")
   if(use_samtools)
@@ -81,7 +85,7 @@ vl_ChIP_pipeline <- function(fq1,
 
   # Clean
   print("Import done -> start cleaning reads!")
-  reads <- reads[V3 %in% chr$seqnames & V5>=30]
+  reads <- reads[V3 %in% chrom_sizes$seqnames & V5>=30]
   if(is.null(fq2))
   {
     reads <- unique(reads[V2 %in% c(0, 16), 
@@ -94,7 +98,7 @@ vl_ChIP_pipeline <- function(fq1,
     right[, start:= end-300]               
     reads <- rbind(left, right)
     reads[start<1, start:= 1]
-    reads[chr, end:= i.length, on= c("seqnames", "end>length")]
+    reads[chrom_sizes, end:= i.seqlengths, on= c("seqnames", "end>seqlengths")]
   }else
   {
     reads <- reads[V2 %in% c(83, 99, 147, 163), 

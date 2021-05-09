@@ -15,7 +15,7 @@ vl_binBSgenome <- function(BSgenome,
 {
   if(!class(BSgenome)=="BSgenome")
     stop("genome should be a BSgenome object!")
-  dat <- as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome.Dmelanogaster.UCSC.dm3)))
+  dat <- as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome)))
   bins <- dat[, .(start= seq(1, end, bin_size)), .(seqnames, end, width)]
   bins[, end:= start+bin_size-1]
   bins[end>width, end:= width]
