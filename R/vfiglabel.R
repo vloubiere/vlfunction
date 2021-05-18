@@ -9,7 +9,7 @@
 #' @export
 
 
-my_fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
+vl_fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
   region <- match.arg(region, c("figure", "plot", "device"))
   pos <- match.arg(pos, c("topleft", "top", "topright", 
                           "left", "center", "right", 

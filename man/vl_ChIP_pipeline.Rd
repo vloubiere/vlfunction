@@ -4,7 +4,7 @@
 \alias{vl_ChIP_pipeline}
 \title{Process ChIP-Seq/ATAC-Seq data}
 \usage{
-vl_ChIP_pipeline(fq1, fq2 = NULL, basename_prefix = "",
+vl_ChIP_pipeline(fq1, fq2 = NULL, chrom_sizes, basename_prefix = "",
   Rsubread_index_prefix = NULL, bam_folder = NULL, bw_folder,
   extend = 300, maxMismatches = 2, nTrim3 = 0, nTrim5 = 0,
   use_samtools = T)
