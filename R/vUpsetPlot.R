@@ -86,7 +86,8 @@ vl_upset_plot <- function(dat_list, ylab= "Intersection size")
   setorderv(sets, "N", 1)
   sets[, y:= grconvertY(grconvertY(0, "nfc", "chars")+.I*1.5, "chars", "user")]
   sets[, all_x:= .(.(dat$x))]
-  sets[, inter_x:= .(.(unlist(all_x) %in% dat[grep(all_IDs, dat$.id), x])), all_IDs]
+  tab <- dat[, .(check_IDs= unlist(tstrsplit(.id, "\\|")), x), .id]
+  sets[, inter_x:= .(.(unlist(all_x) %in% tab[check_IDs %in% all_IDs, x])), all_IDs]
   # points
   sets[, {
     cx <- unlist(all_x)
