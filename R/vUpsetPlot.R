@@ -8,113 +8,157 @@
 #' test <- list(A= 1:1000, B= 1:1500, C= 1000:1750)
 #' vl_upset_plot(test)
 #' @export
-
+#' 
 vl_upset_plot <- function(dat_list, ylab= "Intersection size")
 {
   if(is.null(names(dat_list)))
     stop("The list should be named!")
   if(any(grepl("\\|", names(dat_list))))
     stop("list names should not contain any '|' cause they are use internally")
-  
+  if(max(nchar(names(dat_list)))<3)
+    names(dat_list) <- paste0("  ", names(dat_list), "  ")
+  # if(par("mfrow"))
+    
+    
   # Initiate plotting area
-  init <- par(no.readonly=TRUE)
+  # init <- par(no.readonly=TRUE)
+  # dev.off()
   plot.new()
-  par(mar = c(length(dat_list)*2+1,
-              grconvertX(max(strwidth(names(dat_list))), to= "lines"),
-              1,
+  par(mar = c(length(dat_list)*1.5+1,
+              6+grconvertX(max(strwidth(names(dat_list), "inches")), "inches", to= "lines"),
+              2,
               1))
   
-  # Format dat
+  #-------------------------#
+  # Main barplot
+  #-------------------------#
   dat <- rbindlist(lapply(dat_list, as.data.table), idcol = T)
   colnames(dat)[2] <- "intersect"
   dat <- dat[, .(.id= paste(.id, collapse = "|")), intersect]
   dat <- dat[, .(N= .N), .id]
   setorderv(dat, "N", -1)
-  dat$x <- barplot(dat$N, plot = F)
-  dat <- dat[, .(all_IDs= unlist(tstrsplit(.id, "\\|"))), dat]
-  sets <- dat[, sum(N), all_IDs]
-  setorderv(sets, "V1", 1)
-  sets$y <- barplot(-sets$V1,
-                    plot = F)
-  dat[sets, y:= i.y, on= "all_IDs"]
-  dat <- dat[, .(y= .(y)), .(.id, N, x)]
+  width <- 0.9/nrow(dat)
+  space <- 0.1/nrow(dat)
+  dat[, left:= grconvertX(space*.I+width*(.I-1), "npc", "user")]
+  dat[, right:= grconvertX(space*(.I-1)+width*.I, "npc", "user")]
+  dat[, top:= grconvertY(N/max(N), "npc", "user")]
+  dat[, bottom:= grconvertY(0, "npc", "user")]
+  dat[, x:= rowMeans(.SD), .SDcols= c("left", "right")]
+  dat[, rect(left[1],
+             bottom[1],
+             right[1],
+             top[1], 
+             border = NA, 
+             col= "grey20",
+             xpd= T), (dat)]
+  # Print N on top
+  dat[, text(x[1], 
+             top[1],
+             N[1],
+             xpd= T,
+             cex= 0.6,
+             pos=3), (dat)]
   
-  # Plot main barplot
-  barplot(dat$N,
-          las= 1,
-          border= NA,
-          col= "grey20",
-          ylab= ylab)
-  text(dat$x,
-       dat$N,
-       dat$N,
-       cex=0.5,
-       xpd=T,
-       pos=3,
-       offset= 0.25)
-  dat[, x:= grconvertX(x, to= "ndc")]
-  inset <- c(grconvertX(0.5, from= "lines", to= "ndc"),
-             grconvertX(0, to= "ndc")-max(strwidth(names(dat_list), "figure"))-grconvertX(1, "lines", "ndc"),
-             0,
-             grconvertY(0, "user", to= "ndc")-grconvertY(0.75, "lines", "ndc"))
-  
-  # Plot set barplot
-  par(fig = inset,
-      mar= c(1,1,0,0),
-      xaxs= "i",
-      yaxs= "i",
-      new = T)
-  barplot(-sets$V1,
-          horiz = T,
-          axes= F,
-          xpd= T,
-          border= NA,
-          col= "grey20")
-  ticks <- axisTicks(c(0, max(sets$V1)), log= F)
-  axis(3,
-       at= -ticks,
+  # Y axis
+  ticks <- axisTicks(c(0, max(dat$N)), log= F)
+  at <- grconvertY(ticks/max(dat$N), "npc", "user")
+  axis(2,
+       at= at,
        labels= NA,
        line = 0.5,
        tcl= -0.1)
-  mtext(text = range(ticks),
-        at= -range(ticks),
-        side= 3,
-        line= 0.75,
-        cex= 0.6,
-        xpd= T)
-  mtext("Set size",
-        line = 1.5,
-        cex= 0.6)
-  axis(4,
-       at= sets$y,
-       label= sets$all_IDs,
-       las= 1,
-       lwd= NA)
-  dat[, y:= .(list(grconvertY(unlist(y), to= "ndc"))), .id]
+  mtext(text = ticks,
+        at= at,
+        side= 2,
+        line= 1,
+        cex= 0.8,
+        xpd= T,
+        las= 1)
+  mtext(side= 2,
+        ylab, 
+        line = 3)
   
-  # Plot Intersection scheme
-  par(fig = c(0,1,0,1))
-  dat[, x:= grconvertX(x, "ndc", "user")]
-  dat[, y:= .(list(grconvertY(unlist(y), "ndc", "user"))), .id]
+  #-------------------------#
+  # Intersections
+  #-------------------------#
+  sets <- dat[, .(all_IDs= unlist(tstrsplit(.id, "\\|"))), dat]
+  sets <- sets[, .(N= sum(N)), all_IDs]
+  setorderv(sets, "N", 1)
+  sets[, y:= grconvertY(grconvertY(0, "nfc", "chars")+.I*1.5, "chars", "user")]
+  sets[, all_x:= .(.(dat$x))]
+  sets[, inter_x:= .(.(unlist(all_x) %in% dat[grep(all_IDs, dat$.id), x])), all_IDs]
+  # points
+  sets[, {
+    cx <- unlist(all_x)
+    cy <- rep(y[1], length(cx))
+    cxi <- unlist(inter_x)
+    points(cx,
+           cy, 
+           pch=19, 
+           cex=2,
+           col= ifelse(cxi, "grey20", "grey80"),
+           xpd= T)
+  }, .(all_IDs)]
+  # Segments
+  seg <- data.table(x= unlist(sets$all_x), 
+                    y= rep(sets$y, lengths(sets$all_x)))[unlist(sets$inter_x)]
+  seg[, segments(x[1], 
+                 min(y), 
+                 x[1], 
+                 max(y), 
+                 xpd= T, 
+                 lwd=2,
+                 col= "grey20"), x]
   
-  frame <- CJ(unique(dat$x), unique(unlist(dat$y)))
-  points(frame$V1,
-         frame$V2,
-         col= "grey90",
-         pch= 19,
-         cex= 2)
-  dat[, segments(x[1],
-                 min(unlist(y)),
-                 x[1],
-                 max(unlist(y)),
-                 xpd= T,
-                 lwd = 2,
-                 col= "grey20"), .id]
-  dat[, points(rep(x, lengths(y)),
-               unlist(y),
-               col= "grey20",
-               pch= 19,
-               cex= 2), .id]
+  #-------------------------#
+  # Sets barplot
+  #-------------------------#
+  sets[, text(grconvertX(0, "npc", "user"), 
+              y[1], 
+              labels = all_IDs[1], 
+              pos= 2, 
+              xpd= T), .(all_IDs, y)]
+  plot_left <- grconvertX(0.02, from = "nfc", "user")
+  plot_right <- grconvertX(0, from = "npc", "user")-max(strwidth(paste0("   ", names(dat_list))))
+  sets[, right:= plot_right]
+  sets[, left:= right-(N/max(N)*(plot_right-plot_left))]
+  sets[, top:= y+strheight("A", "user")]
+  sets[, bottom:= y-strheight("A", "user")]
+  # Barplot
+  sets[, rect(left[1],
+              bottom[1],
+              right[1],
+              top[1], 
+              border = NA, 
+              col= "grey20",
+              xpd= T), right:bottom]
+  # Axis
+  ticks <- axisTicks(c(0, max(sets$N)), log= F)
+  ticks <- ticks[c(1, length(ticks))]
+  at <- c(plot_right,
+          plot_right-(ticks[2]/max(sets$N)*(plot_right-plot_left)))
+  segments(at[1], 
+           grconvertY(0, "npc", "user"), 
+           at[2], 
+           grconvertY(0, "npc", "user"), 
+           xpd=T)
+  segments(at, 
+           grconvertY(0, "npc", "user"), 
+           at, 
+           grconvertY(grconvertY(0.1, "chars", "ndc"), "npc", "user"), 
+           xpd=T)
+  text(x= at, 
+       grconvertY(0, "npc", "user"),
+       ticks, 
+       cex= 0.5, 
+       xpd= T, 
+       pos= 3)
+  text(x= mean(at), 
+       grconvertY(0, "npc", "user"),
+       labels = "Size", 
+       cex= 0.8, 
+       xpd= T, 
+       pos= 3)
   
-  on.exit(par(init),add=TRUE,after=FALSE)
+  # on.exit(par(init), add=TRUE, after=FALSE)
 }
