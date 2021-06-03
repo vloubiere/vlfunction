@@ -59,13 +59,15 @@ vl_GO_clusters <- function(FBgn_list,
   
   # Generate plot table
   pl <- go_current[`-log10(padj)`>5 & log2OR>0]
+  pl[, cor_log2OR:= log2OR]
+  pl[log2OR==Inf, cor_log2OR:= max(pl$log2OR[is.finite(pl$log2OR)], na.rm= T)]
   Cc <- colorRamp2(range(pl$`-log10(padj)`), 
                    colors = c("blue", "red"))
   pl[, col:= Cc(`-log10(padj)`)]
-  pl[, size:= cex*log2OR]
+  pl[, size:= cex*cor+log2OR]
   pl[, x:= seq(0, 1, length.out = length(unique(pl$cluster_names)))[.GRP], cluster_names]
   setorderv(pl, 
-            c("cluster_names", "-log10(padj)", "log2OR", "GO"), 
+            c("cluster_names", "-log10(padj)", "cor+log2OR", "GO"), 
             order = c(1, -1, -1, 1))
   pl[, y:= as.numeric(min(.I)), GO]
   pl[, y:= seq(1, 0, length.out = length(unique(pl$GO)))[.GRP], keyby= y]
