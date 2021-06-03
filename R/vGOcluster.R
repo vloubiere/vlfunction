@@ -9,6 +9,7 @@
 
 vl_GO_clusters <- function(FBgn_list,
                            go_object= vl_fb_go_table_dm6_FB2020_05,
+                           FBgn_universe= "all",
                            cex= 1)
 {
   # Checks
@@ -20,16 +21,21 @@ vl_GO_clusters <- function(FBgn_list,
     stop("All FBgn list names should be unique!")
   if(!all(grepl("FBgn", unlist(FBgn_list))))
     stop(paste0("Some FBgn_list components are not FBgn IDs"))
-    
+  if(length(FBgn_universe)==1)
+    if(FBgn_universe=="all")
+      FBgn_universe <- unique(go_object$FBgn)  
+  
+  # Restrict GO object to universe
+  go_current <- copy(go_object)[FBgn %in% FBgn_universe, .(GO, name, type= unlist(type), FBgn, Symbol)]
+
   # Compute go and total counts
-  go_current <- copy(go_object)[,.(GO, name, type= unlist(type), FBgn, Symbol)]
-  go_current[, total_FBgn:= length(unique(go_object$FBgn))]
+  go_current[, total_FBgn:= length(FBgn_universe)]
   go_current[, total_go:= length(unique(FBgn)), GO]
   
   # Add cluster counts
   FBgn_DT <- rbindlist(lapply(FBgn_list, 
-                              function(x) # Select only cluster uniq FBgns that exist in GO object
-                                data.table(FBgn= unique(x[x %in% unique(go_object$FBgn)]))), 
+                              function(x) # Select only cluster uniq FBgns that exist in universe
+                                data.table(FBgn= unique(x[x %in% FBgn_universe]))), 
                        idcol = "cluster_names")
   FBgn_DT[, total_cluster:= .N, cluster_names]
   go_current <- go_current[rep(seq(nrow(go_current)), each= length(FBgn_list))] # Expand N clusters
