@@ -11,6 +11,7 @@
 vl_GO_enrich <- function(FBgn_vector,
                          go_object= vl_fb_go_table_dm6_FB2020_05,
                          FBgn_universe= "all",
+                         go_type= "all",
                          main= "")
 {
   # Checks
@@ -23,9 +24,17 @@ vl_GO_enrich <- function(FBgn_vector,
     if(FBgn_universe=="all")
       FBgn_universe <- unique(go_object$FBgn)
   }
+  if(length(go_type)!=1)
+    stop("length(go_type)!=1")
+  if(!(go_type %in% c("all", "biological_process", "cellular_component", "molecular_function")))
+     stop("go_type should be one of 'all', 'biological_process', 'cellular_component', 'molecular_function'")
     
   # Restrict GO object to universe
   go_current <- copy(go_object)[FBgn %in% FBgn_universe, .(GO, name, type= unlist(type), FBgn, Symbol)]
+  
+  # Restrict to type
+  if(go_type!="all")
+    go_current <- go_current[type==go_type]
   
   # Compute go and total counts
   go_current[, total_FBgn:= length(FBgn_universe)]
@@ -50,8 +59,11 @@ vl_GO_enrich <- function(FBgn_vector,
   go_current[, '-log10(padj)':= -log10(p.adjust(pvalue, method = "fdr"))]
   go_current[, log2OR:= log2(estimate)]
   
+  #----------------------------#
   # Generate plot table
+  #----------------------------#
   pl <- go_current[`-log10(padj)`>5 & log2OR>0]
+  # Handle infinite values
   pl[, cor_log2OR:= log2OR]
   pl[log2OR==Inf, cor_log2OR:= max(pl$log2OR[is.finite(pl$log2OR)], na.rm= T)]
   Cc <- colorRamp2(range(pl$cor_log2OR, na.rm = T), 
@@ -59,9 +71,11 @@ vl_GO_enrich <- function(FBgn_vector,
   pl[, col:= Cc(log2OR)]
   setorderv(pl, "-log10(padj)")
   
+  #----------------------------#
   # PLOT
+  #----------------------------#
   par(mai= c(1, 
-             max(strwidth(pl$name, "inches")), 
+             max(strwidth(pl$name, "inches"))+1, 
              0.5, 
              1))
   barplot(pl$`-log10(padj)`, 
@@ -90,14 +104,16 @@ vl_GO_enrich <- function(FBgn_vector,
        offset= 0, 
        cex= 0.8)
   ticks <- axisTicks(range(pl$cor_log2OR), log= F)
-  segments(grconvertX(1.125+0.005, "npc", "user"), 
-           grconvertY(0.75+ticks/max(pl$cor_log2OR)*(0.93-0.75), "npc", "user"), 
+  at <- grconvertY(0.75+(ticks-min(pl$cor_log2OR))/(max(pl$cor_log2OR)-min(pl$cor_log2OR))*(0.93-0.75), "npc", "user")
+  segments(grconvertX(1.125+0.005, "npc", "user"),
+           at,
            grconvertX(1.125+0.01, "npc", "user"),
-           grconvertY(0.75+ticks/max(pl$cor_log2OR)*(0.93-0.75), "npc", "user"),
-           xpd= T, 
+           at,
+           xpd= T,
            lend= 2)
+
   text(grconvertX(1.125+0.01, "npc", "user"), 
-       grconvertY(0.75+ticks/max(pl$cor_log2OR)*(0.93-0.75), "npc", "user"),
+       at,
        labels = ticks,
        cex= 0.6,
        offset= 0.1,
@@ -107,6 +123,7 @@ vl_GO_enrich <- function(FBgn_vector,
   # RETURN
   invisible(list(data= go_current, 
                  plot= pl, 
-                 legend_ticks= ticks))  
+                 legend_ticks= ticks,
+                 ticks_at= at))  
   
 }

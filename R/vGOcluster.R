@@ -10,6 +10,7 @@
 vl_GO_clusters <- function(FBgn_list,
                            go_object= vl_fb_go_table_dm6_FB2020_05,
                            FBgn_universe= "all",
+                           go_type= "all",
                            cex= 1)
 {
   # Checks
@@ -22,11 +23,21 @@ vl_GO_clusters <- function(FBgn_list,
   if(!all(grepl("FBgn", unlist(FBgn_list))))
     stop(paste0("Some FBgn_list components are not FBgn IDs"))
   if(length(FBgn_universe)==1)
+  {
     if(FBgn_universe=="all")
-      FBgn_universe <- unique(go_object$FBgn)  
-  
+      FBgn_universe <- unique(go_object$FBgn)
+  }
+  if(length(go_type)!=1)
+    stop("length(go_type)!=1")
+  if(!(go_type %in% c("all", "biological_process", "cellular_component", "molecular_function")))
+     stop("go_type should be one of 'all', 'biological_process', 'cellular_component', 'molecular_function'")
+
   # Restrict GO object to universe
   go_current <- copy(go_object)[FBgn %in% FBgn_universe, .(GO, name, type= unlist(type), FBgn, Symbol)]
+  
+  # Restrict to type
+  if(go_type!="all")
+    go_current <- go_current[type==go_type]
 
   # Compute go and total counts
   go_current[, total_FBgn:= length(FBgn_universe)]
@@ -39,7 +50,7 @@ vl_GO_clusters <- function(FBgn_list,
                        idcol = "cluster_names")
   FBgn_DT[, total_cluster:= .N, cluster_names]
   go_current <- go_current[rep(seq(nrow(go_current)), each= length(FBgn_list))] # Expand N clusters
-  go_current[, cluster_names:= factor(rep(names(FBgn_list), nrow(go_object)))]
+  go_current[, cluster_names:= rep(names(FBgn_list), nrow(go_current)/length(FBgn_list))]
   go_current <- merge(go_current, FBgn_DT, c("cluster_names", "FBgn")) # Keep only lines for which FBgn exist in clusters
   go_current[, go_cluster:= length(unique(FBgn)), .(GO, cluster_names)]
   
@@ -57,25 +68,49 @@ vl_GO_clusters <- function(FBgn_list,
   go_current[, '-log10(padj)':= -log10(p.adjust(pvalue, method = "fdr"))]
   go_current[, log2OR:= log2(estimate)]
   
+  #----------------------------------#
   # Generate plot table
+  #----------------------------------#
   pl <- go_current[`-log10(padj)`>5 & log2OR>0]
+  pl[, cluster_names:= factor(cluster_names, levels = names(FBgn_list)[names(FBgn_list) %in% pl$cluster_names])]
+  # Handle infinite values
   pl[, cor_log2OR:= log2OR]
   pl[log2OR==Inf, cor_log2OR:= max(pl$log2OR[is.finite(pl$log2OR)], na.rm= T)]
+  # Colors
   Cc <- colorRamp2(range(pl$`-log10(padj)`), 
                    colors = c("blue", "red"))
   pl[, col:= Cc(`-log10(padj)`)]
-  pl[, size:= cex*cor+log2OR]
-  pl[, x:= seq(0, 1, length.out = length(unique(pl$cluster_names)))[.GRP], cluster_names]
+  # Size
+  pl[, size:= cex*cor_log2OR]
+  # Y coordinates
   setorderv(pl, 
-            c("cluster_names", "-log10(padj)", "cor+log2OR", "GO"), 
+            c("cluster_names", "-log10(padj)", "cor_log2OR", "GO"), 
             order = c(1, -1, -1, 1))
   pl[, y:= as.numeric(min(.I)), GO]
   pl[, y:= seq(1, 0, length.out = length(unique(pl$GO)))[.GRP], keyby= y]
+  # Add missing cluster names if any
+  missing <- unique(go_current$cluster_names[!go_current$cluster_names %in% pl$cluster_names])
+  if(length(missing)>0)
+  {
+    pl <- rbind(pl[1, .(cluster_names= missing, 
+                        `-log10(padj)`= 0, 
+                        log2OR= 0,
+                        col= "white",
+                        size= 0,
+                        y= 0,
+                        type= go_type), .(GO, name)], 
+                pl, 
+                fill= T) 
+  }
+  # X coordinates
+  pl[, x:= seq(0, 1, length.out = length(unique(pl$cluster_names)))[.GRP], keyby= cluster_names]
   
-  # PLOT init
+  #-----------------------------#
+  # PLOT
+  #-----------------------------#
   par(mai = c(max(strwidth(pl$cluster_names, "inches"))+0.5,
               max(strwidth(pl$name, "inches"))+0.5,
-              0.25,
+              0.5,
               1),
       xaxs= "i",
       yaxs= "i")
@@ -119,21 +154,22 @@ vl_GO_clusters <- function(FBgn_list,
        offset= 0, 
        cex= 0.8)
   ticks <- axisTicks(range(pl$`-log10(padj)`), log= F)
+  at <- 0.8+(ticks-min(pl$`-log10(padj)`))/(max(pl$`-log10(padj)`)-min(pl$`-log10(padj)`))*(0.96-0.8)
   segments(1.125+0.005, 
-           0.8+ticks/max(pl$`-log10(padj)`)*(0.96-0.8), 
+           at,
            1.125+0.01,
-           0.8+ticks/max(pl$`-log10(padj)`)*(0.96-0.8),
+           at,
            xpd= T, 
            lend= 2)
   text(1.125+0.01, 
-       0.8+ticks/max(pl$`-log10(padj)`)*(0.96-0.8),
+       at,
        labels = ticks,
        cex= 0.6,
        offset= 0.1,
        pos= 4,
        xpd= T)
   # Legend balloons
-  scale <- axisTicks(range(pl$size), log= F)
+  scale <- axisTicks(range(pl[!(cluster_names %in% missing), size]), log= F)
   points(rep(1.1, length(scale)),
          seq(0.4, 0.65, length.out = length(scale)), 
          xpd= T,
@@ -158,5 +194,6 @@ vl_GO_clusters <- function(FBgn_list,
   invisible(list(data= go_current, 
                  plot= pl, 
                  legend_ticks= ticks, 
+                 legend_ticks_at= at, 
                  ballon_ticks= scale))
 }
