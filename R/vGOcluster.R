@@ -77,11 +77,13 @@ vl_GO_clusters <- function(FBgn_list,
   pl[, cor_log2OR:= log2OR]
   pl[log2OR==Inf, cor_log2OR:= max(pl$log2OR[is.finite(pl$log2OR)], na.rm= T)]
   # Colors
-  Cc <- colorRamp2(range(pl$`-log10(padj)`), 
+  padj_lims <- range(pl$`-log10(padj)`)
+  Cc <- colorRamp2(padj_lims, 
                    colors = c("blue", "red"))
   pl[, col:= Cc(`-log10(padj)`)]
   # Size
   pl[, size:= cex*cor_log2OR]
+  size_lims <- range(pl$size)
   # Y coordinates
   setorderv(pl, 
             c("cluster_names", "-log10(padj)", "cor_log2OR", "GO"), 
@@ -137,8 +139,8 @@ vl_GO_clusters <- function(FBgn_list,
        labels = unique(pl[, .(name, y)])$name, 
        las= 2)
   # Legend pval
-  rasterImage(matrix(Cc(seq(min(pl$`-log10(padj)`), 
-                            max(pl$`-log10(padj)`), 
+  rasterImage(matrix(Cc(seq(padj_lims[1], 
+                            padj_lims[2], 
                             length.out = 100)), 
                      ncol= 1), 
               xleft = 1.075,
@@ -153,8 +155,8 @@ vl_GO_clusters <- function(FBgn_list,
        xpd= T, 
        offset= 0, 
        cex= 0.8)
-  ticks <- axisTicks(range(pl$`-log10(padj)`), log= F)
-  at <- 0.8+(ticks-min(pl$`-log10(padj)`))/(max(pl$`-log10(padj)`)-min(pl$`-log10(padj)`))*(0.96-0.8)
+  ticks <- axisTicks(padj_lims, log= F)
+  at <- 0.8+(ticks-padj_lims[1])/(padj_lims[2]-padj_lims[1])*(0.96-0.8)
   segments(1.125+0.005, 
            at,
            1.125+0.01,
@@ -169,7 +171,7 @@ vl_GO_clusters <- function(FBgn_list,
        pos= 4,
        xpd= T)
   # Legend balloons
-  scale <- axisTicks(range(pl[!(cluster_names %in% missing), size]), log= F)
+  scale <- axisTicks(size_lims, log= F)
   points(rep(1.1, length(scale)),
          seq(0.4, 0.65, length.out = length(scale)), 
          xpd= T,
