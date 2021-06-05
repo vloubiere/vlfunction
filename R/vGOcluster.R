@@ -63,7 +63,8 @@ vl_GO_clusters <- function(FBgn_list,
                          total_go-go_cluster, # go+ cluster -
                          total_FBgn-total_cluster-total_go+go_cluster), # go- cluster -
                        nrow=2, 
-                       byrow = T))[c("estimate", "p.value")]
+                       byrow = T), 
+                alternative = "greater")[c("estimate", "p.value")]
   }, total_go:go_cluster]
   go_current[, '-log10(padj)':= -log10(p.adjust(pvalue, method = "fdr"))]
   go_current[, log2OR:= log2(estimate)]
