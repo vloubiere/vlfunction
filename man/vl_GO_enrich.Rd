@@ -8,6 +8,7 @@ vl_GO_enrich(
   FBgn_vector,
   go_object = vl_fb_go_table_dm6_FB2020_05,
   FBgn_universe = "all",
+  go_type = "all",
   main = ""
 )
 }

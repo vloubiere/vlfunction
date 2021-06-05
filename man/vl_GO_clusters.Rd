@@ -8,6 +8,7 @@ vl_GO_clusters(
   FBgn_list,
   go_object = vl_fb_go_table_dm6_FB2020_05,
   FBgn_universe = "all",
+  go_type = "all",
   cex = 1
 )
 }
