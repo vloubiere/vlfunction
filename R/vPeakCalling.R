@@ -9,17 +9,12 @@
 #' @param BSgenome BSgenome object used for binning the data
 #' @param collapse_touching_peaks If set to FALSE, return all bins with related padj and OR. Else, returns collapsed reads with max OR and -log10(padj) (Default).
 #' @examples 
-#' ex <- GRanges(c("chr3L", "chr3L", "chr3L", "chr3L", "chr2R"), 
-#' IRanges(c(1000, 2000, 2100, 2200, 2000), 
-#' c(1500, 2099, 2199, 2299, 3000)),
-#' strand= c("+","+","+","-","+"))
-#' vl_collapse_DT_ranges(ex, mingap= 1, stranded= F)
-#' vl_collapse_DT_ranges(ex, mingap= 1, stranded= T)
+#' ChIP_bed <- c("../available_data_dm3/db/bed//GSE119708_ATAC_rep1_uniq.bed", "../available_data_dm3/db/bed//GSE119708_ATAC_rep2_uniq.bed")
+#' peaks <- vl_peakCalling(ChIP_bed)
 #' 
 #' @return Collapse coor data.table
 #' @export
 
-ChIP_bed <- c("../available_data_dm3/db/bed//GSE119708_ATAC_rep1_uniq.bed", "../available_data_dm3/db/bed//GSE119708_ATAC_rep2_uniq.bed")
 vl_peakCalling <- function(ChIP_bed, 
                            Input_bed= NULL, 
                            binsize= 100,
