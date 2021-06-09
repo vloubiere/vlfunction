@@ -27,6 +27,8 @@ vl_computeEnrichment <- function(ChIP_bed,
     Input_bed <- ChIP_bed
   if(length(ChIP_bed)>1 & length(Input_bed)==1)
     Input_bed <- rep(Input_bed, length(ChIP_bed))
+  if(nrow(unique(peaks)) != nrow(peaks))
+    stop("nrow(unique(peaks)) != nrow(peaks), make sure all peaks file lines are unique")
 
   # Count reads ChIP
   .q <- mclapply(ChIP_bed, function(x)
