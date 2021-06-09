@@ -12,7 +12,7 @@
 #' ChIP_bed <- c("../available_data_dm3/db/bed//GSE119708_ATAC_rep1_uniq.bed", "../available_data_dm3/db/bed//GSE119708_ATAC_rep2_uniq.bed")
 #' peaks <- vl_peakCalling(ChIP_bed)
 #' 
-#' @return Collapse coor data.table
+#' @return peaks
 #' @export
 
 vl_peakCalling <- function(ChIP_bed, 
@@ -26,7 +26,11 @@ vl_peakCalling <- function(ChIP_bed,
     stop("genome should be a BSgenome object!")
   if(!length(Input_bed) %in% c(0, 1, length(ChIP_bed)))
     stop("Input_bed should either be set to null (local enrichment) or have a length of 1 (single input) or match ChIP_bed files length!")
-  
+  if(is.null(Input_bed))
+    Input_bed <- ChIP_bed
+  if(length(ChIP_bed)>1 & length(Input_bed)==1)
+    Input_bed <- rep(Input_bed, length(ChIP_bed))
+
   # Small bins
   bins <- as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome)))
   bins <- bins[, .(start = seq(1, end, binsize)), .(seqnames, end, width)]
@@ -35,87 +39,45 @@ vl_peakCalling <- function(ChIP_bed,
   bins <- bins[end - start > 0, .(seqnames, start, end, width)]
   bins[, bins_ID:= .I]
   
-  # Count ChIP reads
-  .q <- mclapply(ChIP_bed, function(x) 
-    {
+  # Count reads
+  .q <- mclapply(c(ChIP_bed, Input_bed), function(x) 
+  {
     .c <- fread(x)
     total_reads <- nrow(.c)
-    .c <- .c[bins, .(bins_ID, .N), 
-             .EACHI, on= c("V1==seqnames", "V2<=end", "V3>=start")]
+    .c <- .c[bins, .(bins_ID, .N), .EACHI, on= c("V1==seqnames", "V2<=end", "V3>=start")]
     return(.c[, .(seqnames= V1, 
                   bins_ID, 
-                  CHIP= N, 
-                  CHIP_total= total_reads)])
+                  counts= N, 
+                  total_counts= total_reads)])
   })
+  names(.q) <- c(paste0("CHIP_", seq(ChIP_bed)), paste0("INPUT_", seq(Input_bed)))
   .q <- rbindlist(.q, idcol = T)
   
-  # Control reads
-  if(is.null(Input_bed))
-  {
-    .i <- .q
-    colnames(.q)[3:4] <- c("CTL", "CTL_total")
-  }else if(length(Input_bed)==length(ChIP_bed))
-  {
-    .i <- mclapply(Input_bed, function(x) 
-    {
-      .c <- fread(x)
-      total_reads <- nrow(.c)
-      .c <- .c[bins, .(bins_ID, .N), 
-               .EACHI, on= c("V1==seqnames", "V2<=end", "V3>=start")]
-      return(.c[, .(seqnames= V1, 
-                    CTL= N, 
-                    CTL_total= total_reads)])
-    })
-    .i <- rbindlist(.i, idcol = T)
-  }else if(length(Input_bed)==1)
-  {
-    .c <- fread(Input_bed)
-    total_reads <- nrow(.c)
-    .c <- .c[bins, .(bins_ID, .N), 
-             .EACHI, on= c("V1==seqnames", "V2<=end", "V3>=start")]
-    .c <- .c[, .(seqnames= V1, 
-                 CTL= N, 
-                 CTL_total= total_reads)]
-    .i <- data.table(.id= rep(seq(ChIP_bed), each= nrow(.c)),
-                     seqnames= rep(.c$seqnames, length(ChIP_bed)),
-                     CTL= rep(.c$CTL, length(ChIP_bed)),
-                     CTL_total= rep(.c$CTL_total, length(ChIP_bed)))
-  }
-  
-  # Compute counts
-  Nbins <- ceiling(round(Nbins_test/2))
-  obj <- split(.q, by= c(".id", "seqnames"))
-  obj <- mclapply(obj, function(x) 
-  {
-    # Compute input slidin window idx
-    x[, input_min_line:= ifelse((.I-Nbins)<1, 1, .I-Nbins)]
-    x[, input_max_line := ifelse((.I+Nbins)>.N, .N, .I+50)]
-    x <- x[rep(seq(nrow(x)), input_max_line-input_min_line+1)]
-    x[, input_lines:= input_min_line:input_max_line, .(input_min_line, input_max_line)]
-    # Compute Input mean count in larger window
-    input <- .i[.id==x$.id[1] & seqnames==x$seqnames[1]]
-    x[, c("CTL", "CTL_total"):= input[input_lines, .(CTL, CTL_total)]]
-    x <- x[, .(CTL= ceiling(mean(CTL))), .(.id, bins_ID, CHIP, CHIP_total, CTL_total)]
-    # Compute pval and OR
-    x[, c("OR", "pval"):= {
-      mat <- matrix(c(CHIP, CHIP_total-CHIP, CTL, CTL_total-CTL), nrow= 2, byrow = T)
-      fisher.test(mat, alternative = "greater")[c("estimate", "p.value")]
-    }, .(CHIP, CHIP_total, CTL, CTL_total)]
-    return(x)
-  })
-  obj <- rbindlist(obj)
+  # Compute Enrichment
+  res <- dcast(.q, bins_ID+seqnames~.id, value.var = list("counts", "total_counts"))
+  mav <- function(x,n){filter(x,rep(1/n,n), sides= 2)} # Rolling average function
+  cols <- grep("^counts_INPUT_", colnames(res), value = T)
+  res[, (cols):= mclapply(.SD, function(x) ceiling(mav(x, Nbins_test+1))), seqnames, .SDcols= cols]
+  res <- melt(na.omit(res), 
+              id.vars = "bins_ID", 
+              measure.vars = patterns("^counts_CHIP", "^counts_INPUT", "^total_counts_CHIP", "^total_counts_INPUT"))
+  res[, c("OR", "pval"):= {
+    mat <- matrix(c(value1, value3-value1, value2, value4-value2), nrow= 2, byrow = T)
+    fisher.test(mat, alternative = "greater")[c("estimate", "p.value")]
+  }, value1:value4]
   
   # Padj cutoff + keep only bins called in all replicates
-  obj[, padj:= p.adjust(pval, method = "fdr")]
-  obj <- obj[padj<0.05, rep:= .N, bins_ID][rep==length(ChIP_bed)]
+  res[, padj:= p.adjust(pval, method = "fdr")]
+  res <- res[padj<0.05, rep:= .N, bins_ID][rep==length(ChIP_bed)]
   
   # Compute mean enrichments and merge
-  peaks <- obj[, .(OR= mean(OR), "-log10(padj)"= mean(-log10(padj))), bins_ID]
+  peaks <- res[, .(OR= mean(OR), "-log10(padj)"= mean(-log10(padj))), bins_ID]
   peaks <- merge(bins, peaks)[, .(seqnames, start, end, OR, `-log10(padj)`)]
   if(collapse_touching_peaks)
   {
     coll <- vl_collapse_DT_ranges(peaks)[, !"strand"]
     peaks <- peaks[coll, .(OR= max(OR), `-log10(padj)`= max(`-log10(padj)`)), .EACHI, on= c("seqnames", "start<=end", "end>=start")]
+    peaks <- cbind(coll, peaks[, .(OR, `-log10(padj)`)])
   }
   return(peaks)
 }

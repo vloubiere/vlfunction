@@ -22,7 +22,7 @@ vl_peakCalling(ChIP_bed, Input_bed = NULL, binsize = 100,
 \item{collapse_touching_peaks}{If set to FALSE, return all bins with related padj and OR. Else, returns collapsed reads with max OR and -log10(padj) (Default).}
 }
 \value{
-Collapse coor data.table
+peaks
 }
 \description{
 Compute peaks from bed files
