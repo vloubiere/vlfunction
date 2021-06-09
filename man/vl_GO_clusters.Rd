@@ -4,13 +4,8 @@
 \alias{vl_GO_clusters}
 \title{GO analysis}
 \usage{
-vl_GO_clusters(
-  FBgn_list,
-  go_object = vl_fb_go_table_dm6_FB2020_05,
-  FBgn_universe = "all",
-  go_type = "all",
-  cex = 1
-)
+vl_GO_clusters(FBgn_list, go_object = vl_fb_go_table_dm6_FB2020_05,
+  FBgn_universe = "all", go_type = "all", cex = 1)
 }
 \arguments{
 \item{FBgn_list}{A nameds list of FBgn IDs (1 sublist/cluster)}
