@@ -209,7 +209,7 @@ vl_screenshot <- function(bed,
          xpd= T)
 
     # add symbols
-    .g[!is.na(SYMBOL),
+    .g[!is.na(SYMBOL) & !is.na(x),
        {
          if(diff(range(x))>=ncol(gim)/25)
             text(mean(range(x))/ncol(gim),
