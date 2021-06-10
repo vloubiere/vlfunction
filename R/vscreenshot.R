@@ -192,31 +192,32 @@ vl_screenshot <- function(bed,
   #--------------------------#
   # PLOT genes -> plotting it after allows constant tracks/gene band ratio
   #--------------------------#
-  if(nrow(.g)>0)
-  {
-    empty <- data.table::CJ(x= seq(max(q$x))[!seq(max(q$x)) %in% .g$x], y= unique(.g$y))
-    empty[, value:= "white"]
-    gres <- base::rbind(.g, empty, fill= T)
-    gim <- as.matrix(data.table::dcast(gres, y~x, value.var = "value"), 1)
-    gim[1,] <- NA # Important to see bottom line of the last track
-    rasterImage(gim, 0, 0, 1, gband, interpolate = F)
-
-    # Add gene label
-    text(0,
-         gband/2,
-         labels = "Genes",
-         pos= 2,
-         xpd= T)
-
-    # add symbols
-    .g[!is.na(SYMBOL) & !is.na(x),
-       {
-         if(diff(range(x))>=ncol(gim)/25)
-            text(mean(range(x))/ncol(gim),
-                 1-(min(y)+3)/nrow(gim)*gband-(1-gband),
-                 SYMBOL[1],
-                 cex= 0.8)
-       }, .(TXNAME, region_ID)]
-  }
+  if(exists(".g"))
+    if(nrow(.g)>0)
+    {
+      empty <- data.table::CJ(x= seq(max(q$x))[!seq(max(q$x)) %in% .g$x], y= unique(.g$y))
+      empty[, value:= "white"]
+      gres <- base::rbind(.g, empty, fill= T)
+      gim <- as.matrix(data.table::dcast(gres, y~x, value.var = "value"), 1)
+      gim[1,] <- NA # Important to see bottom line of the last track
+      rasterImage(gim, 0, 0, 1, gband, interpolate = F)
+      
+      # Add gene label
+      text(0,
+           gband/2,
+           labels = "Genes",
+           pos= 2,
+           xpd= T)
+      
+      # add symbols
+      .g[!is.na(SYMBOL) & !is.na(x),
+         {
+           if(diff(range(x))>=ncol(gim)/25)
+             text(mean(range(x))/ncol(gim),
+                  1-(min(y)+3)/nrow(gim)*gband-(1-gband),
+                  SYMBOL[1],
+                  cex= 0.8)
+         }, .(TXNAME, region_ID)]
+    }
 }
 

@@ -8,6 +8,7 @@
 #' @param Nbins_test Number of INPUT bins used to average INPUT signal and perform Fishwer
 #' @param BSgenome BSgenome object used for binning the data
 #' @param collapse_touching_peaks If set to FALSE, return all bins with related padj and OR. Else, returns collapsed reads with max OR and -log10(padj) (Default).
+#' @param cutoff_input_counts minimum number of input reads for the bin to be considered for testing. default= 5
 #' @examples 
 #' ChIP_bed <- c("../available_data_dm3/db/bed//GSE119708_ATAC_rep1_uniq.bed", "../available_data_dm3/db/bed//GSE119708_ATAC_rep2_uniq.bed")
 #' peaks <- vl_peakCalling(ChIP_bed)
@@ -20,7 +21,8 @@ vl_peakCalling <- function(ChIP_bed,
                            binsize= 100,
                            Nbins_test= 100,
                            BSgenome= BSgenome.Dmelanogaster.UCSC.dm3,
-                           collapse_touching_peaks= T)
+                           collapse_touching_peaks= T,
+                           cutoff_input_counts= 5)
 {
   if (!class(BSgenome) == "BSgenome") 
     stop("genome should be a BSgenome object!")
@@ -61,6 +63,8 @@ vl_peakCalling <- function(ChIP_bed,
   res <- melt(na.omit(res), 
               id.vars = "bins_ID", 
               measure.vars = patterns("^counts_CHIP", "^counts_INPUT", "^total_counts_CHIP", "^total_counts_INPUT"))
+  # Cutoff minimum number input reads
+  res <- res[value2>cutoff_input_counts]
   res[, c("OR", "pval"):= {
     mat <- matrix(c(value1, value3-value1, value2, value4-value2), nrow= 2, byrow = T)
     fisher.test(mat, alternative = "greater")[c("estimate", "p.value")]
