@@ -41,7 +41,9 @@ vl_peakCalling <- function(ChIP_bed,
   bins <- bins[end - start > 0, .(seqnames, start, end, width)]
   bins[, bins_ID:= .I]
   
+  #----------------------#
   # Count reads
+  #----------------------#
   .q <- mclapply(c(ChIP_bed, Input_bed), function(x) 
   {
     .c <- fread(x)
@@ -55,16 +57,22 @@ vl_peakCalling <- function(ChIP_bed,
   names(.q) <- c(paste0("CHIP_", seq(ChIP_bed)), paste0("INPUT_", seq(Input_bed)))
   .q <- rbindlist(.q, idcol = T)
   
+  #----------------------#
   # Compute Enrichment
+  #----------------------#
   res <- dcast(.q, bins_ID+seqnames~.id, value.var = list("counts", "total_counts"))
   mav <- function(x,n){filter(x,rep(1/n,n), sides= 2)} # Rolling average function
   cols <- grep("^counts_INPUT_", colnames(res), value = T)
+  # Cutoff minimum number input reads (all bins within +/- 5)
+  res[, check_input:= { 
+    check <- c(rep(0, 5), rowSums(.SD), rep(0, 5))
+    rowSums(sapply(1:10, function(x) check[x:(x+.N-1)]))>=(10*cutoff_input_counts)
+  }, .SDcols= patterns("^counts_INPUT")] 
   res[, (cols):= mclapply(.SD, function(x) ceiling(mav(x, Nbins_test+1))), seqnames, .SDcols= cols]
+  res <- res[(check_input), !"check_input"] # Apply input cutoff check
   res <- melt(na.omit(res), 
               id.vars = "bins_ID", 
               measure.vars = patterns("^counts_CHIP", "^counts_INPUT", "^total_counts_CHIP", "^total_counts_INPUT"))
-  # Cutoff minimum number input reads
-  res <- res[value2>cutoff_input_counts]
   res[, c("OR", "pval"):= {
     mat <- matrix(c(value1, value3-value1, value2, value4-value2), nrow= 2, byrow = T)
     fisher.test(mat, alternative = "greater")[c("estimate", "p.value")]
@@ -77,11 +85,14 @@ vl_peakCalling <- function(ChIP_bed,
   # Compute mean enrichments and merge
   peaks <- res[, .(OR= mean(OR), "-log10(padj)"= mean(-log10(padj))), bins_ID]
   peaks <- merge(bins, peaks)[, .(seqnames, start, end, OR, `-log10(padj)`)]
+  peaks[, center:= round(rowMeans(.SD)), .SDcols= c("start", "end")]
   if(collapse_touching_peaks)
   {
     coll <- vl_collapse_DT_ranges(peaks)[, !"strand"]
-    peaks <- peaks[coll, .(OR= max(OR), `-log10(padj)`= max(`-log10(padj)`)), .EACHI, on= c("seqnames", "start<=end", "end>=start")]
-    peaks <- cbind(coll, peaks[, .(OR, `-log10(padj)`)])
+    peaks <- peaks[coll, .(OR= max(OR), 
+                           `-log10(padj)`= max(`-log10(padj)`), 
+                           max_coor= center[which.max(OR)]), .EACHI, on= c("seqnames", "start<=end", "end>=start")]
+    peaks <- cbind(coll, peaks[, .(OR, `-log10(padj)`, max_coor)])
   }
   return(peaks)
 }
