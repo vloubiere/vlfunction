@@ -57,7 +57,6 @@ vl_Rsub_singularity <- function(R_script, args_v= NULL)
 
 #' Wrap commands to send to bash on windows
 #' @export
-
 vl_bash_wrap_windows <- function(cmd)
 {
   cmd <- paste("bash -c \"", cmd, "\"")  

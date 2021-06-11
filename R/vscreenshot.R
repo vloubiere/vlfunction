@@ -169,12 +169,17 @@ vl_screenshot <- function(bed,
   im <- as.matrix(data.table::dcast(res, y~x, value.var = "value"), 1)
 
   # image
-  par(xaxs= "i", yaxs= "i")
+  par(xaxs= "i", 
+      yaxs= "i",
+      mai= c(0.25,
+             max(strwidth(unique(res$name), units = "inches"))+0.25,
+             0.25,
+             0.25))
   plot.new()
   rasterImage(im, 0, 0+gband, 1, 1, interpolate = F)
 
   # add labels
-  adj <- (1-gband)/length(tracks)/15
+  adj <- 0.6*strheight("", cex = 0.6)
   res[!is.na(feature_ID),
       {
         lab_y <- 1-mean(range(y))/nrow(im)
