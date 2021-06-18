@@ -15,6 +15,5 @@ vl_oligo_Tm <- function(seq)
 
   Tm <- 2*(sum(current[c("A", "T"), N]))+4*(sum(current[c("G", "C"), N]))-7
   GC <- round(sum(current[c("G", "C"), N])/sum(current$N)*100, 1)
-  print(paste0("Tm= ", Tm, "°C"))
-  print(paste0("%GC= ", GC, "%"))
+  return(list(Tm= Tm, 'GC%'= GC))
 }
