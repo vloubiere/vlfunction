@@ -81,3 +81,24 @@
 #' 
 #' @source {"../../vlfunction/data/vl_fb_go_table_dm6_FB2020_05.RData"}
 "vl_fb_go_table_dm6_FB2020_05"
+
+#' Thermofisher enzymes
+#'
+#' Contains cutting sites for most commercial enzymes
+#'
+#' @usage Can be used with vl_digest. see ?vl_digest()
+#' 
+#' @format A table containing thermofisher enzymes and related info
+#' \describe{
+#'   \item{name1}{enzyme name}
+#'   \item{name2}{Alternative names}
+#'   \item{fastdigest}{FastDigest?}
+#'   \item{buffer}{Buffer to be used}
+#'   \item{temperature}{Temeprature for digest}
+#'   \item{cutsite}{cutsite pattern}
+#'   \item{consensus_F}{consensu motif}
+#'   ...
+#' }
+#' 
+#' @source {"https://www.thermofisher.com/at/en/home/brands/thermo-scientific/molecular-biology/thermo-scientific-restriction-modifying-enzymes/restriction-enzymes-thermo-scientific/conventional-restriction-enzymes-thermo-scientific.html"}
+"vl_thermofisher_restriction_enzymes_table"
