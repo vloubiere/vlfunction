@@ -4,12 +4,14 @@
 \alias{vl_digest}
 \title{Digest sequence}
 \usage{
-vl_digest(seq, enzyme)
+vl_digest(seq, enzyme, keepsite = F)
 }
 \arguments{
 \item{seq}{character sequence to digest}
 
 \item{enzyme}{Character vector containing the enzymes to use}
+
+\item{keepsite}{If TRUE, then the enzymmatic consensu will be paste at cutting sites}
 }
 \value{
 A vector containing the digested pieces

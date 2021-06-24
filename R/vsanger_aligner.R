@@ -85,14 +85,21 @@ vl_sanger_align <- function(refseq,
   #-----------------------####
   # Plot figure
   #-----------------------####
-  par(xaxs= "i", yaxs= "i")
+  par(xaxs= "i", 
+      yaxs= "i", 
+      mai= c(0.5, max(strwidth(colnames(mat), units = "inches"))+0.5, 0.5, 0.5))
   plot.new()
   rasterImage(t(mat), 0, 0, 1, 1, interpolate = F)
   abline(h= seq(0, 1, length.out= ncol(mat)+1))
   box()
-  y <- seq(1, 0, length.out= ncol(mat)*2+1)
+  y <- seq(1, 
+           0, 
+           length.out= ncol(mat)*2+1)
   y <- y[(seq(y) %% 2)==0]
-  axis(side = 2, at = y, labels = colnames(mat), las= 1)
+  axis(side = 2, 
+       at = y, 
+       labels = colnames(mat), 
+       las= 1)
   
   #-----------------------####
   # Add features
