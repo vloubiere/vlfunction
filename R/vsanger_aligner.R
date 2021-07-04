@@ -44,6 +44,8 @@ vl_sanger_align <- function(refseq,
     stop("revcomp vector length should match the length of provided abfiles")
   if(!is.null(feat_sequences))
   {
+    if(any(is.na(feat_sequences)))
+      stop("Some feat sequences are NAs -> stop")
     if(is.null(feat_names))
       feat_names <- paste0("feat_", seq(feat_sequences))
     if(length(feat_names) != length(feat_sequences))
