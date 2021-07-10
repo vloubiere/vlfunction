@@ -204,7 +204,7 @@ vl_heatmap <- function(mat,
     par(mai= c(max(strwidth(DT$row, "inches"))+0.5,
                max(strwidth(DT$col, "inches"))+0.5,
                0.5,
-               1.5)
+               1.5))
   plot.new()
   rasterImage(im,
               xleft = 0,
