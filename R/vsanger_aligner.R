@@ -89,7 +89,7 @@ vl_sanger_align <- function(refseq,
   #-----------------------####
   par(xaxs= "i", 
       yaxs= "i", 
-      mai= c(0.5, max(strwidth(colnames(mat), units = "inches"))+0.5, 0.5, 0.5))
+      mai= c(0.5, max(strwidth(colnames(mat), units = "inches"))+0.5, 1, 0.5))
   plot.new()
   rasterImage(t(mat), 0, 0, 1, 1, interpolate = F)
   abline(h= seq(0, 1, length.out= ncol(mat)+1))
