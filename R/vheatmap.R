@@ -200,6 +200,11 @@ vl_heatmap <- function(mat,
   #------------------------####
   # Image
   im <- as.matrix(data.table::dcast(DT, y~x, value.var = "Cc"), 1)
+  if(identical(c(5.1, 4.1, 4.1, 2.1), par("mar")))
+    par(mai= c(max(strwidth(DT$row, "inches"))+0.5,
+               max(strwidth(DT$col, "inches"))+0.5,
+               0.5,
+               1.5)
   plot.new()
   rasterImage(im,
               xleft = 0,
