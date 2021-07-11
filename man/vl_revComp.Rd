@@ -4,7 +4,7 @@
 \alias{vl_revComp}
 \title{reverseComplement}
 \usage{
-vl_revComp(DNA_char)
+vl_revComp(DNA_char, complement = T, reverse = T)
 }
 \arguments{
 \item{DNA_char}{DNA character string}

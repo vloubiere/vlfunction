@@ -4,6 +4,7 @@
 #'
 #' @param fq1 fastq file path (read1)
 #' @param fq2 fastq file path (read2). Default is null -> fq1 treated as single end!
+#' @param chrom_sizes data.table containing "seqnames" and "seqlengths" columns. 
 #' @param basename_prefix prefix to add at the beginning of all output files
 #' @param Rsubread_index_prefix Rsubread index to use for alignment. Attached seqnames and seqlenths will be used.
 #' @param bam_folder Folder for output bam files.
@@ -113,7 +114,7 @@ vl_ChIP_pipeline <- function(fq1,
   print("Export bed!")
   reads <- GRanges(reads)
   rtracklayer::export.bed(reads, 
-                          gsub(".bam$", "_uniq.bed", output))
+                          gsub(".bam$|.sam$", "_uniq.bed", output))
   # Generate and export bw
   print("Generate bw!")
   total_reads <- length(reads)

@@ -14,6 +14,8 @@ vl_ChIP_pipeline(fq1, fq2 = NULL, chrom_sizes, basename_prefix = "",
 
 \item{fq2}{fastq file path (read2). Default is null -> fq1 treated as single end!}
 
+\item{chrom_sizes}{data.table containing "seqnames" and "seqlengths" columns.}
+
 \item{basename_prefix}{prefix to add at the beginning of all output files}
 
 \item{Rsubread_index_prefix}{Rsubread index to use for alignment. Attached seqnames and seqlenths will be used.}
