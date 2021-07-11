@@ -6,7 +6,8 @@
 \usage{
 vl_peakCalling(ChIP_bed, Input_bed = NULL, binsize = 100,
   Nbins_test = 100, BSgenome = BSgenome.Dmelanogaster.UCSC.dm3,
-  collapse_touching_peaks = T, cutoff_input_counts = 5)
+  collapse_touching_peaks = T, min_N_replicates = length(ChIP_bed),
+  cutoff_input_counts = 5)
 }
 \arguments{
 \item{ChIP_bed}{Vector of CHIP bed files path}
@@ -20,6 +21,8 @@ vl_peakCalling(ChIP_bed, Input_bed = NULL, binsize = 100,
 \item{BSgenome}{BSgenome object used for binning the data}
 
 \item{collapse_touching_peaks}{If set to FALSE, return all bins with related padj and OR. Else, returns collapsed reads with max OR and -log10(padj) (Default).}
+
+\item{min_N_replicates}{minimum number of replicates required to retain peak. Default= all replicates}
 
 \item{cutoff_input_counts}{minimum number of input reads for the bin to be considered for testing. default= 5}
 }
