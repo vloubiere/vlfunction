@@ -8,6 +8,7 @@
 #' @param Nbins_test Number of INPUT bins used to average INPUT signal and perform Fishwer
 #' @param BSgenome BSgenome object used for binning the data
 #' @param collapse_touching_peaks If set to FALSE, return all bins with related padj and OR. Else, returns collapsed reads with max OR and -log10(padj) (Default).
+#' @param min_N_replicates minimum number of replicates required to retain peak. Default= all replicates
 #' @param cutoff_input_counts minimum number of input reads for the bin to be considered for testing. default= 5
 #' @examples 
 #' ChIP_bed <- c("../available_data_dm3/db/bed//GSE119708_ATAC_rep1_uniq.bed", "../available_data_dm3/db/bed//GSE119708_ATAC_rep2_uniq.bed")
@@ -22,6 +23,7 @@ vl_peakCalling <- function(ChIP_bed,
                            Nbins_test= 100,
                            BSgenome= BSgenome.Dmelanogaster.UCSC.dm3,
                            collapse_touching_peaks= T,
+                           min_N_replicates= length(ChIP_bed),
                            cutoff_input_counts= 5)
 {
   if (!class(BSgenome) == "BSgenome") 
@@ -78,9 +80,9 @@ vl_peakCalling <- function(ChIP_bed,
     fisher.test(mat, alternative = "greater")[c("estimate", "p.value")]
   }, value1:value4]
   
-  # Padj cutoff + keep only bins called in all replicates
+  # Padj cutoff + keep only bins called in X replicates
   res[, padj:= p.adjust(pval, method = "fdr")]
-  res <- res[padj<0.05, rep:= .N, bins_ID][rep==length(ChIP_bed)]
+  res <- res[padj<0.05, rep:= .N, bins_ID][rep==min_N_replicates]
   
   # Compute mean enrichments and merge
   peaks <- res[, .(OR= mean(OR), "-log10(padj)"= mean(-log10(padj))), bins_ID]
