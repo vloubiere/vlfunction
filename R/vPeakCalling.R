@@ -86,7 +86,7 @@ vl_peakCalling <- function(ChIP_bed,
   
   # Padj cutoff + keep only bins called in X replicates
   res[, padj:= p.adjust(pval, method = "fdr")]
-  res <- res[padj<0.05, rep:= .N, bins_ID][rep==min_N_replicates]
+  res <- res[padj<0.05, rep:= .N, bins_ID][rep>=min_N_replicates]
   
   # Compute mean enrichments and merge
   peaks <- res[, .(OR= mean(OR), "-log10(padj)"= mean(-log10(padj))), bins_ID]

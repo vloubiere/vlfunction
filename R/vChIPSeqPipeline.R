@@ -49,9 +49,11 @@ vl_ChIP_pipeline <- function(fq1,
     stop("chrom sizes must be a data.table object")
   if(!all(c("seqnames", "seqlengths") %in% colnames(chrom_sizes)))
      stop("chrom sizes data.table object should contain seqnames and seqlengths columns!")
+  if(any(!grepl(".fq$|.fastq$|.fq.gz$|.fastq.gz$", fq1)))
+    stop("Unsupported fq extension. Supported: fq|fastq|fq.gz|fastq.gz")
      
   # Compute output name
-  .bn <- strsplit(basename(fq1), "[.]")[[1]][1]
+  .bn <- gsub(".fq$|.fastq$|.fq.gz$|.fastq.gz$", "", basename(fq1))
   output <- paste0(bam_folder, basename_prefix, .bn, ifelse(use_samtools,".bam", ".sam"))
   # Alignment
   print("START alignment!")
