@@ -63,13 +63,17 @@ vl_peakCalling <- function(ChIP_bed,
   # Compute Enrichment
   #----------------------#
   res <- dcast(.q, bins_ID+seqnames~.id, value.var = list("counts", "total_counts"))
-  mav <- function(x,n){filter(x,rep(1/n,n), sides= 2)} # Rolling average function
+  mav <- function(x,n){stats::filter(x,rep(1/n,n), sides= 2)} # Rolling average function
   cols <- grep("^counts_INPUT_", colnames(res), value = T)
   # Cutoff minimum number input reads (all bins within +/- 5)
   res[, check_input:= { 
     check <- c(rep(0, 5), rowSums(.SD), rep(0, 5))
     rowSums(sapply(1:10, function(x) check[x:(x+.N-1)]))>=(10*cutoff_input_counts)
   }, .SDcols= patterns("^counts_INPUT")] 
+  # Remove scaffolds smaller than Nbins_test
+  selChr <- res[, .N, seqnames][N>Nbins_test+1, seqnames]
+  res <- res[seqnames %in% selChr]
+  # Rolling average
   res[, (cols):= mclapply(.SD, function(x) ceiling(mav(x, Nbins_test+1))), seqnames, .SDcols= cols]
   res <- res[(check_input), !"check_input"] # Apply input cutoff check
   res <- melt(na.omit(res), 
