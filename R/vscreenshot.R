@@ -37,6 +37,7 @@ vl_screenshot <- function(bed,
                           highlight_col= "lightgrey",
                           names= NULL,
                           max= NULL,
+                          strand= NULL,
                           col= NULL,
                           n_genes= 4,
                           gband= 0.1)
@@ -63,7 +64,9 @@ vl_screenshot <- function(bed,
     stop("Colors vector length should be the same as bw files vector length(", length(tracks), ")")
   if(!is.null(max) & length(max) != length(tracks))
     stop("max vector length should be the same as bw files vector length(", length(tracks), ")")
-
+  if(!is.null(strand) & length(strand) != length(tracks))
+    stop("strand vector length should be the same as bw files vector length(", length(tracks), ")")
+  
   #--------------------------#
   # Binning bed file
   #--------------------------#
@@ -109,8 +112,15 @@ vl_screenshot <- function(bed,
        on= c("seqnames", "start<=end", "end>=start")]
   })
   q <- data.table::rbindlist(q, idcol = "feature_ID")
+  # Change strand to tune plotting direction
+  if(is.null(strand))
+    u_strand <- unique(q[, .(feature_ID, strand)])[, strand] else
+      u_strand <- strand
+  q[, strand:= u_strand[.GRP], feature_ID]
+  # Name and colors
   q[, name:= names[.GRP], feature_ID]
   q[, col:= col[.GRP], feature_ID]
+  # Max
   if(is.null(max))
     q[, max:= max(abs(c(0, score)), na.rm= T), feature_ID] else
       q[, max:= max[.GRP], feature_ID]
@@ -128,13 +138,20 @@ vl_screenshot <- function(bed,
   if(nrow(.t)>0)
   {
     .t <- .t[, .(GENEID= as.character(unlist(GENEID))), seqnames:TXNAME]
-    .t[, SYMBOL:= AnnotationDbi::mapIds(org.Dm.eg.db::org.Dm.eg.db,
-                                        key= GENEID,
-                                        column="SYMBOL",
-                                        keytype="FLYBASE",
-                                        multiVals="first")]
+    # Try to find symbols
+    .symbols <- try(AnnotationDbi::mapIds(org.Dm.eg.db::org.Dm.eg.db,
+                                          key= as.character(.t$GENEID),
+                                          column= "SYMBOL",
+                                          keytype= "FLYBASE",
+                                          multiVals= "first"), silent = T)
+    # Fix error when no symbols can be ma[apped
+    if(class(.symbols)=="try-error")
+      .symbols <- .t$GENEID
+    # Add symbols/FBgn
+    .t[, SYMBOL:= .symbols]
     .t[is.na(SYMBOL), SYMBOL:= GENEID]
     data.table::setkeyv(.t, c("seqnames", "start", "end"))
+    # Object
     .g <- data.table::foverlaps(.t, bins)
     .g[, width:= as.integer(ifelse(i.end>max(end), max(end), i.end)- # Correct width
                             ifelse(i.start<min(start), min(start), i.start)+1), region_ID]
@@ -169,12 +186,13 @@ vl_screenshot <- function(bed,
   im <- as.matrix(data.table::dcast(res, y~x, value.var = "value"), 1)
 
   # image
-  par(xaxs= "i", 
-      yaxs= "i",
-      mai= c(0.25,
-             max(strwidth(unique(res$name), units = "inches"))+0.25,
-             0.25,
-             0.25))
+  if(identical(par("mar"), c(5.1, 4.1, 4.1, 2.1)))
+    par(xaxs= "i", 
+        yaxs= "i",
+        mai= c(0.25,
+               max(strwidth(unique(res$name), units = "inches"))+0.25,
+               0.25,
+               0.25))
   plot.new()
   rasterImage(im, 0, 0+gband, 1, 1, interpolate = F)
 
