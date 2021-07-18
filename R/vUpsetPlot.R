@@ -8,7 +8,7 @@
 #' test <- list(A= 1:1000, B= 1:1500, C= 1000:1750)
 #' vl_upset_plot(test)
 #' @export
-#' 
+
 vl_upset_plot <- function(dat_list, ylab= "Intersection size")
 {
   if(is.null(names(dat_list)))
