@@ -6,7 +6,7 @@
 \usage{
 vl_screenshot(bed, tracks, highlight_regions = NULL,
   highlight_col = "lightgrey", names = NULL, max = NULL,
-  col = NULL, n_genes = 4, gband = 0.1)
+  strand = NULL, col = NULL, n_genes = 4, gband = 0.1)
 }
 \arguments{
 \item{bed}{Regions to plot. Can be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns"}

@@ -48,7 +48,7 @@ vl_boxplot <- function(x,
     response <- attr(attr(mf, "terms"), "response")
     x <- split(mf[[response]], mf[-response])
   }
-  if(is.matrix(x) | is.data.frame(x) | is.vector(x))
+  if(is.matrix(x) | is.data.frame(x) | is.numeric(x))
   {
     dat <- data.table::as.data.table(x)
     dat <- data.table::melt.data.table(dat, measure.vars = colnames(dat))
