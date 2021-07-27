@@ -18,10 +18,10 @@ vl_model_equation <- function(model, ...) {
                                          model_coeff_sign == 0 ~ " + ")
   model_eqn <- paste(strsplit(as.character(model$call$formula), "~")[[2]], # 'y'
                      "=",
-                     paste(if_else(model_coeff[1]<0, "- ", ""),
-                           do.call(format, format_args)[1],
+                     paste(dplyr::if_else(model_coeff[1]<0, "- ", ""),
+                           do.call(formatC, format_args)[1],
                            paste(model_coeff_prefix[-1],
-                                 do.call(format, format_args)[-1],
+                                 do.call(formatC, format_args)[-1],
                                  " * ",
                                  names(model_coeff[-1]),
                                  sep = "", collapse = ""),
