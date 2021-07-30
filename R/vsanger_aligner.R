@@ -53,7 +53,11 @@ vl_sanger_align <- function(refseq,
     if(length(feat_names) != length(feat_sequences))
       stop("length feat names should match the length of feat seqauences")
     if(is.null(feat_cols))
-      feat_cols <- colorRamps::matlab.like2(length(feat_sequences))
+    {
+      if(length(feat_sequences)==1)
+        feat_cols <- "black" else
+          feat_cols <- colorRamps::matlab.like2(length(feat_sequences))
+    }
     if(length(feat_cols) != length(feat_sequences))
       stop("length feat colors should match the length of feat seqauences")
   }
@@ -116,6 +120,7 @@ vl_sanger_align <- function(refseq,
       # Add forward feature
       .c <- data.table::as.data.table(Biostrings::matchPattern(Biostrings::DNAString(seq),
                                                                subject = refseq, 
+                                                               with.indels= T,
                                                                max.mismatch = feat_mismatches)@ranges)
       if(nrow(.c)>0)
       {
@@ -129,7 +134,8 @@ vl_sanger_align <- function(refseq,
       }
       # Add reverse feature  
       .c <- data.table::as.data.table(Biostrings::matchPattern(Biostrings::reverseComplement(Biostrings::DNAString(seq)),
-                                                               subject = refseq, 
+                                                               subject = refseq,
+                                                               with.indels= T,
                                                                max.mismatch = feat_mismatches)@ranges)
       if(nrow(.c)>0)
       {
