@@ -5,6 +5,7 @@
 #' @param refseq A character string corresponding to the reference sequence
 #' @param abfiles Paths to abfiles to analyse
 #' @param revcomp Boolean value specifying if the sequence shoul be reversed before alignment to the refseq
+#' @param feat_mismatches Number of mismatches allowed to align features
 #' @param feat_sequences additional feature sequences to plot on top of the matrix
 #' @param feat_names Names of additional feature sequences
 #' @param feat_cols Colors to use to plot additional feature sequences
@@ -27,7 +28,8 @@
 
 vl_sanger_align <- function(refseq, 
                             abfiles, 
-                            revcomp= NULL, 
+                            revcomp= NULL,
+                            feat_mismatches= 0, 
                             feat_sequences= NULL,
                             feat_names= NULL,
                             feat_cols= NULL)
@@ -79,9 +81,7 @@ vl_sanger_align <- function(refseq,
   mat <- as.matrix(align, 1)
   mat[mat=="-"] <- "white"
   for(i in 2:ncol(mat))
-  {
     mat[mat[, i] != "white", i] <- ifelse(mat[mat[, i] != "white", i]==mat[mat[, i] != "white", 1], "blue", "red")
-  }
   mat[mat[, 1]!="white",1] <- apply(mat[mat[, 1]!="white",], 1, function(x) ifelse(any(x=="blue"), "blue", "red"))
   
   #-----------------------####
@@ -115,7 +115,8 @@ vl_sanger_align <- function(refseq,
     feat[, {
       # Add forward feature
       .c <- data.table::as.data.table(Biostrings::matchPattern(Biostrings::DNAString(seq),
-                                                               subject = refseq)@ranges)
+                                                               subject = refseq, 
+                                                               max.mismatch = feat_mismatches)@ranges)
       if(nrow(.c)>0)
       {
         arrows(.c$start/nrow(mat), 1.1, 
@@ -128,7 +129,8 @@ vl_sanger_align <- function(refseq,
       }
       # Add reverse feature  
       .c <- data.table::as.data.table(Biostrings::matchPattern(Biostrings::reverseComplement(Biostrings::DNAString(seq)),
-                                                               subject = refseq)@ranges)
+                                                               subject = refseq, 
+                                                               max.mismatch = feat_mismatches)@ranges)
       if(nrow(.c)>0)
       {
         arrows(.c$start/nrow(mat), 1.1, 
