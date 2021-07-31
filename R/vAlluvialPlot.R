@@ -19,7 +19,7 @@
 
 
 vl_alluvial_plot <- function(dat,
-                             col= c("tomato", "lightgrey", "cornflowerblue"),
+                             col= c("cornflowerblue", "lightgrey", "tomato"),
                              connectionColDT= NULL)
 {
   # Build connections color table
