@@ -4,8 +4,13 @@
 \alias{vl_computeEnrichment}
 \title{Compyte enrichment}
 \usage{
-vl_computeEnrichment(ChIP_bed, Input_bed = NULL, peaks,
-  ext_peaks = 10000, BSgenome = BSgenome.Dmelanogaster.UCSC.dm3)
+vl_computeEnrichment(
+  ChIP_bed,
+  Input_bed = NULL,
+  peaks,
+  ext_peaks = 10000,
+  BSgenome = BSgenome.Dmelanogaster.UCSC.dm3
+)
 }
 \arguments{
 \item{ChIP_bed}{Vector of CHIP bed files path}
