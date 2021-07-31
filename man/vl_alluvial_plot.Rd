@@ -6,7 +6,7 @@
 \usage{
 vl_alluvial_plot(
   dat,
-  col = c("tomato", "lightgrey", "cornflowerblue"),
+  col = c("cornflowerblue", "lightgrey", "tomato"),
   connectionColDT = NULL
 )
 }

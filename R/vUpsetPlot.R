@@ -4,12 +4,15 @@
 #'
 #' @param dat_list List containing the names to intersect (see examples)
 #' @param ylab Ylab main barplot
+#' @param intersection_cutoff min cutoff for selections to be shown
 #' @examples 
 #' test <- list(A= 1:1000, B= 1:1500, C= 1000:1750)
 #' vl_upset_plot(test)
 #' @export
 
-vl_upset_plot <- function(dat_list, ylab= "Intersection size")
+vl_upset_plot <- function(dat_list, 
+                          ylab= "Intersection size",
+                          intersection_cutoff= 0)
 {
   if(is.null(names(dat_list)))
     stop("The list should be named!")
@@ -36,6 +39,7 @@ vl_upset_plot <- function(dat_list, ylab= "Intersection size")
   colnames(dat)[2] <- "intersect"
   dat <- dat[, .(.id= paste(.id, collapse = "|")), intersect]
   dat <- dat[, .(N= .N), .id]
+  dat <- dat[N>=intersection_cutoff]
   setorderv(dat, "N", -1)
   width <- 0.9/nrow(dat)
   space <- 0.1/nrow(dat)
