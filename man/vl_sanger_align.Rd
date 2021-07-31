@@ -4,8 +4,8 @@
 \alias{vl_sanger_align}
 \title{Aligns sanger ab files to a refseq}
 \usage{
-vl_sanger_align(refseq, abfiles, revcomp = NULL, feat_sequences = NULL,
-  feat_names = NULL, feat_cols = NULL)
+vl_sanger_align(refseq, abfiles, revcomp = NULL, feat_mismatches = 0,
+  feat_sequences = NULL, feat_names = NULL, feat_cols = NULL)
 }
 \arguments{
 \item{refseq}{A character string corresponding to the reference sequence}
@@ -13,6 +13,8 @@ vl_sanger_align(refseq, abfiles, revcomp = NULL, feat_sequences = NULL,
 \item{abfiles}{Paths to abfiles to analyse}
 
 \item{revcomp}{Boolean value specifying if the sequence shoul be reversed before alignment to the refseq}
+
+\item{feat_mismatches}{Number of mismatches allowed to align features}
 
 \item{feat_sequences}{additional feature sequences to plot on top of the matrix}
 

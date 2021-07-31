@@ -197,7 +197,7 @@ vl_screenshot <- function(bed,
   rasterImage(im, 0, 0+gband, 1, 1, interpolate = F)
 
   # add labels
-  adj <- 0.6*strheight("", cex = 0.6)
+  adj <- 1*strheight("", cex = 0.6)
   res[!is.na(feature_ID),
       {
         lab_y <- 1-mean(range(y))/nrow(im)
