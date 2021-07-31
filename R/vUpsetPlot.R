@@ -70,7 +70,8 @@ vl_upset_plot <- function(dat_list,
        at= at,
        labels= NA,
        line = 0.5,
-       tcl= -0.1)
+       tcl= -0.1,
+       xpd= T)
   mtext(text = ticks,
         at= at,
         side= 2,
@@ -78,9 +79,7 @@ vl_upset_plot <- function(dat_list,
         cex= 0.8,
         xpd= T,
         las= 1)
-  mtext(side= 2,
-        ylab, 
-        line = 3)
+  title(ylab= ylab)
   
   #-------------------------#
   # Intersections
