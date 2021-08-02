@@ -165,4 +165,5 @@ vl_upset_plot <- function(dat_list,
        pos= 3)
   
   # on.exit(par(init), add=TRUE, after=FALSE)
+  invisible(sets)
 }

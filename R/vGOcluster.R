@@ -11,7 +11,8 @@ vl_GO_clusters <- function(FBgn_list,
                            go_object= vl_fb_go_table_dm6_FB2020_05,
                            FBgn_universe= "all",
                            go_type= "all",
-                           cex= 1)
+                           cex= 1,
+                           N_top= Inf)
 {
   # Checks
   if(!is.list(FBgn_list))
@@ -73,6 +74,8 @@ vl_GO_clusters <- function(FBgn_list,
   # Generate plot table
   #----------------------------------#
   pl <- go_current[`-log10(padj)`>5 & log2OR>0]
+  sel <- pl[order(`-log10(padj)`, decreasing = T), GO[seq(.N)<=N_top], cluster_names]$V1
+  pl <- pl[GO %in% sel]
   pl[, cluster_names:= factor(cluster_names, levels = names(FBgn_list)[names(FBgn_list) %in% pl$cluster_names])]
   # Handle infinite values
   pl[, cor_log2OR:= log2OR]
@@ -114,7 +117,7 @@ vl_GO_clusters <- function(FBgn_list,
   par(mai = c(max(strwidth(pl$cluster_names, "inches"))+0.5,
               max(strwidth(pl$name, "inches"))+0.5,
               0.5,
-              1),
+              2),
       xaxs= "i",
       yaxs= "i")
   

@@ -194,6 +194,16 @@ vl_heatmap <- function(mat,
   Cc <- circlize::colorRamp2(breaks, colors= col)
   DT[!is.na(value), Cc:= Cc(value)]
   DT[is.na(Cc), Cc:= "lightgrey"]
+  
+  #------------------------####
+  # Compute numer plotting pos
+  #------------------------####
+  xpos <- 1/(max(DT$x, na.rm = T)*2) 
+  xpos <- seq(xpos, 1-xpos, length.out= max(DT$x))
+  ypos <- 1/(max(DT$y, na.rm = T)*2) 
+  ypos <- seq(ypos, 1-ypos, length.out= max(DT$y))
+  DT[, xplot:= xpos[x], x]
+  DT[, yplot:= ypos[y], y]
 
   #------------------------####
   # PLOT
@@ -215,8 +225,8 @@ vl_heatmap <- function(mat,
 
   # Plot numbers
   if(display_numbers)
-    text(DT$x/(max(DT$x))-(0.5/ncol(im)),
-         DT$y/(max(DT$y))-(0.5/nrow(im)),
+    text(DT$xplot,
+         DT$yplot,
          display_numbers_FUN(DT$value),
          cex= display_numbers_cex,
          offset= 0)
