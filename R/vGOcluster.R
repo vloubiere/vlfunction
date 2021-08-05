@@ -5,6 +5,7 @@
 #' @param FBgn_list A nameds list of FBgn IDs (1 sublist/cluster)
 #' @param go_object object containing GO data. see ?vl_fb_go_table_dm6_FB2020_05
 #' @param cex cex ballons (usefull to adjust size)
+#' @param padj_cutoff padjust cutoff applied to GOs
 #' @export
 
 vl_GO_clusters <- function(FBgn_list,
@@ -12,6 +13,7 @@ vl_GO_clusters <- function(FBgn_list,
                            FBgn_universe= "all",
                            go_type= "all",
                            cex= 1,
+                           padj_cutoff= 1e-5,
                            N_top= Inf)
 {
   # Checks
@@ -73,7 +75,7 @@ vl_GO_clusters <- function(FBgn_list,
   #----------------------------------#
   # Generate plot table
   #----------------------------------#
-  pl <- go_current[`-log10(padj)`>5 & log2OR>0]
+  pl <- go_current[`-log10(padj)`>(-log10(padj_cutoff)) & log2OR>0]
   sel <- pl[order(`-log10(padj)`, decreasing = T), GO[seq(.N)<=N_top], cluster_names]$V1
   pl <- pl[GO %in% sel]
   pl[, cluster_names:= factor(cluster_names, levels = names(FBgn_list)[names(FBgn_list) %in% pl$cluster_names])]

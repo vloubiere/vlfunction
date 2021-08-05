@@ -10,6 +10,7 @@ vl_GO_clusters(
   FBgn_universe = "all",
   go_type = "all",
   cex = 1,
+  padj_cutoff = 1e-05,
   N_top = Inf
 )
 }
@@ -19,6 +20,8 @@ vl_GO_clusters(
 \item{go_object}{object containing GO data. see ?vl_fb_go_table_dm6_FB2020_05}
 
 \item{cex}{cex ballons (usefull to adjust size)}
+
+\item{padj_cutoff}{padjust cutoff applied to GOs}
 }
 \description{
 This function compares GO enrichments for several groups
