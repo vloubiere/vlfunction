@@ -4,11 +4,8 @@
 \alias{vl_alluvial_plot}
 \title{bw Average tracks}
 \usage{
-vl_alluvial_plot(
-  dat,
-  col = c("cornflowerblue", "lightgrey", "tomato"),
-  connectionColDT = NULL
-)
+vl_alluvial_plot(dat, col = c("cornflowerblue", "lightgrey", "tomato"),
+  connectionColDT = NULL)
 }
 \arguments{
 \item{dat}{Data.table containing the variables to plot}

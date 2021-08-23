@@ -68,6 +68,8 @@ vl_computeEnrichment <- function(ChIP_bed,
               measure.vars = patterns("^counts_CHIP", "^counts_INPUT", "^total_counts_CHIP", "^total_counts_INPUT"))
   res[, enr:= log2((value1+1)/value3)-log2((value2+1)/value4)]
   res <- res[, .(log2_enr= log2(mean(2^enr))), .(seqnames, start, end)]
+  res <- res[peaks, , on =c("seqnames", "start", "end")]
   
   return(res)
 }
+
