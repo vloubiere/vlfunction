@@ -6,14 +6,14 @@
 \usage{
 vl_heatmap(mat, newdata = NULL, breaks = NULL, show_rownames = T,
   show_colnames = T, col = c("cornflowerblue", "white", "red"),
-  cluster_rows = T, clustering_distance_rows = "euclidean",
-  cutree_rows = 1, show_cl_number_rows = T, cluster_cols = T,
+  main = NA, cluster_rows = T,
+  clustering_distance_rows = "euclidean", cutree_rows = 1,
+  show_cl_number_rows = T, cluster_cols = T,
   clustering_distance_cols = "euclidean", cutree_cols = 1,
   show_cl_number_cols = T, clustering_method = "complete",
   kmeans_k = NA, display_numbers = F,
   display_numbers_FUN = function(x) round(x, 2),
-  display_numbers_cex = 0.5, legend_title = "legend",
-  legend_pos = c(0.8, 1.15, 1, 1.2), scale = "none")
+  display_numbers_cex = 0.5, legend_title = "legend", scale = "none")
 }
 \arguments{
 \item{mat}{Matrix to plot. Row names and col names will be reported in return}
@@ -21,6 +21,14 @@ vl_heatmap(mat, newdata = NULL, breaks = NULL, show_rownames = T,
 \item{newdata}{If specified, clusters using matrix and plots new data instead}
 
 \item{breaks}{Heatmap breaks, which should be the same length as the color vector}
+
+\item{show_rownames}{Show rownames? default= T}
+
+\item{show_colnames}{Show colnames? default= T}
+
+\item{col}{Color scale? default= c("cornflowerblue", "white", "red")}
+
+\item{main}{Title, default is NA}
 
 \item{cluster_rows}{Should matrix rows be clustered? default is T}
 
@@ -49,8 +57,6 @@ vl_heatmap(mat, newdata = NULL, breaks = NULL, show_rownames = T,
 \item{display_numbers_cex}{cex display numbers}
 
 \item{legend_title}{Character to plot as title legend}
-
-\item{legend_pos}{vector(bottom, left, top, right). default= c(0.8, 1.15, 1, 1.2),}
 
 \item{scale}{Scale matrix before clustering? Can be 'none' (default), 'column' or 'row'.}
 }

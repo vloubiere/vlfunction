@@ -6,6 +6,10 @@
 #' @param mat Matrix to plot. Row names and col names will be reported in return
 #' @param newdata If specified, clusters using matrix and plots new data instead
 #' @param breaks Heatmap breaks, which should be the same length as the color vector
+#' @param show_rownames Show rownames? default= T
+#' @param show_colnames Show colnames? default= T
+#' @param col Color scale? default= c("cornflowerblue", "white", "red")
+#' @param main Title, default is NA
 #' @param cluster_rows Should matrix rows be clustered? default is T
 #' @param clustering_distance_rows Method for clustering distance rows. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"
 #' @param cutree_rows Number of cuts for rows tree. default= 1z
@@ -20,7 +24,6 @@
 #' @param display_numbers_FUN Function to apply before displaying numbers on heatmap.
 #' @param display_numbers_cex cex display numbers
 #' @param legend_title Character to plot as title legend
-#' @param legend_pos vector(bottom, left, top, right). default= c(0.8, 1.15, 1, 1.2),
 #' @param scale Scale matrix before clustering? Can be 'none' (default), 'column' or 'row'.
 #' @return A data.table containing clustering data!
 #' @export
@@ -48,6 +51,7 @@ vl_heatmap <- function(mat,
                        show_rownames= T,
                        show_colnames= T,
                        col= c("cornflowerblue", "white", "red"),
+                       main= NA,
                        cluster_rows= T,
                        clustering_distance_rows= "euclidean",
                        cutree_rows = 1,
@@ -62,7 +66,6 @@ vl_heatmap <- function(mat,
                        display_numbers_FUN= function(x) round(x, 2),
                        display_numbers_cex= 0.5,
                        legend_title= "legend",
-                       legend_pos= c(0.8, 1.15, 1, 1.2),
                        scale = "none")
 {
   if(!is.matrix(mat))
@@ -211,10 +214,17 @@ vl_heatmap <- function(mat,
   # Image
   im <- as.matrix(data.table::dcast(DT, y~x, value.var = "Cc"), 1)
   if(identical(c(5.1, 4.1, 4.1, 2.1), par("mar")))
-    par(mai= c(max(strwidth(DT$row, "inches"))+0.5,
-               max(strwidth(DT$col, "inches"))+0.5,
-               0.5,
-               1.5))
+  {
+    mBottom <- max(strwidth(DT$row, "inches"))+0.5
+    mLeft <- max(strwidth(DT$col, "inches"))+0.5
+    mTop <- ifelse(!is.na(main) & cluster_cols, 0.15, 0.1)
+    mTop <- grconvertY(mTop, from = "nfc", to= "inches")
+    mRight <- strwidth(legend_title, "inches")
+    if(cluster_rows)
+      mRight <- mRight+grconvertX(0.1, from = "ndc", to= "inches")
+    par(mai= c(mBottom, mLeft, mTop, mRight))
+  }
+
   plot.new()
   rasterImage(im,
               xleft = 0,
@@ -274,9 +284,7 @@ vl_heatmap <- function(mat,
            offset= 1,
            cex= 2)
   }
-    
-
-
+  
   # Plot axes
   if(show_colnames)
     axis(1,
@@ -293,10 +301,12 @@ vl_heatmap <- function(mat,
          las= 2)
 
   # Plot legend
-  xleft <- legend_pos[2]
-  ybottom <- legend_pos[1]
-  xright <- legend_pos[4]
-  ytop <- legend_pos[3]
+  xleft <- 1+grconvertX(strheight(DT$col[1], "inches")*2, "inches", "ndc")
+  if(cluster_rows)
+    xleft <- xleft+0.1
+  ybottom <- 0.7
+  xright <- xleft+grconvertX(strheight(DT$col[1], "inches")*2, "inches", "ndc")
+  ytop <- 1-3*grconvertY(strheight(legend_title, cex = 0.8, "inches"), from = "inches", to= "ndc")
   rasterImage(matrix(rev(Cc(seq(min(breaks), max(breaks), length.out = 101)))),
               xleft,
               ybottom,
@@ -314,12 +324,19 @@ vl_heatmap <- function(mat,
        cex= 0.6,
        offset= 0.25)
   text(xleft,
-       ytop+par("usr")[4]*0.05,
+       1-0.5*strheight(legend_title),
        labels = legend_title,
        pos=4,
        xpd= T,
        cex= 0.8,
        offset= 0)
+  
+  # Title
+  text(0.5, 
+       y = ifelse(cluster_cols, 1.1, 1.05),
+       main, 
+       pos = 3,
+       xpd= T)
   
   invisible(DT)
 }
