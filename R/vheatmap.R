@@ -10,6 +10,7 @@
 #' @param show_colnames Show colnames? default= T
 #' @param col Color scale? default= c("cornflowerblue", "white", "red")
 #' @param main Title, default is NA
+#' @param auto_margins If T, optimal margins will be computed. Otherwise, takes existing ones
 #' @param cluster_rows Should matrix rows be clustered? default is T
 #' @param clustering_distance_rows Method for clustering distance rows. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"
 #' @param cutree_rows Number of cuts for rows tree. default= 1z
@@ -52,6 +53,7 @@ vl_heatmap <- function(mat,
                        show_colnames= T,
                        col= c("cornflowerblue", "white", "red"),
                        main= NA,
+                       auto_margins= T,
                        cluster_rows= T,
                        clustering_distance_rows= "euclidean",
                        cutree_rows = 1,
@@ -211,9 +213,8 @@ vl_heatmap <- function(mat,
   #------------------------####
   # PLOT
   #------------------------####
-  # Image
-  im <- as.matrix(data.table::dcast(DT, y~x, value.var = "Cc"), 1)
-  if(identical(c(5.1, 4.1, 4.1, 2.1), par("mar")))
+  # Margins
+  if(auto_margins)
   {
     mBottom <- max(strwidth(DT$row, "inches"))+0.5
     mLeft <- max(strwidth(DT$col, "inches"))+0.5
@@ -224,7 +225,9 @@ vl_heatmap <- function(mat,
       mRight <- mRight+grconvertX(0.1, from = "ndc", to= "inches")
     par(mai= c(mBottom, mLeft, mTop, mRight))
   }
-
+  
+  # Image
+  im <- as.matrix(data.table::dcast(DT, y~x, value.var = "Cc"), 1)
   plot.new()
   rasterImage(im,
               xleft = 0,
@@ -291,14 +294,16 @@ vl_heatmap <- function(mat,
          at= seq(ncol(im))/ncol(im)-(0.5/ncol(im)),
          labels = unique(DT[, col, keyby= x])$col,
          lty= 0,
-         las= 2)
+         las= 2, 
+         line= -1)
     
   if(show_rownames)
     axis(2,
          at= seq(nrow(im))/nrow(im)-(0.5/nrow(im)),
          labels = unique(DT[, row, keyby= y])$row,
          lty= 0,
-         las= 2)
+         las= 2,
+         line= -1)
 
   # Plot legend
   xleft <- 1+grconvertX(strheight(DT$col[1], "inches")*2, "inches", "ndc")

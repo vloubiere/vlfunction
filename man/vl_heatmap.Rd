@@ -6,7 +6,7 @@
 \usage{
 vl_heatmap(mat, newdata = NULL, breaks = NULL, show_rownames = T,
   show_colnames = T, col = c("cornflowerblue", "white", "red"),
-  main = NA, cluster_rows = T,
+  main = NA, auto_margins = T, cluster_rows = T,
   clustering_distance_rows = "euclidean", cutree_rows = 1,
   show_cl_number_rows = T, cluster_cols = T,
   clustering_distance_cols = "euclidean", cutree_cols = 1,
@@ -29,6 +29,8 @@ vl_heatmap(mat, newdata = NULL, breaks = NULL, show_rownames = T,
 \item{col}{Color scale? default= c("cornflowerblue", "white", "red")}
 
 \item{main}{Title, default is NA}
+
+\item{auto_margins}{If T, optimal margins will be computed. Otherwise, takes existing ones}
 
 \item{cluster_rows}{Should matrix rows be clustered? default is T}
 
