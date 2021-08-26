@@ -35,7 +35,7 @@
 #' @return For each line in a, returns the idx of its closest feature in b (vector)
 #' @export
 
-closestBed <- function(a, 
+vl_closestBed <- function(a, 
                        b= NULL, 
                        min_dist= 0)
 {

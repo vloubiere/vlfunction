@@ -137,7 +137,7 @@ vl_intersectBed <- function(a, b, same_strand=F, sorted= F)
 
 # closestbed wrapper
 #' @export
-vl_closestBed <- function(a, b, k= 1)
+vl_closestBedWrap <- function(a, b, k= 1)
 {
   paste0("/software/2020/software/bedtools/2.27.1-foss-2018b/bin/closestBed -d -k ", k, " -a ", a, " -b ", b)
 }
