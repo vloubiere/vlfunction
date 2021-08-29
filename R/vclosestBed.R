@@ -7,7 +7,7 @@
 #' @param min_dist Min distance for closest feature 
 #' @examples 
 #' Example 1:
-#' a <- b <- data.table(seqnames= c("chr4", "chr2R", "chr2R", "chr3L")
+#' a <- b <- data.table(seqnames= c("chr4", "chr2R", "chr2R", "chr3L"),
 #' start= c(1e6, 1e6, 10e6, 1e6),
 #' end= c(1.1e6, 1.1e6, 10.1e6, 1.1e6))
 #' b <- a[-1]

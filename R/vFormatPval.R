@@ -27,10 +27,11 @@ vl_plot_pval <- function(x, y, pval, stars_only= F, ...)
   value <- formatC(pval, format = "e", digits = 1)
   if(stars_only)
     value <- rep("", length(value))
-  text(x = x[ns_val], 
-       y = y[ns_val], 
-       labels= parse(text= paste0(value[ns_val], "^N.S")), 
-       ...)
+  if(any(ns_val))
+    text(x = x[ns_val], 
+         y = y[ns_val], 
+         labels= parse(text= paste0(value[ns_val], "^N.S")), 
+         ...)
   text(x = x[!ns_val], 
        y = y[!ns_val], 
        labels= paste0(value[!ns_val], star[!ns_val]), 
