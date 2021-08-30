@@ -216,8 +216,12 @@ vl_heatmap <- function(mat,
   # Margins
   if(auto_margins)
   {
-    mBottom <- max(strwidth(DT$row, "inches"))+0.5
-    mLeft <- max(strwidth(DT$col, "inches"))+0.5
+    mBottom <- 0.5
+    if(show_colnames)
+      mBottom <- mBottom+max(strwidth(DT$row, "inches"))
+    mLeft <- 0.5
+    if(show_rownames)
+      mLeft <- max(strwidth(DT$col, "inches"))
     mTop <- ifelse(!is.na(main) & cluster_cols, 0.15, 0.1)
     mTop <- grconvertY(mTop, from = "nfc", to= "inches")
     mRight <- strwidth(legend_title, "inches")
