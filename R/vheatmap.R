@@ -26,6 +26,7 @@
 #' @param display_numbers_cex cex display numbers
 #' @param legend_title Character to plot as title legend
 #' @param scale Scale matrix before clustering? Can be 'none' (default), 'column' or 'row'.
+#' @param na_col Color for na values. Default= "lightgrey"
 #' @return A data.table containing clustering data!
 #' @export
 
@@ -68,7 +69,8 @@ vl_heatmap <- function(mat,
                        display_numbers_FUN= function(x) round(x, 2),
                        display_numbers_cex= 0.5,
                        legend_title= "legend",
-                       scale = "none")
+                       scale = "none",
+                       na_col= "lightgrey")
 {
   if(!is.matrix(mat))
     stop("mat must be a matrix object")
@@ -198,7 +200,7 @@ vl_heatmap <- function(mat,
     breaks <- seq(min(DT$value, na.rm= T), max(DT$value, na.rm= T), length.out = length(col))
   Cc <- circlize::colorRamp2(breaks, colors= col)
   DT[!is.na(value), Cc:= Cc(value)]
-  DT[is.na(Cc), Cc:= "lightgrey"]
+  DT[is.na(Cc), Cc:= na_col]
   
   #------------------------####
   # Compute numer plotting pos

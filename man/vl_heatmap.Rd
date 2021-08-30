@@ -13,7 +13,8 @@ vl_heatmap(mat, newdata = NULL, breaks = NULL, show_rownames = T,
   show_cl_number_cols = T, clustering_method = "complete",
   kmeans_k = NA, display_numbers = F,
   display_numbers_FUN = function(x) round(x, 2),
-  display_numbers_cex = 0.5, legend_title = "legend", scale = "none")
+  display_numbers_cex = 0.5, legend_title = "legend", scale = "none",
+  na_col = "lightgrey")
 }
 \arguments{
 \item{mat}{Matrix to plot. Row names and col names will be reported in return}
@@ -61,6 +62,8 @@ vl_heatmap(mat, newdata = NULL, breaks = NULL, show_rownames = T,
 \item{legend_title}{Character to plot as title legend}
 
 \item{scale}{Scale matrix before clustering? Can be 'none' (default), 'column' or 'row'.}
+
+\item{na_col}{Color for na values. Default= "lightgrey"}
 }
 \value{
 A data.table containing clustering data!
