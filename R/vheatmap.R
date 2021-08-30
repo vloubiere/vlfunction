@@ -223,6 +223,7 @@ vl_heatmap <- function(mat,
     mRight <- strwidth(legend_title, "inches")
     if(cluster_rows)
       mRight <- mRight+grconvertX(0.1, from = "ndc", to= "inches")
+    DT[1, mar:= .(c(mBottom, mLeft, mTop, mRight))]
     par(mai= c(mBottom, mLeft, mTop, mRight))
   }
   
