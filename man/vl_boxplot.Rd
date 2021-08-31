@@ -5,9 +5,9 @@
 \title{violin plot}
 \usage{
 vl_boxplot(x, formula, outline = F, xlab = "", ylab = "",
-  xlim = c(0.5, max(obj$at) + 0.5), ylim = if (outline)
-  range(unlist(obj$value)) else range(c(obj$Q1, obj$Q5)), col = "white",
-  at = NULL)
+  plot_labels = T, xlim = c(0.5, max(obj$at) + 0.5), ylim = if
+  (outline) range(unlist(obj$value)) else range(c(obj$Q1, obj$Q5)),
+  col = "white", at = NULL)
 }
 \arguments{
 \item{x}{Matrix, data.atble or data.frame containing data}
@@ -19,6 +19,8 @@ vl_boxplot(x, formula, outline = F, xlab = "", ylab = "",
 \item{xlab}{x axis label}
 
 \item{ylab}{y axis label}
+
+\item{plot_labels}{Should box labels be plotted? Default= T}
 
 \item{xlim}{x axis limits}
 

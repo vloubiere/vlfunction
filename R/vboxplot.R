@@ -8,6 +8,7 @@
 #' @param outline plot outlier values? default= F
 #' @param xlab x axis label
 #' @param ylab y axis label
+#' @param plot_labels Should box labels be plotted? Default= T
 #' @param xlim x axis limits
 #' @param ylim y axis limits
 #' @export
@@ -34,6 +35,7 @@ vl_boxplot <- function(x,
                      outline= F,
                      xlab= "",
                      ylab= "",
+                     plot_labels= T,
                      xlim= c(0.5, max(obj$at)+0.5),
                      ylim= if(outline) range(unlist(obj$value)) else range(c(obj$Q1, obj$Q5)),
                      col= "white", 
@@ -115,7 +117,7 @@ vl_boxplot <- function(x,
        xaxt= "n")
   axis(1, 
        at= unique(obj$at), 
-       labels= unique(obj$variable))
+       labels= if(plot_labels) unique(obj$variable) else rep(NA, length(obj$at)))
   
   # violins
   obj[, polygon(unlist(x), unlist(y), col= Cc[1]), .(Cc, variable)]
