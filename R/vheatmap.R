@@ -220,12 +220,12 @@ vl_heatmap <- function(mat,
   {
     mBottom <- 0.5
     if(show_colnames)
-      mBottom <- mBottom+max(strwidth(DT$row, "inches"))
+      mBottom <- mBottom+max(strwidth(DT$col, "inches"))
     mLeft <- 0.5
     if(show_rownames)
-      mLeft <- max(strwidth(DT$col, "inches"))
+      mLeft <- mLeft+max(strwidth(DT$row, "inches"))
     mTop <- ifelse(!is.na(main) & cluster_cols, 0.15, 0.1)
-    mTop <- grconvertY(mTop, from = "nfc", to= "inches")
+    mTop <- grconvertY(mTop, from = "ndc", to= "inches")
     mRight <- strwidth(legend_title, "inches")
     if(cluster_rows)
       mRight <- mRight+grconvertX(0.1, from = "ndc", to= "inches")
