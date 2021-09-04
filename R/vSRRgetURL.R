@@ -15,7 +15,7 @@ vl_SRR_url <- function(SRR)
     stop("Install rvest package")
   .c <- rvest::read_html(paste0("https://trace.ncbi.nlm.nih.gov/Traces/sra/?run=", SRR))
   url <- .c %>%
-    html_nodes("#sra-viewer-app .first a") %>%
-    html_text()
+    rvest::html_nodes("#sra-viewer-app .first a") %>%
+    rvest::html_text()
   return(url)
 }
