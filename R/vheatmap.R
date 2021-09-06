@@ -96,6 +96,8 @@ vl_heatmap <- function(mat,
     col <- colorRampPalette(col)(length(breaks))
     warning("color vector has been interpolated to match breaks vector length")
   }
+  if(length(main)!=1)
+    stop("length(main)!=1")
 
   #------------------------####
   # Format object
