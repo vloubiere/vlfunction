@@ -80,9 +80,11 @@ vl_screenshot <- function(bed,
     .s <- .s[-length(.s)]
     .(start= .s, end= .e, x= seq(.s))
   }, .(seqnames, region_ID= seq(nrow(bed)))]
-  inter <- cumsum(bins[, max(x), region_ID]$V1+19) # Interpolate x values (19 empty between lines)
-  inter <- inter-inter[1]
-  bins[, x:= x+inter[.GRP], region_ID]
+  for(i in unique(bins$region_ID)[-1])
+  {
+    add <- bins[region_ID==(i-1), max(x)]+19*(i-1)# Interpolate x values (19 empty between lines)
+    bins[region_ID==i, x:= x+add]
+  }
   bins[, bin_ID:= .I] # Used to track unmatched bins
   
   #--------------------------#
