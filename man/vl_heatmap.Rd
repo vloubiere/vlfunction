@@ -4,17 +4,32 @@
 \alias{vl_heatmap}
 \title{Heatmap}
 \usage{
-vl_heatmap(mat, newdata = NULL, breaks = NULL, show_rownames = T,
-  show_colnames = T, col = c("cornflowerblue", "white", "red"),
-  main = NA, auto_margins = T, cluster_rows = T,
-  clustering_distance_rows = "euclidean", cutree_rows = 1,
-  show_cl_number_rows = T, cluster_cols = T,
-  clustering_distance_cols = "euclidean", cutree_cols = 1,
-  show_cl_number_cols = T, clustering_method = "complete",
-  kmeans_k = NA, display_numbers = F,
+vl_heatmap(
+  mat,
+  newdata = NULL,
+  breaks = NULL,
+  show_rownames = T,
+  show_colnames = T,
+  col = c("cornflowerblue", "white", "red"),
+  main = NA,
+  auto_margins = T,
+  cluster_rows = T,
+  clustering_distance_rows = "euclidean",
+  cutree_rows = 1,
+  show_cl_number_rows = T,
+  cluster_cols = T,
+  clustering_distance_cols = "euclidean",
+  cutree_cols = 1,
+  show_cl_number_cols = T,
+  clustering_method = "complete",
+  kmeans_k = NA,
+  display_numbers = F,
   display_numbers_FUN = function(x) round(x, 2),
-  display_numbers_cex = 0.5, legend_title = "legend", scale = "none",
-  na_col = "lightgrey")
+  display_numbers_cex = 0.5,
+  legend_title = "legend",
+  scale = "none",
+  na_col = "lightgrey"
+)
 }
 \arguments{
 \item{mat}{Matrix to plot. Row names and col names will be reported in return}

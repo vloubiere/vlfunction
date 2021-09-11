@@ -109,16 +109,16 @@ vl_GO_clusters <- function(FBgn_list,
   pl[, y:= as.numeric(min(.I)), GO]
   pl[, y:= seq(1, 0, length.out = length(unique(pl$GO)))[.GRP], keyby= y]
   # X coordinates
-  pl[, x:= seq(0, 1, length.out = length(levels(pl$cluster_name)))[.GRP], keyby= cluster_name]
+  pl[, x:= seq(0, 1, length.out = length(unique(pl$cluster_name)))[.GRP], keyby= cluster_name]
   
   #-----------------------------#
   # PLOT
   #-----------------------------#
   if(auto_margin)
-    par(mai = c(max(strwidth(pl$cluster_names, "inches"))+0.5,
+    par(mai = c(max(strwidth(pl$cluster_name, "inches"))+0.5,
                 max(strwidth(pl$name, "inches"))+0.5,
                 0.5,
-                grconvertX(0.1, from = "ndc", to= "inches")+0.5),
+                strwidth("-log10(padj)", "inches")+0.25),
         xaxs= "i",
         yaxs= "i")
 
@@ -143,37 +143,11 @@ vl_GO_clusters <- function(FBgn_list,
        at = unique(pl$y), 
        labels = unique(pl$name),
        las= 2)
-  # Legend balloons
-  scale <- axisTicks(size_lims, log= F)
-  maxBalloonInch <- strheight("A", units = "inches", cex= max(scale))*0.75
-  maxBalloonDiamY <- grconvertY(maxBalloonInch, "inches", "ndc")
-  maxBalloonDiamX <- grconvertX(maxBalloonInch, "inches", "ndc")
-  xleft <- 1+grconvertX(strwidth("AA", "inches"))+maxBalloonDiamX/2
-  btop <- 0.6-maxBalloonDiamY/2
-  bbot <- btop-maxBalloonDiamY*(length(scale)-1)
-  points(rep(xleft+(maxBalloonDiamX/2), length(scale)),
-         seq(bbot, btop, length.out = length(scale)), 
-         xpd= T,
-         col= "black",
-         cex= scale,
-         pch= 16)
-  text(rep(xleft+maxBalloonDiamX/2, length(scale)),
-       seq(bbot, btop, length.out = length(scale)), 
-       labels= scale,
-       pos= 4, 
-       xpd= T, 
-       offset= 1, 
-       cex= 0.8)
-  text(xleft-maxBalloonDiamX/2,
-       0.62,
-       labels = "log2OR",
-       pos= 4,
-       xpd= T,
-       cex= 0.8,
-       offset= 0)
   # Legend pval
-  xleft <- xleft-maxBalloonDiamX/2
-  xright <- xleft+grconvertX(strwidth("A", units = "inches")*4, "inches", "ndc")
+  xleft <- 1-grconvertX(strwidth("-log10(padj)", "inches"), "inches", "ndc")
+  xright <- xleft+grconvertX(1, "lines", "ndc")
+  xleft <- grconvertX(xleft, "ndc", "npc")
+  xright <- grconvertX(xright, "ndc", "npc")
   ybottom <- 0.7
   ytop <- 1-grconvertY(strheight("A", units = "inches")*2, "inches", "ndc")
   rasterImage(matrix(rev(Cc(seq(min(padj_lims), max(padj_lims), length.out = 101)))),
@@ -199,8 +173,36 @@ vl_GO_clusters <- function(FBgn_list,
        xpd= T,
        cex= 0.8,
        offset= 0)
-  
-  
+
+  # Legend balloons
+  scale <- axisTicks(size_lims, log= F)
+  maxBalloonInch <- strheight("A", units = "inches", cex= max(scale))*0.75
+  maxBalloonDiamX <- grconvertX(maxBalloonInch, "inches", "ndc")
+  maxBalloonDiamY <- grconvertY(maxBalloonInch, "inches", "ndc")
+  btop <- 0.6-maxBalloonDiamY/2
+  bbot <- btop-maxBalloonDiamY*(length(scale)-1)
+  xb <- grconvertX(grconvertX(xleft, "npc", "ndc")+(maxBalloonDiamX/2), "ndc", "npc")
+  points(rep(xb, length(scale)),
+         seq(bbot, btop, length.out = length(scale)), 
+         xpd= T,
+         col= "black",
+         cex= scale,
+         pch= 16)
+  xb <- grconvertX(grconvertX(xb, "npc", "ndc")+(maxBalloonDiamX/2), "ndc", "npc")
+  text(rep(xb, length(scale)),
+       seq(bbot, btop, length.out = length(scale)), 
+       labels= scale,
+       pos= 4, 
+       xpd= T, 
+       offset= 0, 
+       cex= 0.8)
+  text(xleft,
+       0.62,
+       labels = "log2OR",
+       pos= 4,
+       xpd= T,
+       cex= 0.8,
+       offset= 0)
   
   # RETURN
   invisible(list(data= res, 
