@@ -272,8 +272,8 @@ vl_heatmap <- function(mat,
            labels = DT[, mean(y), rcl]$rcl, 
            xpd= T, 
            pos= 4, 
-           offset= 1,
-           cex= 2)
+           offset= 0.5,
+           cex= 1.5)
   }
 
   if(cluster_cols & ncol(mat)>1)
@@ -293,8 +293,8 @@ vl_heatmap <- function(mat,
            labels = DT[, mean(x), ccl]$ccl, 
            xpd= T, 
            pos= 3, 
-           offset= 1,
-           cex= 2)
+           offset= 0.5,
+           cex= 1.5)
   }
   
   # Plot axes
