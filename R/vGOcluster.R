@@ -4,17 +4,22 @@
 #'
 #' @param FBgn_list A nameds list of FBgn IDs (1 sublist/cluster)
 #' @param go_object object containing GO data. see ?vl_fb_go_table_dm6_FB2020_05
+#' @param all_FBgns Vector of FBgns to be used in the universe, typically all the genes tested with DESeq. Default= "all" FBgns present in go_object.
+#' @param go_type The type of go to be considered. Default "all" means "biological_process" AND "cellular_component" AND "molecular_function". 
 #' @param cex cex ballons (usefull to adjust size)
 #' @param padj_cutoff padjust cutoff applied to GOs
+#' @param N_top Select only N top GOs/cluster
+#' @param auto_margin Compute and apply optimal margins. Default= T
 #' @export
 
 vl_GO_clusters <- function(FBgn_list,
                            go_object= vl_fb_go_table_dm6_FB2020_05,
-                           FBgn_universe= "all",
+                           all_FBgns= "all",
                            go_type= "all",
                            cex= 1,
                            padj_cutoff= 1e-5,
-                           N_top= Inf)
+                           N_top= Inf,
+                           auto_margin= T)
 {
   # Checks
   if(!is.list(FBgn_list))
@@ -25,42 +30,45 @@ vl_GO_clusters <- function(FBgn_list,
     stop("All FBgn list names should be unique!")
   if(!all(grepl("FBgn", unlist(FBgn_list))))
     stop(paste0("Some FBgn_list components are not FBgn IDs"))
-  if(length(FBgn_universe)==1)
+  if(length(all_FBgns)==1)
   {
-    if(FBgn_universe=="all")
-      FBgn_universe <- unique(go_object$FBgn)
+    if(all_FBgns!="all")
+      stop(paste0("When length(all_FBgns)==1, only valid value is 'all'"))
+    else
+      all_FBgns <- unique(go_object$FBgn)
   }
-  if(length(go_type)!=1)
-    stop("length(go_type)!=1")
-  if(!(go_type %in% c("all", "biological_process", "cellular_component", "molecular_function")))
-     stop("go_type should be one of 'all', 'biological_process', 'cellular_component', 'molecular_function'")
-
+  if(length(go_type)!=1 |
+     !(go_type %in% c("all", "biological_process", "cellular_component", "molecular_function")))
+    stop("go_type should be one of 'all', 'biological_process', 'cellular_component', 'molecular_function'")
+  
   # Restrict GO object to universe
-  go_current <- copy(go_object)[FBgn %in% FBgn_universe, .(GO, name, type= unlist(type), FBgn, Symbol)]
+  go_current <- copy(go_object)[FBgn %in% all_FBgns, .(GO, name, type= unlist(type), FBgn, Symbol)]
+  perc_noGO <- length(which(!unlist(FBgn_list) %in% go_current$FBgn))/length(unlist(FBgn_list))*100
+  perc_noGO <- round(perc_noGO, 1)
+  print(paste0(perc_noGO, "% of provided FBgns were not found in GO database!\n"))
   
   # Restrict to type
   if(go_type!="all")
     go_current <- go_current[type==go_type]
 
   # Compute go and total counts
-  go_current[, total_FBgn:= length(FBgn_universe)]
-  go_current[, total_go:= length(unique(FBgn)), GO]
+  tab <- copy(go_current)
+  tab[, total_FBgn:= length(unique(go_current$FBgn))]
+  tab[, total_go:= length(unique(FBgn)), GO]
   
   # Add cluster counts
-  FBgn_DT <- rbindlist(lapply(FBgn_list, 
-                              function(x) # Select only cluster uniq FBgns that exist in universe
-                                data.table(FBgn= unique(x[x %in% FBgn_universe]))), 
-                       idcol = "cluster_names")
-  FBgn_DT[, total_cluster:= .N, cluster_names]
-  go_current <- go_current[rep(seq(nrow(go_current)), each= length(FBgn_list))] # Expand N clusters
-  go_current[, cluster_names:= rep(names(FBgn_list), nrow(go_current)/length(FBgn_list))]
-  go_current <- merge(go_current, FBgn_DT, c("cluster_names", "FBgn")) # Keep only lines for which FBgn exist in clusters
-  go_current[, go_cluster:= length(unique(FBgn)), .(GO, cluster_names)]
+  FBgn_DT <- rbindlist(lapply(FBgn_list, as.data.table), idcol = "cluster_name")
+  FBgn_DT[, total_cluster:= .N, cluster_name]
+  tab <- merge(tab,
+               FBgn_DT, 
+               by.x= "FBgn",
+               by.y= "V1")
+  tab[, go_cluster:= length(unique(FBgn)), .(GO, cluster_name)]
   
   # Compute statistically enriched GOs
-  go_current <- go_current[, .(Symbol= .(Symbol), FBgn= .(FBgn)), 
-                           .(GO, name, type, cluster_names, total_go, total_FBgn, total_cluster, go_cluster)]
-  go_current[, c("estimate", "pvalue"):= {
+  res <- tab[, .(Symbol= .(Symbol), FBgn= .(FBgn)), 
+               .(GO, name, type, cluster_name, total_go, total_FBgn, total_cluster, go_cluster)]
+  res[, c("estimate", "pvalue"):= {
     fisher.test(matrix(c(go_cluster, # go+ cluster +
                          total_cluster-go_cluster, # go- cluster +
                          total_go-go_cluster, # go+ cluster -
@@ -69,16 +77,19 @@ vl_GO_clusters <- function(FBgn_list,
                        byrow = T), 
                 alternative = "greater")[c("estimate", "p.value")]
   }, total_go:go_cluster]
-  go_current[, '-log10(padj)':= -log10(p.adjust(pvalue, method = "fdr"))]
-  go_current[, log2OR:= log2(estimate)]
+  res[, '-log10(padj)':= -log10(p.adjust(pvalue, method = "fdr"))]
+  res[, log2OR:= log2(estimate)]
   
   #----------------------------------#
   # Generate plot table
   #----------------------------------#
-  pl <- go_current[`-log10(padj)`>(-log10(padj_cutoff)) & log2OR>0]
-  sel <- pl[order(`-log10(padj)`, decreasing = T), GO[seq(.N)<=N_top], cluster_names]$V1
-  pl <- pl[GO %in% sel]
-  pl[, cluster_names:= factor(cluster_names, levels = names(FBgn_list)[names(FBgn_list) %in% pl$cluster_names])]
+  # pl <- res[GO %in% res[, any(`-log10(padj)`>(-log10(padj_cutoff)) & log2OR>0), GO][(V1), GO]]
+  pl <- res[`-log10(padj)`>(-log10(padj_cutoff)) & log2OR>0]
+  # Select top GO/cluster
+  setorderv(pl, "-log10(padj)", order = -1)
+  pl <- pl[GO %in% pl[, GO[seq(.N)<=N_top], cluster_name]$V1]
+  # Make cluster names as factor
+  pl[, cluster_name:= factor(cluster_name, levels = names(FBgn_list))]
   # Handle infinite values
   pl[, cor_log2OR:= log2OR]
   pl[log2OR==Inf, cor_log2OR:= max(pl$log2OR[is.finite(pl$log2OR)], na.rm= T)]
@@ -87,42 +98,30 @@ vl_GO_clusters <- function(FBgn_list,
   Cc <- colorRamp2(padj_lims, 
                    colors = c("blue", "red"))
   pl[, col:= Cc(`-log10(padj)`)]
-  # Size
-  pl[, size:= cex*cor_log2OR]
+  # Points scaling factor
+  pl[, size:= cex*(2^cor_log2OR)]
+  pl[, size:= log2(size+1)]
   size_lims <- range(pl$size)
   # Y coordinates
   setorderv(pl, 
-            c("cluster_names", "-log10(padj)", "cor_log2OR", "GO"), 
+            c("cluster_name", "-log10(padj)", "cor_log2OR", "GO"), 
             order = c(1, -1, -1, 1))
   pl[, y:= as.numeric(min(.I)), GO]
   pl[, y:= seq(1, 0, length.out = length(unique(pl$GO)))[.GRP], keyby= y]
-  # Add missing cluster names if any
-  missing <- unique(go_current$cluster_names[!go_current$cluster_names %in% pl$cluster_names])
-  if(length(missing)>0)
-  {
-    pl <- rbind(pl[1, .(cluster_names= missing, 
-                        `-log10(padj)`= 0, 
-                        log2OR= 0,
-                        col= "white",
-                        size= 0,
-                        y= 0,
-                        type= go_type), .(GO, name)], 
-                pl, 
-                fill= T) 
-  }
   # X coordinates
-  pl[, x:= seq(0, 1, length.out = length(unique(pl$cluster_names)))[.GRP], keyby= cluster_names]
+  pl[, x:= seq(0, 1, length.out = length(levels(pl$cluster_name)))[.GRP], keyby= cluster_name]
   
   #-----------------------------#
   # PLOT
   #-----------------------------#
-  par(mai = c(max(strwidth(pl$cluster_names, "inches"))+0.5,
-              max(strwidth(pl$name, "inches"))+0.5,
-              0.5,
-              2),
-      xaxs= "i",
-      yaxs= "i")
-  
+  if(auto_margin)
+    par(mai = c(max(strwidth(pl$cluster_names, "inches"))+0.5,
+                max(strwidth(pl$name, "inches"))+0.5,
+                0.5,
+                grconvertX(0.1, from = "ndc", to= "inches")+0.5),
+        xaxs= "i",
+        yaxs= "i")
+
   # Lines
   plot.new()
   abline(v= unique(pl$x))
@@ -136,72 +135,74 @@ vl_GO_clusters <- function(FBgn_list,
          xpd= T)
   axis(1,
        lty= 0,
-       at = unique(pl[, .(cluster_names, x)])$x, 
-       labels = unique(pl[, .(cluster_names, x)])$cluster_names, 
+       at = unique(pl$x), 
+       labels = unique(pl$cluster_name), 
        las= 2)
   axis(2,
        lty= 0,
-       at = unique(pl[, .(name, y)])$y, 
-       labels = unique(pl[, .(name, y)])$name, 
+       at = unique(pl$y), 
+       labels = unique(pl$name),
        las= 2)
-  # Legend pval
-  rasterImage(matrix(Cc(seq(padj_lims[1], 
-                            padj_lims[2], 
-                            length.out = 100)), 
-                     ncol= 1), 
-              xleft = 1.075,
-              ybottom = 0.96,
-              xright = 1.125,
-              ytop = 0.8, 
-              xpd= T)
-  text(1.05,
-       1-grconvertY(0.5, "line", "ndc"), 
-       pos= 4,
-       "-log10(padj)", 
-       xpd= T, 
-       offset= 0, 
-       cex= 0.8)
-  ticks <- axisTicks(padj_lims, log= F)
-  at <- 0.8+(ticks-padj_lims[1])/(padj_lims[2]-padj_lims[1])*(0.96-0.8)
-  segments(1.125+0.005, 
-           at,
-           1.125+0.01,
-           at,
-           xpd= T, 
-           lend= 2)
-  text(1.125+0.01, 
-       at,
-       labels = ticks,
-       cex= 0.6,
-       offset= 0.1,
-       pos= 4,
-       xpd= T)
   # Legend balloons
   scale <- axisTicks(size_lims, log= F)
-  points(rep(1.1, length(scale)),
-         seq(0.4, 0.65, length.out = length(scale)), 
+  maxBalloonInch <- strheight("A", units = "inches", cex= max(scale))*0.75
+  maxBalloonDiamY <- grconvertY(maxBalloonInch, "inches", "ndc")
+  maxBalloonDiamX <- grconvertX(maxBalloonInch, "inches", "ndc")
+  xleft <- 1+grconvertX(strwidth("AA", "inches"))+maxBalloonDiamX/2
+  btop <- 0.6-maxBalloonDiamY/2
+  bbot <- btop-maxBalloonDiamY*(length(scale)-1)
+  points(rep(xleft+(maxBalloonDiamX/2), length(scale)),
+         seq(bbot, btop, length.out = length(scale)), 
          xpd= T,
          col= "black",
          cex= scale,
          pch= 16)
-  text(1.05,
-       0.71, 
-       pos= 4,
-       "log2(OR)", 
+  text(rep(xleft+maxBalloonDiamX/2, length(scale)),
+       seq(bbot, btop, length.out = length(scale)), 
+       labels= scale,
+       pos= 4, 
        xpd= T, 
-       offset= 0, 
+       offset= 1, 
        cex= 0.8)
-  text(1.175,
-       seq(0.4, 0.65, length.out = length(scale)), 
-       labels = scale,
-       xpd= T,
+  text(xleft-maxBalloonDiamX/2,
+       0.62,
+       labels = "log2OR",
        pos= 4,
+       xpd= T,
+       cex= 0.8,
+       offset= 0)
+  # Legend pval
+  xleft <- xleft-maxBalloonDiamX/2
+  xright <- xleft+grconvertX(strwidth("A", units = "inches")*4, "inches", "ndc")
+  ybottom <- 0.7
+  ytop <- 1-grconvertY(strheight("A", units = "inches")*2, "inches", "ndc")
+  rasterImage(matrix(rev(Cc(seq(min(padj_lims), max(padj_lims), length.out = 101)))),
+              xleft,
+              ybottom,
+              xright,
+              ytop,
+              xpd=T)
+  ticks <- axisTicks(padj_lims, log=F)
+  ymin.ticks <- ybottom+(min(ticks)-padj_lims[1])/diff(padj_lims)*(ytop-ybottom)
+  ymax.ticks <- ybottom+(max(ticks)-padj_lims[1])/diff(padj_lims)*(ytop-ybottom)
+  text(xright,
+       seq(ymin.ticks, ymax.ticks, length.out = length(ticks)),
+       labels = ticks,
+       pos=4,
+       xpd= T,
+       cex= 0.6,
+       offset= 0.25)
+  text(xleft,
+       1-0.5*strheight("A"),
+       labels = "-log10(padj)",
+       pos=4,
+       xpd= T,
+       cex= 0.8,
        offset= 0)
   
+  
+  
   # RETURN
-  invisible(list(data= go_current, 
-                 plot= pl, 
-                 legend_ticks= ticks, 
-                 legend_ticks_at= at, 
-                 ballon_ticks= scale))
+  invisible(list(data= res, 
+                 plot= pl))
 }
