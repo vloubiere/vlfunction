@@ -100,8 +100,8 @@ vl_GO_clusters <- function(FBgn_list,
                    colors = c("blue", "red"))
   pl[, col:= Cc(`-log10(pval)`)]
   # Points scaling factor
-  pl[, size:= cex*(2^cor_log2OR)]
-  pl[, size:= log2(size+1)]
+  pl[, size:= (2^cor_log2OR)]
+  pl[, size:= cex*log2(size+1)]
   size_lims <- range(pl$size)
   # Y coordinates
   setorderv(pl, 
