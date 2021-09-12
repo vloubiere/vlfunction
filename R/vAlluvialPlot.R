@@ -44,12 +44,13 @@ vl_alluvial_plot <- function(dat,
   xpos <- seq(0, 1, length.out= length(dat)*2)
   Cc <- colorRampPalette(col)(length(unique(unlist(dat))))
   cCc <- connectionColDT
+  lvls <- unique(unlist(dat))
   
   # PLOT
   plot.new()
   for(i in seq(dat))
   {
-    classes <- table(dat[[i]])
+    classes <- table(factor(dat[[i]], levels = lvls))
     
     ypos <- c(0, cumsum(classes)/nrow(dat))
     
