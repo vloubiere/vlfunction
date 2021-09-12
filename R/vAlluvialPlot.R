@@ -4,93 +4,67 @@
 #'
 #' @param dat Data.table containing the variables to plot
 #' @param col Colors to use for bars. Wrapped with colorRampPalette
-#' @param connectionColDT Data.table containing V1/V2/Cc columns with V1/V2 containing all possible transitions. See examples below
-#' @examples 
-#' if connectionColDT is set to null, the data.table is built internatlly using:
-#'   computeConnectionCol <- function(dat, col)
-#' {
-#'   .c <- CJ(unlist(dat), unlist(dat), unique = T)
-#'   .c[, Cc:= col]
-#'   return(.c)
-#' }
 #' @return An object that can be used with the vl_average_bw_track_plot_only() function.
 #' @export
 
 
 
 vl_alluvial_plot <- function(dat,
-                             col= c("cornflowerblue", "lightgrey", "tomato"),
-                             connectionColDT= NULL)
+                             class_levels= NULL,
+                             col= c("cornflowerblue", "lightgrey", "tomato"))
 {
-  # Build connections color table
-  computeConnectionCol <- function(dat, col)
-  {
-    .c <- CJ(unlist(dat), unlist(dat), unique = T)
-    .c[, Cc:= col]
-    return(.c)
-  }
-  if(is.null(connectionColDT))
-  {
-    N_cmb <- length(unique(unlist(dat)))^2
-    Cc <- colorRampPalette(col)(N_cmb)
-    Cc <- adjustcolor(Cc, 0.6)
-    connectionColDT <- computeConnectionCol(dat, 
-                                            col = Cc) 
-  }
-  if(!is.data.table(connectionColDT) | !identical(c("V1", "V2", "Cc"), names(connectionColDT)))
-    stop("connectionColDT should be a data.table. See ?vl_alluvial_plot")
+  if(is.null(class_levels))
+    class_levels <- as.character(unique(unlist(dat)))
+  DT <- dat[, lapply(.SD, factor, levels= class_levels)]
   
-  # Compute constant
-  xpos <- seq(0, 1, length.out= length(dat)*2)
-  Cc <- colorRampPalette(col)(length(unique(unlist(dat))))
-  cCc <- connectionColDT
-  lvls <- unique(unlist(dat))
+  # Make object
+  res <- melt(DT, measure.vars = names(DT))
+  res[, value:= factor(value, class_levels)]
+  # Compute rectangles
+  setorderv(res, c("variable", "value"))
+  res <- res[, .N, .(variable, value)]
+  res[, cumsum:= cumsum(N), variable]
+  res[, Cc1:= colorRampPalette(col)(length(class_levels))[.GRP], value]
+  res[, top:= cumsum/sum(N), variable]
+  res[, bottom:= c(0, top[-(.N)]), variable]
+  res[, left:=  seq(0, 1, length.out= length(DT)*2)[(.GRP-1)*2+1], variable]
+  res[, right:= seq(0, 1, length.out= length(DT)*2)[.GRP*2], variable]
+  # Compute connections
+  res[, to_variable:= unique(res$variable)[c(2:length(unique(res$variable)), 1)][.GRP], variable]
+  res <- res[, .(to_value= unique(res$value)), (res)]
+  res[, count:= length(which(DT[[as.character(variable)]]==value & # all transition counts
+                             DT[[as.character(to_variable)]]==to_value)), .(variable, to_variable, value, to_value)]
+  # Compute polygons
+  res[, Cc2:= colorRampPalette(col)(length(class_levels))[.GRP], to_value]
+  res[, Cc:= colorRampPalette(c(Cc1, Cc2))(3)[2], .(Cc1, Cc2)]
+  res[, y1:= cumsum(count)/sum(count), variable]
+  res[, y4:= c(0, y1[-(.N)]), variable]
+  setorderv(res, "to_value")
+  res[, y2:= cumsum(count)/sum(count), to_variable]
+  res[, y3:= c(0, y2[-(.N)]), to_variable]
+  res[, left1:=  seq(0, 1, length.out= length(DT)*2)[.GRP*2], variable]
+  res[, right1:= seq(0, 1, length.out= length(DT)*2)[.GRP*2+1], variable]
   
   # PLOT
   plot.new()
-  for(i in seq(dat))
-  {
-    classes <- table(factor(dat[[i]], levels = lvls))
-    
-    ypos <- c(0, cumsum(classes)/nrow(dat))
-    
-    x1 <- xpos[(i-1)*2+1]
-    x2 <- xpos[i*2]
-    x3 <- xpos[i*2+1]
-    
-    rect(xleft = x1, 
-         xright = x2, 
-         ybottom = ypos[-length(ypos)],
-         ytop = ypos[-1],
-         col= Cc)
-    text(x= mean(c(x1, x2)),
-         y= ypos[-length(ypos)]+diff(ypos)/2,
-         labels= paste0(names(classes), "\n(", classes, ")"),
-         xpd= T)
-    text(x= mean(c(x1, x2)),
-         y= 1,
-         labels= names(dat)[i], 
-         xpd= T, 
-         pos=3)
-    
-    cols <- na.omit(names(dat)[i:(i+1)])
-    if(length(cols)==2)
-    {
-      pol <- dat[, .N, keyby= c(cols)]
-      pol[, ybot1:= cumsum(N)/sum(N)]
-      pol[, ytop1:= c(0, ybot1[-.N])]
-      setkeyv(pol, names(pol)[2])
-      pol[, ybot2:= cumsum(N)/sum(N)]
-      pol[, ytop2:= c(0, ybot2[-.N])]
-      pol <- merge(pol, cCc, 
-                   by.x= names(pol)[1:2],
-                   by.y= c("V1", "V2"))
-      pol[, {
-        polygon(c(x2, x2, x3, x3),
-                c(ytop1, ybot1, ybot2, ytop2),
-                border= NA,
-                col= Cc[1])
-      }, (pol)]
-    }
-  }
+  res[, rect(left[1], 
+             bottom[1], 
+             right[1], 
+             top[1], 
+             col= Cc1[1], 
+             border= NA), .(top, bottom, left, right, Cc1)]
+  res[, polygon(c(left1[1], 
+                  right1[1], 
+                  right1[1], 
+                  left1[1]), 
+                c(y1[1], 
+                  y2[1], 
+                  y3[1], 
+                  y4[1]),
+                col= adjustcolor(Cc[1], 0.5),
+                border= NA), .(left1, right1, y1, y2, y3, y4, Cc)]
+  res[, text(mean(c(left, right)), 1, variable, pos= 3), .(variable, left, right)]
+  res[, text(mean(c(left, right)), mean(c(top, bottom)), paste0(value, "\n(", N,")")), .(value, N, left, right, top, bottom)]
+  
+  invisible(res)
 }
