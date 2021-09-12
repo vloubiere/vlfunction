@@ -77,15 +77,17 @@ vl_GO_clusters <- function(FBgn_list,
                        byrow = T), 
                 alternative = "greater")[c("estimate", "p.value")]
   }, total_go:go_cluster]
-  res[, '-log10(padj)':= -log10(p.adjust(pvalue, method = "fdr"))]
+  res[, "-log10(pval)":= -log10(pvalue)]
+  res[, padj:= p.adjust(pvalue, method = "fdr")]
   res[, log2OR:= log2(estimate)]
   
   #----------------------------------#
   # Generate plot table
   #----------------------------------#
-  pl <- res[`-log10(padj)`>(-log10(padj_cutoff)) & log2OR>0]
+  sel <- res[any(padj<=padj_cutoff & log2OR>0), GO]
+  pl <- res[GO %in% sel & padj<0.05 & log2OR>0]
   # Select top GO/cluster
-  setorderv(pl, "-log10(padj)", order = -1)
+  setorderv(pl, "-log10(pval)", order = -1)
   pl <- pl[GO %in% pl[, GO[seq(.N)<=N_top], cluster_name]$V1]
   # Make cluster names as factor
   pl[, cluster_name:= factor(cluster_name, levels = names(FBgn_list))]
@@ -93,17 +95,17 @@ vl_GO_clusters <- function(FBgn_list,
   pl[, cor_log2OR:= log2OR]
   pl[log2OR==Inf, cor_log2OR:= max(pl$log2OR[is.finite(pl$log2OR)], na.rm= T)]
   # Colors
-  padj_lims <- range(pl$`-log10(padj)`)
-  Cc <- colorRamp2(padj_lims, 
+  pval_lims <- range(pl$`-log10(pval)`)
+  Cc <- colorRamp2(pval_lims, 
                    colors = c("blue", "red"))
-  pl[, col:= Cc(`-log10(padj)`)]
+  pl[, col:= Cc(`-log10(pval)`)]
   # Points scaling factor
   pl[, size:= cex*(2^cor_log2OR)]
   pl[, size:= log2(size+1)]
   size_lims <- range(pl$size)
   # Y coordinates
   setorderv(pl, 
-            c("cluster_name", "-log10(padj)", "cor_log2OR", "GO"), 
+            c("cluster_name", "-log10(pval)", "cor_log2OR", "GO"), 
             order = c(1, -1, -1, 1))
   pl[, y:= as.numeric(min(.I)), GO]
   pl[, y:= seq(1, 0, length.out = length(unique(pl$GO)))[.GRP], keyby= y]
@@ -117,7 +119,7 @@ vl_GO_clusters <- function(FBgn_list,
     par(mai = c(max(strwidth(pl$cluster_name, "inches"))+0.5,
                 max(strwidth(pl$name, "inches"))+0.5,
                 0.5,
-                strwidth("-log10(padj)", "inches")+0.25),
+                strwidth("-log10(pval)", "inches")+0.25),
         xaxs= "i",
         yaxs= "i")
 
@@ -143,21 +145,21 @@ vl_GO_clusters <- function(FBgn_list,
        labels = unique(pl$name),
        las= 2)
   # Legend pval
-  xleft <- 1-grconvertX(strwidth("-log10(padj)", "inches"), "inches", "ndc")
+  xleft <- 1-grconvertX(strwidth("-log10(pval)", "inches"), "inches", "ndc")
   xright <- xleft+grconvertX(1, "lines", "ndc")
   xleft <- grconvertX(xleft, "ndc", "npc")
   xright <- grconvertX(xright, "ndc", "npc")
   ybottom <- 0.7
   ytop <- 1-grconvertY(strheight("A", units = "inches")*2, "inches", "ndc")
-  rasterImage(matrix(rev(Cc(seq(min(padj_lims), max(padj_lims), length.out = 101)))),
+  rasterImage(matrix(rev(Cc(seq(min(pval_lims), max(pval_lims), length.out = 101)))),
               xleft,
               ybottom,
               xright,
               ytop,
               xpd=T)
-  ticks <- axisTicks(padj_lims, log=F)
-  ymin.ticks <- ybottom+(min(ticks)-padj_lims[1])/diff(padj_lims)*(ytop-ybottom)
-  ymax.ticks <- ybottom+(max(ticks)-padj_lims[1])/diff(padj_lims)*(ytop-ybottom)
+  ticks <- axisTicks(pval_lims, log=F)
+  ymin.ticks <- ybottom+(min(ticks)-pval_lims[1])/diff(pval_lims)*(ytop-ybottom)
+  ymax.ticks <- ybottom+(max(ticks)-pval_lims[1])/diff(pval_lims)*(ytop-ybottom)
   text(xright,
        seq(ymin.ticks, ymax.ticks, length.out = length(ticks)),
        labels = ticks,
@@ -167,7 +169,7 @@ vl_GO_clusters <- function(FBgn_list,
        offset= 0.25)
   text(xleft,
        1-0.5*strheight("A"),
-       labels = "-log10(padj)",
+       labels = "-log10(pval)",
        pos=4,
        xpd= T,
        cex= 0.8,
