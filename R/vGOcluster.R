@@ -83,7 +83,6 @@ vl_GO_clusters <- function(FBgn_list,
   #----------------------------------#
   # Generate plot table
   #----------------------------------#
-  # pl <- res[GO %in% res[, any(`-log10(padj)`>(-log10(padj_cutoff)) & log2OR>0), GO][(V1), GO]]
   pl <- res[`-log10(padj)`>(-log10(padj_cutoff)) & log2OR>0]
   # Select top GO/cluster
   setorderv(pl, "-log10(padj)", order = -1)
@@ -183,21 +182,21 @@ vl_GO_clusters <- function(FBgn_list,
   bbot <- btop-maxBalloonDiamY*(length(scale)-1)
   xb <- grconvertX(grconvertX(xleft, "npc", "ndc")+(maxBalloonDiamX/2), "ndc", "npc")
   points(rep(xb, length(scale)),
-         seq(bbot, btop, length.out = length(scale)), 
+         grconvertY(seq(bbot, btop, length.out = length(scale)), "ndc", "npc"), 
          xpd= T,
          col= "black",
          cex= scale,
          pch= 16)
   xb <- grconvertX(grconvertX(xb, "npc", "ndc")+(maxBalloonDiamX/2), "ndc", "npc")
   text(rep(xb, length(scale)),
-       seq(bbot, btop, length.out = length(scale)), 
+       grconvertY(seq(bbot, btop, length.out = length(scale)), "ndc", "npc"), 
        labels= scale,
        pos= 4, 
        xpd= T, 
        offset= 0, 
        cex= 0.8)
   text(xleft,
-       0.62,
+       grconvertY(0.6+grconvertY(strheight("A", "inches", cex= 0.8), "inches", "ndc"), "ndc", "npc"),
        labels = "log2OR",
        pos= 4,
        xpd= T,

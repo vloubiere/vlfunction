@@ -3,8 +3,14 @@
 #' Plots average tracks for a set bw files around (potentially) several sets of peaks
 #'
 #' @param dat Data.table containing the variables to plot
-#' @param class_levels LEvels used for ordering. e.g c("Up", "Unaffected", "Down").
+#' @param class_levels Levels used for ordering. e.g c("Up", "Unaffected", "Down").
 #' @param col Colors to use for bars. Wrapped with colorRampPalette
+#' @examples 
+#' test <- data.table(c("A", "A", "A", "A", "A", "B", "B", "B", "C", "C", "C"),
+#' c("A", "A", "A", "B", "B", "B", "B", "C", "C", "C", "C"),
+#' c("A", "A", "B", "B", "B", "B", "B", "B", "B", "C", "C"))
+#' vl_alluvial_plot(test,
+#' class_levels = c("C", "B", "A"))
 #' @return An object that can be used with the vl_average_bw_track_plot_only() function.
 #' @export
 
@@ -64,8 +70,15 @@ vl_alluvial_plot <- function(dat,
                   y4[1]),
                 col= adjustcolor(Cc[1], 0.5),
                 border= NA), .(left1, right1, y1, y2, y3, y4, Cc)]
-  res[, text(mean(c(left, right)), 1, variable, pos= 3), .(variable, left, right)]
-  res[, text(mean(c(left, right)), mean(c(top, bottom)), paste0(value, "\n(", N,")")), .(value, N, left, right, top, bottom)]
+  res[, text(mean(c(left, right)), 
+             1, 
+             variable, 
+             pos= 3, 
+             xpd=T), .(variable, left, right)]
+  res[, text(mean(c(left, right)), 
+             mean(c(top, bottom)), 
+             paste0(value, "\n(", N,")"), 
+             xpd=T), .(value, N, left, right, top, bottom)]
   
   invisible(res)
 }
