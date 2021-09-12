@@ -3,6 +3,7 @@
 #' Plots average tracks for a set bw files around (potentially) several sets of peaks
 #'
 #' @param dat Data.table containing the variables to plot
+#' @param class_levels LEvels used for ordering. e.g c("Up", "Unaffected", "Down").
 #' @param col Colors to use for bars. Wrapped with colorRampPalette
 #' @return An object that can be used with the vl_average_bw_track_plot_only() function.
 #' @export
