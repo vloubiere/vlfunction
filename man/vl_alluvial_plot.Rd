@@ -4,18 +4,15 @@
 \alias{vl_alluvial_plot}
 \title{bw Average tracks}
 \usage{
-vl_alluvial_plot(
-  dat,
-  col = c("cornflowerblue", "lightgrey", "tomato"),
-  connectionColDT = NULL
-)
+vl_alluvial_plot(dat, class_levels = NULL, col = c("cornflowerblue",
+  "lightgrey", "tomato"))
 }
 \arguments{
 \item{dat}{Data.table containing the variables to plot}
 
-\item{col}{Colors to use for bars. Wrapped with colorRampPalette}
+\item{class_levels}{Levels used for ordering. e.g c("Up", "Unaffected", "Down").}
 
-\item{connectionColDT}{Data.table containing V1/V2/Cc columns with V1/V2 containing all possible transitions. See examples below}
+\item{col}{Colors to use for bars. Wrapped with colorRampPalette}
 }
 \value{
 An object that can be used with the vl_average_bw_track_plot_only() function.
@@ -24,11 +21,9 @@ An object that can be used with the vl_average_bw_track_plot_only() function.
 Plots average tracks for a set bw files around (potentially) several sets of peaks
 }
 \examples{
-if connectionColDT is set to null, the data.table is built internatlly using:
-  computeConnectionCol <- function(dat, col)
-{
-  .c <- CJ(unlist(dat), unlist(dat), unique = T)
-  .c[, Cc:= col]
-  return(.c)
-}
+test <- data.table(c("A", "A", "A", "A", "A", "B", "B", "B", "C", "C", "C"),
+c("A", "A", "A", "B", "B", "B", "B", "C", "C", "C", "C"),
+c("A", "A", "B", "B", "B", "B", "B", "B", "B", "C", "C"))
+vl_alluvial_plot(test,
+class_levels = c("C", "B", "A"))
 }

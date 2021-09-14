@@ -4,8 +4,7 @@
 \name{vl_fb_go_table_dm6_FB2020_05}
 \alias{vl_fb_go_table_dm6_FB2020_05}
 \title{Dm6 GO database}
-\format{
-An object containing Motifs and related metadata
+\format{An object containing Motifs and related metadata
 \describe{
   \item{GO}{GO ID}
   \item{name}{GO name}
@@ -15,8 +14,7 @@ An object containing Motifs and related metadata
   \item{Fbgn}{Gene flybase ID}
   \item{symbol}{Gene symbol}
   ...
-}
-}
+}}
 \source{
 {"../../vlfunction/data/vl_fb_go_table_dm6_FB2020_05.RData"}
 }
@@ -40,6 +38,7 @@ type= go_details$namespace,
 parents= go_details$parents,
 children= go_details$children)
 vl_fb_go_table_dm6_FB2020_05 <- merge(go_details, unique(go))
+vl_fb_go_table_dm6_FB2020_05 <- vl_fb_go_table_dm6_FB2020_05[!(name \%in\% type)]
 save(vl_fb_go_table_dm6_FB2020_05, file= "../../vlfunction/data/vl_fb_go_table_dm6_FB2020_05.RData")
 
 }

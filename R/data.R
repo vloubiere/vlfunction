@@ -77,6 +77,7 @@
 #' parents= go_details$parents,
 #' children= go_details$children)
 #' vl_fb_go_table_dm6_FB2020_05 <- merge(go_details, unique(go))
+#' vl_fb_go_table_dm6_FB2020_05 <- vl_fb_go_table_dm6_FB2020_05[!(name %in% type)]
 #' save(vl_fb_go_table_dm6_FB2020_05, file= "../../vlfunction/data/vl_fb_go_table_dm6_FB2020_05.RData")
 #' 
 #' @source {"../../vlfunction/data/vl_fb_go_table_dm6_FB2020_05.RData"}
