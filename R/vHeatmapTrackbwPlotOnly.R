@@ -31,7 +31,7 @@ vl_heatmap_bw_track_plot_only <- function(obj,
   rasterImage(mat, 0,0,1,1, interpolate = F)
   
   # Plot lines
-  .lv <- seq(0, 1, length.out = length(unique(final$track))+1)
+  .lv <- seq(0, 1, length.out = length(unique(obj$track))+1)
   abline(v= .lv, 
          lwd= 0.25)
   .lh <- obj[, 1-(min(region_order)-1)/max(obj$region_order), set_ID]$V1
