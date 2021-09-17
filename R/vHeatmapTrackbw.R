@@ -3,41 +3,23 @@
 #' Plots average tracks for a set bw files around (potentially) several sets of peaks
 #'
 #' @param bed Regions to plot. Can be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns"
+#' @param set_IDs Vector specifying group of regions.
 #' @param tracks Vector of bw files to plot. Use full paths to avoid pbs.
 #' @param extend How much should the bed regions be extended (starting from the center). dEfault= c(-5000, 5000)
 #' @param stranded Should the average track be stranded? If yes, - features are reversed :D
 #' @param nbins Number of bins spanning the extended regions. Default= 501
 #' @param names Track names to plot. If specified, must be the same length as bw vector. By default, bw basenames will be used.
-#' @param plot Should the average track be ploted? default= T
-#' @param xlab X label. default= "genomic distance"
-#' @param ylab Y labels. default= "Enrichment"
-#' @param ylim ylim for plotting. default= range(data)
-#' @param col Colors to use. If specified, should match length(tracks)*length(unique(set_IDs)). default= NULL (redirects to rainbow)
-#' @param axes Should the x axis be plotted? Default to T
-#' @param legend Should the legen be plotted? default to T
-#' @examples 
-#' Unstranded 
-#' STARR <- fread("/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/peaks/DSCP_600bp_gw_cut_merged.peaks.txt", select = c(1,2))
-#' STARR <- STARR[, .(seqnames= V1, start= V2, end= V2)]
-#' obj1 <- vl_average_bw_track(bed= STARR,
-#'                             set_IDs = c(rep("High", 2000), rep("Low", 2781)),
-#'                             #' extend = c(-5000, 5000),
-#'                             stranded = F,
-#'                             tracks= "/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_600bp_gw_cut_merged.bw", 
-#'                             col= c("lightgrey", "red"), 
-#'                             names = c("STARR-Seq"))
-#'
-#' Stranded 
-#' prom <- readRDS("/groups/stark/hendy/Projects/Chromatin_remodeler_specificity/Analyses/Rdata/unique_proms_merged.df.RDS")
-#' prom <- as.data.table(GRanges(unique(prom$Flybase.TSS)))
-#' obj2 <- vl_average_bw_track(bed= prom,
-#'                             extend = c(-5000, 5000),
-#'                             stranded = T,
-#'                             tracks= "/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE81795_H3K4me3_rep1_uniq.bw")
-#' @return An object that can be used with the vl_average_bw_track_plot_only() function.
+#' @param plot Should the heatmap be ploted? default= T
+#' @param center_label Label for the center of the heatmaps
+#' @param max_FUN Function used to compute clipping max for each track. default= function(x) quantile(x, 0.995, na.rm =T)
+#' @param orderTrackIdx yIdx of the tack to be used for ordering the heatmaps. Default=1 (1st left heatmap)
+#' @param oder_FUN Function used for regions ordering. Default= function(x) mean(x, na.rm= T)
+#' @param orderTrackIdx yIdx of the tack to be used for ordering the heatmaps. Default=1 (1st left heatmap)
+#' @param col Color vector to be used for heatmaps. col= c("blue", "yellow", "white")
+#' @return An object that can be used with the vl_heatmap_bw_track_plot_only() function.
 #' @export
 
-vl_average_bw_track <- function(bed,
+vl_heatmap_bw_track <- function(bed,
                                 set_IDs= NULL,
                                 tracks,
                                 extend= c(-5000, 5000),
@@ -45,12 +27,11 @@ vl_average_bw_track <- function(bed,
                                 nbins= 501, 
                                 names= NULL,
                                 plot= T,
-                                xlab= "genomic distance",
-                                ylab= "Enrichment",
-                                ylim= NULL,
-                                col= NULL, 
-                                axes= T,
-                                legend= T)
+                                center_label= "TSS",
+                                max_FUN= function(x) quantile(x, 0.995, na.rm= T),
+                                orderTrackIdx= 1,
+                                order_FUN= function(x) mean(x, na.rm= T),
+                                col= c("blue", "yellow", "white"))
 {
   if(class(bed)[1]=="GRanges")
     bed <- data.table::as.data.table(bed)
@@ -68,12 +49,12 @@ vl_average_bw_track <- function(bed,
     names <- gsub(".bw$", "", basename(tracks))
   if(length(names) != length(tracks))
     stop("names vector length should be the same as bw files vector length(", length(tracks), ")")
-  if(is.null(col))
-    col <- grDevices::rainbow(length(tracks)*length(unique(set_IDs)))
-  if(length(col) != length(tracks)*length(unique(set_IDs)))
-    stop("Colors vector length should be the same as bw files vector length * unique set_IDs (", 
-         length(tracks)*length(unique(set_IDs)), ")")
+  if(!is.numeric(orderTrackIdx) | length(orderTrackIdx)!=1)
+    stop("orderTrackIdx should be numeric of length 1 specifying the idx of track to use for ordering")
   
+  #--------------------------#
+  # Compute bins
+  #--------------------------#
   bins <- copy(bed)
   bins[, set_ID:= set_IDs]
   add <- seq(extend[1], extend[2], length.out = nbins+1)
@@ -84,7 +65,7 @@ vl_average_bw_track <- function(bed,
   bins <- bins[, .(start= ceiling(center+add[-length(add)]),
                    end= floor(center+add[-1]), 
                    bin_ID= if(strand=="+") seq(nbins) else rev(seq(nbins))), 
-                 .(set_ID, region_ID, seqnames, strand)]
+               .(set_ID, region_ID, seqnames, strand)]
   setkeyv(bins, c("seqnames", "start", "end"))
   
   #--------------------------#
@@ -100,30 +81,39 @@ vl_average_bw_track <- function(bed,
     data.table::setkeyv(.c, c("seqnames", "start", "end"))
     res <- data.table::foverlaps(.c, bins, nomatch = 0)
     res <- res[, .(score= max(abs(score), na.rm= T)), .(set_ID, region_ID, bin_ID)]
-    res <- res[, .(mean= mean(score, na.rm = T), se= sd(score, na.rm = T)/sqrt(length(score))), .(set_ID, bin_ID)]
   })
   names(q) <- tracks
-  final <- data.table::rbindlist(q, idcol = "track")
-  final[, Cc:= col[.GRP], .(track, set_ID)]
-  final[, name:= names[.GRP], track]
-  setorderv(final, "bin_ID")
   
-  #-------------------------#
-  # Make object
-  #-------------------------#
-  obj <- list(heatmap= final, 
-              nbins= nbins,
-              extend= extend)
+  #--------------------------#
+  # Final data.table
+  #--------------------------#
+  final <- data.table::rbindlist(q, idcol = "track")
+  final[, name:= names[.GRP], track]
+  final[,ext1:= extend[1]]
+  final[,ext2:= extend[2]]
+  # Make Set_IDs as factor to freeze ordering
+  if(!is.factor(final$set_ID))
+    final[, set_ID:= factor(set_ID, levels = rev(unique(set_ID)))]
+  # Make tracks as factor to freeze ordering
+  final[, track:= factor(track, levels = tracks)]
+  # Compute max, norm values
+  final[, max:= max_FUN(score), track]
+  final[, norm:= score]
+  final[score>max, norm:= 100]
+  final[score<=max, norm:= score/max*100]
+  # Compute plotting colors
+  final[, plot_Cc:= colorRampPalette(col)(100)[var], .(track, var= round(norm))]
+  final[is.na(plot_Cc), plot_Cc:= col[1]]
+  # Compute order
+  final[, region_order:= -order_FUN(.SD[track==tracks[orderTrackIdx], score]), region_ID]
+  final[, region_order:= .GRP, keyby= .(set_ID, region_order, region_ID)]
   
   #--------------------------#
   # PLOT
   #--------------------------#
   if(plot)
-    vl_average_bw_track_plot_only(obj, 
-                                  ylim = ylim,
-                                  xlab= xlab,
-                                  ylab= ylab, 
-                                  axes= axes, 
-                                  legend= legend)
-  invisible(obj) 
+    vl_heatmap_bw_track_plot_only(obj= final,
+                                  center_label= center_label,
+                                  col= col)
+  invisible(final) 
 }
