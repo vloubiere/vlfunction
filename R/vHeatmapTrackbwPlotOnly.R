@@ -13,6 +13,10 @@ vl_heatmap_bw_track_plot_only <- function(obj,
 {
   Ntracks <- length(unique(obj$track))
   
+  # Compute plotting colors
+  Cc <- colorRampPalette(col)(101)
+  obj[, plot_Cc:= Cc[.GRP], keyby= col_idx]
+  
   # Compute image
   im <- dcast(obj, 
               region_order~track+bin_ID, 

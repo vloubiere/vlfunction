@@ -24,7 +24,7 @@ vl_heatmap_bw_track <- function(bed,
                                 tracks,
                                 extend= c(-5000, 5000),
                                 stranded= F,
-                                nbins= 501, 
+                                nbins= 101, 
                                 names= NULL,
                                 plot= T,
                                 center_label= "TSS",
@@ -101,9 +101,9 @@ vl_heatmap_bw_track <- function(bed,
   final[, norm:= score]
   final[score>max, norm:= 100]
   final[score<=max, norm:= score/max*100]
-  # Compute plotting colors
-  final[, plot_Cc:= colorRampPalette(col)(100)[var], .(track, var= round(norm))]
-  final[is.na(plot_Cc), plot_Cc:= col[1]]
+  # Compute colors idx
+  final[, col_idx:= round(norm)]
+  final[is.na(col_idx), col_idx:= 0]
   # Compute order
   final[, region_order:= -order_FUN(.SD[track==tracks[orderTrackIdx], score]), region_ID]
   final[, region_order:= .GRP, keyby= .(set_ID, region_order, region_ID)]

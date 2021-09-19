@@ -13,7 +13,11 @@
 #' }
 #' 
 #' @examples
-#' selection <- 1:100
+#' # Select convenient set of Drosophila TFs
+#' sel <- vl_Dmel_motifs_DB$metadata[!is.na(vl_Dmel_motifs_DB$metadata$Dmel) & # Associated to a known TF
+#' vl_Dmel_motifs_DB$metadata$X..motif_collection_name %in% # From a relevant DB
+#' c("flyfactorsurvey", "bergman", "jaspar", "idmmpmm", "cisbp"), "motif_name"]
+#' sel <- which(name(vl_Dmel_motifs_DB$All_pwms_log_odds) %in% sel)
 #' hit <- matchMotifs(vl_Dmel_motifs_DB$All_pwms_log_odds[selection], GRanges("chrX", IRanges(10000000, 10000500)), genome= "dm3", p.cutoff= 5e-4, bg= "even", out= "scores")
 #' counts <- as.matrix(motifCounts(hit))
 #' colnames(counts) <- name(vl_Dmel_motifs_DB$All_pwms_log_odds[selection])
