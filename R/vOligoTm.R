@@ -10,6 +10,8 @@
 
 vl_oligo_Tm <- function(seq)
 {
+  if(length(seq)>1)
+    stop("seq should be length 1!")
   current <- data.table(c("A", "T", "C", "G"), N= 0, key= "V1")
   current[data.table(unlist(strsplit(seq, "")))[, .N, V1], N:= i.N, on= "V1"]
 
