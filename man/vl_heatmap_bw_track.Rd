@@ -5,7 +5,7 @@
 \title{bw Average tracks}
 \usage{
 vl_heatmap_bw_track(bed, set_IDs = NULL, tracks, extend = c(-5000,
-  5000), stranded = F, nbins = 501, names = NULL, plot = T,
+  5000), stranded = F, nbins = 101, names = NULL, plot = T,
   center_label = "TSS", max_FUN = function(x) quantile(x, 0.995, na.rm
   = T), orderTrackIdx = 1, order_FUN = function(x) mean(x, na.rm = T),
   col = c("blue", "yellow", "white"))

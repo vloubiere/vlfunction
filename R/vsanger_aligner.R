@@ -139,8 +139,8 @@ vl_sanger_align <- function(refseq,
                                                                max.mismatch = feat_mismatches)@ranges)
       if(nrow(.c)>0)
       {
-        arrows(.c$start/nrow(mat), 1.1, 
-               .c$end/nrow(mat), 1.1, 
+        arrows(.c$end/nrow(mat), 1.1, 
+               .c$start/nrow(mat), 1.1, 
                lwd= 3, 
                col = Cc[1], 
                xpd= T, 
