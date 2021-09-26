@@ -4,10 +4,16 @@
 \alias{vl_peakCalling}
 \title{Peak calling}
 \usage{
-vl_peakCalling(ChIP_bed, Input_bed = NULL, binsize = 100,
-  Nbins_test = 100, BSgenome = BSgenome.Dmelanogaster.UCSC.dm3,
-  collapse_touching_peaks = T, min_N_replicates = length(ChIP_bed),
-  cutoff_input_counts = 5)
+vl_peakCalling(
+  ChIP_bed,
+  Input_bed = NULL,
+  binsize = 100,
+  Nbins_test = 100,
+  BSgenome = BSgenome.Dmelanogaster.UCSC.dm3,
+  collapse_touching_peaks = T,
+  min_N_replicates = length(ChIP_bed),
+  cutoff_input_counts = 5
+)
 }
 \arguments{
 \item{ChIP_bed}{Vector of CHIP bed files path}

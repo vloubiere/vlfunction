@@ -4,7 +4,8 @@
 \name{vl_fb_go_table_dm6_FB2020_05}
 \alias{vl_fb_go_table_dm6_FB2020_05}
 \title{Dm6 GO database}
-\format{An object containing Motifs and related metadata
+\format{
+An object containing Motifs and related metadata
 \describe{
   \item{GO}{GO ID}
   \item{name}{GO name}
@@ -14,7 +15,8 @@
   \item{Fbgn}{Gene flybase ID}
   \item{symbol}{Gene symbol}
   ...
-}}
+}
+}
 \source{
 {"../../vlfunction/data/vl_fb_go_table_dm6_FB2020_05.RData"}
 }

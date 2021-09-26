@@ -4,8 +4,11 @@
 \alias{vl_heatmap_bw_track_plot_only}
 \title{bw heatmap plot only}
 \usage{
-vl_heatmap_bw_track_plot_only(obj, center_label = "TSS",
-  col = c("blue", "yellow", "white"))
+vl_heatmap_bw_track_plot_only(
+  obj,
+  center_label = "TSS",
+  col = c("blue", "yellow", "white")
+)
 }
 \arguments{
 \item{obj}{An object returned by the vl_heatmap_bw_track() function. The object can easily be modified to change colors and so on...}
