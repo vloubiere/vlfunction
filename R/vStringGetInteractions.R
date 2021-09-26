@@ -48,6 +48,8 @@ vl_STRING_interaction <- function(symbols= NULL,
   # Checks
   if(is.null(size))
     size <- rep(20, length(symbols))
+  if(any(size<0))
+    stop("all size arguments should be > 0")
   if(is.null(col))
     col <- rep("tomato", length(symbols))
   # Import DB

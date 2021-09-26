@@ -9,6 +9,7 @@ vl_STRING_interaction(
   size = NULL,
   col = NULL,
   score_cutoff = 200,
+  top_N = NA,
   db_path = "/mnt/d/_R_data/genomes/dm6/STRING/dmel_7227_v11.5_vl_db.rds"
 )
 }
