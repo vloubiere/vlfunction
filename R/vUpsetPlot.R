@@ -22,12 +22,22 @@ vl_upset_plot <- function(dat_list,
     names(dat_list) <- paste0("  ", names(dat_list), "  ")
   # if(par("mfrow"))
     
-    
+  #------------------------#
+  # Main object
+  #------------------------#  
+  dat <- rbindlist(lapply(dat_list, as.data.table), idcol = T)
+  colnames(dat)[2] <- "intersect"
+  dat <- dat[, .(.id= paste(.id, collapse = "|")), intersect]
+  dat <- dat[, .(N= .N), .id]
+  dat <- dat[N>=intersection_cutoff]
+  setorderv(dat, "N", -1)
+  
+  #------------------------#
   # Initiate plotting area
-  # init <- par(no.readonly=TRUE)
-  # dev.off()
+  #------------------------#
+  N_cditions <- length(unique(na.omit(unlist(tstrsplit(dat$.id, "\\|")))))
   plot.new()
-  par(mar = c(length(dat_list)*1.5+1,
+  par(mar = c(grconvertY(N_cditions*1.5+2, "chars", to= "lines"),
               6+grconvertX(max(strwidth(names(dat_list), "inches")), "inches", to= "lines"),
               2,
               1))
@@ -35,12 +45,6 @@ vl_upset_plot <- function(dat_list,
   #-------------------------#
   # Main barplot
   #-------------------------#
-  dat <- rbindlist(lapply(dat_list, as.data.table), idcol = T)
-  colnames(dat)[2] <- "intersect"
-  dat <- dat[, .(.id= paste(.id, collapse = "|")), intersect]
-  dat <- dat[, .(N= .N), .id]
-  dat <- dat[N>=intersection_cutoff]
-  setorderv(dat, "N", -1)
   width <- 0.9/nrow(dat)
   space <- 0.1/nrow(dat)
   dat[, left:= grconvertX(space*.I+width*(.I-1), "npc", "user")]
@@ -87,7 +91,7 @@ vl_upset_plot <- function(dat_list,
   sets <- dat[, .(all_IDs= unlist(tstrsplit(.id, "\\|"))), dat]
   sets <- sets[, .(N= sum(N)), all_IDs]
   setorderv(sets, "N", 1)
-  sets[, y:= grconvertY(grconvertY(0, "nfc", "chars")+.I*1.5, "chars", "user")]
+  sets[, y:= grconvertY(1+.I*1.5, "chars", "user")]
   sets[, all_x:= .(.(dat$x))]
   tab <- dat[, .(check_IDs= unlist(tstrsplit(.id, "\\|")), x), .id]
   sets[, inter_x:= .(.(unlist(all_x) %in% tab[check_IDs %in% all_IDs, x])), all_IDs]

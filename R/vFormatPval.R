@@ -15,7 +15,11 @@
 #' @return An object that can be used with the vl_average_bw_track_plot_only() function.
 #' @export
 
-vl_plot_pval <- function(x, y, pval, stars_only= F, ...)
+vl_plot_pval <- function(x, 
+                         y, 
+                         pval, 
+                         stars_only= F, 
+                         ...)
 {
   if(length(y)==1 & length(x)>1)
     y <- rep(y, length(x))
@@ -30,8 +34,9 @@ vl_plot_pval <- function(x, y, pval, stars_only= F, ...)
   if(any(ns_val))
     text(x = x[ns_val], 
          y = y[ns_val], 
-         labels= parse(text= paste0(value[ns_val], "^N.S")), 
+         labels= bquote(paste(.(value[ns_val]), ""^N.S)), 
          ...)
+  if(!all(ns_val))
   text(x = x[!ns_val], 
        y = y[!ns_val], 
        labels= paste0(value[!ns_val], star[!ns_val]), 
