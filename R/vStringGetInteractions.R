@@ -42,6 +42,7 @@ vl_STRING_interaction <- function(symbols= NULL,
                                   size= NULL,
                                   col= NULL,
                                   score_cutoff= 200,
+                                  top_N= NA,
                                   db_path= "/mnt/d/_R_data/genomes/dm6/STRING/dmel_7227_v11.5_vl_db.rds")
 {
   # Checks
@@ -97,6 +98,9 @@ vl_STRING_interaction <- function(symbols= NULL,
   E <- V[, sub[.BY, .(to= protein2_symbol, 
                       width= combined_score/999*5), on= "protein1_symbol==from"], .(from= name)]
   E <- na.omit(E)
+  setorderv(E, "width", order = -1)
+  if(!is.na(top_N) & nrow(E)>top_N)
+    E <- E[1:top_N]
   # Keep only vertices which are represented
   V <- V[name %in% E$from | name %in% E$to]
   # RETURN
