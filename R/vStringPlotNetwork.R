@@ -5,6 +5,7 @@
 #' @param symbols vector of Dmel gene symbols
 #' @param cex.vertices Scaling factor vertices
 #' @param label.cex Scaling factor vertices labels
+#' @param vertex.border.col Color of vertices' borders
 #' 
 #' @examples 
 #' #USAGE
@@ -17,14 +18,16 @@
 #' 
 vl_STRING_network <- function(obj,
                               cex.vertices= 1,
-                              label.cex= 1)
+                              label.cex= 1,
+                              vertex.border.col= "black")
 {
   obj$vertices[, size:= size*cex.vertices]
   .g <- graph_from_data_frame(d = obj$edges, 
                               vertices = obj$vertices,
                               directed = F)
   plot(.g, 
-       vertex.label.cex= label.cex)
+       vertex.label.cex= label.cex, 
+       vertex.frame.color= vertex.border.col)
 }
 
 

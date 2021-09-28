@@ -4,12 +4,19 @@
 \alias{vl_STRING_network}
 \title{plot STRING interactions}
 \usage{
-vl_STRING_network(obj, cex.vertices = 1, label.cex = 1)
+vl_STRING_network(
+  obj,
+  cex.vertices = 1,
+  label.cex = 1,
+  vertex.border.col = "black"
+)
 }
 \arguments{
 \item{cex.vertices}{Scaling factor vertices}
 
 \item{label.cex}{Scaling factor vertices labels}
+
+\item{vertex.border.col}{Color of vertices' borders}
 
 \item{symbols}{vector of Dmel gene symbols}
 }

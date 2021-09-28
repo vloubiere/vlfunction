@@ -18,9 +18,9 @@
 #' vl_Dmel_motifs_DB$metadata$X..motif_collection_name %in% # From a relevant DB
 #' c("flyfactorsurvey", "bergman", "jaspar", "idmmpmm", "cisbp"), "motif_name"]
 #' sel <- which(name(vl_Dmel_motifs_DB$All_pwms_log_odds) %in% sel)
-#' hit <- matchMotifs(vl_Dmel_motifs_DB$All_pwms_log_odds[selection], GRanges("chrX", IRanges(10000000, 10000500)), genome= "dm3", p.cutoff= 5e-4, bg= "even", out= "scores")
+#' hit <- matchMotifs(vl_Dmel_motifs_DB$All_pwms_log_odds[sel], GRanges("chrX", IRanges(10000000, 10000500)), genome= "dm3", p.cutoff= 5e-4, bg= "even", out= "scores")
 #' counts <- as.matrix(motifCounts(hit))
-#' colnames(counts) <- name(vl_Dmel_motifs_DB$All_pwms_log_odds[selection])
+#' colnames(counts) <- name(vl_Dmel_motifs_DB$All_pwms_log_odds[sel])
 #' counts <- as.data.table(counts)
 #'
 #' @source {"/groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/TF_clusters_PWMs.RData"}
