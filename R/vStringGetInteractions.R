@@ -5,6 +5,7 @@
 #' @param symbols vector of Dmel gene symbols
 #' @param size For each gene symbol, the size of corresponding vertice (i.e, absolute FC)
 #' @param col For each gene symbol, the color of corresponding vertice (i.e, tomato for up, cornflowerblue for down)
+#' @param cex.label cex factor to be applied to correponding vertices labels
 #' @param score_cutoff Interaction score cutoff. Default is 200, max value in DB is 999. Also used to compute edge widths!
 #' @param db_path Path to an existing db, or filename where to create it. See examples
 #' @examples 
@@ -41,6 +42,7 @@
 vl_STRING_interaction <- function(symbols= NULL, 
                                   size= NULL,
                                   col= NULL,
+                                  cex.label= NULL,
                                   score_cutoff= 200,
                                   top_N= NA,
                                   db_path= "/mnt/d/_R_data/genomes/dm6/STRING/dmel_7227_v11.5_vl_db.rds")
@@ -52,6 +54,8 @@ vl_STRING_interaction <- function(symbols= NULL,
     stop("all size arguments should be > 0")
   if(is.null(col))
     col <- rep("tomato", length(symbols))
+  if(is.null(cex.label))
+    cex.label <- rep(1, length(symbols))
   # Import DB
   if(is.na(db_path))
     stop("db_path should either be a path to a STRING_db object (vl) or a valid filename where the db will be created")
@@ -94,7 +98,8 @@ vl_STRING_interaction <- function(symbols= NULL,
   # Make Vertices object
   V <- data.table(name= symbols,
                   size, 
-                  color= col)
+                  color= col, 
+                  cex.label= cex.label)
   V <- unique(V)
   # Make Edges object
   E <- V[, sub[.BY, .(to= protein2_symbol, 

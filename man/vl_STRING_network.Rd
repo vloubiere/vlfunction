@@ -7,14 +7,14 @@
 vl_STRING_network(
   obj,
   cex.vertices = 1,
-  label.cex = 1,
+  cex.vertices.labels = 1,
   vertex.border.col = "black"
 )
 }
 \arguments{
 \item{cex.vertices}{Scaling factor vertices}
 
-\item{label.cex}{Scaling factor vertices labels}
+\item{cex.vertices.labels}{Scaling factor vertices labels}
 
 \item{vertex.border.col}{Color of vertices' borders}
 

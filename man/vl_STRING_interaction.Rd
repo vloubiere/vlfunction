@@ -8,6 +8,7 @@ vl_STRING_interaction(
   symbols = NULL,
   size = NULL,
   col = NULL,
+  cex.label = NULL,
   score_cutoff = 200,
   top_N = NA,
   db_path = "/mnt/d/_R_data/genomes/dm6/STRING/dmel_7227_v11.5_vl_db.rds"
@@ -19,6 +20,8 @@ vl_STRING_interaction(
 \item{size}{For each gene symbol, the size of corresponding vertice (i.e, absolute FC)}
 
 \item{col}{For each gene symbol, the color of corresponding vertice (i.e, tomato for up, cornflowerblue for down)}
+
+\item{cex.label}{cex factor to be applied to correponding vertices labels}
 
 \item{score_cutoff}{Interaction score cutoff. Default is 200, max value in DB is 999. Also used to compute edge widths!}
 
