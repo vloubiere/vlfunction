@@ -72,7 +72,8 @@ vl_motif_counts <- function(bed,
               measure.vars = colnames(counts), 
               variable.name = "motif", 
               value.name = "motif_counts")
-  res[as.data.table(vl_Dmel_motifs_DB$metadata), Dmel:= paste0(i.Dmel, "_", .GRP), on= "motif==motif_name"]
+  res[as.data.table(vl_Dmel_motifs_DB$metadata), motif_name:= i.Dmel, on= "motif==motif_name"]
+  res[, motif_name:= paste0(motif_name, "_", .SD[, rep(.GRP, .N), motif]$V1), motif_name]
   return(res)
 }
   
