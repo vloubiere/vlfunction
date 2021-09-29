@@ -18,7 +18,7 @@
 #' @return Network plot.
 #' @export
 
-cl_motif_counts <- function(bed, 
+vl_motif_counts <- function(bed, 
                             genome= "dm6",
                             resize= T,
                             extend= c(500, 500),
