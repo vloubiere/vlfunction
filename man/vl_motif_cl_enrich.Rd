@@ -2,32 +2,21 @@
 % Please edit documentation in R/vMotifClusterEnrichment.R
 \name{vl_motif_cl_enrich}
 \alias{vl_motif_cl_enrich}
-\title{Counts motifs}
+\title{Compute motif enrichment}
 \usage{
 vl_motif_cl_enrich(obj, cl_column)
 }
 \arguments{
-\item{bed}{Either a GRanges object or a data.table that can be coerced to it}
+\item{obj}{A motif count object similar to the output of ?vl_motif_counts() (colnames:'motif', 'motif_counts', 'motif_name') + one cluster column!}
 
-\item{genome}{Genome to be used for coordinates ("dm6, "dm3")}
-
-\item{resize}{Should the regions be resize according to extend arg? Default= T}
-
-\item{extend}{Vector containing two positive integers (e.g c(500,500) indicating how the regions should be extend around their center}
-
-\item{sel}{Either "Dmel" (convenient set of Dmel motifs), NULL (all motifs) or a list of IDs existing in vl_Dmel_motifs_DB$metadata$motif_name}
+\item{cl_column}{name of the cluster column}
 }
 \value{
-Network plot.
+Fisher test data.table.
 }
 \description{
-Counts motif occurences in a set of regions
+Compute motif enrichment for the cluster in cl_columns, using all the lines as background
 }
 \examples{
-test <- cl_motif_counts(bed = GRanges("chr3R", IRanges(c(2e6, 3e6), c(2e6, 3e6)+1e3)),
-genome= "dm6",
-resize= T, 
-extend = c(500, 500),
-sel= vl_Dmel_motifs_DB$metadata$motif_name[1:10])
 
 }
