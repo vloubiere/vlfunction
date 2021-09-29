@@ -27,6 +27,7 @@
 #' @param legend_title Character to plot as title legend
 #' @param scale Scale matrix before clustering? Can be 'none' (default), 'column' or 'row'.
 #' @param na_col Color for na values. Default= "lightgrey"
+#' @param plot Should the heatmap be plotted? Default to T
 #' @return A data.table containing clustering data!
 #' @export
 
@@ -70,7 +71,8 @@ vl_heatmap <- function(mat,
                        display_numbers_cex= 0.5,
                        legend_title= "legend",
                        scale = "none",
-                       na_col= "lightgrey")
+                       na_col= "lightgrey",
+                       plot= T)
 {
   if(!is.matrix(mat))
     stop("mat must be a matrix object")
@@ -217,140 +219,143 @@ vl_heatmap <- function(mat,
   #------------------------####
   # PLOT
   #------------------------####
-  # Margins
-  if(auto_margins)
+  if(plot)
   {
-    mBottom <- 0.5
-    if(show_colnames)
-      mBottom <- mBottom+max(strwidth(DT$col, "inches"))
-    mLeft <- 0.5
-    if(show_rownames)
-      mLeft <- mLeft+max(strwidth(DT$row, "inches"))
-    mTop <- ifelse(!is.na(main) & cluster_cols, 0.15, 0.1)
-    mTop <- grconvertY(mTop, from = "ndc", to= "inches")
-    mRight <- strwidth(legend_title, "inches")
-    if(cluster_rows)
-      mRight <- mRight+grconvertX(0.1, from = "ndc", to= "inches")
-    DT[1, mar:= .(c(mBottom, mLeft, mTop, mRight))]
-    par(mai= c(mBottom, mLeft, mTop, mRight))
-  }
-  
-  # Image
-  im <- as.matrix(data.table::dcast(DT, y~x, value.var = "Cc"), 1)
-  plot.new()
-  rasterImage(im,
-              xleft = 0,
-              ybottom = 1,
-              xright = 1,
-              ytop = 0,
-              interpolate = F)
-
-  # Plot numbers
-  if(display_numbers)
-    text(DT$xplot,
-         DT$yplot,
-         display_numbers_FUN(DT$value),
-         cex= display_numbers_cex,
-         offset= 0)
-
-  # Plot dendro and cuts
-  if(cluster_rows & is.null(newdata) & nrow(mat)>1)
-    if(is.na(kmeans_k))
-      segments(rdend$y/max(rdend$y)/10+1,
-               1-(rdend$x/max(rdend$x)-(0.5/nrow(im))),
-               rdend$yend/max(rdend$yend)/10+1,
-               1-(rdend$xend/max(rdend$xend)-(0.5/nrow(im))),
-               xpd= T)
-  cr <- cumsum(unique(DT[, rcl, keyby= y])[, .N, rcl][, N])
-  cr <- cr[-length(cr)]/nrow(im)
-  if(length(cr)>0) # Plot cutree lines and cluster numbers
-  {
-    segments(0, cr, 1, cr)
-    if(show_cl_number_rows)
-      text(x= 1, 
-           y= DT[, mean(y), rcl]$V1/(nrow(im))-(0.5/nrow(im)), 
-           labels = DT[, mean(y), rcl]$rcl, 
-           xpd= T, 
-           pos= 4, 
-           offset= 0.5,
-           cex= 1.5)
-  }
-
-  if(cluster_cols & ncol(mat)>1)
-    segments(cdend$x/max(cdend$x)-(0.5/ncol(im)),
-             cdend$y/max(cdend$y)/10+1,
-             cdend$xend/max(cdend$xend)-(0.5/ncol(im)),
-             cdend$yend/max(cdend$yend)/10+1,
-             xpd= T)
-  cc <- cumsum(unique(DT[, ccl, keyby= x])[, .N, ccl][, N])
-  cc <- cc[-length(cc)]/ncol(im)
-  if(length(cc)>0) # Plot cutcol lines and cluster numbers
-  {
-    segments(cc, 0, cc, 1)
-    if(show_cl_number_cols)
-      text(x= DT[, mean(x), ccl]$V1/ncol(im)-0.5/ncol(im), 
-           y= 1, 
-           labels = DT[, mean(x), ccl]$ccl, 
-           xpd= T, 
-           pos= 3, 
-           offset= 0.5,
-           cex= 1.5)
-  }
-  
-  # Plot axes
-  if(show_colnames)
-    axis(1,
-         at= seq(ncol(im))/ncol(im)-(0.5/ncol(im)),
-         labels = unique(DT[, col, keyby= x])$col,
-         lty= 0,
-         las= 2, 
-         line= -1)
+    # Margins
+    if(auto_margins)
+    {
+      mBottom <- 0.5
+      if(show_colnames)
+        mBottom <- mBottom+max(strwidth(DT$col, "inches"))
+      mLeft <- 0.5
+      if(show_rownames)
+        mLeft <- mLeft+max(strwidth(DT$row, "inches"))
+      mTop <- ifelse(!is.na(main) & cluster_cols, 0.15, 0.1)
+      mTop <- grconvertY(mTop, from = "ndc", to= "inches")
+      mRight <- strwidth(legend_title, "inches")
+      if(cluster_rows)
+        mRight <- mRight+grconvertX(0.1, from = "ndc", to= "inches")
+      DT[1, mar:= .(c(mBottom, mLeft, mTop, mRight))]
+      par(mai= c(mBottom, mLeft, mTop, mRight))
+    }
     
-  if(show_rownames)
-    axis(2,
-         at= seq(nrow(im))/nrow(im)-(0.5/nrow(im)),
-         labels = unique(DT[, row, keyby= y])$row,
-         lty= 0,
-         las= 2,
-         line= -1)
-
-  # Plot legend
-  xleft <- 1+grconvertX(strheight(DT$col[1], "inches")*2, "inches", "ndc")
-  if(cluster_rows)
-    xleft <- xleft+0.1
-  ybottom <- 0.7
-  xright <- xleft+grconvertX(strheight(DT$col[1], "inches")*2, "inches", "ndc")
-  ytop <- 1-3*grconvertY(strheight(legend_title, cex = 0.8, "inches"), from = "inches", to= "ndc")
-  rasterImage(matrix(rev(Cc(seq(min(breaks), max(breaks), length.out = 101)))),
-              xleft,
-              ybottom,
-              xright,
-              ytop,
-              xpd=T)
-  ticks <- axisTicks(range(breaks), log=F)
-  ymin.ticks <- ybottom+(min(ticks)-min(breaks))/diff(range(breaks))*(ytop-ybottom)
-  ymax.ticks <- ybottom+(max(ticks)-min(breaks))/diff(range(breaks))*(ytop-ybottom)
-  text(xright,
-       seq(ymin.ticks, ymax.ticks, length.out = length(ticks)),
-       labels = ticks,
-       pos=4,
-       xpd= T,
-       cex= 0.6,
-       offset= 0.25)
-  text(xleft,
-       1-0.5*strheight(legend_title),
-       labels = legend_title,
-       pos=4,
-       xpd= T,
-       cex= 0.8,
-       offset= 0)
-  
-  # Title
-  text(0.5, 
-       y = ifelse(cluster_cols, 1.1, 1.05),
-       main, 
-       pos = 3,
-       xpd= T)
+    # Image
+    im <- as.matrix(data.table::dcast(DT, y~x, value.var = "Cc"), 1)
+    plot.new()
+    rasterImage(im,
+                xleft = 0,
+                ybottom = 1,
+                xright = 1,
+                ytop = 0,
+                interpolate = F)
+    
+    # Plot numbers
+    if(display_numbers)
+      text(DT$xplot,
+           DT$yplot,
+           display_numbers_FUN(DT$value),
+           cex= display_numbers_cex,
+           offset= 0)
+    
+    # Plot dendro and cuts
+    if(cluster_rows & is.null(newdata) & nrow(mat)>1)
+      if(is.na(kmeans_k))
+        segments(rdend$y/max(rdend$y)/10+1,
+                 1-(rdend$x/max(rdend$x)-(0.5/nrow(im))),
+                 rdend$yend/max(rdend$yend)/10+1,
+                 1-(rdend$xend/max(rdend$xend)-(0.5/nrow(im))),
+                 xpd= T)
+    cr <- cumsum(unique(DT[, rcl, keyby= y])[, .N, rcl][, N])
+    cr <- cr[-length(cr)]/nrow(im)
+    if(length(cr)>0) # Plot cutree lines and cluster numbers
+    {
+      segments(0, cr, 1, cr)
+      if(show_cl_number_rows)
+        text(x= 1, 
+             y= DT[, mean(y), rcl]$V1/(nrow(im))-(0.5/nrow(im)), 
+             labels = DT[, mean(y), rcl]$rcl, 
+             xpd= T, 
+             pos= 4, 
+             offset= 0.5,
+             cex= 1.5)
+    }
+    
+    if(cluster_cols & ncol(mat)>1)
+      segments(cdend$x/max(cdend$x)-(0.5/ncol(im)),
+               cdend$y/max(cdend$y)/10+1,
+               cdend$xend/max(cdend$xend)-(0.5/ncol(im)),
+               cdend$yend/max(cdend$yend)/10+1,
+               xpd= T)
+    cc <- cumsum(unique(DT[, ccl, keyby= x])[, .N, ccl][, N])
+    cc <- cc[-length(cc)]/ncol(im)
+    if(length(cc)>0) # Plot cutcol lines and cluster numbers
+    {
+      segments(cc, 0, cc, 1)
+      if(show_cl_number_cols)
+        text(x= DT[, mean(x), ccl]$V1/ncol(im)-0.5/ncol(im), 
+             y= 1, 
+             labels = DT[, mean(x), ccl]$ccl, 
+             xpd= T, 
+             pos= 3, 
+             offset= 0.5,
+             cex= 1.5)
+    }
+    
+    # Plot axes
+    if(show_colnames)
+      axis(1,
+           at= seq(ncol(im))/ncol(im)-(0.5/ncol(im)),
+           labels = unique(DT[, col, keyby= x])$col,
+           lty= 0,
+           las= 2, 
+           line= -1)
+    
+    if(show_rownames)
+      axis(2,
+           at= seq(nrow(im))/nrow(im)-(0.5/nrow(im)),
+           labels = unique(DT[, row, keyby= y])$row,
+           lty= 0,
+           las= 2,
+           line= -1)
+    
+    # Plot legend
+    xleft <- 1+grconvertX(strheight(DT$col[1], "inches")*2, "inches", "ndc")
+    if(cluster_rows)
+      xleft <- xleft+0.1
+    ybottom <- 0.7
+    xright <- xleft+grconvertX(strheight(DT$col[1], "inches")*2, "inches", "ndc")
+    ytop <- 1-3*grconvertY(strheight(legend_title, cex = 0.8, "inches"), from = "inches", to= "ndc")
+    rasterImage(matrix(rev(Cc(seq(min(breaks), max(breaks), length.out = 101)))),
+                xleft,
+                ybottom,
+                xright,
+                ytop,
+                xpd=T)
+    ticks <- axisTicks(range(breaks), log=F)
+    ymin.ticks <- ybottom+(min(ticks)-min(breaks))/diff(range(breaks))*(ytop-ybottom)
+    ymax.ticks <- ybottom+(max(ticks)-min(breaks))/diff(range(breaks))*(ytop-ybottom)
+    text(xright,
+         seq(ymin.ticks, ymax.ticks, length.out = length(ticks)),
+         labels = ticks,
+         pos=4,
+         xpd= T,
+         cex= 0.6,
+         offset= 0.25)
+    text(xleft,
+         1-0.5*strheight(legend_title),
+         labels = legend_title,
+         pos=4,
+         xpd= T,
+         cex= 0.8,
+         offset= 0)
+    
+    # Title
+    text(0.5, 
+         y = ifelse(cluster_cols, 1.1, 1.05),
+         main, 
+         pos = 3,
+         xpd= T)
+  }
   
   invisible(DT)
 }

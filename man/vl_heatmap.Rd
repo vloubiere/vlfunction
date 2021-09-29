@@ -28,7 +28,8 @@ vl_heatmap(
   display_numbers_cex = 0.5,
   legend_title = "legend",
   scale = "none",
-  na_col = "lightgrey"
+  na_col = "lightgrey",
+  plot = T
 )
 }
 \arguments{
@@ -79,6 +80,8 @@ vl_heatmap(
 \item{scale}{Scale matrix before clustering? Can be 'none' (default), 'column' or 'row'.}
 
 \item{na_col}{Color for na values. Default= "lightgrey"}
+
+\item{plot}{Should the heatmap be plotted? Default to T}
 }
 \value{
 A data.table containing clustering data!
