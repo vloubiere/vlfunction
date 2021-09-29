@@ -13,7 +13,7 @@
 #' @export
 
 
-vl_motif_cl_enrich_plot_only <- function(obj= enr_all,
+vl_motif_cl_enrich_plot_only <- function(obj,
                                          padj_cutoff= 0.00001,
                                          N_top= Inf,
                                          auto_margin= T)
@@ -26,9 +26,9 @@ vl_motif_cl_enrich_plot_only <- function(obj= enr_all,
   # Generate plot table
   #----------------------------------#
   # padj cutoff
-  sel <- DT[any(padj <= padj_cutoff & log2OR > 0), motif]
+  sel <- DT[, any(padj <= padj_cutoff & log2OR > 0), motif_name][(V1), motif_name]
   # Plotting object
-  pl <- DT[motif %in% sel & padj < 0.05 & log2OR > 0]
+  pl <- DT[motif_name %in% sel & padj < 0.05 & log2OR > 0]
   pl[, '-log10(pval)':= -log10(pval)]
   # Select top motif/cluster
   setorderv(pl, "-log10(pval)", order = -1)
@@ -158,4 +158,6 @@ vl_motif_cl_enrich_plot_only <- function(obj= enr_all,
        xpd= T,
        cex= 0.8,
        offset= 0)
+  
+  invisible(pl)
 }
