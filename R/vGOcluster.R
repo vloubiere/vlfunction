@@ -125,8 +125,14 @@ vl_GO_clusters <- function(FBgn_list,
 
   # Lines
   plot.new()
-  abline(v= unique(pl$x))
-  abline(h= unique(pl$y))
+  segments(unique(pl$x),
+           par("usr")[3],
+           unique(pl$x),
+           par("usr")[4])
+  segments(par("usr")[1],
+           unique(pl$y),
+           par("usr")[2],
+           unique(pl$y))
   # Points
   points(pl$x, 
          pl$y, 
