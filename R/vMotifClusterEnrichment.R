@@ -28,7 +28,7 @@ vl_motif_cl_enrich <- function(obj,
   # Transform cl as factor and fill NAs with None
   if(!is.factor(DT$cl))
     DT[, cl:= factor(cl, 
-                     levels= unique(DT$cl))]
+                     levels= sort(unique(DT$cl)))]
   DT[is.na(cl), cl:= factor("None")]
   
   # Compute enrichment
