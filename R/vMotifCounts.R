@@ -28,7 +28,7 @@ vl_motif_counts <- function(bed,
   if(is.data.table(bed))
     bed <- GRanges(bed)
   if(ncol(mcols(bed))>3)
-    warning("provided bed file has many columns!! \n Given that the output can be massive, I would adive to reduce it to the minimu (coordinates + ID)")
+    print("provided bed file has many columns!! \n Given that the output can be massive, I would advice to reduce it to the minimum (coordinates + ID)")
   if(resize)
     if(length(extend)!=2 | !all(sign(extend)==1))
       stop("extend should be a vector containing two positive integers, e.g c(500, 500). If you want to use fancy resizing, resize before and set 'resize' argument to F!")

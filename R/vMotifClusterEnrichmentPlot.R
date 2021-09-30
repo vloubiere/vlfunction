@@ -27,6 +27,8 @@ vl_motif_cl_enrich_plot_only <- function(obj,
   #----------------------------------#
   # padj cutoff
   sel <- DT[, any(padj <= padj_cutoff & log2OR > 0), motif_name][(V1), motif_name]
+  if(length(sel)==0)
+    stop("No enrichment found with provided paj cutoff!")
   # Plotting object
   pl <- DT[motif_name %in% sel & padj < 0.05 & log2OR > 0]
   pl[, '-log10(pval)':= -log10(pval)]

@@ -27,9 +27,16 @@ vl_motif_cl_enrich <- function(obj,
   
   # Transform cl as factor and fill NAs with None
   if(!is.factor(DT$cl))
+  {
+    print("cl_column coerced as factor (levels in alphabetical order).")
     DT[, cl:= factor(cl, 
                      levels= sort(unique(DT$cl)))]
-  DT[is.na(cl), cl:= factor("None")]
+  }
+  if(anyNA(DT$cl))
+  {
+    print("cl_column contains NAs that will be renamed as 'None' (factor)")
+    DT[is.na(cl), cl:= factor("None")]
+  }
   
   # Compute enrichment
   DT <- DT[, {
@@ -42,7 +49,6 @@ vl_motif_cl_enrich <- function(obj,
   }, .(motif, motif_name)]
   DT[, padj:= p.adjust(pval, method = "fdr"), pval]
   DT[, log2OR:= log2(OR)]
-  DT <- DT[V1!="None"]
   names(DT)[3] <- "cl"
   return(DT)
 }

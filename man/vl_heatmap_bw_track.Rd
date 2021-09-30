@@ -4,21 +4,11 @@
 \alias{vl_heatmap_bw_track}
 \title{bw Average tracks}
 \usage{
-vl_heatmap_bw_track(
-  bed,
-  set_IDs = NULL,
-  tracks,
-  extend = c(-5000, 5000),
-  stranded = F,
-  nbins = 101,
-  names = NULL,
-  plot = T,
-  center_label = "TSS",
-  max_FUN = function(x) quantile(x, 0.995, na.rm = T),
-  orderTrackIdx = 1,
-  order_FUN = function(x) mean(x, na.rm = T),
-  col = c("blue", "yellow", "white")
-)
+vl_heatmap_bw_track(bed, set_IDs = NULL, tracks, extend = c(-5000,
+  5000), stranded = F, nbins = 101, names = NULL, plot = T,
+  center_label = "TSS", max_FUN = function(x) quantile(x, 0.995, na.rm
+  = T), orderTrackIdx = 1, order_FUN = function(x) mean(x, na.rm = T),
+  col = c("blue", "yellow", "white"))
 }
 \arguments{
 \item{bed}{Regions to plot. Can be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns"}
@@ -46,6 +36,8 @@ vl_heatmap_bw_track(
 \item{col}{Color vector to be used for heatmaps. col= c("blue", "yellow", "white")}
 
 \item{oder_FUN}{Function used for regions ordering. Default= function(x) mean(x, na.rm= T)}
+
+\item{orderTrackIdx}{yIdx of the tack to be used for ordering the heatmaps. Default=1 (1st left heatmap)}
 }
 \value{
 An object that can be used with the vl_heatmap_bw_track_plot_only() function.

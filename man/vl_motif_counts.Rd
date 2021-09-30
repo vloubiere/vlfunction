@@ -4,13 +4,8 @@
 \alias{vl_motif_counts}
 \title{Counts motifs}
 \usage{
-vl_motif_counts(
-  bed,
-  genome = "dm6",
-  resize = T,
-  extend = c(500, 500),
-  sel = "Dmel"
-)
+vl_motif_counts(bed, genome = "dm6", resize = T, extend = c(500,
+  500), sel = "Dmel")
 }
 \arguments{
 \item{bed}{Either a GRanges object or a data.table that can be coerced to it}
