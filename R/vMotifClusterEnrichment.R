@@ -11,7 +11,8 @@
 #' @export
 
 vl_motif_cl_enrich <- function(obj, 
-                               cl_column)
+                               cl_column,
+                               compare_to= unique(DT$cl))
 {
   DT <- copy(obj)
   if(!cl_column %in% names(DT))
@@ -40,10 +41,11 @@ vl_motif_cl_enrich <- function(obj,
   
   # Compute enrichment
   DT <- DT[, {
-    .ccl <- data.table(V1= unique(cl))
-    if(nrow(.ccl)>1)
+    .ccl <- data.table(V1= unique(cl)) # make DT containing all clusters
+    if(nrow(.ccl)>1) # If any motif count within cluster -> FISHER
       .ccl[, c("OR", "pval"):= {
-        .f <- fisher.test(cl==V1, motif_counts>0)
+        .f <- fisher.test(.SD[cl %in% c(V1, compare_to), cl==V1], # Restrict the analysis to tested cluster and the ones in "compare_to"
+                          .SD[cl %in% c(V1, compare_to), motif_counts>0])
         .f[c("estimate", "p.value")]
       }, V1]
   }, .(motif, motif_name)]
