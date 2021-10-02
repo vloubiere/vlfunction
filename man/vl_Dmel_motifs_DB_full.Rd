@@ -7,10 +7,10 @@
 \format{
 An object containing 13899 motifs and related metadata
 \describe{
-  \item{motif}{motif IDs consitent with Bernardo's ones, except for the motifs from the CP collection (see collection column)}
+  \item{motif}{motif IDs consitent with Bernardo's ones.}
   \item{motif_name}{Curated Dmel symbols. sep= "/"}
   \item{FBgn}{Curated FBgn symbols. sep= "/"}
-  \item{collection}{Motif collection. CP moitifs were set to "CP"}
+  \item{collection}{Motif collection.}
   \item{Motif_cluster_name}{Cluster names with the respective motif types.}
   \item{Pwms_log_odds}{PWM expressed as log odds}
   \item{Pwms_perc}{PWM expressed as percentage}
@@ -23,7 +23,7 @@ An object containing 13899 motifs and related metadata
 Can be used with the ?vl_motif_counts() function to count motifs
 }
 \description{
-Contains 13918 motifs usable for motif enrichments in Dmel
+Contains 13899 motifs usable for motif enrichments in Dmel
 }
 \examples{
 load("/mnt/d/_R_data/vlfunction/data/vl_Dmel_motifs_DB.RData")
@@ -48,7 +48,11 @@ setcolorder(DB, c("motif",
                   "FBgn", 
                   "Motif_cluster_name", 
                   "Motif_cluster"))
-# CP motifs
+vl_Dmel_motifs_DB_full <- DB
+save(vl_Dmel_motifs_DB_full, 
+file = "/mnt/d/_R_data/vlfunction/data/vl_Dmel_motifs_DB_full.RData")
+
+# Add CP motifs (not workig yet !)
 load("/mnt/d/_R_data/vlfunction/data/vl_CP_motifs_DB.RData")
 CP <- data.table(motif= paste0("CP__", name(vl_CP_motifs_DB$Pwms_log_odds)),
                  pwms_log_odds= as.list(vl_CP_motifs_DB$Pwms_log_odds),
@@ -60,11 +64,9 @@ CP <- data.table(motif= paste0("CP__", name(vl_CP_motifs_DB$Pwms_log_odds)),
 CP[grepl("Ohler1", motif), c("motif_name", "FBgn"):= .("M1BP", "FBgn0003687")]
 CP[grepl("TATA", motif), c("motif_name", "FBgn"):= .("Tbp", "FBgn0003687")]
 CP[grepl("DRE", motif), c("motif_name", "FBgn"):= .("Dref", "FBgn0015664")]
-vl_Dmel_motifs_DB_full <- rbind(DB,
+final <- rbind(DB,
 CP,
 fill= T)
-save(vl_Dmel_motifs_DB_full, 
-file = "/mnt/d/_R_data/vlfunction/data/vl_Dmel_motifs_DB_full.RData")
 
 }
 \keyword{datasets}

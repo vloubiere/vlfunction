@@ -101,8 +101,8 @@ vl_motif_cl_enrich_plot_only <- function(obj,
        las= 2)
   axis(2,
        lty= 0,
-       at = unique(pl$y), 
-       labels = unique(pl$motif_name),
+       at = unique(pl[, .(motif_name, y)])$y, 
+       labels = unique(pl[, .(motif_name, y)])$motif_name,
        las= 2)
   # Legend pval
   xleft <- 1-grconvertX(strwidth("-log10(pval)", "inches"), "inches", "ndc")

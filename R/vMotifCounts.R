@@ -4,9 +4,7 @@
 #'
 #' @param bed Either a GRanges object or a data.table that can be coerced to it
 #' @param genome Genome to be used for coordinates ("dm6, "dm3")
-#' @param resize Should the regions be resize according to extend arg? Default= T
-#' @param extend Vector containing two positive integers (e.g c(500,500) indicating how the regions should be extend around their center
-#' @param sel Either "Dmel" (convenient set of Dmel motifs), NULL (all motifs) or a list of IDs existing in vl_Dmel_motifs_DB$metadata$motif_name
+#' @param sel List of motifs to compute. see vl_Dmel_motifs_DB_full$motif
 #' 
 #' @examples 
 #' test <- cl_motif_counts(bed = GRanges("chr3R", IRanges(c(2e6, 3e6), c(2e6, 3e6)+1e3)),
@@ -23,9 +21,10 @@ vl_motif_counts <- function(bed,
                             sel= vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn), motif])
 {
   # Checks
-  if(!is.data.table(bed))
-    bed <- as.data.table(bed)
-  if(ncol(bed)>5)
+  if(is.data.table(bed))
+    DT <- copy(bed) else
+      DT <- as.data.table(bed)
+  if(ncol(DT)>5)
     print("provided bed file has many columns!! \n Given that the output can be massive, I would advice to reduce it to the minimum (coordinates + ID)")
   if(any(!sel %in% vl_Dmel_motifs_DB_full$motif))
     stop("Some motif provided in 'sel' do not exist in vl_Dmel_motifs_DB_full$motif")
@@ -35,14 +34,14 @@ vl_motif_counts <- function(bed,
   mot <- do.call(PWMatrixList, 
                  sub$pwms_log_odds)
   # Get sequence
-  bed[, seq:= getSeq(getBSgenome(genome), seqnames, start, end, as.character= T)]
+  DT[, seq:= getSeq(getBSgenome(genome), seqnames, start, end, as.character= T)]
   res <- as.data.table(as.matrix(matchMotifs(mot,
-                                             bed$seq,
+                                             DT$seq,
                                              p.cutoff= 5e-4,
                                              bg= "even",
                                              out= "scores")@assays@data[["motifCounts"]]))
   names(res) <- sub$motif
-  res <- cbind(bed[, !"seq"], res)
+  res <- cbind(DT[, !"seq"], res)
   res <- melt(res,
               measure.vars = sub$motif,
               variable.name = "motif",

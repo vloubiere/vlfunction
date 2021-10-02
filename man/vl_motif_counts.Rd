@@ -15,11 +15,7 @@ vl_motif_counts(
 
 \item{genome}{Genome to be used for coordinates ("dm6, "dm3")}
 
-\item{sel}{Either "Dmel" (convenient set of Dmel motifs), NULL (all motifs) or a list of IDs existing in vl_Dmel_motifs_DB$metadata$motif_name}
-
-\item{resize}{Should the regions be resize according to extend arg? Default= T}
-
-\item{extend}{Vector containing two positive integers (e.g c(500,500) indicating how the regions should be extend around their center}
+\item{sel}{List of motifs to compute. see vl_Dmel_motifs_DB_full$motif}
 }
 \value{
 Network plot.
