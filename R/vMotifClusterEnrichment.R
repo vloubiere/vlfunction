@@ -4,6 +4,8 @@
 #'
 #' @param obj A motif count object similar to the output of ?vl_motif_counts() (colnames:'motif', 'motif_counts', 'motif_name') + one cluster column! 
 #' @param cl_column name of the cluster column
+#' @param bg cluster IDs to be used as background. Default unique(obj[[cl_column]])
+#' @param comp_expr Expression used for contingency table. Default "motif_count>0"
 #' 
 #' @examples 
 #' 
@@ -12,45 +14,35 @@
 
 vl_motif_cl_enrich <- function(obj, 
                                cl_column,
-                               compare_to= unique(DT$cl))
+                               bg= unique(obj[[cl_column]]),
+                               comp_expr= "motif_counts>0")
 {
   DT <- copy(obj)
-  if(!cl_column %in% names(DT))
-    stop("cl_column does not exist in provided obj")
-  
   # Checks
+  if(!cl_column %in% names(DT))
+    stop("cl_column does not exist in provided obj") else if(cl_column != "cl")
+      names(DT)[names(DT)=="cl_column"] <- "cl"
   if(!all(c("motif", "motif_counts", "motif_name") %in% names(DT)))
     stop("Provided DT should contain c('motif', 'motif_counts', 'motif_name') columns. see ?vl_motif_counts() output!")
+  if(anyNA(bg))
+    stop("bg contains NAs. cl_column should not contain NAs OR they should not be used for comparisons!")
   
-  # Rename cl column
-  if(cl_column!="cl")
-    names(DT)[names(DT)==cl_column] <- "cl"
-  
-  # Transform cl as factor and fill NAs with None
-  if(!is.factor(DT$cl))
-  {
-    print("cl_column coerced as factor (levels in alphabetical order).")
-    DT[, cl:= factor(cl, 
-                     levels= sort(unique(DT$cl)))]
-  }
-  if(anyNA(DT$cl))
-  {
-    print("cl_column contains NAs that will be renamed as 'None' (factor)")
-    DT[is.na(cl), cl:= factor("None")]
-  }
-  
-  # Compute enrichment
-  DT <- DT[, {
-    .ccl <- data.table(V1= unique(cl)) # make DT containing all clusters
-    if(nrow(.ccl)>1) # If any motif count within cluster -> FISHER
-      .ccl[, c("OR", "pval"):= {
-        .f <- fisher.test(.SD[cl %in% c(V1, compare_to), cl==V1], # Restrict the analysis to tested cluster and the ones in "compare_to"
-                          .SD[cl %in% c(V1, compare_to), motif_counts>0])
-        .f[c("estimate", "p.value")]
-      }, V1]
-  }, .(motif, motif_name)]
-  DT[, padj:= p.adjust(pval, method = "fdr"), pval]
-  DT[, log2OR:= log2(OR)]
-  names(DT)[3] <- "cl"
-  return(DT)
+  # For each motif/cluster combination, compute association using fisher
+  cmb <- DT[, {
+    data.table(V1= na.omit(unique(cl))) # make DT containing clusters to test
+  }, .(mot= motif, motif_name)]
+  cmb[, c("OR", "pval"):= {
+    # Extract motif from DT, restrict to regions from tested cluster OR bg, cast contingency table
+    .t <- table(DT[motif==mot & cl %in% c(V1, bg), .(cl==V1, 
+                                                     eval(parse(text= comp_expr)))])
+    # If motif present in both tested cl and bg, do fisher test
+    if(identical(dim(.t), as.integer(c(2,2))))
+      res <- as.data.table(as.list(fisher.test(.t)[c("estimate", "p.value")])) else
+        data.table(numeric(), numeric())
+  }, .(mot, V1)] 
+  cmb <- na.omit(cmb)
+  cmb[, padj:= p.adjust(pval, method = "fdr"), pval]
+  cmb[, log2OR:= log2(OR)]
+  names(cmb)[c(1,3)] <- c("motif", cl_column)
+  return(cmb)
 }

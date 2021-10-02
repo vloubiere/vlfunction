@@ -4,12 +4,21 @@
 \alias{vl_motif_cl_enrich}
 \title{Compute motif enrichment}
 \usage{
-vl_motif_cl_enrich(obj, cl_column)
+vl_motif_cl_enrich(
+  obj,
+  cl_column,
+  bg = unique(obj[[cl_column]]),
+  comp_expr = "motif_counts>0"
+)
 }
 \arguments{
 \item{obj}{A motif count object similar to the output of ?vl_motif_counts() (colnames:'motif', 'motif_counts', 'motif_name') + one cluster column!}
 
 \item{cl_column}{name of the cluster column}
+
+\item{bg}{cluster IDs to be used as background. Default unique(obj[[cl_column]])}
+
+\item{comp_expr}{Expression used for contingency table. Default "motif_count>0"}
 }
 \value{
 Fisher test data.table.
