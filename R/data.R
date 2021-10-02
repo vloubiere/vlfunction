@@ -1,53 +1,63 @@
 #' Dmel motifs data base 
 #'
-#' Contains 13899 motifs usable for motif enrichments in Dmel
+#' Contains 13918 motifs usable for motif enrichments in Dmel
 #'
-#' @usage Can be used with the matchMotifs function from the motifmatchr package (see example)
+#' @usage Can be used with the ?vl_motif_counts() function to count motifs
 #' 
 #' @format An object containing 13899 motifs and related metadata
 #' \describe{
-#'   \item{Motif_cluster}{901 clusters containing redunsant motifs. Used collections: bergman, cisbp, flyfactorsurvey, homer, jaspar, stark, idmmpmm.}
+#'   \item{motif}{motif IDs consitent with Bernardo's ones, except for the motifs from the CP collection (see collection column)}
+#'   \item{motif_name}{Curated Dmel symbols. sep= "/"}
+#'   \item{FBgn}{Curated FBgn symbols. sep= "/"}
+#'   \item{collection}{Motif collection. CP moitifs were set to "CP"}
 #'   \item{Motif_cluster_name}{Cluster names with the respective motif types.}
 #'   \item{Pwms_log_odds}{PWM expressed as log odds}
 #'   \item{Pwms_perc}{PWM expressed as percentage}
 #' }
 #' 
 #' @examples
-#' # Select convenient set of Drosophila TFs
-#' sel <- vl_Dmel_motifs_DB$metadata[!is.na(vl_Dmel_motifs_DB$metadata$Dmel) & # Associated to a known TF
-#' vl_Dmel_motifs_DB$metadata$X..motif_collection_name %in% # From a relevant DB
-#' c("flyfactorsurvey", "bergman", "jaspar", "idmmpmm", "cisbp"), "motif_name"]
-#' sel <- which(name(vl_Dmel_motifs_DB$All_pwms_log_odds) %in% sel)
-#' hit <- matchMotifs(vl_Dmel_motifs_DB$All_pwms_log_odds[sel], GRanges("chrX", IRanges(10000000, 10000500)), genome= "dm3", p.cutoff= 5e-4, bg= "even", out= "scores")
-#' counts <- as.matrix(motifCounts(hit))
-#' colnames(counts) <- name(vl_Dmel_motifs_DB$All_pwms_log_odds[sel])
-#' counts <- as.data.table(counts)
+#' load("/mnt/d/_R_data/vlfunction/data/vl_Dmel_motifs_DB.RData")
+#' DB <- data.table(motif= name(vl_Dmel_motifs_DB$All_pwms_log_odds),
+#' pwms_log_odds= as.list(vl_Dmel_motifs_DB$All_pwms_log_odds),
+#' pwms_perc= as.list(vl_Dmel_motifs_DB$All_pwms_perc[match(name(vl_Dmel_motifs_DB$All_pwms_log_odds), 
+#'                                                          name(vl_Dmel_motifs_DB$All_pwms_perc))]))
+#' meta <- as.data.table(vl_Dmel_motifs_DB$metadata)
+#' meta <- meta[, !c("motif_id", "motif_description2", "motif_length", "S2_exp", "S2_protein_exp")]
+#' setnames(meta,         
+#'          c("motif_name", "X..motif_collection_name", "motif_collection_version", "Dmel", "motif_description"),
+#'          c("motif", "collection", "collection_version", "motif_name", "description"))
+#' DB <- merge(meta,
+#'             DB)
+#'             
+#' # load hand curated names
+#' load("/mnt/d/_R_data/vlfunction/data/vl_motifs_DB_fix_names_211002.RData")
+#' DB[fix_names, c("motif_name", "FBgn"):= .(i.new_symbol, i.FBgn), on="motif_name==old_symbol"]
+#' setcolorder(DB, c("motif", 
+#'                   "motif_name", 
+#'                   "description", 
+#'                   "FBgn", 
+#'                   "Motif_cluster_name", 
+#'                   "Motif_cluster"))
+#' # CP motifs
+#' load("/mnt/d/_R_data/vlfunction/data/vl_CP_motifs_DB.RData")
+#' CP <- data.table(motif= paste0("CP__", name(vl_CP_motifs_DB$Pwms_log_odds)),
+#'                  pwms_log_odds= as.list(vl_CP_motifs_DB$Pwms_log_odds),
+#'                  pwms_perc= as.list(vl_CP_motifs_DB$Pwms_perc[match(name(vl_CP_motifs_DB$Pwms_log_odds), 
+#'                                                                     name(vl_CP_motifs_DB$Pwms_perc))]),
+#'                  collection= "CP",
+#'                  collection_version= "October2021",
+#'                  Species= "Drosophila")
+#' CP[grepl("Ohler1", motif), c("motif_name", "FBgn"):= .("M1BP", "FBgn0003687")]
+#' CP[grepl("TATA", motif), c("motif_name", "FBgn"):= .("Tbp", "FBgn0003687")]
+#' CP[grepl("DRE", motif), c("motif_name", "FBgn"):= .("Dref", "FBgn0015664")]
+#' vl_Dmel_motifs_DB_full <- rbind(DB,
+#' CP,
+#' fill= T)
+#' save(vl_Dmel_motifs_DB_full, 
+#' file = "/mnt/d/_R_data/vlfunction/data/vl_Dmel_motifs_DB_full.RData")
 #'
 #' @source {"/groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/TF_clusters_PWMs.RData"}
-"vl_Dmel_motifs_DB"
-
-#' Core Promoter motifs data base 
-#'
-#' Contains 19 core promoter motifs (Vanja + Bernie)
-#'
-#' @usage Can be used with the matchMotifs function from the motifmatchr package (see example)
-#' 
-#' @format An object containing Motifs and related metadata
-#' \describe{
-#'   \item{Pwms_log_odds}{PWM expressed as log odds}
-#'   \item{Pwms_perc}{PWM expressed as percentage}
-#'   ...
-#' }
-#' 
-#' @examples
-#' hit <- matchMotifs(vl_CP_motifs_DB$Pwms_log_odds, GRanges("chrX", IRanges(10000000, 10000500)), genome= "dm3", p.cutoff= 5e-4, bg= "even", out= "scores")
-#' counts <- as.matrix(motifCounts(hit))
-#' colnames(counts) <- name(vl_CP_motifs_DB$Pwms_log_odds)
-#' counts <- as.data.table(counts)
-#'
-#' @source {"/groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/TF_clusters_PWMs.RData"}
-"vl_CP_motifs_DB"
-
+"vl_Dmel_motifs_DB_full"
 
 #' Dm6 GO database 
 #'

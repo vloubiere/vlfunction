@@ -20,60 +20,35 @@
 
 vl_motif_counts <- function(bed, 
                             genome= "dm6",
-                            resize= T,
-                            extend= c(500, 500),
-                            sel= "Dmel")
+                            sel= vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn), motif])
 {
   # Checks
-  if(is.data.table(bed))
-    bed <- GRanges(bed)
-  if(ncol(mcols(bed))>3)
+  if(!is.data.table(bed))
+    bed <- as.data.table(bed)
+  if(ncol(bed)>5)
     print("provided bed file has many columns!! \n Given that the output can be massive, I would advice to reduce it to the minimum (coordinates + ID)")
-  if(resize)
-    if(length(extend)!=2 | !all(sign(extend)==1))
-      stop("extend should be a vector containing two positive integers, e.g c(500, 500). If you want to use fancy resizing, resize before and set 'resize' argument to F!")
+  if(any(!sel %in% vl_Dmel_motifs_DB_full$motif))
+    stop("Some motif provided in 'sel' do not exist in vl_Dmel_motifs_DB_full$motif")
   
   # Select motifs
-  if(is.null(sel))
-    sel_IDs <- vl_Dmel_motifs_DB$metadata[,"motif_name"]
-  if(identical("Dmel", sel))
-  {
-    idx <- !is.na(vl_Dmel_motifs_DB$metadata$Dmel) & # Associated to a known TF
-      vl_Dmel_motifs_DB$metadata$X..motif_collection_name %in% # From a relevant DB
-      c("flyfactorsurvey", "bergman", "jaspar", "idmmpmm", "cisbp")
-    sel_IDs <- vl_Dmel_motifs_DB$metadata[idx, "motif_name"]
-  }else if(all(sel %in% vl_Dmel_motifs_DB$metadata$motif_name))
-    sel_IDs <- sel else
-      stop("Sel should either be set to NULL (all motifs) or 'Dmel' (convenient set for Dmel) or should only contain IDs that exist in vl_Dmel_motifs_DB$metadata$motif_name")
-
-  # Resize bed
-  if(resize)
-  {
-    bed <- resize(bed, 1, "center")
-    bed <- resize(bed, extend[1], fix = "end")
-    bed <- resize(bed, extend[1]+extend[2], fix = "start")
-  }
-  
-  # Compute counts
-  sel_idx <- which(name(vl_Dmel_motifs_DB$All_pwms_log_odds) %in% sel_IDs)
-  hit <- matchMotifs(vl_Dmel_motifs_DB$All_pwms_log_odds[sel_idx], 
-                     bed, 
-                     genome= genome, 
-                     p.cutoff= 5e-4, 
-                     bg= "even", 
-                     out= "scores")
-  counts <- as.matrix(motifCounts(hit))
-  colnames(counts) <- name(vl_Dmel_motifs_DB$All_pwms_log_odds[sel_idx])
-  counts <- as.data.table(counts)
-  
-  # Format output
-  res <- cbind(as.data.table(bed), counts)
-  res <- melt(res, 
-              measure.vars = colnames(counts), 
-              variable.name = "motif", 
+  sub <- vl_Dmel_motifs_DB_full[motif %in% sel]
+  mot <- do.call(PWMatrixList, 
+                 sub$pwms_log_odds)
+  # Get sequence
+  bed[, seq:= getSeq(getBSgenome(genome), seqnames, start, end, as.character= T)]
+  res <- as.data.table(as.matrix(matchMotifs(mot,
+                                             bed$seq,
+                                             p.cutoff= 5e-4,
+                                             bg= "even",
+                                             out= "scores")@assays@data[["motifCounts"]]))
+  names(res) <- sub$motif
+  res <- cbind(bed[, !"seq"], res)
+  res <- melt(res,
+              measure.vars = sub$motif,
+              variable.name = "motif",
               value.name = "motif_counts")
-  res[as.data.table(vl_Dmel_motifs_DB$metadata), motif_name:= i.Dmel, on= "motif==motif_name"]
-  res[, motif_name:= paste0(motif_name, "_", .SD[, rep(.GRP, .N), motif]$V1), motif_name]
+  res <- merge(sub[, .(motif, motif_name)],
+               res)
   return(res)
 }
-  
+

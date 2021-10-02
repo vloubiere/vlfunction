@@ -21,8 +21,8 @@ vl_motif_cl_enrich_plot_only <- function(obj,
                                          auto_margin= T)
 {
   DT <- copy(obj)
-  if(!all(c("motif_name", "cl", "pval", "padj", "log2OR") %in% names(DT)))
-    stop("Input should contain c('motif_name', 'cl', 'pval', 'padj', 'log2OR') columns. See ?vl_motif_cl_enrich() output")
+  if(!all(c("motif", "motif_name", "cl", "pval", "padj", "log2OR") %in% names(DT)))
+    stop("Input should contain c('motif', 'motif_name', 'cl', 'pval', 'padj', 'log2OR') columns. See ?vl_motif_cl_enrich() output")
   if(log2OR_cutoff<0)
     stop("log2OR_cutoff should be > 0")
   
@@ -30,21 +30,21 @@ vl_motif_cl_enrich_plot_only <- function(obj,
   # Generate plot table
   #----------------------------------#
   # padj cutoff
-  sel <- DT[, any(padj <= padj_cutoff & log2OR > log2OR_cutoff), motif_name][(V1), motif_name]
+  sel <- DT[, any(padj <= padj_cutoff & log2OR > log2OR_cutoff), motif][(V1), motif]
   if(length(sel)==0)
     stop("No enrichment found with provided paj cutoff!")
   # Plotting object
-  pl <- DT[motif_name %in% sel & padj < 0.05 & log2OR > 0]
+  pl <- DT[motif %in% sel & padj < 0.05 & log2OR > 0]
   pl[, '-log10(pval)':= -log10(pval)]
   # Select top motif/cluster
   setorderv(pl, "-log10(pval)", order = -1)
-  top_motifs <- pl[, motif_name[seq(.N)<=N_top], cl]$V1
-  pl <- pl[motif_name %in% top_motifs]
+  top_motifs <- pl[, motif[seq(.N)<=N_top], cl]$V1
+  pl <- pl[motif %in% top_motifs]
   # Handle infinite log2OR
   if(any(is.infinite(pl$log2OR)))
   {
     warning("There are suspcious infinite log2OR values found after padj cutoff")
-    print(unique(pl[is.infinite(pl$log2OR), motif_name]))
+    print(unique(pl[is.infinite(pl$log2OR), motif]))
   }
   pl[log2OR==Inf, log2OR:= max(pl[is.finite(log2OR), log2OR])]
   pl[log2OR==(-Inf), log2OR:= min(pl[is.finite(log2OR), log2OR])]
@@ -61,8 +61,8 @@ vl_motif_cl_enrich_plot_only <- function(obj,
   setorderv(pl, 
             c("cl", "-log10(pval)", "log2OR", "motif"), 
             order = c(1, -1, -1, 1))
-  pl[, y:= as.numeric(min(.I)), motif_name]
-  pl[, y:= seq(1, 0, length.out = length(unique(pl$motif_name)))[.GRP], keyby= y]
+  pl[, y:= as.numeric(min(.I)), motif]
+  pl[, y:= seq(1, 0, length.out = length(unique(pl$motif)))[.GRP], keyby= y]
   # X coordinates
   pl[, x:= seq(0, 1, length.out = length(unique(pl$cl)))[.GRP], keyby= cl]
   
