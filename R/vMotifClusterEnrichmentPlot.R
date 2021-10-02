@@ -4,6 +4,7 @@
 #'
 #' @param obj A fisher test matrix similar to ?vl_motif_cl_enrich() ouput.
 #' @param padj_cutoff cutoff for ballons to be ploted
+#' @param log2OR_cutoff cutoff for ballons to be ploted
 #' @param N_top Select top enriched motifs/cluster
 #' @param auto_margin computes optimal plotting margins
 #' 
@@ -15,18 +16,21 @@
 
 vl_motif_cl_enrich_plot_only <- function(obj,
                                          padj_cutoff= 0.00001,
+                                         log2OR_cutoff= 0,
                                          N_top= Inf,
                                          auto_margin= T)
 {
   DT <- copy(obj)
   if(!all(c("motif_name", "cl", "pval", "padj", "log2OR") %in% names(DT)))
     stop("Input should contain c('motif_name', 'cl', 'pval', 'padj', 'log2OR') columns. See ?vl_motif_cl_enrich() output")
+  if(log2OR_cutoff<0)
+    stop("log2OR_cutoff should be > 0")
   
   #----------------------------------#
   # Generate plot table
   #----------------------------------#
   # padj cutoff
-  sel <- DT[, any(padj <= padj_cutoff & log2OR > 0), motif_name][(V1), motif_name]
+  sel <- DT[, any(padj <= padj_cutoff & log2OR > log2OR_cutoff), motif_name][(V1), motif_name]
   if(length(sel)==0)
     stop("No enrichment found with provided paj cutoff!")
   # Plotting object
