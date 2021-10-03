@@ -151,10 +151,10 @@ vl_GO_clusters <- function(FBgn_list,
        labels = unique(pl$name),
        las= 2)
   # Legend pval
-  xleft <- 1-grconvertX(strwidth("-log10(pval)", "inches"), "inches", "ndc")
-  xright <- xleft+grconvertX(1, "lines", "ndc")
-  xleft <- grconvertX(xleft, "ndc", "npc")
-  xright <- grconvertX(xright, "ndc", "npc")
+  xleft <- 1-grconvertX(strwidth("-log10(pval)", "inches"), "inches", "nfc")
+  xright <- xleft+grconvertX(1, "lines", "nfc")
+  xleft <- grconvertX(xleft, "nfc", "npc")
+  xright <- grconvertX(xright, "nfc", "npc")
   ybottom <- 0.7
   ytop <- 1-grconvertY(strheight("A", units = "inches")*2, "inches", "ndc")
   rasterImage(matrix(rev(Cc(seq(min(pval_lims), max(pval_lims), length.out = 101)))),
