@@ -230,13 +230,17 @@ vl_heatmap <- function(mat,
       mLeft <- 0.5
       if(show_rownames)
         mLeft <- mLeft+max(strwidth(DT$row, "inches"))
-      mTop <- ifelse(!is.na(main) & cluster_cols, 0.15, 0.1)
-      mTop <- grconvertY(mTop, from = "ndc", to= "inches")
-      mRight <- strwidth(legend_title, "inches")
-      if(cluster_rows)
-        mRight <- mRight+grconvertX(0.1, from = "ndc", to= "inches")
-      DT[1, mar:= .(c(mBottom, mLeft, mTop, mRight))]
-      par(mai= c(mBottom, mLeft, mTop, mRight))
+      mTop <- 0.5
+      mRight <- strwidth(legend_title, "inches")+0.25
+      if(mRight<grconvertX(3, "lines", "inches"))
+        mRight <- grconvertX(3, "lines", "inches")
+      DT[1, mai:= .(c(mBottom, mLeft, mTop, mRight))]
+      par(mai= c(mBottom, 
+                 mLeft, 
+                 mTop, 
+                 mRight), 
+          xaxs= "i", 
+          yaxs= "i")
     }
     
     # Image
@@ -319,12 +323,13 @@ vl_heatmap <- function(mat,
            line= -1)
     
     # Plot legend
-    xleft <- 1+grconvertX(strheight(DT$col[1], "inches")*2, "inches", "ndc")
-    if(cluster_rows)
-      xleft <- xleft+0.1
+    xleft <- grconvertX(1, "npc", "inches")+grconvertX(1, "lines", "inches")
+    xright <- xleft+grconvertX(1, "lines", "inches")
+    xleft <- grconvertX(xleft, "inches", "npc")
+    xright <- grconvertX(xright, "inches", "npc")
     ybottom <- 0.7
-    xright <- xleft+grconvertX(strheight(DT$col[1], "inches")*2, "inches", "ndc")
-    ytop <- 1-3*grconvertY(strheight(legend_title, cex = 0.8, "inches"), from = "inches", to= "ndc")
+    ytop <- grconvertY(1, "npc", "inches")-grconvertY(1, "chars", "inches")
+    ytop <- grconvertY(ytop, "inches", "npc")
     rasterImage(matrix(rev(Cc(seq(min(breaks), max(breaks), length.out = 101)))),
                 xleft,
                 ybottom,

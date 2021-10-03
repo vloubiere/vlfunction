@@ -151,12 +151,13 @@ vl_GO_clusters <- function(FBgn_list,
        labels = unique(pl$name),
        las= 2)
   # Legend pval
-  xleft <- 1-grconvertX(strwidth("-log10(pval)", "inches"), "inches", "nfc")
-  xright <- xleft+grconvertX(1, "lines", "nfc")
-  xleft <- grconvertX(xleft, "nfc", "npc")
-  xright <- grconvertX(xright, "nfc", "npc")
+  xleft <- grconvertX(1, "npc", "inches")+grconvertX(1, "lines", "inches")
+  xright <- xleft+grconvertX(1, "lines", "inches")
+  xleft <- grconvertX(xleft, "inches", "npc")
+  xright <- grconvertX(xright, "inches", "npc")
   ybottom <- 0.7
-  ytop <- 1-grconvertY(strheight("A", units = "inches")*2, "inches", "ndc")
+  ytop <- grconvertY(1, "npc", "inches")-grconvertY(1, "chars", "inches")
+  ytop <- grconvertY(ytop, "inches", "npc")
   rasterImage(matrix(rev(Cc(seq(min(pval_lims), max(pval_lims), length.out = 101)))),
               xleft,
               ybottom,
@@ -180,31 +181,35 @@ vl_GO_clusters <- function(FBgn_list,
        xpd= T,
        cex= 0.8,
        offset= 0)
-
+  
   # Legend balloons
   scale <- axisTicks(size_lims, log= F)
   maxBalloonInch <- strheight("A", units = "inches", cex= max(scale))*0.75
-  maxBalloonDiamX <- grconvertX(maxBalloonInch, "inches", "ndc")
-  maxBalloonDiamY <- grconvertY(maxBalloonInch, "inches", "ndc")
-  btop <- 0.6-maxBalloonDiamY/2
-  bbot <- btop-maxBalloonDiamY*(length(scale)-1)
-  xb <- grconvertX(grconvertX(xleft, "npc", "ndc")+(maxBalloonDiamX/2), "ndc", "npc")
-  points(rep(xb, length(scale)),
-         grconvertY(seq(bbot, btop, length.out = length(scale)), "ndc", "npc"), 
+  bx <- grconvertX(xleft, "npc", "inches")+maxBalloonInch/2
+  bx <- grconvertX(bx, "inches", "npc")
+  btop <- grconvertY(0.6, "npc", "inches")-maxBalloonInch/2
+  bbot <- btop-maxBalloonInch*(length(scale)-1)
+  btop <- grconvertY(btop, "inches", "npc")
+  bbot <- grconvertY(bbot, "inches", "npc")
+  points(rep(bx, length(scale)),
+         seq(bbot, btop, length.out = length(scale)), 
          xpd= T,
          col= "black",
          cex= scale,
          pch= 16)
-  xb <- grconvertX(grconvertX(xb, "npc", "ndc")+(maxBalloonDiamX/2), "ndc", "npc")
-  text(rep(xb, length(scale)),
-       grconvertY(seq(bbot, btop, length.out = length(scale)), "ndc", "npc"), 
+  bx <- grconvertX(bx, "npc", "inches")+maxBalloonInch/2
+  bx <- grconvertX(bx, "inches", "npc")
+  text(rep(bx, length(scale)),
+       seq(bbot, btop, length.out = length(scale)),
        labels= scale,
-       pos= 4, 
-       xpd= T, 
-       offset= 0, 
+       pos= 4,
+       xpd= T,
+       offset= 0,
        cex= 0.8)
+  tity <- grconvertY(0.6, "npc", "inches")+grconvertY(1, "chars", "inches")/2
+  tity <- grconvertY(tity, "inches", "npc")
   text(xleft,
-       grconvertY(0.6+grconvertY(strheight("A", "inches", cex= 0.8), "inches", "ndc"), "ndc", "npc"),
+       tity,
        labels = "log2OR",
        pos= 4,
        xpd= T,
