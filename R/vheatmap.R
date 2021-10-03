@@ -232,11 +232,10 @@ vl_heatmap <- function(mat,
         mLeft <- mLeft+max(strwidth(DT$row, "inches"))
       mTop <- 1
       if(cluster_cols)
-        mTop <- mTop+0.5
+        mTop <- mTop+grconvertY(1, "lines", "inches")
       mRight <- strwidth(legend_title, "inches")+grconvertX(1, "lines", "inches")
-      if(!is.na(kmeans_k))
-        mRight <- mRight+grconvertX(1, "lines", "inches") else if(cluster_rows)
-          mRight <- mRight+grconvertX(0.1, "npc", "inches")
+      if(cluster_rows | !is.na(kmeans_k))
+        mRight <- mRight+grconvertX(1, "lines", "inches")
       if(mRight<grconvertX(3, "lines", "inches"))
         mRight <- grconvertX(3, "lines", "inches")
       DT[1, mai:= .(c(mBottom, mLeft, mTop, mRight))]
@@ -267,9 +266,9 @@ vl_heatmap <- function(mat,
     # Plot dendro and cuts
     if(cluster_rows & is.null(newdata) & nrow(mat)>1)
       if(is.na(kmeans_k))
-        segments(rdend$y/max(rdend$y)/10+1,
+        segments(grconvertX(rdend$y/max(rdend$y)*grconvertX(1, "lines", "inches")+grconvertX(1, "npc", "inches"), "inches", "npc"),
                  1-(rdend$x/max(rdend$x)-(0.5/nrow(im))),
-                 rdend$yend/max(rdend$yend)/10+1,
+                 grconvertX(rdend$yend/max(rdend$yend)*grconvertX(1, "lines", "inches")+grconvertX(1, "npc", "inches"), "inches", "npc"),
                  1-(rdend$xend/max(rdend$xend)-(0.5/nrow(im))),
                  xpd= T)
     cr <- cumsum(unique(DT[, rcl, keyby= y])[, .N, rcl][, N])
@@ -278,20 +277,18 @@ vl_heatmap <- function(mat,
     {
       segments(0, cr, 1, cr)
       if(show_cl_number_rows)
-        text(x= 1, 
+        text(x= grconvertX(grconvertX(0.5, "lines", "inches")+grconvertX(1, "npc", "inches"), "inches", "npc"), 
              y= DT[, mean(y), rcl]$V1/(nrow(im))-(0.5/nrow(im)), 
              labels = DT[, mean(y), rcl]$rcl, 
              xpd= T, 
-             pos= 4, 
-             offset= 0.5,
              cex= 1.5)
     }
     
     if(cluster_cols & ncol(mat)>1)
       segments(cdend$x/max(cdend$x)-(0.5/ncol(im)),
-               cdend$y/max(cdend$y)/10+1,
+               grconvertY(cdend$y/max(cdend$y)*grconvertY(1, "lines", "inches")+grconvertY(1, "npc", "inches"), "inches", "npc"),
                cdend$xend/max(cdend$xend)-(0.5/ncol(im)),
-               cdend$yend/max(cdend$yend)/10+1,
+               grconvertY(cdend$yend/max(cdend$yend)*grconvertY(1, "lines", "inches")+grconvertY(1, "npc", "inches"), "inches", "npc"),
                xpd= T)
     cc <- cumsum(unique(DT[, ccl, keyby= x])[, .N, ccl][, N])
     cc <- cc[-length(cc)]/ncol(im)
@@ -327,12 +324,12 @@ vl_heatmap <- function(mat,
     
     # Plot legend
     xleft <- grconvertX(1, "npc", "inches")+grconvertX(1, "lines", "inches")
-    if(!is.na(kmeans_k))
-      xleft <- xleft+grconvertX(1, "lines", "inches") else if(cluster_rows)
-        xleft <- xleft+grconvertX(0.1, "npc", "inches")
+    if(cluster_rows | !is.na(kmeans_k))
+      xleft <- xleft+grconvertX(1, "lines", "inches")
     xright <- xleft+grconvertX(1, "lines", "inches")
     xleft <- grconvertX(xleft, "inches", "npc")
     xright <- grconvertX(xright, "inches", "npc")
+    print(xright)
     ybottom <- 0.7
     ytop <- grconvertY(1, "npc", "inches")-grconvertY(1, "chars", "inches")
     ytop <- grconvertY(ytop, "inches", "npc")
