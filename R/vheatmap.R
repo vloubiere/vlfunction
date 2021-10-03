@@ -230,8 +230,13 @@ vl_heatmap <- function(mat,
       mLeft <- 0.5
       if(show_rownames)
         mLeft <- mLeft+max(strwidth(DT$row, "inches"))
-      mTop <- 0.5
-      mRight <- strwidth(legend_title, "inches")+0.25
+      mTop <- 1
+      if(cluster_cols)
+        mTop <- mTop+0.5
+      mRight <- strwidth(legend_title, "inches")+grconvertX(1, "lines", "inches")
+      if(!is.na(kmeans_k))
+        mRight <- mRight+grconvertX(1, "lines", "inches") else if(cluster_rows)
+          mRight <- mRight+grconvertX(0.1, "npc", "inches")
       if(mRight<grconvertX(3, "lines", "inches"))
         mRight <- grconvertX(3, "lines", "inches")
       DT[1, mai:= .(c(mBottom, mLeft, mTop, mRight))]
@@ -324,6 +329,9 @@ vl_heatmap <- function(mat,
     
     # Plot legend
     xleft <- grconvertX(1, "npc", "inches")+grconvertX(1, "lines", "inches")
+    if(!is.na(kmeans_k))
+      xleft <- xleft+grconvertX(1, "lines", "inches") else if(cluster_rows)
+        xleft <- xleft+grconvertX(0.1, "npc", "inches")
     xright <- xleft+grconvertX(1, "lines", "inches")
     xleft <- grconvertX(xleft, "inches", "npc")
     xright <- grconvertX(xright, "inches", "npc")
