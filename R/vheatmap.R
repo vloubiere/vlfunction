@@ -243,9 +243,7 @@ vl_heatmap <- function(mat,
       par(mai= c(mBottom, 
                  mLeft, 
                  mTop, 
-                 mRight), 
-          xaxs= "i", 
-          yaxs= "i")
+                 mRight))
     }
     
     # Image
