@@ -115,6 +115,8 @@ vl_GO_clusters <- function(FBgn_list,
   #-----------------------------#
   # PLOT
   #-----------------------------#
+  if(nrow(pl)==0)
+    stop("No enrichment pass current tresholds")
   if(auto_margin)
     par(mai = c(max(strwidth(pl$cluster_name, "inches"))+0.5,
                 max(strwidth(pl$name, "inches"))+0.5,
@@ -220,3 +222,4 @@ vl_GO_clusters <- function(FBgn_list,
   invisible(list(data= res, 
                  plot= pl))
 }
+
