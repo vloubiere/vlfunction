@@ -41,7 +41,7 @@ vl_motif_cl_enrich <- function(obj,
   cmb[, c("OR", "pval"):= {
     # Extract motif from DT, restrict to regions from tested cluster OR bg, cast contingency table
     .t <- table(DT[.(mot, c(V1, bg)), .(cl==V1, 
-                                        motif_counts>0)])
+                                        eval(parse(text= comp_expr)))])
     # If motif present in both tested cl and bg, do fisher test
     if(identical(dim(.t), as.integer(c(2,2))))
       res <- as.data.table(as.list(fisher.test(.t)[c("estimate", "p.value")])) else
