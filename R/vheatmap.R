@@ -329,7 +329,6 @@ vl_heatmap <- function(mat,
     xright <- xleft+grconvertX(1, "lines", "inches")
     xleft <- grconvertX(xleft, "inches", "npc")
     xright <- grconvertX(xright, "inches", "npc")
-    print(xright)
     ybottom <- 0.7
     ytop <- grconvertY(1, "npc", "inches")-grconvertY(1, "chars", "inches")
     ytop <- grconvertY(ytop, "inches", "npc")
