@@ -22,6 +22,8 @@ vl_motif_cl_enrich <- function(obj,
   if(!cl_column %in% names(DT))
     stop("cl_column does not exist in provided obj") else if(cl_column != "cl")
       names(DT)[names(DT)==cl_column] <- "cl"
+  if(class(DT$cl) != class(bg))
+    stop("cluster column and bg arg should share the same class!")
   if(!all(c("motif", "motif_counts", "motif_name") %in% names(DT)))
     stop("Provided DT should contain c('motif', 'motif_counts', 'motif_name') columns. see ?vl_motif_counts() output!")
   if(anyNA(bg))
