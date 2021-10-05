@@ -21,20 +21,22 @@ vl_motif_cl_enrich <- function(obj,
   # Checks
   if(!cl_column %in% names(DT))
     stop("cl_column does not exist in provided obj") else if(cl_column != "cl")
-      names(DT)[names(DT)=="cl_column"] <- "cl"
+      names(DT)[names(DT)==cl_column] <- "cl"
   if(!all(c("motif", "motif_counts", "motif_name") %in% names(DT)))
     stop("Provided DT should contain c('motif', 'motif_counts', 'motif_name') columns. see ?vl_motif_counts() output!")
   if(anyNA(bg))
     stop("bg contains NAs. cl_column should not contain NAs OR they should not be used for comparisons!")
-  
+  DT <- DT[, .(motif, motif_name, motif_counts, cl)]
+    
   # For each motif/cluster combination, compute association using fisher
   cmb <- DT[, {
     data.table(V1= na.omit(unique(cl))) # make DT containing clusters to test
   }, .(mot= motif, motif_name)]
   cmb[, c("OR", "pval"):= {
+    print(.GRP)
     # Extract motif from DT, restrict to regions from tested cluster OR bg, cast contingency table
     .t <- table(DT[motif==mot & cl %in% c(V1, bg), .(cl==V1, 
-                                                     eval(parse(text= comp_expr)))])
+                                                     motif_counts>0)])
     # If motif present in both tested cl and bg, do fisher test
     if(identical(dim(.t), as.integer(c(2,2))))
       res <- as.data.table(as.list(fisher.test(.t)[c("estimate", "p.value")])) else
