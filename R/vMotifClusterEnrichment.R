@@ -25,17 +25,17 @@ vl_motif_cl_enrich <- function(obj,
   if(class(DT$cl) != class(bg))
     stop("cluster column and bg are not from same class -- > coerce?")
   if(!all(c("motif", "motif_counts", "motif_name") %in% names(DT)))
-    stop("Provided DT should contain c('motif', 'motif_counts', 'motif_name') columns. see ?vl_motif_counts() output!")
+    stop("Provided DT should contain c('motif', 'motif_counts', 'motif_name', 'FBgn') columns. see ?vl_motif_counts() output!")
   if(anyNA(bg))
     stop("bg contains NAs. cl_column should not contain NAs OR they should not be used for comparisons!")
-  DT <- DT[, .(motif, motif_name, motif_counts, cl)]
+  DT <- DT[, .(motif, motif_name, motif_counts, FBgn, cl)]
 
   #-----------------------#
   # Format result table
   #-----------------------#
   cmb <- DT[, {
     data.table(V1= na.omit(unique(cl))) # make DT containing clusters to test
-  }, .(mot= motif, motif_name)]
+  }, .(mot= motif, motif_name, FBgn)]
   
   #-----------------------#
   # For each motif/cluster combination, compute association using fisher
