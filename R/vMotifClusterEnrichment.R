@@ -35,7 +35,7 @@ vl_motif_cl_enrich <- function(obj,
   #-----------------------#
   cmb <- DT[, {
     data.table(V1= na.omit(unique(cl))) # make DT containing clusters to test
-  }, .(mot= motif, motif_name, FBgn)]
+  }, .(mot= motif, motif_name)]
   
   #-----------------------#
   # For each motif/cluster combination, compute association using fisher
