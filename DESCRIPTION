@@ -14,19 +14,6 @@ LazyData: true
 RoxygenNote: 7.1.1
 Depends:
     R (>= 3.5.0),
-    data.table,
-    Rsubread,
-    SRAdb,
-    GenomicRanges,
-    rtracklayer,
-    GenomicFeatures,
-    GenomeInfoDb,
-    motifmatchr,
-    TxDb.Dmelanogaster.UCSC.dm3.ensGene,
-    org.Dm.eg.db,
-    AnnotationDbi,
-    circlize,
-    colorRamps,
-    grDevices
+    data.table
 Imports:
 Suggests:
