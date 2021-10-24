@@ -1,6 +1,6 @@
 #' Heatmap
 #'
-#' This function plots a heatmap and returns an S3 object of type v2_heatmap_obj which can be modified and used for later plotting.
+#' This function plots a heatmap and returns an S3 object of type vl_heatmap_obj which can be modified and used for later plotting.
 #' 
 #' @param x Data to plot. Can be one of matrix, data.table, or formula.
 #' @param breaks Heatmap breaks, which should be the same length as the color vector
@@ -38,20 +38,20 @@
 #' rownames(test) = paste("Gene", 1:20, sep = "")
 #' 
 #' par(mfrow=c(2,2))
-#' res <- v2_heatmap(test, kmeans_k = 4, cutree_rows = 3, cutree_cols = 5, legend_title = "log2FoldChange", main= "test")
+#' res <- vl_heatmap(test, kmeans_k = 4, cutree_rows = 3, cutree_cols = 5, legend_title = "log2FoldChange", main= "test")
 #' res$result[]
-#' v2_heatmap(test, cutree_rows = 3, cutree_cols = 2, show_col_clusters = F, legend_title = "log2FoldChange", main= "test")
-#' v2_heatmap(test, cutree_rows = 3, cutree_cols = 2, show_col_dendrogram = F, legend_title = "log2FoldChange", main= "test")
-#' obj <- v2_heatmap(test, cutree_rows = 3, cutree_cols = 2, show_row_clusters = F, show_row_dendrogram = F,show_col_clusters = F, show_col_dendrogram = F, legend_title = "log2FoldChange", main= "test", plot= F)
+#' vl_heatmap(test, cutree_rows = 3, cutree_cols = 2, show_col_clusters = F, legend_title = "log2FoldChange", main= "test")
+#' vl_heatmap(test, cutree_rows = 3, cutree_cols = 2, show_col_dendrogram = F, legend_title = "log2FoldChange", main= "test")
+#' obj <- vl_heatmap(test, cutree_rows = 3, cutree_cols = 2, show_row_clusters = F, show_row_dendrogram = F,show_col_clusters = F, show_col_dendrogram = F, legend_title = "log2FoldChange", main= "test", plot= F)
 #' plot(obj, cutree_rows = 3, cutree_cols = 2, show_row_clusters = F, show_row_dendrogram = F,show_col_clusters = F, show_col_dendrogram = F, legend_title = "log2FoldChange", main= "test")
 #' 
-#' @return An object of class v2_heatmap_obj containing clustering data and can be used for plotting using plot(obj, ...)
+#' @return An object of class vl_heatmap_obj containing clustering data and can be used for plotting using plot(obj, ...)
 #' @export
-v2_heatmap <- function(x, ...) UseMethod("v2_heatmap")
+vl_heatmap <- function(x, ...) UseMethod("vl_heatmap")
 
-#' @describeIn v2_heatmap test1
+#' @describeIn vl_heatmap test1
 #' @export
-v2_heatmap.data.table <- function(x, rownames= names(x)[1], ...)
+vl_heatmap.data.table <- function(x, rownames= names(x)[1], ...)
 {
   if(rownames %in% names(x))
   {
@@ -59,23 +59,23 @@ v2_heatmap.data.table <- function(x, rownames= names(x)[1], ...)
     mat <- as.matrix(x, 1)
   }else
     mat <- as.matrix(x)
-  v2_heatmap.matrix(mat, ...)
+  vl_heatmap.matrix(mat, ...)
 }
 
-#' @describeIn v2_heatmap test2
+#' @describeIn vl_heatmap test2
 #' @export
-v2_heatmap.formula <- function(formula, data, value.var, ...)
+vl_heatmap.formula <- function(formula, data, value.var, ...)
 {
   mat <- dcast(data,
                formula, 
                value.var = value.var)
   mat <- as.matrix(mat, 1)
-  v2_heatmap.matrix(mat, ...)
+  vl_heatmap.matrix(mat, ...)
 }
 
-#' @describeIn v2_heatmap test3
+#' @describeIn vl_heatmap test3
 #' @export
-v2_heatmap.matrix <- function(x,
+vl_heatmap.matrix <- function(x,
                               breaks= seq(min(x, na.rm= T), max(x, na.rm= T), length.out= length(col)),
                               show_rownames= T,
                               show_colnames= T,
@@ -170,15 +170,16 @@ v2_heatmap.matrix <- function(x,
   # PLOT
   #------------------------####
   obj <- c(list(result= DT), as.list(environment()))
-  class(obj) <- "v2_heatmap_pl"
+  class(obj) <- "vl_heatmap_pl"
   if(plot)
     plot(obj)
   
-  class(obj) <- "v2_heatmap_obj"
+  class(obj) <- "vl_heatmap_obj"
   invisible(obj)
 }
 
-plot.v2_heatmap_obj <- function(obj,
+#' @export
+plot.vl_heatmap_obj <- function(obj,
                                 breaks= seq(min(obj$x, na.rm= T), max(obj$x, na.rm= T), length.out= length(col)),
                                 show_rownames= T,
                                 show_colnames= T,
@@ -200,11 +201,12 @@ plot.v2_heatmap_obj <- function(obj,
   args <- args[args %in% names(obj)]
   for(arg in args)
     obj[[arg]] <- get(arg)
-  class(obj) <- "v2_heatmap_pl"
+  class(obj) <- "vl_heatmap_pl"
   plot(obj)
 }
 
-plot.v2_heatmap_pl <- function(obj)
+# Default plotting function
+plot.vl_heatmap_pl <- function(obj)
 {
   list2env(obj, envir = environment())
   # Margins
