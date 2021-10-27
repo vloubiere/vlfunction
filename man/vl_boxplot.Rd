@@ -2,31 +2,26 @@
 % Please edit documentation in R/vboxplot.R
 \name{vl_boxplot}
 \alias{vl_boxplot}
-\title{violin plot}
+\title{box plot}
 \usage{
-vl_boxplot(x, formula, outline = F, xlab = "", ylab = "",
-  plot_labels = T, xlim = c(0.5, max(obj$at) + 0.5), ylim = if
-  (outline) range(unlist(obj$value)) else range(c(obj$Q1, obj$Q5)),
-  col = "white", at = NULL)
+vl_boxplot(x, las.x = 1, las.y = 1, xlab = NA, ylab = NA, ...)
 }
 \arguments{
 \item{x}{Matrix, data.atble or data.frame containing data}
 
-\item{formula}{Formula to apply to the data}
+\item{las.x}{las x axis labels}
 
-\item{outline}{plot outlier values? default= F}
+\item{las.y}{las y axis labels}
 
 \item{xlab}{x axis label}
 
 \item{ylab}{y axis label}
-
-\item{plot_labels}{Should box labels be plotted? Default= T}
-
-\item{xlim}{x axis limits}
-
-\item{ylim}{y axis limits}
 }
 \description{
-This function plots a violin plot from either matrix,
-data.table, data.frame or using formula.
+This function is just a wrapper around default boxplot function with a nicer layout
+}
+\examples{
+test <- data.table(test= c(1:10, 50, 50, 90:100),
+test1= c(1:10, 50, 50, 90:100)+10)
+vl_boxplot(test, xlab = "test", ylab = "test")
 }
