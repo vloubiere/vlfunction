@@ -53,6 +53,7 @@ vl_heatmap <- function(x, ...) UseMethod("vl_heatmap")
 #' @export
 vl_heatmap.data.table <- function(x, rownames= names(x)[1], ...)
 {
+  browser()
   if(rownames %in% names(x))
   {
     setcolorder(x, rownames)
@@ -242,7 +243,8 @@ plot.vl_heatmap_pl <- function(obj)
   # Image
   Cc <- circlize::colorRamp2(breaks, 
                              colors= col)
-  im <- Cc(x)
+  im <- x
+  im[!is.na(im)] <- Cc(x[!is.na(x)])
   im[is.na(im)] <- na_col
   plot.new()
   plot.window(xlim = c(0.5,ncol(im)+0.5),
