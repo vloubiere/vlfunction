@@ -53,7 +53,6 @@ vl_heatmap <- function(x, ...) UseMethod("vl_heatmap")
 #' @export
 vl_heatmap.data.table <- function(x, rownames= names(x)[1], ...)
 {
-  browser()
   if(rownames %in% names(x))
   {
     setcolorder(x, rownames)
