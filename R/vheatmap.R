@@ -355,7 +355,7 @@ plot.vl_heatmap_pl <- function(obj)
   if(show_rownames & !is.null(rownames(x)))
     axis(2,
          at= seq(nrow(x)),
-         labels = rownames(x),
+         labels = rev(rownames(x)),
          lwd= 0,
          las= 2,
          line= -0.5)
