@@ -6,8 +6,8 @@
 \usage{
 vl_ChIP_pipeline(fq1, fq2 = NULL, chrom_sizes, basename_prefix = "",
   Rsubread_index_prefix = NULL, bam_folder = NULL, bw_folder,
-  extend = 300, maxMismatches = 2, nTrim3 = 0, nTrim5 = 0,
-  use_samtools = T)
+  extend = 300, max_frag_size_pe = 500, maxMismatches = 2,
+  nTrim3 = 0, nTrim5 = 0, gzip_sam_output = F)
 }
 \arguments{
 \item{fq1}{fastq file path (read1)}
@@ -31,6 +31,8 @@ vl_ChIP_pipeline(fq1, fq2 = NULL, chrom_sizes, basename_prefix = "",
 \item{nTrim3}{default 0}
 
 \item{nTrim5}{default 0}
+
+\item{gzip_sam_output}{Should sam alignment file be gzipped? default= F}
 
 \item{use_samtools}{If FALSE, avoids using samtools by saving alignments in a non-binary sam file. default= TRUE.}
 }

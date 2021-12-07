@@ -14,6 +14,7 @@
 #' @param nTrim3 default 0
 #' @param nTrim5 default 0
 #' @param use_samtools If FALSE, avoids using samtools by saving alignments in a non-binary sam file. default= TRUE.
+#' @param gzip_sam_output Should sam alignment file be gzipped? default= F
 #' @examples require(data.table)
 #' require(GenomicRanges)
 #' require(Rsubread)
@@ -30,8 +31,6 @@
 #' bw_folder = "/groups/stark/vloubiere/projects/available_data_dm3/test/")
 #' @return bam , bam_stats.txt, uniq.bed and .bw files
 #' @export
-
-
 vl_ChIP_pipeline <- function(fq1,
                              fq2= NULL,
                              chrom_sizes,
@@ -43,7 +42,8 @@ vl_ChIP_pipeline <- function(fq1,
                              max_frag_size_pe= 500,
                              maxMismatches= 2,
                              nTrim3= 0,
-                             nTrim5= 0)
+                             nTrim5= 0,
+                             gzip_sam_output= F)
 {
   if(!is.data.table(chrom_sizes))
     stop("chrom sizes must be a data.table object")
@@ -116,6 +116,7 @@ vl_ChIP_pipeline <- function(fq1,
   rtracklayer::export.bw(GRanges(cov), con= bw_output)
   
   # gzip sam file
-  system(paste("gzip", output))
+  if(gzip_sam_output)
+    system(paste("gzip", output))
 }
 
