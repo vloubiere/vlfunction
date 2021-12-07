@@ -40,10 +40,10 @@ vl_ChIP_pipeline <- function(fq1,
                              bam_folder= NULL,
                              bw_folder,
                              extend= 300,
+                             max_frag_size_pe= 500,
                              maxMismatches= 2,
                              nTrim3= 0,
-                             nTrim5= 0,
-                             use_samtools= T)
+                             nTrim5= 0)
 {
   if(!is.data.table(chrom_sizes))
     stop("chrom sizes must be a data.table object")
@@ -54,7 +54,9 @@ vl_ChIP_pipeline <- function(fq1,
      
   # Compute output name
   .bn <- gsub(".fq$|.fastq$|.fq.gz$|.fastq.gz$", "", basename(fq1))
-  output <- paste0(bam_folder, basename_prefix, .bn, ifelse(use_samtools,".bam", ".sam"))
+  if(!is.null(fq2))
+    .bn <- gsub("_1$", "", .bn)
+  output <- paste0(bam_folder, basename_prefix, .bn, ".sam")
   # Alignment
   print("START alignment!")
   Rsubread::align(index = Rsubread_index_prefix,
@@ -67,61 +69,53 @@ vl_ChIP_pipeline <- function(fq1,
                   nTrim3 = nTrim3,
                   nTrim5 = nTrim5, 
                   nthreads= getDTthreads()-2, 
-                  output_format = ifelse(use_samtools,"BAM", "SAM"))
+                  output_format = "SAM")
   
   # Import reads
   print("Import reads!")
-  if(use_samtools)
-  {
-    cmd <- paste("module load build-env/2020; module load samtools/1.9-foss-2018b; samtools view -@", 
-                 getDTthreads()-1, 
-                 output)
-    reads <- data.table::fread(cmd= cmd, fill= T)
-  }else
-  {
-    reads <- data.table::fread(output, fill= T)
-    reads <- reads[!grepl("^@", V1)]
-    reads[, V2:= as.numeric(V2)]
-    reads[, V4:= as.numeric(V4)]
-    reads[, V5:= as.numeric(V5)]
-  }
+  reads <- data.table::fread(output, 
+                             fill= T, 
+                             select = c("V1", "V2", "V3", "V4", "V5", "V10"), 
+                             col.names = c("ID", "flag", "seqnames", "read_most_left_pos", "mapq", "read"))
+  reads <- reads[seqnames %in% chrom_sizes$seqnames]
+  reads[, read_length:= nchar(read)]
+  reads$read <- NULL
+  cols <- c("flag", "read_most_left_pos", "mapq", "read_length")
+  reads[, (cols):= lapply(.SD, as.numeric), .SDcols= cols]
 
   # Clean
   print("Import done -> start cleaning reads!")
-  reads <- reads[V3 %in% chrom_sizes$seqnames & V5>=30]
+  reads <- reads[mapq>=30]
   if(is.null(fq2))
   {
-    reads <- unique(reads[V2 %in% c(0, 16), 
-                          .(V2, V3, V4, V10= nchar(V10))]) # nchar(V10)= read lengths
-    left <- reads[V2==0, .(seqnames= V3, 
-                           start= V4,
-                           end= V4+extend)]
-    right <- reads[V2==16, .(seqnames= V3,
-                             end= V4+V10)]
-    right[, start:= end-300]               
-    reads <- rbind(left, right)
+    reads[flag==0, start:= read_most_left_pos]
+    reads[flag==16, start:= read_most_left_pos+read_length-1-extend]
+    reads <- unique(reads[, .(seqnames, start)])
+    reads[, end:= start+extend]
     reads[start<1, start:= 1]
     reads[chrom_sizes, end:= i.seqlengths, on= c("seqnames", "end>seqlengths")]
+    res <- GenomicRanges::GRanges(reads)
   }else
   {
-    reads <- reads[V2 %in% c(83, 99, 147, 163), 
-                   .(V1, V2, V3, V4, V10= nchar(V10))] # nchar(V10)= read lengths
-    data.table::setkeyv(reads, "V1")
-    reads <- reads[, .(seqnames= V3, 
-                       start= min(V4), 
-                       end= max(V4)+V10), V1]
-    reads <- unique(reads[, seqnames:end])
+    res <- unique(reads[flag %in% c(99, 163, 83, 147), .(ID, seqnames)])
+    res[reads[flag %in% c(99, 163)], start:= read_most_left_pos, on= "ID"]
+    res <- na.omit(res)
+    res[reads[flag %in% c(83, 147)], end:= read_most_left_pos+read_length-1, on= "ID"]
+    res <- unique(na.omit(res[(end-start)<max_frag_size_pe, !"ID"]))
+    res <- GenomicRanges::GRanges(res)
   }
   # Export result as bed
   print("Export bed!")
-  reads <- GRanges(reads)
-  rtracklayer::export.bed(reads, 
+  rtracklayer::export.bed(res, 
                           gsub(".bam$|.sam$", "_uniq.bed", output))
   # Generate and export bw
   print("Generate bw!")
-  total_reads <- length(reads)
-  cov <- GenomicRanges::coverage(reads)/total_reads*1e6
-  output <- paste0(bw_folder, basename_prefix, .bn, ".bw")
-  rtracklayer::export.bw(GRanges(cov), con= output)
+  total_reads <- length(res)
+  cov <- GenomicRanges::coverage(res)/total_reads*1e6
+  bw_output <- paste0(bw_folder, basename_prefix, .bn, ".bw")
+  rtracklayer::export.bw(GRanges(cov), con= bw_output)
+  
+  # gzip sam file
+  system(paste("gzip", output))
 }
 
