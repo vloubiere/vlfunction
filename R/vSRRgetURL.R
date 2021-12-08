@@ -14,6 +14,7 @@ vl_SRR_url <- function(SRR)
   if(!"rvest" %in% rownames(installed.packages()))
     stop("Install rvest package")
   .c <- xml2::read_html(paste0("https://trace.ncbi.nlm.nih.gov/Traces/sra/?run=", SRR))
+  `%>%` <- magrittr::`%>%`
   url <- .c %>%
     rvest::html_nodes("#sra-viewer-app .first a") %>%
     rvest::html_text()
