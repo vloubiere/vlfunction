@@ -26,12 +26,12 @@ vl_STRING_network <- function(obj,
   if(length(cex.vertices.labels)!=1)
     stop("lenght(cex.vertices.labels) should be 1, applied to all vertices equally")
   
-  .c <- copy(obj)
+  .c <- data.table::copy(obj)
   .c$vertices[, size:= size*cex.vertices]
   .c$vertices[, cex.label:= cex.label*cex.vertices.labels]
-  .g <- graph_from_data_frame(d = .c$edges, 
-                              vertices = .c$vertices,
-                              directed = F)
+  .g <- igraph::graph_from_data_frame(d = .c$edges, 
+                                      vertices = .c$vertices,
+                                      directed = F)
   plot(.g, 
        vertex.label.cex= .c$vertices$cex.label, 
        vertex.frame.color= vertex.border.col)

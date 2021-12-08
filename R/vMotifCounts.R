@@ -34,19 +34,19 @@ vl_motif_counts <- function(bed,
   mot <- do.call(PWMatrixList, 
                  sub$pwms_log_odds)
   # Get sequence
-  DT[, seq:= getSeq(getBSgenome(genome), seqnames, start, end, as.character= T)]
-  res <- as.data.table(as.matrix(matchMotifs(mot,
-                                             DT$seq,
-                                             p.cutoff= 5e-4,
-                                             bg= "even",
-                                             out= "scores")@assays@data[["motifCounts"]]))
+  DT[, seq:= BSgenome::getSeq(BSgenome::getBSgenome(genome), seqnames, start, end, as.character= T)]
+  res <- as.data.table(as.matrix(motifmatchr::matchMotifs(mot,
+                                                          DT$seq,
+                                                          p.cutoff= 5e-4,
+                                                          bg= "even",
+                                                          out= "scores")@assays@data[["motifCounts"]]))
   names(res) <- sub$motif
   res <- cbind(DT[, !"seq"], res)
   res <- melt(res,
               measure.vars = sub$motif,
               variable.name = "motif",
               value.name = "motif_counts")
-  res <- merge(sub[, .(motif, motif_name)],
+  res <- merge(sub[, .(motif, motif_name, motif_FBgn= FBgn)],
                res)
   return(res)
 }
