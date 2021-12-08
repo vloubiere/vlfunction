@@ -35,6 +35,6 @@ vl_bw_merge <- function(x,
   res$score <- dat[res, sum(score), .EACHI, on= c("seqnames", "start<=end", "end>=start")]$V1
   res <- GRanges(res)
   seqlengths(res) <- seqL[match(seqlevels(res), names(seqL))]
-  export.bw(object = res, 
-            paste0(output_folder, "/", output_prefix, ".bw"))
+  rtracklayer::export.bw(object = res, 
+                         paste0(output_folder, "/", output_prefix, ".bw"))
 }
