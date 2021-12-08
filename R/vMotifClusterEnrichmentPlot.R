@@ -20,7 +20,7 @@ vl_motif_cl_enrich_plot_only <- function(obj,
                                          N_top= Inf,
                                          auto_margin= T)
 {
-  DT <- copy(obj)
+  DT <- data.table::copy(obj)
   if(!all(c("motif", "motif_name", "cl", "pval", "padj", "log2OR") %in% names(DT)))
     stop("Input should contain c('motif', 'motif_name', 'cl', 'pval', 'padj', 'log2OR') columns. See ?vl_motif_cl_enrich() output")
   if(log2OR_cutoff<0)
@@ -80,13 +80,15 @@ vl_motif_cl_enrich_plot_only <- function(obj,
   # Lines
   plot.new()
   segments(unique(pl$x),
-           par("usr")[3],
+           0,
            unique(pl$x),
-           par("usr")[4])
-  segments(par("usr")[1],
+           1,
+           xpd=T)
+  segments(0,
            unique(pl$y),
-           par("usr")[2],
-           unique(pl$y))
+           1,
+           unique(pl$y),
+           xpd=T)
   # Points
   points(pl$x, 
          pl$y, 

@@ -17,25 +17,25 @@ vl_motif_cl_enrich <- function(obj,
                                bg= unique(obj[[cl_column]]),
                                comp_expr= "motif_counts>0")
 {
-  DT <- copy(obj)
+  DT <- data.table::copy(obj)
   # Checks
   if(!cl_column %in% names(DT))
     stop("cl_column does not exist in provided obj") else if(cl_column != "cl")
       names(DT)[names(DT)==cl_column] <- "cl"
   if(class(DT$cl) != class(bg))
     stop("cluster column and bg are not from same class -- > coerce?")
-  if(!all(c("motif", "motif_counts", "motif_name") %in% names(DT)))
-    stop("Provided DT should contain c('motif', 'motif_counts', 'motif_name', 'FBgn') columns. see ?vl_motif_counts() output!")
+  if(!all(c("motif", "motif_name", "motif_FBgn", "motif_counts") %in% names(DT)))
+    stop("Provided DT should contain c('motif', 'motif_name', 'motif_FBgn', 'motif_counts') columns. see ?vl_motif_counts() output!")
   if(anyNA(bg))
     stop("bg contains NAs. cl_column should not contain NAs OR they should not be used for comparisons!")
-  DT <- DT[, .(motif, motif_name, motif_counts, FBgn, cl)]
+  DT <- DT[, .(motif, motif_name, motif_counts, motif_FBgn, cl)]
 
   #-----------------------#
   # Format result table
   #-----------------------#
   cmb <- DT[, {
     data.table(V1= na.omit(unique(cl))) # make DT containing clusters to test
-  }, .(mot= motif, motif_name)]
+  }, .(mot= motif, motif_name, motif_FBgn)]
   
   #-----------------------#
   # For each motif/cluster combination, compute association using fisher
@@ -52,6 +52,8 @@ vl_motif_cl_enrich <- function(obj,
   cmb <- na.omit(cmb)
   cmb[, padj:= p.adjust(pval, method = "fdr"), pval]
   cmb[, log2OR:= log2(OR)]
-  names(cmb)[c(1,3)] <- c("motif", cl_column)
+  setnames(cmb, 
+           c("mot", "V1"),
+           c("motif", "cl"))
   return(cmb)
 }
