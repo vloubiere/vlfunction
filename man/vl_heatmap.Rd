@@ -3,7 +3,6 @@
 \name{vl_heatmap}
 \alias{vl_heatmap}
 \alias{vl_heatmap.data.table}
-\alias{vl_heatmap.formula}
 \alias{vl_heatmap.matrix}
 \title{Heatmap}
 \usage{
@@ -11,35 +10,18 @@ vl_heatmap(x, ...)
 
 \method{vl_heatmap}{data.table}(x, rownames = names(x)[1], ...)
 
-\method{vl_heatmap}{formula}(formula, data, value.var, ...)
-
-\method{vl_heatmap}{matrix}(
-  x,
-  breaks = seq(min(x, na.rm = T), max(x, na.rm = T), length.out = length(col)),
-  show_rownames = T,
-  show_colnames = T,
-  col = c("cornflowerblue", "white", "red"),
-  main = NA,
-  auto_margins = T,
-  cluster_rows = T,
-  clustering_distance_rows = "euclidean",
-  cutree_rows = 1,
-  show_row_dendrogram = T,
-  show_row_clusters = T,
-  cluster_cols = T,
-  clustering_distance_cols = "euclidean",
-  cutree_cols = 1,
-  show_col_dendrogram = T,
-  show_col_clusters = T,
-  clustering_method = "complete",
-  kmeans_k = NA,
-  display_numbers = F,
+\method{vl_heatmap}{matrix}(x, breaks = seq(min(x, na.rm = T), max(x,
+  na.rm = T), length.out = length(col)), show_rownames = T,
+  show_colnames = T, col = c("cornflowerblue", "white", "red"),
+  main = NA, auto_margins = T, cluster_rows = T,
+  clustering_distance_rows = "euclidean", cutree_rows = 1,
+  show_row_dendrogram = T, show_row_clusters = T, cluster_cols = T,
+  clustering_distance_cols = "euclidean", cutree_cols = 1,
+  show_col_dendrogram = T, show_col_clusters = T,
+  clustering_method = "complete", kmeans_k = NA, display_numbers = F,
   display_numbers_FUN = function(x) round(x, 2),
-  display_numbers_cex = 0.5,
-  legend_title = NA,
-  na_col = "lightgrey",
-  plot = T
-)
+  display_numbers_cex = 0.5, legend_title = NA, na_col = "lightgrey",
+  plot = T)
 }
 \arguments{
 \item{x}{Data to plot. Can be one of matrix, data.table, or formula.}
@@ -100,11 +82,9 @@ This function plots a heatmap and returns an S3 object of type vl_heatmap_obj wh
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{data.table}: test1
+\item \code{data.table}: Just a wrapper that collapses DT to a suitable matrix
 
-\item \code{formula}: test2
-
-\item \code{matrix}: test3
+\item \code{matrix}: Core function that clusters input matrix and plots a heatmap
 }}
 
 \examples{
@@ -119,7 +99,7 @@ rownames(test) = paste("Gene", 1:20, sep = "")
 
 par(mfrow=c(2,2))
 res <- vl_heatmap(test, kmeans_k = 4, cutree_rows = 3, cutree_cols = 5, legend_title = "log2FoldChange", main= "test")
-res$result[]
+res$result_DT[]
 vl_heatmap(test, cutree_rows = 3, cutree_cols = 2, show_col_clusters = F, legend_title = "log2FoldChange", main= "test")
 vl_heatmap(test, cutree_rows = 3, cutree_cols = 2, show_col_dendrogram = F, legend_title = "log2FoldChange", main= "test")
 obj <- vl_heatmap(test, cutree_rows = 3, cutree_cols = 2, show_row_clusters = F, show_row_dendrogram = F,show_col_clusters = F, show_col_dendrogram = F, legend_title = "log2FoldChange", main= "test", plot= F)

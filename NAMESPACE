@@ -3,7 +3,6 @@
 S3method(plot,vl_heatmap_obj)
 S3method(vl_balloons_plot,matrix)
 S3method(vl_heatmap,data.table)
-S3method(vl_heatmap,formula)
 S3method(vl_heatmap,matrix)
 export(vl_ChIP_pipeline)
 export(vl_GO_clusters)
