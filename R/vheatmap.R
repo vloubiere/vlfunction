@@ -192,28 +192,29 @@ plot.vl_heatmap_obj <- function(obj,
                                 display_numbers_cex= 0.5,
                                 legend_title= NA)
 {
-  args <- ls()
-  args <- args[args %in% names(obj)]
   if(!missing(add))
   {
     if(!is.matrix(add))
-      stop("add should be a matrix with either same number of rows and/or cols as original inpute")
+      stop("add should be a matrix with either same number of rows and/or cols as original input") else
+        obj$x <- add
     if(add_inherit_row_order)
       if(nrow(add)!=nrow(obj$x))
         stop("add_inherit_row_order is TRUE but nrow(add)!=nrow(x)") else if(obj$cluster_rows)
         {
           if(class(obj$rcl)=="hclust")
-            add <- add[obj$rcl$order,] else if(class(obj$rcl)=="kmeans")
-              add <- add[order(obj$rcl$cluster),]
+            add <- add[obj$rcl$order,, drop=F] else if(class(obj$rcl)=="kmeans")
+              add <- add[order(obj$rcl$cluster),, drop=F]
         }
     if(add_inherit_col_order)
       if(ncol(add)!=ncol(obj$x))
         stop("add_inherit_col_order is TRUE but ncol(add)!=ncol(x)") else if(obj$cluster_cols)
-          add <- add[,obj$ccl$order]
-    show_row_dendrogram <- F
-    show_col_dendrogram <- F
-    obj$clustered_x <- add
+          add <- add[,obj$ccl$order, drop=F]
+        show_row_dendrogram <- F
+        show_col_dendrogram <- F
+        obj$clustered_x <- add
   }
+  args <- ls()
+  args <- args[args %in% names(obj)]
   for(arg in args)
     obj[[arg]] <- get(arg)
   class(obj) <- "vl_heatmap_pl"
