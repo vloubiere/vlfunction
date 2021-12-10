@@ -33,6 +33,7 @@
 
 vl_screenshot <- function(bed,
                           tracks,
+                          genome= "dm3",
                           highlight_regions= NULL,
                           highlight_col= "lightgrey",
                           names= NULL,
@@ -133,7 +134,10 @@ vl_screenshot <- function(bed,
   #--------------------------#
   # Transcripts
   #--------------------------#
-  TxDb <- TxDb.Dmelanogaster.UCSC.dm3.ensGene::TxDb.Dmelanogaster.UCSC.dm3.ensGene
+  if(genome=="dm3")
+    TxDb <- TxDb.Dmelanogaster.UCSC.dm3.ensGene::TxDb.Dmelanogaster.UCSC.dm3.ensGene
+  if(genome=="dm6")
+    TxDb <- TxDb.Dmelanogaster.UCSC.dm6.ensGene::TxDb.Dmelanogaster.UCSC.dm6.ensGene
   .t <- data.table::as.data.table(GenomicFeatures::transcriptsByOverlaps(TxDb,
                                                                          GenomicRanges::GRanges(bed),
                                                                          columns= c("TXNAME", "GENEID")))
