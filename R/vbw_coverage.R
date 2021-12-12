@@ -23,7 +23,7 @@ vl_bw_coverage <- function(bed,
     stop("bw file does not exist! EXIT")
   
   # Format
-  .b <- data.table::copy(bed)
+  .b <- data.table::copy(bed[, .(seqnames, start, end)])
   .b[, ID:= .I]
   
   # Import bw
@@ -38,9 +38,9 @@ vl_bw_coverage <- function(bed,
   ov[i.start<start, i.start:= start]
   ov[i.end>end, i.end:= end]
   ov[, width:= i.end-i.start+1]
-  res <- merge(.b[, .(seqnames, start, end, ID)], 
+  res <- merge(.b, 
                ov[, .(score= sum(width*score)/sum(width)), ID], by= "ID", all.x= T)
   setorderv(res, "ID")
-  res <- res[, !"ID"]
+  res <- cbind(bed, res[, .(score)])
   return(res)
 }

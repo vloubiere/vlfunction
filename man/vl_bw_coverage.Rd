@@ -14,3 +14,6 @@ vl_bw_coverage(bed, bw)
 \description{
 Quantify bw file at a set of intervals. returns mean value/region
 }
+\details{
+Note that strand-specific overlap is not implemented! bw files do not contain strand info!?
+}
