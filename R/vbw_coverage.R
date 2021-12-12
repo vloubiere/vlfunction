@@ -2,6 +2,8 @@
 #'
 #' Quantify bw file at a set of intervals. returns mean value/region
 #'
+#' Note that strand-specific overlap is not implemented! bw files do not contain strand info!?
+#'
 #' @param bed Regions to quantify. Can be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns"
 #' @param bw Path to target bw file (character vector)
 #' @export
