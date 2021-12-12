@@ -36,6 +36,9 @@ vl_bw_coverage <- function(bed,
   ov[i.start<start, i.start:= start]
   ov[i.end>end, i.end:= end]
   ov[, width:= i.end-i.start+1]
-  res <- data.table::data.table(score= merge(.b[, .(ID)], ov[, .(score= sum(width*score)/sum(width)), ID], by= "ID", all.x= T)$score)
+  res <- merge(.b[, .(seqnames, start, end, ID)], 
+               ov[, .(score= sum(width*score)/sum(width)), ID], by= "ID", all.x= T)
+  setorderv(res, "ID")
+  res <- res[, !"ID"]
   return(res)
 }
