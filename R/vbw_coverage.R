@@ -24,7 +24,7 @@ vl_bw_coverage <- function(bed,
   
   # Format
   .b <- data.table::copy(bed[, .(seqnames, start, end)])
-  .b[, ID:= .I]
+  .b[, .ID:= .I]
   
   # Import bw
   sel <- rtracklayer::BigWigSelection(GenomicRanges::GRanges(bed), "score")
@@ -34,13 +34,11 @@ vl_bw_coverage <- function(bed,
   data.table::setkeyv(var, keys)
   
   # Compute counts
-  ov <- data.table::foverlaps(var, .b, nomatch= NULL)
+  ov <- data.table::foverlaps(var, .b)
   ov[i.start<start, i.start:= start]
   ov[i.end>end, i.end:= end]
   ov[, width:= i.end-i.start+1]
-  res <- merge(.b, 
-               ov[, .(score= sum(width*score)/sum(width)), ID], by= "ID", all.x= T)
-  setorderv(res, "ID")
-  res <- cbind(bed, res[, .(score)])
+  res <- ov[, .(score= sum(score*width)/(end[1]-start[1]+1)), .ID]
+  res <- res[.(seq(nrow(bed))), score, on= ".ID"]
   return(res)
 }
