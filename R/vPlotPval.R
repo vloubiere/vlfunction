@@ -114,11 +114,12 @@ vl_boxplot_pval <- function(x,
   setorderv(obj, "max")
   inter <- (max(box$stats)-min(box$stats))/adj
   obj[1, y:= max+inter]
-  for(i in 2:nrow(obj))
-  {
-    overlap <- obj$y[obj[i, x_1]<=obj$x_2 & obj[i, x_2]>=obj$x_1]
-    obj[i, y:= max(c(overlap, max), na.rm = T)+inter]
-  }
+  if(nrow(obj)>1)
+    for(i in 2:nrow(obj))
+    {
+      overlap <- obj$y[obj[i, x_1]<=obj$x_2 & obj[i, x_2]>=obj$x_1]
+      obj[i, y:= max(c(overlap, max), na.rm = T)+inter]
+    }
 
   # Plot
   boxplot(x, 
