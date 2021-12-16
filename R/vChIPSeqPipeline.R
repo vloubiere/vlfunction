@@ -39,7 +39,7 @@ vl_ChIP_pipeline <- function(fq1,
                              bam_folder= NULL,
                              bw_folder,
                              extend= 300,
-                             max_frag_size_pe= 500,
+                             max_frag_size_pe= 600,
                              maxMismatches= 2,
                              nTrim3= 0,
                              nTrim5= 0,
@@ -65,6 +65,7 @@ vl_ChIP_pipeline <- function(fq1,
                   type= "dna", 
                   output_file = output, 
                   maxMismatches= maxMismatches, 
+                  maxFragLength = max_frag_size_pe,
                   unique= T, 
                   nTrim3 = nTrim3,
                   nTrim5 = nTrim5, 
@@ -88,8 +89,10 @@ vl_ChIP_pipeline <- function(fq1,
   reads <- reads[mapq>=30]
   if(is.null(fq2))
   {
+    # Filter sam flags and extract start
     reads[flag==0, start:= read_most_left_pos]
     reads[flag==16, start:= read_most_left_pos+read_length-1-extend]
+    # Collapse
     reads <- unique(reads[, .(seqnames, start)])
     reads[, end:= start+extend]
     reads[start<1, start:= 1]
@@ -97,11 +100,14 @@ vl_ChIP_pipeline <- function(fq1,
     res <- GenomicRanges::GRanges(reads)
   }else
   {
+    # Filter sam flags
     res <- unique(reads[flag %in% c(99, 163, 83, 147), .(ID, seqnames)])
+    # Get start end coor
     res[reads[flag %in% c(99, 163)], start:= read_most_left_pos, on= "ID"]
     res <- na.omit(res)
     res[reads[flag %in% c(83, 147)], end:= read_most_left_pos+read_length-1, on= "ID"]
-    res <- unique(na.omit(res[(end-start)<max_frag_size_pe, !"ID"]))
+    # Collapse
+    res <- unique(na.omit(res[, !"ID"]))
     res <- GenomicRanges::GRanges(res)
   }
   # Export result as bed
