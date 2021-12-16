@@ -48,6 +48,7 @@ vl_plot_pval_text <- function(x,
 #'
 #' @param x list corresponding to the different groups
 #' @param compare A list of length 2 vectors specifying the groups to compare (can be either integers or group names)
+#' @param adj Ratio of the boxplots' range that will be used to space pval segments
 #' @param outline Should oultiers be ploted?
 #' @param las boxplot las
 #' @param xlab boxplot xlab
@@ -66,11 +67,11 @@ vl_plot_pval_text <- function(x,
 #' @export
 vl_boxplot_pval <- function(x,
                             compare,
+                            adj= 10,
                             outline= F, 
                             las= 2,
                             xlab= NA,
-                            ylim= c(min(box$stats[1,], na.rm= T), 
-                                    max(obj$y, na.rm= T)+inter),
+                            ylim= c(min(box$stats, na.rm = T), max(obj$y)+inter),
                             staplewex = NA, 
                             whisklty = 1, 
                             boxwex = 0.5, ...)
@@ -110,16 +111,15 @@ vl_boxplot_pval <- function(x,
   obj[, pval:= wilcox.test(unlist(var_1), unlist(var_2))$p.value, .id]
   
   # Compute Y pos
-  inter <- grconvertY(0.75, "lines", "user")-grconvertY(0, "lines", "user")
   setorderv(obj, "max")
-  obj[.id==1, y:= max+inter]
-  for(i in 2:max(obj$.id))
+  inter <- (max(box$stats)-min(box$stats))/adj
+  obj[1, y:= max+inter]
+  for(i in 2:nrow(obj))
   {
-    cy <- obj[.id==i, max]+inter
-    if(between(cy, max(obj$y, na.rm= T)-inter, max(obj$y, na.rm= T)+inter))
-      cy <- max(obj$y, na.rm= T)+inter 
-    obj[.id==i, y:= cy]
+    overlap <- obj$y[obj[i, x_1]<=obj$x_2 & obj[i, x_2]>=obj$x_1]
+    obj[i, y:= max(c(overlap, max), na.rm = T)+inter]
   }
+
   # Plot
   boxplot(x, 
           outline= outline, 
@@ -130,8 +130,8 @@ vl_boxplot_pval <- function(x,
           whisklty = whisklty, 
           boxwex = boxwex, ...)
   obj[, {
-    segments(x_1[1], y[1], x_2[1], y[1])
-    vl_plot_pval_text(mean(c(x_1, x_2)),
+    segments(x_1[1], y, x_2[1], y)
+    vl_plot_pval_text(mean(c(x_1, x_2)), 
                       y,
                       pval,
                       stars_only= T)

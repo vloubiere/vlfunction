@@ -4,14 +4,16 @@
 \alias{vl_boxplot_pval}
 \title{Plot pval}
 \usage{
-vl_boxplot_pval(x, compare, outline = F, las = 2, xlab = NA,
-  ylim = c(min(box$stats[1, ], na.rm = T), max(obj$y, na.rm = T) +
-  inter), staplewex = NA, whisklty = 1, boxwex = 0.5, ...)
+vl_boxplot_pval(x, compare, adj = 10, outline = F, las = 2,
+  xlab = NA, ylim = c(min(box$stats, na.rm = T), max(obj$y) + inter),
+  staplewex = NA, whisklty = 1, boxwex = 0.5, ...)
 }
 \arguments{
 \item{x}{list corresponding to the different groups}
 
 \item{compare}{A list of length 2 vectors specifying the groups to compare (can be either integers or group names)}
+
+\item{adj}{Ratio of the boxplots' range that will be used to space pval segments}
 
 \item{outline}{Should oultiers be ploted?}
 
