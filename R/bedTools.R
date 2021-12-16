@@ -45,11 +45,13 @@ vl_binBSgenome <- function(BSgenome,
 
 vl_control_regions_BSgenome <- function(BSgenome,
                                         n,
-                                        width, 
+                                        width= 1, 
                                         restrict_seqnames= NULL)
 {
   if(!class(BSgenome)=="BSgenome")
     stop("genome should be a BSgenome object!")
+  if(width<1)
+    stop("width cannot be smaller than 1")
   dat <- as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome)))
   if(is.null(restrict_seqnames))
     restrict_seqnames <- dat$seqnames
@@ -63,7 +65,7 @@ vl_control_regions_BSgenome <- function(BSgenome,
   rdm <- dat[idx, .(seqnames, chr_size)]
   rdm[, width:= width]
   rdm[, start:= sample(seq(width+1, chr_size-width-1), .N), .(chr_size, width)]
-  rdm[, end:= start+width, .(chr_size, width)]
+  rdm[, end:= start+width-1, .(chr_size, width)]
   
   return(rdm[, .(seqnames, start, end)])
 }
