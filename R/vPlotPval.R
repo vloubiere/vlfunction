@@ -72,13 +72,19 @@ vl_boxplot_pval <- function(x,
                             las= 2,
                             xlab= NA,
                             ylim= c(min(box$stats, na.rm = T), max(obj$y)+inter),
+                            lwd= 0.75,
                             staplewex = NA, 
-                            whisklty = 1, 
-                            boxwex = 0.5, ...)
+                            whisklty = 1,
+                            whisklwd = 0.75, 
+                            boxwex = 0.5, 
+                            boxlwd= 0.75,
+                            medlwd= 1, ...)
 {
   # Checks
   if(!is.list(x))
     stop("x should be a (named) list of values")
+  if(is.null(names(x)))
+    names(x) <- as.character(seq(x))
   if(is.numeric(unlist(compare)))
   {
     if(!all(between(unlist(compare), 1, length(x))))
@@ -122,16 +128,23 @@ vl_boxplot_pval <- function(x,
     }
 
   # Plot
+  par(lwd= lwd)
   boxplot(x, 
-          outline= outline, 
-          las= las,
+          outline= outline,
+          xaxt= "n",
+          yaxt= "n",
           xlab= xlab,
           ylim= ylim,
           staplewex = staplewex, 
           whisklty = whisklty, 
-          boxwex = boxwex, ...)
+          whisklwd = whisklwd, 
+          boxwex = boxwex,
+          boxlwd= boxlwd,
+          medlwd= medlwd, ...)
+  axis(1, at = seq(x), labels = names(x), las= las, lwd= lwd)
+  axis(2, las= las, lwd= lwd)
   obj[, {
-    segments(x_1[1], y, x_2[1], y)
+    segments(x_1[1], y, x_2[1], y, lwd= lwd)
     vl_plot_pval_text(mean(c(x_1, x_2)), 
                       y,
                       pval,

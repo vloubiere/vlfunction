@@ -6,7 +6,8 @@
 \usage{
 vl_boxplot_pval(x, compare, adj = 10, outline = F, las = 2,
   xlab = NA, ylim = c(min(box$stats, na.rm = T), max(obj$y) + inter),
-  staplewex = NA, whisklty = 1, boxwex = 0.5, ...)
+  lwd = 0.75, staplewex = NA, whisklty = 1, whisklwd = 0.75,
+  boxwex = 0.5, boxlwd = 0.75, medlwd = 1, ...)
 }
 \arguments{
 \item{x}{list corresponding to the different groups}
