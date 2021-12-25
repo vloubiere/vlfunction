@@ -43,6 +43,14 @@ vl_Rsub <- function(R_script, args_v= NULL)
   return(cmd)
 }
 
+#' Extract reads from bam VBC
+#' @export
+vl_extract_reads_VBC <- function(bam, output_prefix, rev_comp_i5)
+{
+  paste0("module load build-env/2020; module load samtools/1.9-foss-2018b; 
+         /groups/stark/software-all/shell/demultiplexPE.sh -i ", bam, " -o ", output_prefix, " -b ", '"', rev_comp_i5, '"', " -u TRUE")
+}
+
 #' Submits to R using singularity
 vl_Rsub_singularity <- function(R_script, args_v= NULL)
 {
@@ -60,12 +68,6 @@ vl_bash_wrap_windows <- function(cmd)
   cmd <- paste("bash -c \"", cmd, "\"")  
 }
 
-#' Extract reads from bam VBC
-vl_extract_reads_VBC <- function(bam, output_prefix, rev_comp_i5)
-{
-  paste0("module load build-env/2020; module load samtools/1.9-foss-2018b; 
-         /groups/stark/software-all/shell/demultiplexPE.sh -i ", bam, " -o ", output_prefix, " -b ", '"', rev_comp_i5, '"', " -u TRUE")
-}
 
 #' BOWTIE Alignment to custom genome
 vl_bowtie1_align <- function(fq1, index_prefix, sam_output, o= NA, e= NA, execute= F, cores= 6, d= NA)
