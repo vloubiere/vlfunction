@@ -9,7 +9,6 @@
 #' @param collapse_touching_peaks If set to FALSE, return all bins with related padj and OR. Else, returns collapsed reads with max OR and -log10(padj) (Default).
 #' @param collapse_mingap mingap for collapsing peaks. see ?vl_collapse_DT_ranges().
 #' @param min_N_replicates minimum number of replicates required to retain peak. Default= all replicates
-#' @param cutoff_input_counts minimum number of input reads for the bin to be considered for testing. default= 5
 #' @examples 
 #' ChIP_bed <- c("../available_data_dm3/db/bed//GSE119708_ATAC_rep1_uniq.bed", "../available_data_dm3/db/bed//GSE119708_ATAC_rep2_uniq.bed")
 #' peaks <- vl_peakCalling(ChIP_bed)
@@ -23,8 +22,7 @@ vl_peakCalling <- function(ChIP_bed,
                            BSgenome= BSgenome.Dmelanogaster.UCSC.dm3,
                            collapse_touching_peaks= T,
                            collapse_mingap= 3*binsize+1,
-                           min_N_replicates= length(ChIP_bed),
-                           cutoff_input_counts= 5)
+                           min_N_replicates= length(ChIP_bed))
 {
   if (!class(BSgenome) == "BSgenome") 
     stop("genome should be a BSgenome object!")
@@ -53,12 +51,13 @@ vl_peakCalling <- function(ChIP_bed,
   })
   names(.q) <- c(paste0("CHIP_", seq(ChIP_bed)), paste0("INPUT_", seq(Input_bed)))
   .q <- rbindlist(.q, idcol = T)
+  # Check that bins contain read for all INPUT replicates
+  .q[, check:= all(counts[grep("^INPUT", .id)]>0), .(seqnames, start, end)]
   
   #----------------------#
   # Cast table
   #----------------------#
-  check <- .q[, rep(all(counts[grepl("^INPUT", .id)]>0), .N), .(seqnames, start, end)]$V1
-  res <- .q[check]
+  res <- .q[(check), !"check"]
   res[, c(".id", "rep"):= tstrsplit(.id, "_")]
   res <- dcast(res, 
                seqnames+start+end+rep~.id, 
@@ -67,22 +66,23 @@ vl_peakCalling <- function(ChIP_bed,
   res <- na.omit(res)
 
   #----------------------#
-  # Fisher test
+  # Find significantly enriched bins
   #----------------------#
   # Compute average counts/bin/chromosome
   res[, input_average:= ceiling(mean(counts_INPUT)), .(seqnames, rep)]
+  # Fisher test
   res[, c("OR", "pval"):= {
     mat <- matrix(unlist(.BY), nrow= 2, byrow = T)
     fisher.test(mat, alternative = "greater")[c("estimate", "p.value")]
   }, .(counts_CHIP, input_average, total_reads_CHIP, total_reads_INPUT)]
   res[, padj:= p.adjust(pval, method= "fdr")]
+  # Check that N padj<0.05 is higher than min number of replicates required
+  res[, check:= length(which(padj<0.05))>=min_N_replicates, .(seqnames, start, end)]
 
   #----------------------#
   # Collapse touching peaks
   #----------------------#
   # Filter peaks that pass thresholds
-  check <- (res$padj<0.05 # padj
-            & res[, rep(.N>=min_N_replicates, .N), .(seqnames, start, end)]$V1)  # N consistent replicates
   coll <- vl_collapse_DT_ranges(res[(check)], mingap = collapse_mingap)
   coll <- res[coll, {
     .SD[, {
@@ -97,14 +97,10 @@ vl_peakCalling <- function(ChIP_bed,
     }, rep]
   }, .EACHI, on= c("seqnames", "start<=end", "end>=start")]
   coll[, padj:= p.adjust(pval)]
-  
-  #----------------------#
   # Filter peaks that pass thresholds and export
-  #----------------------#
-  check <- (coll$padj<0.05 # padj
-            & coll[, rep(.N>=min_N_replicates, .N), .(seqnames, start, end)]$V1)  # N consistent replicates
-  peaks <- coll[check]
-  return(peaks)
+  coll[, check:= length(which(padj<0.05))>=min_N_replicates, .(seqnames, start, end)]
+  
+  return(coll[(check), !"check"])
 }
 
 

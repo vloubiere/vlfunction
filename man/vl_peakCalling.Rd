@@ -11,8 +11,7 @@ vl_peakCalling(
   BSgenome = BSgenome.Dmelanogaster.UCSC.dm3,
   collapse_touching_peaks = T,
   collapse_mingap = 3 * binsize + 1,
-  min_N_replicates = length(ChIP_bed),
-  cutoff_input_counts = 5
+  min_N_replicates = length(ChIP_bed)
 )
 }
 \arguments{
@@ -29,8 +28,6 @@ vl_peakCalling(
 \item{collapse_mingap}{mingap for collapsing peaks. see ?vl_collapse_DT_ranges().}
 
 \item{min_N_replicates}{minimum number of replicates required to retain peak. Default= all replicates}
-
-\item{cutoff_input_counts}{minimum number of input reads for the bin to be considered for testing. default= 5}
 }
 \value{
 peaks
