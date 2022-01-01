@@ -84,23 +84,24 @@ vl_peakCalling <- function(ChIP_bed,
   #----------------------#
   # Filter peaks that pass thresholds
   coll <- vl_collapse_DT_ranges(res[(check)], mingap = collapse_mingap)
-  coll <- res[coll, {
-    .SD[, {
-      mat <- matrix(c(sum(counts_CHIP),
-                      sum(input_average),
-                      total_reads_CHIP[1],
-                      total_reads_INPUT[1]), nrow= 2, byrow = T)
-      .f <- fisher.test(mat, alternative = "greater")
-      .(OR= .f[["estimate"]],
-        pval= .f[["p.value"]],
-        max_coor= center[which.max(OR)])
-    }, rep]
-  }, .EACHI, on= c("seqnames", "start<=end", "end>=start")]
-  coll[, padj:= p.adjust(pval)]
+  # Compute Fisher on merged peaks
+  setkeyv(coll, c("seqnames", "start", "end"))
+  setkeyv(res, c("seqnames", "start", "end"))
+  peaks <- foverlaps(res, 
+                     coll, 
+                     nomatch = NULL)
+  peaks <- peaks[, .(counts_CHIP= sum(counts_CHIP),
+                     input_average= sum(input_average)), 
+                 .(seqnames, start, end, rep, total_reads_CHIP, total_reads_INPUT)]
+  peaks[, c("OR", "pval"):= {
+    mat <- matrix(unlist(.BY), nrow= 2, byrow = T)
+    fisher.test(mat, alternative = "greater")[c("estimate", "p.value")]
+  }, .(counts_CHIP, input_average, total_reads_CHIP, total_reads_INPUT)]
+  peaks[, padj:= p.adjust(pval)]
   # Filter peaks that pass thresholds and export
-  coll[, check:= length(which(padj<0.05))>=min_N_replicates, .(seqnames, start, end)]
+  peaks[, check:= length(which(padj<0.05))>=min_N_replicates, .(seqnames, start, end)]
   
-  return(coll[(check), !"check"])
+  return(peaks[(check), !"check"])
 }
 
 
