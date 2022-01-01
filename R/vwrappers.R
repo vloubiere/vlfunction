@@ -51,6 +51,23 @@ vl_extract_reads_VBC <- function(bam, output_prefix, rev_comp_i5)
          /groups/stark/software-all/shell/demultiplexPE.sh -i ", bam, " -o ", output_prefix, " -b ", '"', rev_comp_i5, '"', " -u TRUE")
 }
 
+#' Use dropbox uploader
+#' @export
+vl_dropbox_upload <- function(local_path, remote_path)
+{
+  cmd <- paste("sh  /groups/stark/vloubiere/apps/dropbox/dropbox_uploader.sh upload", local_path, remote_path)
+  system(cmd)
+}
+
+#' Use dropbox downloader
+#' @export
+vl_dropbox_download <- function(local_path, remote_path)
+{
+  cmd <- paste("sh  /groups/stark/vloubiere/apps/dropbox/dropbox_uploader.sh download", local_path, remote_path)
+  system(cmd)
+}
+
+
 #' Submits to R using singularity
 vl_Rsub_singularity <- function(R_script, args_v= NULL)
 {

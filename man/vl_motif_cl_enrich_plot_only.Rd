@@ -4,7 +4,7 @@
 \alias{vl_motif_cl_enrich_plot_only}
 \title{Compute motif enrichment}
 \usage{
-vl_motif_cl_enrich_plot_only(obj, padj_cutoff = 1e-05,
+vl_motif_cl_enrich_plot_only(obj, padj_cutoff = 0.00001,
   log2OR_cutoff = 0, N_top = Inf, auto_margin = T)
 }
 \arguments{
