@@ -77,7 +77,7 @@ vl_peakCalling <- function(ChIP_bed,
   }, .(counts_CHIP, input_average, total_reads_CHIP, total_reads_INPUT)]
   res[, padj:= p.adjust(pval, method= "fdr")]
   # Check that N padj<0.05 is higher than min number of replicates required
-  res[, check:= length(which(padj<0.05))>=min_N_replicates, .(seqnames, start, end)]
+  res[, check:= length(which(padj<1e-5))>=min_N_replicates, .(seqnames, start, end)]
 
   #----------------------#
   # Collapse touching peaks
