@@ -90,16 +90,16 @@ vl_peakCalling <- function(ChIP_bed,
   peaks <- foverlaps(res, 
                      coll, 
                      nomatch = NULL)
-  peaks <- peaks[, .(counts_CHIP= sum(counts_CHIP),
-                     input_average= sum(input_average)), 
+  peaks <- peaks[, .(counts_CHIP= round(mean(counts_CHIP)),
+                     input_average= round(mean(input_average))), 
                  .(seqnames, start, end, rep, total_reads_CHIP, total_reads_INPUT)]
   peaks[, c("OR", "pval"):= {
     mat <- matrix(unlist(.BY), nrow= 2, byrow = T)
     fisher.test(mat, alternative = "greater")[c("estimate", "p.value")]
   }, .(counts_CHIP, input_average, total_reads_CHIP, total_reads_INPUT)]
-  peaks[, padj:= p.adjust(pval)]
+  peaks[, `-log10(padj)`:= -log10(p.adjust(pval))]
   # Filter peaks that pass thresholds and export
-  peaks[, check:= length(which(padj<0.05))>=min_N_replicates, .(seqnames, start, end)]
+  peaks[, check:= length(which(`-log10(padj)`>(-log10(0.05))))>=min_N_replicates, .(seqnames, start, end)]
   
   return(peaks[(check), !"check"])
 }
