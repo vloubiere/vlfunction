@@ -1,3 +1,57 @@
+#' Counts motifs
+#'
+#' Counts motif occurences in a set of regions
+#'
+#' @param bed Either a GRanges object or a data.table that can be coerced to it
+#' @param genome Genome to be used for coordinates ("dm6, "dm3")
+#' @param sel List of motifs to compute. see vl_Dmel_motifs_DB_full$motif
+#' 
+#' @examples 
+#' test <- cl_motif_counts(bed = GRanges("chr3R", IRanges(c(2e6, 3e6), c(2e6, 3e6)+1e3)),
+#' genome= "dm6",
+#' resize= T, 
+#' extend = c(500, 500),
+#' sel= vl_Dmel_motifs_DB$metadata$motif_name[1:10])
+#' 
+#' @return Network plot.
+#' @export
+
+vl_motif_counts <- function(bed, 
+                            genome= "dm6",
+                            sel= vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn), motif])
+{
+  # Checks
+  if(is.data.table(bed))
+    DT <- copy(bed) else
+      DT <- as.data.table(bed)
+    if(ncol(DT)>5)
+      print("provided bed file has many columns!! \n Given that the output can be massive, I would advice to reduce it to the minimum (coordinates + ID)")
+    if(any(!sel %in% vl_Dmel_motifs_DB_full$motif))
+      stop("Some motif provided in 'sel' do not exist in vl_Dmel_motifs_DB_full$motif")
+    
+    # Select motifs
+    sub <- vl_Dmel_motifs_DB_full[motif %in% sel]
+    mot <- do.call(PWMatrixList, 
+                   sub$pwms_log_odds)
+    # Get sequence
+    DT[, seq:= BSgenome::getSeq(BSgenome::getBSgenome(genome), seqnames, start, end, as.character= T)]
+    res <- as.data.table(as.matrix(motifmatchr::matchMotifs(mot,
+                                                            DT$seq,
+                                                            p.cutoff= 5e-4,
+                                                            bg= "even",
+                                                            out= "scores")@assays@data[["motifCounts"]]))
+    names(res) <- sub$motif
+    res <- cbind(DT[, !"seq"], res)
+    res <- melt(res,
+                measure.vars = sub$motif,
+                variable.name = "motif",
+                value.name = "motif_counts")
+    res <- merge(sub[, .(motif, motif_name, motif_FBgn= FBgn)],
+                 res)
+    return(res)
+}
+
+
 #' Compute motif enrichment
 #'
 #' Compute motif enrichment for the cluster in cl_columns, using all the lines as background
@@ -173,4 +227,64 @@ vl_motif_cl_enrich_plot_only <- function(obj,
        offset= 0)
   
   invisible(pl)
+}
+
+#' Compute motif enrichment
+#'
+#' Compute motif enrichment for the cluster in cl_columns, using all the lines as background
+#'
+#' @param obj A motif count object similar to the output of ?vl_motif_counts() (colnames:'motif', 'motif_counts', 'motif_name') + one cluster column! 
+#' @param cl_column name of the cluster column
+#' @param bg cluster IDs to be used as background. Default unique(obj[[cl_column]])
+#' @param comp_expr Expression used for contingency table. Default "motif_count>0"
+#' 
+#' @examples 
+#' 
+#' @return Fisher test data.table.
+#' @export
+
+vl_motif_cl_enrich <- function(obj, 
+                               cl_column,
+                               bg= unique(obj[[cl_column]]),
+                               comp_expr= "motif_counts>0")
+{
+  DT <- data.table::copy(obj)
+  # Checks
+  if(!cl_column %in% names(DT))
+    stop("cl_column does not exist in provided obj") else if(cl_column != "cl")
+      names(DT)[names(DT)==cl_column] <- "cl"
+  if(class(DT$cl) != class(bg))
+    stop("cluster column and bg are not from same class -- > coerce?")
+  if(!all(c("motif", "motif_name", "motif_FBgn", "motif_counts") %in% names(DT)))
+    stop("Provided DT should contain c('motif', 'motif_name', 'motif_FBgn', 'motif_counts') columns. see ?vl_motif_counts() output!")
+  if(anyNA(bg))
+    stop("bg contains NAs. cl_column should not contain NAs OR they should not be used for comparisons!")
+  DT <- DT[, .(motif, motif_name, motif_counts, motif_FBgn, cl)]
+
+  #-----------------------#
+  # Format result table
+  #-----------------------#
+  cmb <- DT[, {
+    data.table(V1= na.omit(unique(cl))) # make DT containing clusters to test
+  }, .(mot= motif, motif_name, motif_FBgn)]
+  
+  #-----------------------#
+  # For each motif/cluster combination, compute association using fisher
+  #-----------------------#
+  cmb[, c("OR", "pval"):= {
+    # Extract motif from DT, restrict to regions from tested cluster OR bg, cast contingency table
+    .t <- table(DT[motif==mot & cl %in% c(V1, bg), .(cl==V1, 
+                                                     eval(parse(text= comp_expr)))])
+    # If motif present in both tested cl and bg, do fisher test
+    if(identical(dim(.t), as.integer(c(2,2))))
+      res <- as.data.table(as.list(fisher.test(.t)[c("estimate", "p.value")])) else
+        data.table(numeric(), numeric())
+  }, .(mot, V1)]
+  cmb <- na.omit(cmb)
+  cmb[, padj:= p.adjust(pval, method = "fdr"), pval]
+  cmb[, log2OR:= log2(OR)]
+  setnames(cmb, 
+           c("mot", "V1"),
+           c("motif", "cl"))
+  return(cmb)
 }

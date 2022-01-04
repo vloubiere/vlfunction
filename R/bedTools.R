@@ -9,7 +9,6 @@
 #' @return data.table containing bin coordinates
 #' @export
 
-
 vl_binBSgenome <- function(BSgenome,
                            bin_size= 50)
 {
@@ -41,7 +40,6 @@ vl_binBSgenome <- function(BSgenome,
 #' 
 #' @return data.table containing random control regions
 #' @export
-
 
 vl_control_regions_BSgenome <- function(BSgenome,
                                         n,
@@ -182,4 +180,219 @@ vl_collapse_DT_ranges <- function(bed,
   }, .(seqnames, strand)]
   res <- DT[, .(start= min(start), end= max(end)), .(seqnames, idx, strand)]
   return(res[, .(seqnames, start, end, strand)])
+}
+
+#' Compute Enrichment
+#'
+#' Compute enrichment for a list of regions using fisher test to compare ChIP and Input
+#'
+#' @param bins Data.table containing bins (seqnames, start and end columns)
+#' @param ChIP_bed Either a character vector poiting to bed file path OR a data.table containing ChIP reads
+#' @param Input_bed Either a character vector poiting to bed file path OR a data.table containing Input reads. 
+#' If set to NULL (default), use shuffled version of the ChIP reads as input.
+#' @examples 
+#' ChIP_bed <- "/mnt/d/_R_data/projects/epigenetic_cancer/db/bed/cutnrun/merge/H3K27me3_PH18_merge_uniq.bed"
+#' res <- vl_bedEnrichment(ChIP_bed)
+#' 
+#' @return original bins file with OR, pval and padj corresponding to fisher result
+#' @export
+
+vl_bedEnrichment <- function(bins,
+                             ChIP_bed, 
+                             Input_bed= NULL)
+{
+  # Function to Import bed files (if ChIP_bed and Input_bed are not already data.tables)
+  bed_import <- function(x)
+  {
+    if(!is.data.table(bins))
+      stop("bins should be a data.table containing seqnames, start and end columns")
+    if(!all(c("seqnames", "start", "end") %in% names(bins)))
+      stop("bins should contain seqnames, start and end columns")
+    # Import function
+    .c <- rbindlist(lapply(x, 
+                           fread, 
+                           sel= 1:3, 
+                           col.names= c("seqnames", "start", "end"), 
+                           key= c("seqnames", "start")))
+    .c[, total_counts:= .N, seqnames]
+    return(.c)
+  }
+  # ChIP
+  if(is.character(ChIP_bed))
+    .c <- bed_import(ChIP_bed) else if(is.data.table(ChIP_bed))
+    {
+      if(all(c("seqnames", "start", "end") %in% names(ChIP_bed)))
+        stop("Could not find seqnames, start, end in ChIP_bed data.table. Either provide such data.table or a .bed path")
+      .c <- ChIP_bed
+    }
+  # Input
+  if(is.character(Input_bed))
+    Input_bed <- bed_import(Input_bed) else if(is.data.table(Input_bed))
+    {
+      if(all(c("seqnames", "start", "end") %in% names(Input_bed)))
+        stop("Could not find seqnames, start, end in Input_bed data.table. Either provide such data.table or a .bed path")
+      .i <- Input_bed
+    } else if (is.null(Input_bed))
+    {
+      # Compute contigs 
+      .i <- vl_collapse_DT_ranges(.c)
+      # resize depending on reads sizes (random starts will be sampled!)
+      .i[, end:= end-median(.c[, end-start]), seqnames]
+      # Compute effective chr sizes
+      .i[, chr_size:= sum(end-start+1), seqnames]
+      # Add total counts/chr
+      .i <- merge(.i,
+                  unique(.c[, .(seqnames, total_counts)]))
+      # Compute sample size fo each contig
+      .i[, sample_size:= round(total_counts*((end-start+1)/chr_size))]
+      # Sampling
+      set.seed(1)
+      .i <- .i[, .(start= sample(region_start:region_end, sample_size, replace = T)), 
+               .(seqnames, region_start= start, region_end= end, sample_size, total_counts)]
+      # Order and extend to match ChIP reads length
+      setorderv(.i, c("seqnames", "start"))
+      .i[, end:= start+median(.c[, end-start])]
+      # Clean
+      .i <- .i[, .(seqnames, start, end, total_counts)]
+    }
+  
+  # Count overlapping reads
+  regions <- copy(bins)
+  # ChIP
+  regions$ChIP_counts <- .c[regions, .N, .EACHI, on= c("seqnames", "start<=end", "end>=start")]$N
+  regions$ChIP_total_counts <- regions[, rep(.c[.BY, .N, on= "seqnames"], .N), seqnames]$V1
+  # Input
+  regions$Input_counts <- .i[regions, .N, .EACHI, on= c("seqnames", "start<=end", "end>=start")]$N
+  regions$Input_total_counts <- regions[, rep(.i[.BY, .N, on= "seqnames"], .N), seqnames]$V1
+  
+  # Remove bins without reads
+  regions <- na.omit(regions)
+  
+  # Compute enrichment over background
+  regions[, c("OR", "pval"):= {
+    mat <- matrix(unlist(.BY), nrow= 2, byrow = T)
+    fisher.test(mat, alternative = "greater")[c("estimate", "p.value")]
+  }, .(ChIP_counts, Input_counts, ChIP_total_counts, Input_total_counts)]
+  regions[, padj:= p.adjust(pval, "fdr")]
+  return(regions)
+}
+
+#' Compute peak calling
+#'
+#' Compute peak calling using ChIP and Input
+#'
+#' @param ChIP_bed Either a character vector poiting to bed file path OR a data.table containing ChIP reads
+#' @param Input_bed Either a character vector poiting to bed file path OR a data.table containing Input reads. 
+#' @param BSgenome A BSgenome object used for gw binning
+#' @param binsize binsize used for peak calling, Default to 100 (narrow Peaks). Use larger bins to call domains
+#' @examples 
+#' 
+#' @return significantly enriched peaks
+#' @export
+
+vl_peakCalling <- function(ChIP_bed,
+                           Input_bed= NULL,
+                           BSgenome,
+                           binsize= 100)
+{
+  if(!is.character(ChIP_bed))
+    stop("ChIP_bed and Input_bed should both be character vectors pointing to bed files")
+  if(!is.null(Input_bed))
+    if(!is.character(Input_bed))
+      stop("ChIP_bed and Input_bed should both be character vectors pointing to bed files")
+  if(class(BSgenome)[1]!="BSgenome")
+    stop("BSgenome should be a BSgenome object")
+  
+  # Small bins
+  bins <- as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome)))
+  bins <- bins[, .(start = seq(1, end, binsize)), .(seqnames, end, width)]
+  bins[, end:= start+(binsize-1)]
+  bins[end > width, end:= width]
+  bins <- bins[end - start > 0, .(seqnames, start, end)]
+  
+  #----------------------------#
+  # Import reads
+  #----------------------------#
+  bed_import <- function(x)
+  {
+    .c <- rbindlist(lapply(x, 
+                           fread, 
+                           sel= 1:3, 
+                           col.names= c("seqnames", "start", "end"), 
+                           key= c("seqnames", "start")))
+    .c[, total_counts:= .N, seqnames]
+    return(.c)
+  }
+  # ChIP
+  .c <- bed_import(ChIP_bed)
+  # Input
+  if(is.character(Input_bed))
+    .i <- bed_import(Input_bed) else
+    {
+      # Compute contigs 
+      .i <- vl_collapse_DT_ranges(.c)
+      # resize depending on reads sizes (random starts will be sampled!)
+      .i[, end:= end-median(.c[, end-start]), seqnames]
+      # Compute effective chr sizes
+      .i[, chr_size:= sum(end-start+1), seqnames]
+      # Add total counts/chr
+      .i <- merge(.i,
+                  unique(.c[, .(seqnames, total_counts)]))
+      # Compute sample size fo each contig
+      .i[, sample_size:= round(total_counts*((end-start+1)/chr_size))]
+      # Sampling
+      set.seed(1)
+      .i <- .i[, .(start= sample(region_start:region_end, sample_size, replace = T)), 
+               .(seqnames, region_start= start, region_end= end, sample_size, total_counts)]
+      # Order and extend to match ChIP reads length
+      setorderv(.i, c("seqnames", "start"))
+      .i[, end:= start+median(.c[, end-start])]
+      # Clean
+      .i <- .i[, .(seqnames, start, end, total_counts)]
+    }
+  
+  #----------------------------#
+  # Compute bins enrichment
+  #----------------------------#
+  bins <- vl_bedEnrichment(ChIP_bed = .c, 
+                           Input_bed = .i, 
+                           bins = bins)
+  
+  #----------------------------#
+  # Merge contiguous bins into peaks
+  #----------------------------#
+  # Only retain bins significantly enriched over background
+  peaks <- bins[pval<1e-5]
+  # Collapse touching bins into candidate peaks
+  i <- 0
+  peaks[, idx:= {
+    i <<- i+1
+    .idx <- c(i, sapply(.SD[-1, start]-.SD[-nrow(.SD), end], function(y) {
+      if(y>1) 
+        i <<- i+1
+      return(i)
+    }))
+  }, seqnames]
+  peaks <- peaks[, .(start= start[1], end= end[.N]), .(seqnames, idx)]
+  # Compute overall peaks enrihment
+  peaks <- vl_bedEnrichment(ChIP_bed = .c, 
+                            Input_bed = .i, 
+                            bins = peaks)
+  
+  #----------------------------#
+  # Clean and save narrowPeak object
+  #----------------------------#
+  final <- peaks[padj<0.05]
+  final[pval==0, pval:= min(final[pval>0, pval])]
+  final[padj==0, padj:= min(final[padj>0, padj])]
+  final <- final[, .(seqnames, start, end,
+                     names= paste0("peak_", .I), 
+                     score= round(OR/max(OR)*1000), 
+                     strand= ".", 
+                     signalValue= OR,
+                     pValue= -log10(pval),
+                     qValue= -log10(padj),
+                     peak= -1)]
+  
+  return(final)
 }
