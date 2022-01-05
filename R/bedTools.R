@@ -145,6 +145,9 @@ vl_closestBed <- function(a,
 #' @param bed GRanges or data.table file with "seqnames", "start", "end" (and optionally strand, set to * if absent)
 #' @param mingap min gap ditance for merging. default is 1 (that is, touching coordinates)
 #' @param stranded If set to true and strand column is provided, only merges coordinates with similar strand.
+#' @param return_idx_only If set to T, does not collapse regions but returns idx as an extra columns. default= F
+#' @param compute_other_columns If set to T or to a vector of column names, extra columns will be compute by contig using aggregate.fun. 
+#' @param aggregate.fun See compute_other_columns. Default to function(x) mean(x, na.rm= T)
 #' @examples 
 #' ex <- GRanges(c("chr3L", "chr3L", "chr3L", "chr3L", "chr2R"), 
 #' IRanges(c(1000, 2000, 2100, 2200, 2000), 
@@ -157,29 +160,45 @@ vl_closestBed <- function(a,
 #' @export
 
 vl_collapse_DT_ranges <- function(bed, 
-                                  mingap= 1, 
-                                  stranded= F)
+                                  mingap= 1,
+                                  return_idx_only= F, 
+                                  compute_other_columns= NULL,
+                                  aggregate.fun= function(x) mean(x, na.rm= T))
 {
   if(class(bed)[1]=="GRanges")
     bed <- data.table::as.data.table(bed)
-  if(!data.table::is.data.table(bed) | !all(c("seqnames", "start", "end") %in% colnames(bed)))
+  if(!data.table::is.data.table(bed) | !all(c("seqnames", "start", "end") %in% names(bed)))
     stop("bed must be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns")
-  if(!"strand" %in% colnames(bed) | !stranded)
-    bed[, strand:= "*"]
+  if(is.null(compute_other_columns)) # Check if compute_other_columns corresponds to bed columns or bool
+  {
+    cols <- as.character()
+    compute_other_columns <- F
+  }else 
+  {
+    if(all(compute_other_columns %in% names(bed)))
+      cols <- compute_other_columns else
+        cols <- setdiff(names(bed), c("seqnames", "start", "end"))
+      compute_other_columns <- T
+  }
   
-  DT <- copy(bed)
-  setorderv(DT, c("seqnames", "start", "end", "strand"))
-  i <- 0
-  DT[, idx:= {
-    i <<- i+1
-    .idx <- c(i, sapply(.SD[-1, start]-.SD[-nrow(.SD), end], function(y) {
-      if(y>mingap) 
-        i <<- i+1
-      return(i)
-    }))
-  }, .(seqnames, strand)]
-  res <- DT[, .(start= min(start), end= max(end)), .(seqnames, idx, strand)]
-  return(res[, .(seqnames, start, end, strand)])
+  # Hard copy
+  DT <- copy(bed[, match(c("seqnames", "start", "end", cols), names(bed)), with= F])
+  setkeyv(DT, c("seqnames", "start"))
+  # Compute contig idx
+  DT[, idx:= cumsum(sapply(start-cummax(end)[c(1, seq(.N-1))], function(x) x>mingap)), seqnames]
+  DT[, idx:= .GRP, .(seqnames, idx)] # Make idx unique
+  if(!return_idx_only)
+  {
+    if(compute_other_columns) # compute other columns per group
+      DT[, (cols):= lapply(.SD, aggregate.fun), idx, .SDcols= cols] else
+        DT <- DT[, .(seqnames, start, end, idx)] # Otherwise only report collapsed intervals
+    # Compute contigs start and end
+    DT[, c("start", "end") := .(min(start), max(end)), .(seqnames, idx)]
+    # Collapse
+    DT <- unique(DT[, !"idx"])
+  }
+
+  return(DT)
 }
 
 #' Compute Enrichment
@@ -221,28 +240,27 @@ vl_bedEnrichment <- function(bins,
   if(is.character(ChIP_bed))
     .c <- bed_import(ChIP_bed) else if(is.data.table(ChIP_bed))
     {
-      if(all(c("seqnames", "start", "end") %in% names(ChIP_bed)))
+      if(!all(c("seqnames", "start", "end") %in% names(ChIP_bed)))
         stop("Could not find seqnames, start, end in ChIP_bed data.table. Either provide such data.table or a .bed path")
       .c <- ChIP_bed
     }
   # Input
   if(is.character(Input_bed))
-    Input_bed <- bed_import(Input_bed) else if(is.data.table(Input_bed))
+    Input_bed <- bed_import(Input_bed) else if (is.data.table(Input_bed))
     {
-      if(all(c("seqnames", "start", "end") %in% names(Input_bed)))
+      if(!all(c("seqnames", "start", "end") %in% names(Input_bed)))
         stop("Could not find seqnames, start, end in Input_bed data.table. Either provide such data.table or a .bed path")
       .i <- Input_bed
-    } else if (is.null(Input_bed))
+    } else if (is.null(Input_bed)) # If Input not provided, use random shuffling of ChIP reads
     {
       # Compute contigs 
-      .i <- vl_collapse_DT_ranges(.c)
+      .i <- vl_collapse_DT_ranges(bed = .c, 
+                                  compute_other_columns = "total_counts", 
+                                  aggregate.fun = function(x) max(x, na.rm=T))
       # resize depending on reads sizes (random starts will be sampled!)
-      .i[, end:= end-median(.c[, end-start]), seqnames]
+      .i[, end:= end-min(.c[, end-start]), seqnames]
       # Compute effective chr sizes
       .i[, chr_size:= sum(end-start+1), seqnames]
-      # Add total counts/chr
-      .i <- merge(.i,
-                  unique(.c[, .(seqnames, total_counts)]))
       # Compute sample size fo each contig
       .i[, sample_size:= round(total_counts*((end-start+1)/chr_size))]
       # Sampling
@@ -251,11 +269,12 @@ vl_bedEnrichment <- function(bins,
                .(seqnames, region_start= start, region_end= end, sample_size, total_counts)]
       # Order and extend to match ChIP reads length
       setorderv(.i, c("seqnames", "start"))
-      .i[, end:= start+median(.c[, end-start])]
+      set.seed(1)
+      .i[, end:= start+sample(.c[, end-start], .N)]
       # Clean
       .i <- .i[, .(seqnames, start, end, total_counts)]
     }
-  
+
   # Count overlapping reads
   regions <- copy(bins)
   # ChIP
@@ -299,7 +318,7 @@ vl_peakCalling <- function(ChIP_bed,
     stop("ChIP_bed and Input_bed should both be character vectors pointing to bed files")
   if(!is.null(Input_bed))
     if(!is.character(Input_bed))
-      stop("ChIP_bed and Input_bed should both be character vectors pointing to bed files")
+      stop("Input_bed should either be set to NULL or a bed file path")
   if(class(BSgenome)[1]!="BSgenome")
     stop("BSgenome should be a BSgenome object")
   
@@ -327,26 +346,60 @@ vl_peakCalling <- function(ChIP_bed,
   .c <- bed_import(ChIP_bed)
   # Input
   if(is.character(Input_bed))
-    .i <- bed_import(Input_bed) else
+    .i <- bed_import(Input_bed) else # If Input not provided, use random shuffling of ChIP reads
     {
       # Compute contigs 
-      .i <- vl_collapse_DT_ranges(.c)
-      # resize depending on reads sizes (random starts will be sampled!)
-      .i[, end:= end-median(.c[, end-start]), seqnames]
+      .i <- vl_collapse_DT_ranges(bed = .c, 
+                                  compute_other_columns = "total_counts", 
+                                  aggregate.fun = function(x) max(x, na.rm=T))
       # Compute effective chr sizes
       .i[, chr_size:= sum(end-start+1), seqnames]
-      # Add total counts/chr
-      .i <- merge(.i,
-                  unique(.c[, .(seqnames, total_counts)]))
-      # Compute sample size fo each contig
+      # Compute prob vector in order to constrain shuffle reads into mappable regions AND match ChIP read length distribution
+      prob_vector <- data.table(read_length= seq(max(.i[,end-start+1])))
+      prob_vector <- merge(prob_vector,
+                           .c[, .N, .(read_length= end-start+1)],
+                           all.x= T)
+      prob_vector[is.na(N), N:= 0]
+      # Sampling
       .i[, sample_size:= round(total_counts*((end-start+1)/chr_size))]
+      set.seed(1)
+      .i <- .i[, .(start= sample(x = region_start:region_end, 
+                                 size = sample_size,
+                                 prob = rev(cumsum(prob_vector[read_length<=(region_end-region_start+1), N])),
+                                 replace = T)), 
+               .(seqnames, region_start= start, region_end= end, sample_size, total_counts)]
+      
+      # Sample
+      .i[1, prob:= .(.(cumsum(prob_vector[read_length<=width, N]))), .(width= end-start+1)]
+      .i[1, prob]
+      # Extend table to get 1/row per read (depending on contig size)
+      set.seed(1)
+      .i <- .i[, .SD[sample(x= seq(.N), 
+                            size= total_counts, 
+                            prob = (end-start+1)/chr_size,
+                            replace= T)], .(seqnames, total_counts)]
+      setkeyv(.i, c("seqnames", "start"))
+      # Sample read lengths from ChIP
+      set.seed(1)
+      .i[, read_length:= sample(.c[, end-start], .N)]
+      # Compute shuffled reads start and end
+      .i[, end:= end-read_length]
+      set.seed(1)
+      .i[, start:= sample(start:end, .N), .(seqnames, start, end)]
+      .i[, sample_size:= round(total_counts*((end-start+1)/chr_size))]
+      .i <- .i[rep(seq(.N), sample_size)]
+      # resize depending on reads sizes (random starts will be sampled!)
+      .i[, end:= end-min(.c[, end-start]), seqnames]
+      
+      
       # Sampling
       set.seed(1)
       .i <- .i[, .(start= sample(region_start:region_end, sample_size, replace = T)), 
                .(seqnames, region_start= start, region_end= end, sample_size, total_counts)]
       # Order and extend to match ChIP reads length
       setorderv(.i, c("seqnames", "start"))
-      .i[, end:= start+median(.c[, end-start])]
+      set.seed(1)
+      .i[, end:= start+sample(.c[, end-start], .N)]
       # Clean
       .i <- .i[, .(seqnames, start, end, total_counts)]
     }

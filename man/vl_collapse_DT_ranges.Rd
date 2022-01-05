@@ -4,12 +4,24 @@
 \alias{vl_collapse_DT_ranges}
 \title{Collapse ranges with a certain min dist}
 \usage{
-vl_collapse_DT_ranges(bed, mingap = 1, stranded = F)
+vl_collapse_DT_ranges(
+  bed,
+  mingap = 1,
+  return_idx_only = F,
+  compute_other_columns = NULL,
+  aggregate.fun = function(x) mean(x, na.rm = T)
+)
 }
 \arguments{
 \item{bed}{GRanges or data.table file with "seqnames", "start", "end" (and optionally strand, set to * if absent)}
 
 \item{mingap}{min gap ditance for merging. default is 1 (that is, touching coordinates)}
+
+\item{return_idx_only}{If set to T, does not collapse regions but returns idx as an extra columns. default= F}
+
+\item{compute_other_columns}{If set to T or to a vector of column names, extra columns will be compute by contig using aggregate.fun.}
+
+\item{aggregate.fun}{See compute_other_columns. Default to function(x) mean(x, na.rm= T)}
 
 \item{stranded}{If set to true and strand column is provided, only merges coordinates with similar strand.}
 }
