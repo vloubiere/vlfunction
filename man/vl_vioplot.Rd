@@ -4,10 +4,18 @@
 \alias{vl_vioplot}
 \title{violin plot}
 \usage{
-vl_vioplot(x, formula, outline = F, xlab = "", ylab = "",
-  plot_labels = T, xlim = c(0.5, max(obj$at) + 0.5), ylim = if
-  (outline) range(unlist(obj$value)) else range(c(obj$Q1, obj$Q5)),
-  col = "white", at = NULL)
+vl_vioplot(
+  x,
+  formula,
+  outline = F,
+  xlab = "",
+  ylab = "",
+  plot_labels = T,
+  xlim = c(0.5, max(obj$at) + 0.5),
+  ylim = if (outline) range(unlist(obj$value)) else range(c(obj$Q1, obj$Q5)),
+  col = "white",
+  at = NULL
+)
 }
 \arguments{
 \item{x}{Matrix, data.atble or data.frame containing data}

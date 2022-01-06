@@ -324,10 +324,21 @@ vl_peakCalling <- function(ChIP_bed,
                            binsize= 100)
 {
   #----------------------------#
-  # Compute genome wide bins enrichment
+  # Import data and compute gw bins enrichment
   #----------------------------#
   # genome wide bins
   bins <- vl_binBSgenome(BSgenome, bin_size = binsize)
+  # Import bed files
+  .c <- vl_importBed(ChIP_bed)
+  .c[, total_counts:= .N, seqnames]
+  # Input
+  if(is.null(Input_bed))
+    .i <- vl_shuffleBed(.c) else
+    {
+      .i <- vl_importBed(Input_bed)
+      .i[, total_counts:= .N, seqnames]
+    }
+  # Enrichment
   bins <- vl_enrichBed(ChIP_bed = .c, 
                        Input_bed = .i, 
                        bins = bins)

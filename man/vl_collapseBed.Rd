@@ -4,9 +4,13 @@
 \alias{vl_collapseBed}
 \title{Collapse ranges with a certain min dist}
 \usage{
-vl_collapseBed(bed, mingap = 1, return_idx_only = F,
-  compute_other_columns = NULL, aggregate.fun = function(x) mean(x,
-  na.rm = T))
+vl_collapseBed(
+  bed,
+  mingap = 1,
+  return_idx_only = F,
+  compute_other_columns = NULL,
+  aggregate.fun = function(x) mean(x, na.rm = T)
+)
 }
 \arguments{
 \item{bed}{bed file to be collapsed. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames','start', 'end' columns. see ?vl_importBed()}
