@@ -4,22 +4,12 @@
 \alias{vl_screenshot}
 \title{bw screenshot}
 \usage{
-vl_screenshot(
-  bed,
-  tracks,
-  genome,
-  highlight_regions = NULL,
-  highlight_col = "lightgrey",
-  names = NULL,
-  max = NULL,
-  strand = NULL,
-  col = NULL,
-  n_genes = 4,
-  gband = 0.1
-)
+vl_screenshot(bed, tracks, genome, highlight_regions = NULL,
+  highlight_col = "lightgrey", names = NULL, max = NULL,
+  strand = NULL, col = NULL, n_genes = 4, gband = 0.1)
 }
 \arguments{
-\item{bed}{Regions to plot. Can be a path to a bed file OR a GRanges object OR a data.table containing 'seqnames', 'start', 'end' columns"}
+\item{bed}{Regions to plot. Can be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start' and 'end' columns}
 
 \item{tracks}{Vector of bw files to plot. Use full paths to avoid pbs.}
 
@@ -42,6 +32,7 @@ This function plots a screenshot of bw files for a set of regions.
 }
 \examples{
 vl_screenshot(bed = GRanges("chr3R", IRanges(1+c(0, 5e6), 1e6+c(0, 5e6))),
+genome= "dm3",
 tracks = c("/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE81795_H3K4me3_rep1_uniq.bw", 
 "/groups/stark/vloubiere/projects/pe_STARRSeq/db/peaks/H3K4me3_peaks.txt",
 "/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE81795_H3K4me3_rep1_uniq.bw"),

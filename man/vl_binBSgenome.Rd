@@ -7,7 +7,7 @@
 vl_binBSgenome(BSgenome, bin_size = 50)
 }
 \arguments{
-\item{BSgenome}{BSgneome object to use.}
+\item{BSgenome}{BSgenome object to use.}
 
 \item{bin_size}{bin size. default to 50bp}
 }

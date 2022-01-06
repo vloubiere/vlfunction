@@ -7,9 +7,9 @@
 vl_peakCalling(ChIP_bed, Input_bed = NULL, BSgenome, binsize = 100)
 }
 \arguments{
-\item{ChIP_bed}{Either a character vector poiting to bed file path OR a data.table containing ChIP reads}
+\item{ChIP_bed}{ChIP bed file. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()}
 
-\item{Input_bed}{Either a character vector poiting to bed file path OR a data.table containing Input reads.}
+\item{Input_bed}{Input bed file. Default to NULL, meaning shuffle ChIP bed is used a background}
 
 \item{BSgenome}{A BSgenome object used for gw binning}
 
@@ -20,7 +20,4 @@ significantly enriched peaks
 }
 \description{
 Compute peak calling using ChIP and Input
-}
-\examples{
-
 }

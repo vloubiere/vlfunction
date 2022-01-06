@@ -2,7 +2,7 @@
 #'
 #' This function plots a screenshot of bw files for a set of regions.
 #'
-#' @param bed Regions to plot. Can be a path to a bed file OR a GRanges object OR a data.table containing 'seqnames', 'start', 'end' columns"
+#' @param bed Regions to plot. Can be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start' and 'end' columns
 #' @param tracks Vector of bw files to plot. Use full paths to avoid pbs.
 #' @param highlight_regions Path to a bed file OR Granges OR data.table object specifying regions to highlight
 #' @param highlight_col Color to use for highlighting regions. default is "lightgrey"
@@ -13,6 +13,7 @@
 #' @param gband gband ratio. default is 0.1
 #' @examples 
 #' vl_screenshot(bed = GRanges("chr3R", IRanges(1+c(0, 5e6), 1e6+c(0, 5e6))),
+#' genome= "dm3",
 #' tracks = c("/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE81795_H3K4me3_rep1_uniq.bw", 
 #' "/groups/stark/vloubiere/projects/pe_STARRSeq/db/peaks/H3K4me3_peaks.txt",
 #' "/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE81795_H3K4me3_rep1_uniq.bw"),
@@ -34,12 +35,7 @@ vl_screenshot <- function(bed,
                           n_genes= 4,
                           gband= 0.1)
 {
-  if(is.character(bed))
-    bed <- fread(bed, sel= 1:3, col.names = c("seqnames", "start", "end"))
-  if(class(bed)[1]=="GRanges")
-    bed <- data.table::as.data.table(bed)
-  if(!data.table::is.data.table(bed) | !all(c("seqnames", "start", "end") %in% colnames(bed)))
-    stop("bed must be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns")
+  bed <- vl_importBed(bed)
   if(any(!is.character(tracks)))
     stop("tracks can only use file paths (either .bw, .bed or .txt)")
   if(any(!file.exists(tracks)))
@@ -49,13 +45,8 @@ vl_screenshot <- function(bed,
   if(length(names) != length(tracks))
     stop("names vector length should be the same as bw files vector length(", length(tracks), ")")
   if(is.null(highlight_regions))
-    highlight_regions <- data.table::as.data.table(GRanges())
-  if(is.character(highlight_regions))
-    highlight_regions <- fread(highlight_regions, sel= 1:3, col.names = c("seqnames", "start", "end"))
-  if(class(highlight_regions)[1]=="GRanges")
-    highlight_regions <- data.table::as.data.table(highlight_regions)
-  if(!data.table::is.data.table(highlight_regions) | !all(c("seqnames", "start", "end") %in% colnames(highlight_regions)))
-    stop("highlight_regions must be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns")
+    highlight_regions <- data.table::as.data.table(GenomicRanges::GRanges())
+  highlight_regions <- vl_importBed(highlight_regions)
   if(is.null(col))
     col <- rep("black", length(tracks))
   if(length(col) != length(tracks))
@@ -105,7 +96,7 @@ vl_screenshot <- function(bed,
     if(grepl(".bw|.bigWig|.bigwig", x))
       .c <- data.table::as.data.table(rtracklayer::import.bw(x, selection= sel)) else
       {
-        .c <- fread(x, sel= 1:3, col.names = c("seqnames", "start", "end")) # bed files essentially imported as 0/1 scores
+        .c <- vl_importBed(x) # bed files essentially imported as 0/1 scores
         .c[, c("strand", "score"):= .("*", 1)]
       }
     data.table::setkeyv(.c, c("seqnames", "start", "end"))
@@ -119,6 +110,10 @@ vl_screenshot <- function(bed,
                 on= c("seqnames", "start<=end", "end>=start")]
   })
   q <- data.table::rbindlist(q, idcol = "feature_ID")
+  
+  #--------------------------#
+  # Compute vars used for plotting
+  #--------------------------#
   # Add strand/type/names/colors
   q[, strand:= strand[feature_ID], feature_ID]
   q[, type:= ifelse(grepl(".bw|.bigWig|.bigwig", tracks)[feature_ID], 

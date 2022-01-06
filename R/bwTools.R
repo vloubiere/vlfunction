@@ -4,30 +4,24 @@
 #'
 #' Note that strand-specific overlap is not implemented! bw files do not contain strand info!?
 #'
-#' @param bed Regions to quantify. Can be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns"
+#' @param bed Regions to quantify. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
 #' @param bw Path to target bw file (character vector)
 #' @export
 
 vl_bw_coverage <- function(bed, 
                            bw)
 {
-  if(class(bed)[1]=="GRanges")
-    bed <- data.table::as.data.table(bed)
-  if(!is.data.table(bed))
-    stop("!is.data.table(bed)")
-  if(!all(c("seqnames", "start", "end") %in% colnames(bed)))
-    stop("some bed keys are missing in bed colnames!")
   if(length(bw) != 1)
     stop("length(bw) != 1")
   if(!file.exists(bw))
     stop("bw file does not exist! EXIT")
   
   # Format
-  .b <- data.table::copy(bed[, .(seqnames, start, end)])
+  .b <- data.table::copy(vl_importBed(bed))
   .b[, .ID:= .I]
   
   # Import bw
-  sel <- rtracklayer::BigWigSelection(GenomicRanges::GRanges(bed), "score")
+  sel <- rtracklayer::BigWigSelection(GenomicRanges::GRanges(.b), "score")
   var <- data.table::as.data.table(rtracklayer::import.bw(bw, selection= sel))
   keys <- c("seqnames", "start", "end")
   data.table::setkeyv(.b, keys)
@@ -39,7 +33,7 @@ vl_bw_coverage <- function(bed,
   ov[i.end>end, i.end:= end]
   ov[, width:= i.end-i.start+1]
   res <- ov[, .(score= sum(score*width)/(end[1]-start[1]+1)), .ID]
-  res <- res[.(seq(nrow(bed))), score, on= ".ID"]
+  res <- res[.(seq(nrow(.b))), score, on= ".ID"]
   return(res)
 }
 
@@ -128,7 +122,7 @@ vl_average_bw_track_plot_only <- function(obj,
 #'
 #' Plots average tracks for a set bw files around (potentially) several sets of peaks
 #'
-#' @param bed Regions to plot. Can be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns"
+#' @param bed Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
 #' @param tracks Vector of bw files to plot. Use full paths to avoid pbs.
 #' @param extend How much should the bed regions be extended (starting from the center). dEfault= c(-5000, 5000)
 #' @param stranded Should the average track be stranded? If yes, - features are reversed :D
@@ -178,15 +172,13 @@ vl_average_bw_track <- function(bed,
                                 axes= T,
                                 legend= T)
 {
-  if(class(bed)[1]=="GRanges")
-    bed <- data.table::as.data.table(bed)
-  if(!data.table::is.data.table(bed) | !all(c("seqnames", "start", "end") %in% colnames(bed)))
-    stop("bed must be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns")
+  # Hard copy bed
+  bins <- copy(vl_importBed(bed))
   if(is.null(set_IDs))
-    set_IDs <- rep(1, nrow(bed))
-  if(length(set_IDs)!=nrow(bed))
+    set_IDs <- rep(1, nrow(bins))
+  if(length(set_IDs)!=nrow(bins))
     stop("set_IDs length should match nrows(bed)!")
-  if(stranded & !("strand" %in% colnames(bed)))
+  if(stranded & !("strand" %in% colnames(bins)))
     stop("stranded= T but no 'strand' column in bed file")
   if(any(!file.exists(tracks)))
     stop("some bw files could not be found! full paths prodvided?")
@@ -200,7 +192,7 @@ vl_average_bw_track <- function(bed,
     stop("Colors vector length should be the same as bw files vector length * unique set_IDs (", 
          length(tracks)*length(unique(set_IDs)), ")")
   
-  bins <- copy(bed)
+  # Format bins
   bins[, set_ID:= set_IDs]
   add <- seq(extend[1], extend[2], length.out = nbins+1)
   if(!stranded)
@@ -371,7 +363,7 @@ vl_heatmap_bw_track_plot_only <- function(obj,
 #'
 #' Plots average tracks for a set bw files around (potentially) several sets of peaks
 #'
-#' @param bed Regions to plot. Can be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns"
+#' @param bed Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
 #' @param set_IDs Vector specifying group of regions.
 #' @param tracks Vector of bw files to plot. Use full paths to avoid pbs.
 #' @param extend How much should the bed regions be extended (starting from the center). dEfault= c(-5000, 5000)
@@ -402,15 +394,13 @@ vl_heatmap_bw_track <- function(bed,
                                 order_FUN= function(x) mean(x, na.rm= T),
                                 col= c("blue", "yellow", "white"))
 {
-  if(class(bed)[1]=="GRanges")
-    bed <- data.table::as.data.table(bed)
-  if(!data.table::is.data.table(bed) | !all(c("seqnames", "start", "end") %in% colnames(bed)))
-    stop("bed must be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns")
+  # Hard copy bed
+  bins <- copy(vl_importBed(bed))
   if(is.null(set_IDs))
-    set_IDs <- rep(1, nrow(bed))
-  if(length(set_IDs)!=nrow(bed))
+    set_IDs <- rep(1, nrow(bins))
+  if(length(set_IDs)!=nrow(bins))
     stop("set_IDs length should match nrows(bed)!")
-  if(stranded & !("strand" %in% colnames(bed)))
+  if(stranded & !("strand" %in% colnames(bins)))
     stop("stranded= T but no 'strand' column in bed file")
   if(any(!file.exists(tracks)))
     stop("some bw files could not be found! full paths prodvided?")
@@ -424,7 +414,6 @@ vl_heatmap_bw_track <- function(bed,
   #--------------------------#
   # Compute bins
   #--------------------------#
-  bins <- copy(bed)
   bins[, set_ID:= set_IDs]
   add <- seq(extend[1], extend[2], length.out = nbins+1)
   if(!stranded)

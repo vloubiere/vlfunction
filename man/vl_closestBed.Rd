@@ -2,48 +2,22 @@
 % Please edit documentation in R/bedTools.R
 \name{vl_closestBed}
 \alias{vl_closestBed}
-\title{Find closestBed idx}
+\title{Find closestBed regions}
 \usage{
-vl_closestBed(a, b = NULL, min_dist = 0)
+vl_closestBed(a, b = NULL, k = "all", min_dist = 0)
 }
 \arguments{
 \item{a}{Granges or data.table FOR which closest features have to be found.}
 
-\item{b}{Granges or data.table FROM which closest features have to be found. If set to NULL (default), then a is matched to itself while excluding self-matching.}
+\item{b}{Granges or data.table FROM which closest features have to be found. If set to NULL (default), then a is matched to itself.}
+
+\item{k}{If set to "all" (default), return all features that match the min(|distance|). Else, returns the k first features}
 
 \item{min_dist}{Min distance for closest feature}
 }
 \value{
-For each line in a, returns the idx of its closest feature in b (vector)
+Return "a" coor and closeet "b" coordinates together with distance
 }
 \description{
-For each line of a file, return the idx of the closest line in b (or non orverlapping line in a if b is null)
-}
-\examples{
-Example 1:
-a <- b <- data.table(seqnames= c("chr4", "chr2R", "chr2R", "chr3L"),
-start= c(1e6, 1e6, 10e6, 1e6),
-end= c(1.1e6, 1.1e6, 10.1e6, 1.1e6))
-b <- a[-1]
-b[, start:= start+5e5]
-b[, end:= end+5e5]
-closestBed(a, b)
-closestBed(a, b, min_dist = 1e6)
-closestBed(a, a)
-closestBed(a, a, min_dist= 1)
-closestBed(a)
-
-Benchmarking:
-require(rtracklayer)
-tss <- as.data.table(import("/groups/stark/vloubiere/genomes/ensembl/dm3/Drosophila_melanogaster.BDGP5.77.gtf"))
-tss <- tss[type=="gene", .(seqnames, start= ifelse(strand=="+", start+0, end-1)), gene_name]
-tss[, end:= start+1]
-This:
-c1 <- closestBed(tss)
-Is pretty similar to this:
-c2 <- closestBed(tss, tss, 1)
-Except for the cases where two genes have exact same start. Example check c1[67] and c2[67], and compare to tss[65:67]
-closestBed(tss, tss)
-closestBed(tss, min_dist = 100000)
-
+For each line of a file, returns the closest lines in b
 }

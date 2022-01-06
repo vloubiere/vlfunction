@@ -4,25 +4,13 @@
 \alias{vl_average_bw_track}
 \title{bw Average tracks}
 \usage{
-vl_average_bw_track(
-  bed,
-  set_IDs = NULL,
-  tracks,
-  extend = c(-5000, 5000),
-  stranded = F,
-  nbins = 501,
-  names = NULL,
-  plot = T,
-  xlab = "genomic distance",
-  ylab = "Enrichment",
-  ylim = NULL,
-  col = NULL,
-  axes = T,
-  legend = T
-)
+vl_average_bw_track(bed, set_IDs = NULL, tracks, extend = c(-5000,
+  5000), stranded = F, nbins = 501, names = NULL, plot = T,
+  xlab = "genomic distance", ylab = "Enrichment", ylim = NULL,
+  col = NULL, axes = T, legend = T)
 }
 \arguments{
-\item{bed}{Regions to plot. Can be a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns"}
+\item{bed}{Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 
 \item{tracks}{Vector of bw files to plot. Use full paths to avoid pbs.}
 
