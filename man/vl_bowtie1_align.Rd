@@ -4,16 +4,8 @@
 \alias{vl_bowtie1_align}
 \title{BOWTIE Alignment to custom genome}
 \usage{
-vl_bowtie1_align(
-  fq1,
-  index_prefix,
-  sam_output,
-  o = NA,
-  e = NA,
-  execute = F,
-  cores = 6,
-  d = NA
-)
+vl_bowtie1_align(fq1, index_prefix, sam_output, o = NA, e = NA,
+  execute = F, cores = 6, d = NA)
 }
 \description{
 BOWTIE Alignment to custom genome
