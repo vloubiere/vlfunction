@@ -69,7 +69,7 @@ vl_exportBed.GRanges <- function(bed, filename)
 vl_exportBed.data.table <- function(bed, filename)
 {
   if(!vl_isDTranges(bed))
-    bed <- vl_importBed(bed)
+    stop("Could not find seqnames, start and end columns")
   cols <- c("seqnames", "start", "end", "name", "score", "strand")
   if("name" %in% names(bed))
     bed$name <- "."
