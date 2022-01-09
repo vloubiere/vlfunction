@@ -4,6 +4,7 @@
 #'
 #' @param bed Regions to plot. Can be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start' and 'end' columns
 #' @param tracks Vector of bw files to plot. Use full paths to avoid pbs.
+#' @param genome "dm3", "dm6" or "mm10"
 #' @param highlight_regions Path to a bed file OR Granges OR data.table object specifying regions to highlight
 #' @param highlight_col Color to use for highlighting regions. default is "lightgrey"
 #' @param names Track names to plot. If specified, must be the same length as bw vector. By default, bw basenames will be used.
@@ -146,21 +147,27 @@ vl_screenshot <- function(bed,
   #--------------------------#
   # Transcripts
   #--------------------------#
-  if(genome=="dm3")
-    TxDb <- TxDb.Dmelanogaster.UCSC.dm3.ensGene::TxDb.Dmelanogaster.UCSC.dm3.ensGene
-  if(genome=="dm6")
-    TxDb <- TxDb.Dmelanogaster.UCSC.dm6.ensGene::TxDb.Dmelanogaster.UCSC.dm6.ensGene
-  .t <- data.table::as.data.table(GenomicFeatures::transcriptsByOverlaps(TxDb,
+  annotation <- switch(genome, 
+                       "dm3"= list(TxDb= TxDb.Dmelanogaster.UCSC.dm3.ensGene::TxDb.Dmelanogaster.UCSC.dm3.ensGene,
+                                   org= org.Dm.eg.db::org.Dm.eg.db,
+                                   Keytype= "FLYBASE"),
+                       "dm6"= list(TxDb= TxDb.Dmelanogaster.UCSC.dm6.ensGene::TxDb.Dmelanogaster.UCSC.dm6.ensGene,
+                                   org= org.Dm.eg.db::org.Dm.eg.db,
+                                   Keytype= "FLYBASE"),
+                       "mm10"= list(TxDb= TxDb.Mmusculus.UCSC.mm10.knownGene::TxDb.Mmusculus.UCSC.mm10.knownGene,
+                                    org= org.Mm.eg.db::org.Mm.eg.db,
+                                    Keytype= "ENTREZID"))
+  .t <- data.table::as.data.table(GenomicFeatures::transcriptsByOverlaps(annotation$TxDb,
                                                                          GenomicRanges::GRanges(bed),
                                                                          columns= c("TXNAME", "GENEID")))
   if(nrow(.t)>0)
   {
     .t <- .t[, .(GENEID= as.character(unlist(GENEID))), seqnames:TXNAME]
     # Try to find symbols
-    .symbols <- try(AnnotationDbi::mapIds(org.Dm.eg.db::org.Dm.eg.db,
+    .symbols <- try(AnnotationDbi::mapIds(annotation$org,
                                           key= as.character(.t$GENEID),
                                           column= "SYMBOL",
-                                          keytype= "FLYBASE",
+                                          keytype= annotation$Keytype,
                                           multiVals= "first"), silent = T)
     # Fix error when no symbols can be ma[apped
     if(class(.symbols)=="try-error")
@@ -184,7 +191,7 @@ vl_screenshot <- function(bed,
     # unique(.g[, .(TXNAME, ord, SYMBOL)]) # Useful for debugging gene ordering
     .g <- .g[ord<=n_genes] # Select given number of genes to plot
     # Add exons
-    .e <- data.table::as.data.table(GenomicFeatures::exonsByOverlaps(TxDb,
+    .e <- data.table::as.data.table(GenomicFeatures::exonsByOverlaps(annotation$TxDb,
                                                                      GenomicRanges::GRanges(bed),
                                                                      columns= "TXNAME"))
     .e <- .e[, .(TXNAME= as.character(unlist(TXNAME))), seqnames:strand]

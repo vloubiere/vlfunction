@@ -4,7 +4,8 @@
 \alias{vl_seqlogo}
 \title{plot seqlogo rasterImage}
 \usage{
-vl_seqlogo(pwm, xleft = 0, ybottom = 0, xright = 1, ytop = 1, add = T)
+vl_seqlogo(pwm, xleft = 0, ybottom = 0, xright = 1, ytop = 1,
+  add = T)
 }
 \arguments{
 \item{pwm}{pwm matrix}
