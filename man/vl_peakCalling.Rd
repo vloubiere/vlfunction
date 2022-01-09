@@ -13,7 +13,7 @@ vl_peakCalling(
   bins_width = 100,
   steps_width = round(bins_width/2),
   bins_pval_cutoff = 0.05,
-  bins_OR_cutoff = 2
+  bins_OR_cutoff = 1
 )
 }
 \arguments{
@@ -33,7 +33,7 @@ vl_peakCalling(
 
 \item{bins_pval_cutoff}{The cutoff that will be applied to find candidate bins and merge them into peaks. Less stringent cutoffs means broader regions. default to 0.05}
 
-\item{bins_OR_cutoff}{Enrichment cutoff that will be applied to find candidate bins and merge them into peaks. Less stringent cutoffs means broader regions. default to 2}
+\item{bins_OR_cutoff}{Enrichment cutoff that will be applied to find candidate bins and merge them into peaks. Less stringent cutoffs means broader regions. default to 1}
 }
 \value{
 significantly enriched peaks

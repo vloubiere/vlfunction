@@ -4,8 +4,17 @@
 \alias{vl_bsub}
 \title{Stark lab wrappers}
 \usage{
-vl_bsub(cmd, cores = 1, name = "vl", d = NA, m = NA, o = NA,
-  e = NA, t = NA, execute = T)
+vl_bsub(
+  cmd,
+  cores = 1,
+  name = "vl",
+  d = NA,
+  m = NA,
+  o = NA,
+  e = NA,
+  t = NA,
+  execute = T
+)
 }
 \description{
 bsub submits to the cluster

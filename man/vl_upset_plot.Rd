@@ -4,8 +4,7 @@
 \alias{vl_upset_plot}
 \title{upset Plot}
 \usage{
-vl_upset_plot(dat_list, ylab = "Intersection size",
-  intersection_cutoff = 0)
+vl_upset_plot(dat_list, ylab = "Intersection size", intersection_cutoff = 0)
 }
 \arguments{
 \item{dat_list}{List containing the names to intersect (see examples)}

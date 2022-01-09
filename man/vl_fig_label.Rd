@@ -4,8 +4,7 @@
 \alias{vl_fig_label}
 \title{figure label}
 \usage{
-vl_fig_label(text, region = "figure", pos = "topleft", cex = NULL,
-  ...)
+vl_fig_label(text, region = "figure", pos = "topleft", cex = NULL, ...)
 }
 \arguments{
 \item{text}{Text to plot.}

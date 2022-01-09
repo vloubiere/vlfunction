@@ -4,7 +4,8 @@
 \name{vl_thermofisher_restriction_enzymes_table}
 \alias{vl_thermofisher_restriction_enzymes_table}
 \title{Thermofisher enzymes}
-\format{A table containing thermofisher enzymes and related info
+\format{
+A table containing thermofisher enzymes and related info
 \describe{
   \item{name1}{enzyme name}
   \item{name2}{Alternative names}
@@ -14,7 +15,8 @@
   \item{cutsite}{cutsite pattern}
   \item{consensus_F}{consensu motif}
   ...
-}}
+}
+}
 \source{
 {"https://www.thermofisher.com/at/en/home/brands/thermo-scientific/molecular-biology/thermo-scientific-restriction-modifying-enzymes/restriction-enzymes-thermo-scientific/conventional-restriction-enzymes-thermo-scientific.html"}
 }
