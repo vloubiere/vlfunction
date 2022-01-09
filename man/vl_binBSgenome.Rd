@@ -4,12 +4,14 @@
 \alias{vl_binBSgenome}
 \title{Bin BS genome}
 \usage{
-vl_binBSgenome(BSgenome, bin_size = 50)
+vl_binBSgenome(BSgenome, bins_width = 50, steps_width = bins_width)
 }
 \arguments{
 \item{BSgenome}{BSgenome object to use.}
 
-\item{bin_size}{bin size. default to 50bp}
+\item{bins_width}{bins width default to 50bp}
+
+\item{steps_width}{steps width separating each bin. default set to bins_width}
 }
 \value{
 data.table containing bin coordinates
@@ -18,5 +20,5 @@ data.table containing bin coordinates
 Very fast using data.table
 }
 \examples{
-vl_binBSgenome(BSgenome= BSgenome.Dmelanogaster.UCSC.dm3, bin_size= 50)
+vl_binBSgenome(BSgenome= BSgenome.Dmelanogaster.UCSC.dm3, bins_width= 50)
 }

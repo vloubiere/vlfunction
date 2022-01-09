@@ -4,16 +4,36 @@
 \alias{vl_peakCalling}
 \title{Compute peak calling}
 \usage{
-vl_peakCalling(ChIP_bed, Input_bed = NULL, BSgenome, binsize = 100)
+vl_peakCalling(
+  ChIP_bed,
+  Input_bed,
+  average_function = function(x) ceiling(mean(x)),
+  gaussian_blur = F,
+  BSgenome,
+  bins_width = 100,
+  steps_width = round(bins_width/2),
+  bins_pval_cutoff = 0.05,
+  bins_OR_cutoff = 2
+)
 }
 \arguments{
 \item{ChIP_bed}{ChIP bed file. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()}
 
-\item{Input_bed}{Input bed file. Default to NULL, meaning shuffle ChIP bed is used a background}
+\item{Input_bed}{Input bed file.}
+
+\item{average_function}{Function applied to ChIP read counts to define candidate peaks}
+
+\item{gaussian_blur}{Applies gaussian blur to ChIP signal to identify peak candidates. Useful for noisy signal. default= FALSE}
 
 \item{BSgenome}{A BSgenome object used for gw binning}
 
-\item{binsize}{binsize used for peak calling, Default to 100 (narrow Peaks). Use larger bins to call domains}
+\item{bins_width}{bins width used for peak calling, Default to 100L (narrow Peaks). Use larger bins to call domains}
+
+\item{steps_width}{Step between bins. default to round(bins_width/2)}
+
+\item{bins_pval_cutoff}{The cutoff that will be applied to find candidate bins and merge them into peaks. Less stringent cutoffs means broader regions. default to 0.05}
+
+\item{bins_OR_cutoff}{Enrichment cutoff that will be applied to find candidate bins and merge them into peaks. Less stringent cutoffs means broader regions. default to 2}
 }
 \value{
 significantly enriched peaks

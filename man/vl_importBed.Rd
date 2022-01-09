@@ -4,16 +4,13 @@
 \alias{vl_importBed}
 \alias{vl_importBed.character}
 \alias{vl_importBed.GRanges}
-\alias{vl_importBed.data.table}
 \title{Import bed file as data.table}
 \usage{
-vl_importBed(bed, ...)
+vl_importBed(bed)
 
 \method{vl_importBed}{character}(bed)
 
 \method{vl_importBed}{GRanges}(bed)
-
-\method{vl_importBed}{data.table}(bed)
 }
 \arguments{
 \item{bed}{Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
@@ -29,7 +26,5 @@ Imports bed as data.table and check formats
 \item \code{character}: for bed paths
 
 \item \code{GRanges}: for GRanges
-
-\item \code{data.table}: for data.table
 }}
 

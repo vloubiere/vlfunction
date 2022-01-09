@@ -34,8 +34,6 @@ Collapse ranges with a certain min dist between them
 \examples{
 ex <- GRanges(c("chr3L", "chr3L", "chr3L", "chr3L", "chr2R"), 
 IRanges(c(1000, 2000, 2100, 2200, 2000), 
-c(1500, 2099, 2199, 2299, 3000)),
-strand= c("+","+","+","-","+"))
-vl_collapseBed(ex, mingap= 1, stranded= F)
-vl_collapseBed(ex, mingap= 1, stranded= T)
+c(1500, 2099, 2199, 2299, 3000))
+vl_collapseBed(ex, mingap= 1)
 }

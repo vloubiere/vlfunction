@@ -2,24 +2,20 @@
 % Please edit documentation in R/bedTools.R
 \name{vl_enrichBed}
 \alias{vl_enrichBed}
-\title{Compute Enrichment}
+\title{Compute ChIP enrichment}
 \usage{
-vl_enrichBed(bins, ChIP_bed, Input_bed = NULL)
+vl_enrichBed(regions, ChIP_bed, Input_bed)
 }
 \arguments{
-\item{bins}{bins for which enrichment has to be computed. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()}
+\item{regions}{Regions to analyse. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()}
 
 \item{ChIP_bed}{ChIP bed file. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()}
 
-\item{Input_bed}{Input bed file. Default to NULL, meaning shuffle ChIP bed is used a background}
+\item{Input_bed}{Input bed file.}
 }
 \value{
 original bins file with OR, pval and padj corresponding to fisher result
 }
 \description{
-Compute enrichment for a list of regions using fisher test to compare ChIP and Input
-}
-\examples{
-ChIP_bed <- "/mnt/d/_R_data/projects/epigenetic_cancer/db/bed/cutnrun/merge/H3K27me3_PH18_merge_uniq.bed"
-res <- vl_enrichBed(ChIP_bed)
+Given a set of ChIP and Input counts, performs hypergeometric test to know if ChIP is enriched compared to Input
 }

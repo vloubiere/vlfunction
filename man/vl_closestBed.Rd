@@ -21,3 +21,14 @@ Return "a" coor and closeet "b" coordinates together with distance
 \description{
 For each line of a file, returns the closest lines in b
 }
+\examples{
+a <- data.table(chr= "chr2L", start= sample(10000, 1000))
+a[, end:= start:1000]
+
+To all closest features
+vl_closestBed(a, min_dist= 0)
+
+To find closet yet non touching features
+vl_closestBed(a, min_dist= 1)
+
+}
