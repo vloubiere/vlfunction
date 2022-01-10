@@ -383,17 +383,15 @@ vl_enrichBed <- function(regions,
   regions <- merge(regions,
                    unique(Input_bed[, .(Input_total_counts= .N), seqnames]))
   # Compute enrichment and pval
-  regions[, c("OR", "pval"):= {
+  check <- ChIP_counts>0 & Input_counts>0 # Only regions contianing reads
+  regions[(check), c("OR", "pval"):= {
     mat <- matrix(unlist(.BY), nrow= 2, byrow = T)
     fisher.test(mat, alternative = "greater")[c("estimate", "p.value")]
   }, .(ChIP_counts, Input_counts, ChIP_total_counts, Input_total_counts)]
-  regions[, padj:= p.adjust(pval, "fdr")]
   # Format narrowpeak file
-  regions[pval==0, pval:= min(regions[pval>0, pval])]
-  regions[padj==0, padj:= min(regions[padj>0, padj])]
   regions <- regions[, .(seqnames, start, end,
                          names= paste0("peak_", .I), 
-                         score= round(OR/max(OR)*1000), 
+                         score= round(OR/max(OR, na.rm = T)*1000), 
                          strand= ".", 
                          signalValue= OR,
                          pValue= -log10(pval),
