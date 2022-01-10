@@ -383,7 +383,7 @@ vl_enrichBed <- function(regions,
   regions <- merge(regions,
                    unique(Input_bed[, .(Input_total_counts= .N), seqnames]))
   # Compute enrichment and pval
-  check <- ChIP_counts>0 & Input_counts>0 # Only regions contianing reads
+  check <- regions[, ChIP_counts>0 & Input_counts>0] # Only regions contianing reads
   regions[(check), c("OR", "pval"):= {
     mat <- matrix(unlist(.BY), nrow= 2, byrow = T)
     fisher.test(mat, alternative = "greater")[c("estimate", "p.value")]
