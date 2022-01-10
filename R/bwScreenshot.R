@@ -101,9 +101,9 @@ vl_screenshot <- function(bed,
       {
         .c <- vl_importBed(x) # bed files essentially imported as 0/1 scores
         .c[, c("strand", "score"):= .("*", 1)]
+        .c[, score:= as.numeric(score)]
       }
     data.table::setkeyv(.c, c("seqnames", "start", "end"))
-    res <- data.table::foverlaps(.c, bins, nomatch = 0)
     # Compute result
     final <- .c[bins, .(region_ID, 
                         x, 

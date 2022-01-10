@@ -17,7 +17,9 @@ vl_bw_coverage <- function(bed,
     stop("bw file does not exist! EXIT")
   
   # Format
-  .b <- data.table::copy(vl_importBed(bed))
+  if(!vl_isDTranges(bed))
+    bed <- vl_importBed(bed)
+  .b <- data.table::copy(bed)
   .b[, .ID:= .I]
   
   # Import bw
@@ -173,7 +175,9 @@ vl_average_bw_track <- function(bed,
                                 legend= T)
 {
   # Hard copy bed
-  bins <- copy(vl_importBed(bed))
+  if(!vl_isDTranges(bed))
+    bed <- vl_importBed(bed)
+  bins <- data.table::copy(bed)
   if(is.null(set_IDs))
     set_IDs <- rep(1, nrow(bins))
   if(length(set_IDs)!=nrow(bins))
@@ -395,7 +399,8 @@ vl_heatmap_bw_track <- function(bed,
                                 col= c("blue", "yellow", "white"))
 {
   # Hard copy bed
-  bins <- copy(vl_importBed(bed))
+  if(!vl_isDTranges(bed))
+    bins <- copy(vl_importBed(bed))
   if(is.null(set_IDs))
     set_IDs <- rep(1, nrow(bins))
   if(length(set_IDs)!=nrow(bins))
