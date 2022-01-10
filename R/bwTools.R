@@ -495,31 +495,38 @@ vl_heatmap_bw_track <- function(bed,
 #' @export
 
 vl_bw_merge <- function(x, 
-                        output_folder,
-                        output_prefix)
+                        output,
+                        BSgenome= BSgenome,
+                        bins= 25)
 {
   if(!is.character(x))
     stop("x should bw a character vector of bw paths")
-  dat <- data.table(file= x)
-  seqL <- list()
-  dat <- dat[, {
-    .c <- rtracklayer::import.bw(file)
-    seqL[[.GRP]] <<- seqlengths(.c)
-    as.data.table(.c)
-  }, file]
-  if(all(sapply(seqL, function(x) identical(x, seqL[[1]]))))
-    seqL <- seqL[[1]] else
-      stop("seqlenghts differ for some files!?!")
-  res <- dat[, {
-    .c <- matrix(sort(unique(c(start, end))), 
-                 ncol = 2, 
-                 byrow = T)
-    colnames(.c) <- c("start", "end")
-    as.data.table(.c)
-  }, seqnames]
-  res$score <- dat[res, sum(score), .EACHI, on= c("seqnames", "start<=end", "end>=start")]$V1
-  res <- GRanges(res)
-  seqlengths(res) <- seqL[match(seqlevels(res), names(seqL))]
-  rtracklayer::export.bw(object = res, 
-                         paste0(output_folder, "/", output_prefix, ".bw"))
+  if(length(x)<2)
+    stop("x should have a length of at least 2")
+  if(class(BSgenome)[1]!="BSgenome")
+    stop("BSgenome should be an pbject of class BSgenome")
+  
+  # Bin whole genome
+  merged <- vl_binBSgenome(BSgenome, 
+                           bins_width = bins, 
+                           steps_width = bins)
+  merged[, score:= 0]
+  setkeyv(merged, c("seqnames", "start", "end"))
+  # Import each file one after the other to save mem
+  for(file in x)
+  {
+    add <- as.data.table(rtracklayer::import.bw(file))
+    setkeyv(add, c("seqnames", "start", "end"))
+    add <- foverlaps(merged, add)
+    add[end>i.end, end:= i.end]
+    add[start<i.start, start:= i.start]
+    merged[, score:= score+add[, sum(score*(end-start+1), na.rm= T)/(i.end-i.start+1), .(seqnames, i.start, i.end)]$V1]
+    print(".")
+  }
+  # Export
+  merged <- na.omit(merged)
+  merged <- GRanges(merged)
+  seqlengths(merged) <- seqlengths(BSgenome)
+  rtracklayer::export.bw(object = merged, 
+                         output)
 }

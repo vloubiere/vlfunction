@@ -4,7 +4,7 @@
 \alias{vl_bw_merge}
 \title{Merge bw files}
 \usage{
-vl_bw_merge(x, output_folder, output_prefix)
+vl_bw_merge(x, output, BSgenome = BSgenome, bins = 25)
 }
 \arguments{
 \item{x}{fastq file path (read1)}
