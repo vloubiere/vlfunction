@@ -207,8 +207,8 @@ vl_closestBed <- function(a,
     # Compute distance
     .c[, dist:= {
       if(end<i.start)
-        end-i.start else if (start>i.end)
-          start-i.end else
+        as.integer(end-i.start) else if (start>i.end)
+          as.integer(start-i.end) else
             0L
     }, .(start, end)]
     # Distance check AND order based on distance
