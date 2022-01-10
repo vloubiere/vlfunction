@@ -36,7 +36,8 @@ vl_screenshot <- function(bed,
                           n_genes= 4,
                           gband= 0.1)
 {
-  bed <- vl_importBed(bed)
+  if(!vl_isDTranges(bed))
+    bed <- vl_importBed(bed)
   if(any(!is.character(tracks)))
     stop("tracks can only use file paths (either .bw, .bed or .txt)")
   if(any(!file.exists(tracks)))
@@ -47,7 +48,8 @@ vl_screenshot <- function(bed,
     stop("names vector length should be the same as bw files vector length(", length(tracks), ")")
   if(is.null(highlight_regions))
     highlight_regions <- data.table::as.data.table(GenomicRanges::GRanges())
-  highlight_regions <- vl_importBed(highlight_regions)
+  if(!vl_isDTranges(highlight_regions))
+    highlight_regions <- vl_importBed(highlight_regions)
   if(is.null(col))
     col <- rep("black", length(tracks))
   if(length(col) != length(tracks))
@@ -128,9 +130,7 @@ vl_screenshot <- function(bed,
   q[, max:= max[feature_ID], feature_ID]
   # Compute plotting variables (y axis)
   q[, y_Nbins:= ifelse(type=="bw", 100, 10)] # Number of bins used for plotting (-> track width)
-  q[, y_start:= sum(q[.BY, y_Nbins+1, # Starting bin has to be unique for each feature (1:100, 101:200 [...])
-                      .(feature_ID, y_Nbins), 
-                      on= "feature_ID<feature_ID"]$V1, na.rm= T), feature_ID]
+  q[, y_start:= c(1, cumsum(unique(q[, .(y_Nbins, feature_ID)])$y_Nbins)+1)[.GRP], feature_ID]
   # Replicate each line depending on y_Nbins (1 line/pixel)
   q <- q[rep(seq(nrow(q)), q$y_Nbins)]
   q[, y:= seq(y_start, y_start+y_Nbins-1), .(y_start, y_Nbins, x)] # y pos in the raster matrix
