@@ -71,11 +71,11 @@ vl_exportBed.data.table <- function(bed, filename)
   if(!vl_isDTranges(bed))
     stop("Could not find seqnames, start and end columns")
   cols <- c("seqnames", "start", "end", "name", "score", "strand")
-  if("name" %in% names(bed))
+  if(!"name" %in% names(bed))
     bed$name <- "."
-  if("score" %in% names(bed))
+  if(!"score" %in% names(bed))
     bed$score <- 0
-  if("strand" %in% names(bed))
+  if(!"strand" %in% names(bed))
     bed$strand <- "."
   cols <- cols[cols %in% names(bed)]
   setcolorder(bed, cols)
