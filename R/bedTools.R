@@ -222,6 +222,55 @@ vl_closestBed <- function(a,
   return(res)
 }
 
+#' Find closestBed regions
+#'
+#' For each line of a file, returns the closest lines in b
+#'
+#' @param a Granges or data.table FOR which closest features have to be found.
+#' @param b Granges or data.table FROM which closest features have to be found. If set to NULL (default), then a is matched to itself.
+#' @param k If set to "all" (default), return all features that match the min(|distance|). Else, returns the k first features
+#' @param min_dist Min distance for closest feature 
+#' @examples 
+#' a <- data.table(chr= "chr2L", start= sample(10000, 1000))
+#' a[, end:= start:1000]
+#' 
+#' To all closest features
+#' vl_closestBed(a, min_dist= 0)
+#' 
+#' To find closet yet non touching features
+#' vl_closestBed(a, min_dist= 1)
+#' 
+#' @return Return "a" coor and closeet "b" coordinates together with distance
+#' @export
+vl_resize <- function(bed, 
+                      center= "center",
+                      upstream= 500,
+                      downstream= 500, 
+                      ignore.strand= F)
+{
+  if(!vl_isDTranges(bed))
+    bed <- vl_importBed(bed)
+  regions <- data.table::copy(bed)
+  
+  if(!center %in% c("center", "start", "end"))
+    stop("center should be one of center, start or end")
+  
+  if(center=="center")
+    regions[, start:= round(rowMeans(.SD)), .SDcols= c("start", "end")]
+  if(center=="start")
+    if(!ignore.strand)
+      regions[strand=="-", start:= end]
+  if(center=="end")
+    if(ignore.strand)
+      regions[, start:= end] else
+        regions[strand!="-", start:= end]
+  regions[, end:= start]
+  
+  regions[, start:= start-upstream]
+  regions[, end:= end+downstream-1]
+  return(regions)
+}
+
 #' Collapse ranges with a certain min dist
 #'
 #' Collapse ranges with a certain min dist between them
@@ -375,13 +424,15 @@ vl_enrichBed <- function(regions,
     ChIP_bed <- vl_importBed(ChIP_bed)
   regions[, ChIP_counts:= vl_covBed(regions, ChIP_bed)]
   regions <- merge(regions,
-                   unique(ChIP_bed[, .(ChIP_total_counts= .N), seqnames]))
+                   unique(ChIP_bed[, .(ChIP_total_counts= .N), seqnames]), 
+                   all.x= T)
   # Input coverage
   if(!vl_isDTranges(Input_bed))
     Input_bed <- vl_importBed(Input_bed)
   regions[, Input_counts:= vl_covBed(regions, Input_bed)]
   regions <- merge(regions,
-                   unique(Input_bed[, .(Input_total_counts= .N), seqnames]))
+                   unique(Input_bed[, .(Input_total_counts= .N), seqnames]), 
+                   all.x= T)
   # Compute enrichment and pval
   check <- regions[, ChIP_counts>0 & Input_counts>0] # Only regions containing reads
   regions[(check), c("OR", "pval"):= {
@@ -442,7 +493,8 @@ vl_peakCalling <- function(ChIP_bed,
     ChIP_bed <- vl_importBed(ChIP_bed)
   bins[, ChIP_counts:= vl_covBed(bins, ChIP_bed)]
   bins <- merge(bins,
-                unique(ChIP_bed[, .(ChIP_total_counts= .N), seqnames]))
+                unique(ChIP_bed[, .(ChIP_total_counts= .N), seqnames]),
+                all.x= T)
   # Smooth signal?
   if(gaussian_blur)
     bins[, ChIP_counts:= round(vl_gaussian_blur(ChIP_counts))]
