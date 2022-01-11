@@ -231,19 +231,10 @@ vl_closestBed <- function(a,
 #' @param upstream Upstream extension. default= 500L
 #' @param downstream Downstream extension. default= 500L
 #' @param ignore.strand Should the strand be considered when defininng start or end centering? Default= F
-#' @examples 
-#' a <- data.table(chr= "chr2L", start= sample(10000, 1000))
-#' a[, end:= start:1000]
 #' 
-#' To all closest features
-#' vl_closestBed(a, min_dist= 0)
-#' 
-#' To find closet yet non touching features
-#' vl_closestBed(a, min_dist= 1)
-#' 
-#' @return Return "a" coor and closeet "b" coordinates together with distance
+#' @return Resized DT ranges
 #' @export
-vl_resize <- function(bed, 
+vl_resizeBed <- function(bed, 
                       center= "center",
                       upstream= 500,
                       downstream= 500, 
