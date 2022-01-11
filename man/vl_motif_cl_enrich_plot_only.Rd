@@ -5,7 +5,9 @@
 \title{Compute motif enrichment}
 \usage{
 vl_motif_cl_enrich_plot_only(obj, padj_cutoff = 1e-05,
-  log2OR_cutoff = 0, N_top = Inf, auto_margin = T)
+  log2OR_cutoff = 0, N_top = Inf, color_breaks,
+  col = c("cornflowerblue", "lightgrey", "tomato"), main = NA,
+  cex.balloons = 4, auto_margins = T)
 }
 \arguments{
 \item{obj}{A fisher test matrix similar to ?vl_motif_cl_enrich() ouput.}
@@ -16,14 +18,19 @@ vl_motif_cl_enrich_plot_only(obj, padj_cutoff = 1e-05,
 
 \item{N_top}{Select top enriched motifs/cluster}
 
-\item{auto_margin}{computes optimal plotting margins}
+\item{color_breaks}{Color breaks used for coloring}
+
+\item{col}{Vector of colors used for coloring}
+
+\item{main}{Title. Default= NA}
+
+\item{cex.balloons}{scaling factor for balloons size}
+
+\item{auto_margins}{Use auto margins? Default= T}
 }
 \value{
-Fisher test data.table.
+ballons plot with padj and log2OR
 }
 \description{
 Compute motif enrichment for the cluster in cl_columns, using all the lines as background
-}
-\examples{
-
 }

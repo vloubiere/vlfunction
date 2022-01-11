@@ -4,24 +4,37 @@
 \alias{vl_motif_cl_enrich}
 \title{Compute motif enrichment}
 \usage{
-vl_motif_cl_enrich(obj, cl_column, bg = unique(obj[[cl_column]]),
-  comp_expr = "motif_counts>0")
+vl_motif_cl_enrich(counts_matrix, cl_IDs, plot = F,
+  padj_cutoff = 1e-05, log2OR_cutoff = 0, N_top = Inf, color_breaks,
+  col = c("cornflowerblue", "lightgrey", "tomato"), main = NA,
+  cex.balloons = 4, auto_margins = T)
 }
 \arguments{
-\item{obj}{A motif count object similar to the output of ?vl_motif_counts() (colnames:'motif', 'motif_counts', 'motif_name') + one cluster column!}
+\item{counts_matrix}{A matrix containing motif counts (rows= sequences, cols= motifs)}
 
-\item{cl_column}{name of the cluster column}
+\item{cl_IDs}{vector of cluster IDs (used to split the data.table)}
 
-\item{bg}{cluster IDs to be used as background. Default unique(obj[[cl_column]])}
+\item{plot}{Should the result be plot using balloons plot?}
 
-\item{comp_expr}{Expression used for contingency table. Default "motif_count>0"}
+\item{padj_cutoff}{cutoff for ballons to be ploted}
+
+\item{log2OR_cutoff}{cutoff for ballons to be ploted}
+
+\item{N_top}{Select top enriched motifs/cluster}
+
+\item{color_breaks}{Color breaks used for coloring}
+
+\item{col}{Vector of colors used for coloring}
+
+\item{main}{Title. Default= NA}
+
+\item{cex.balloons}{scaling factor for balloons size}
+
+\item{auto_margins}{Use auto margins? Default= T}
 }
 \value{
 Fisher test data.table.
 }
 \description{
 Compute motif enrichment for the cluster in cl_columns, using all the lines as background
-}
-\examples{
-
 }

@@ -4,11 +4,13 @@
 \alias{vl_motif_counts}
 \title{Counts motifs}
 \usage{
-vl_motif_counts(bed, genome = "dm6",
+vl_motif_counts(sequences = NULL, bed = NULL, genome = "dm6",
   sel = vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn),
   motif])
 }
 \arguments{
+\item{sequences}{Sequences to analyse. If provided takes over bed argument (in the case where both are specified)}
+
 \item{bed}{Either a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns}
 
 \item{genome}{Genome to be used for coordinates ("dm6, "dm3")}

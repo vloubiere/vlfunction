@@ -90,6 +90,8 @@ vl_heatmap.matrix <- function(x,
                               na_col= "lightgrey",
                               plot= T)
 {
+  if(is.null(rownames(x)))
+    rownames(x) <- seq(nrow(x))
   #------------------------####
   # Init informative result DT
   #------------------------####
