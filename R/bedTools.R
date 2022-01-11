@@ -226,10 +226,11 @@ vl_closestBed <- function(a,
 #'
 #' For each line of a file, returns the closest lines in b
 #'
-#' @param a Granges or data.table FOR which closest features have to be found.
-#' @param b Granges or data.table FROM which closest features have to be found. If set to NULL (default), then a is matched to itself.
-#' @param k If set to "all" (default), return all features that match the min(|distance|). Else, returns the k first features
-#' @param min_dist Min distance for closest feature 
+#' @param bed Bed file to resize. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
+#' @param center From where should the region be centered before extension. Either "center", "start" or "end"
+#' @param upstream Upstream extension. default= 500L
+#' @param downstream Downstream extension. default= 500L
+#' @param ignore.strand Should the strand be considered when defininng start or end centering? Default= F
 #' @examples 
 #' a <- data.table(chr= "chr2L", start= sample(10000, 1000))
 #' a[, end:= start:1000]
@@ -266,8 +267,16 @@ vl_resize <- function(bed,
         regions[strand!="-", start:= end]
   regions[, end:= start]
   
-  regions[, start:= start-upstream]
-  regions[, end:= end+downstream-1]
+  if(ignore.strand)
+  {
+    regions[, start:= start-upstream]
+    regions[, end:= end+downstream-1]
+  }else
+  {
+    regions[, start:= start-ifelse(strand=="-", downstream, upstream)]
+    regions[, end:= end+(ifelse(strand!="-", downstream, upstream)-1)]
+  }
+  
   return(regions)
 }
 
