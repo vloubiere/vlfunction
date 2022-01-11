@@ -423,16 +423,14 @@ vl_enrichBed <- function(regions,
   if(!vl_isDTranges(ChIP_bed))
     ChIP_bed <- vl_importBed(ChIP_bed)
   regions[, ChIP_counts:= vl_covBed(regions, ChIP_bed)]
-  regions <- merge(regions,
-                   unique(ChIP_bed[, .(ChIP_total_counts= .N), seqnames]), 
-                   all.x= T)
+  total <- unique(ChIP_bed[, .N, seqnames])
+  regions[total, ChIP_total_counts:= i.N, on= "seqnames"]
   # Input coverage
   if(!vl_isDTranges(Input_bed))
     Input_bed <- vl_importBed(Input_bed)
   regions[, Input_counts:= vl_covBed(regions, Input_bed)]
-  regions <- merge(regions,
-                   unique(Input_bed[, .(Input_total_counts= .N), seqnames]), 
-                   all.x= T)
+  total <- unique(Input_bed[, .N, seqnames])
+  regions[total, Input_total_counts:= i.N, on= "seqnames"]
   # Compute enrichment and pval
   check <- regions[, ChIP_counts>0 & Input_counts>0] # Only regions containing reads
   regions[(check), c("OR", "pval"):= {
@@ -493,8 +491,7 @@ vl_peakCalling <- function(ChIP_bed,
     ChIP_bed <- vl_importBed(ChIP_bed)
   bins[, ChIP_counts:= vl_covBed(bins, ChIP_bed)]
   bins <- merge(bins,
-                unique(ChIP_bed[, .(ChIP_total_counts= .N), seqnames]),
-                all.x= T)
+                unique(ChIP_bed[, .(ChIP_total_counts= .N), seqnames]))
   # Smooth signal?
   if(gaussian_blur)
     bins[, ChIP_counts:= round(vl_gaussian_blur(ChIP_counts))]
