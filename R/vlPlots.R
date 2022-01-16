@@ -107,7 +107,7 @@ vl_plot_pval_text <- function(x,
               breaks = c(-Inf, 1e-5, 1e-3, 1e-2, 5e-2, Inf), 
               labels = c("****", "***", "**", "*", "N.S"))
   star <- as.character(star)
-  ns_val <- star=="N.S"
+  ns_val <- !is.na(star) & star=="N.S"
   value <- formatC(pval, format = "e", digits = 1)
   if(stars_only)
     value <- rep("", length(value))
