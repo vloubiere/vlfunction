@@ -4,8 +4,12 @@
 \alias{vl_STRING_network}
 \title{plot STRING interactions}
 \usage{
-vl_STRING_network(obj, cex.vertices = 1, cex.vertices.labels = 1,
-  vertex.border.col = "black")
+vl_STRING_network(
+  obj,
+  cex.vertices = 1,
+  cex.vertices.labels = 1,
+  vertex.border.col = "black"
+)
 }
 \arguments{
 \item{cex.vertices}{Scaling factor vertices}

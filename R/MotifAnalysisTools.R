@@ -105,7 +105,7 @@ vl_motif_cl_enrich_plot_only <- function(obj,
   }
   DT[log2OR==Inf, log2OR:= max(pl[is.finite(log2OR), log2OR])]
   DT[log2OR==(-Inf), log2OR:= min(pl[is.finite(log2OR), log2OR])]
-  # Y coordinates
+  # Y ordering
   setorderv(DT, 
             c("cl", "-log10(pval)", "log2OR", "motif"), 
             order = c(1, -1, -1, 1))

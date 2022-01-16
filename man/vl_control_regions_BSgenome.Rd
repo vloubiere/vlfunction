@@ -4,8 +4,7 @@
 \alias{vl_control_regions_BSgenome}
 \title{Generate random control regions}
 \usage{
-vl_control_regions_BSgenome(BSgenome, n, width = 1,
-  restrict_seqnames = NULL)
+vl_control_regions_BSgenome(BSgenome, n, width = 1, restrict_seqnames = NULL)
 }
 \arguments{
 \item{BSgenome}{BSgneome object to use.}
@@ -15,8 +14,6 @@ vl_control_regions_BSgenome(BSgenome, n, width = 1,
 \item{width}{Widths of regions to sample (length should either be 1 or equal n)}
 
 \item{restrict_seqnames}{If specified, only the providsed seqnames will be used}
-
-\item{n}{Number of regions to sample}
 }
 \value{
 data.table containing random control regions

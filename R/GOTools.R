@@ -147,10 +147,11 @@ vl_GO_clusters <- function(FBgn_list,
                            go_object= vl_fb_go_table_dm6_FB2020_05,
                            all_FBgns= "all",
                            go_type= "all",
-                           cex= 1,
                            padj_cutoff= 1e-5,
                            N_top= Inf,
-                           auto_margin= T)
+                           auto_margins= T,
+                           cex.balloons= 4,
+                           main= NA)
 {
   # Checks
   if(!is.list(FBgn_list))
@@ -227,130 +228,24 @@ vl_GO_clusters <- function(FBgn_list,
   pl[log2OR==Inf, cor_log2OR:= max(pl$log2OR[is.finite(pl$log2OR)], na.rm= T)]
   # Colors
   pval_lims <- range(pl$`-log10(pval)`)
-  Cc <- colorRamp2(pval_lims, 
-                   colors = c("blue", "red"))
-  pl[, col:= Cc(`-log10(pval)`)]
-  # Points scaling factor
-  pl[, size:= (2^cor_log2OR)]
-  pl[, size:= cex*log2(size+1)]
-  size_lims <- range(pl$size)
-  # Y coordinates
+  # Y ordering
   setorderv(pl, 
             c("cluster_name", "-log10(pval)", "cor_log2OR", "GO"), 
             order = c(1, -1, -1, 1))
-  pl[, y:= as.numeric(min(.I)), GO]
-  pl[, y:= seq(1, 0, length.out = length(unique(pl$GO)))[.GRP], keyby= y]
-  # X coordinates
-  pl[, x:= seq(0, 1, length.out = length(unique(pl$cluster_name)))[.GRP], keyby= cluster_name]
+  pl[, name:= factor(name, levels= unique(pl$name))]
   
   #-----------------------------#
   # PLOT
   #-----------------------------#
-  if(nrow(pl)==0)
-    stop("No enrichment pass current tresholds")
-  if(auto_margin)
-    par(mai = c(max(strwidth(pl$cluster_name, "inches"))+0.5,
-                max(strwidth(pl$name, "inches"))+0.5,
-                0.5,
-                strwidth("-log10(pval)", "inches")+0.25),
-        xaxs= "i",
-        yaxs= "i")
-  
-  # Lines
-  plot.new()
-  segments(unique(pl$x),
-           par("usr")[3],
-           unique(pl$x),
-           par("usr")[4])
-  segments(par("usr")[1],
-           unique(pl$y),
-           par("usr")[2],
-           unique(pl$y))
-  # Points
-  points(pl$x, 
-         pl$y, 
-         cex= pl$size, 
-         col= adjustcolor(pl$col, 0.8),
-         pch= 16,
-         xpd= T)
-  axis(1,
-       lty= 0,
-       at = unique(pl$x), 
-       labels = unique(pl$cluster_name), 
-       las= 2)
-  axis(2,
-       lty= 0,
-       at = unique(pl$y), 
-       labels = unique(pl$name),
-       las= 2)
-  # Legend pval
-  xleft <- grconvertX(1, "npc", "inches")+grconvertX(1, "lines", "inches")
-  xright <- xleft+grconvertX(1, "lines", "inches")
-  xleft <- grconvertX(xleft, "inches", "npc")
-  xright <- grconvertX(xright, "inches", "npc")
-  ybottom <- 0.7
-  ytop <- grconvertY(1, "npc", "inches")-grconvertY(1, "chars", "inches")
-  ytop <- grconvertY(ytop, "inches", "npc")
-  rasterImage(matrix(rev(Cc(seq(min(pval_lims), max(pval_lims), length.out = 101)))),
-              xleft,
-              ybottom,
-              xright,
-              ytop,
-              xpd=T)
-  ticks <- axisTicks(pval_lims, log=F)
-  ymin.ticks <- ybottom+(min(ticks)-pval_lims[1])/diff(pval_lims)*(ytop-ybottom)
-  ymax.ticks <- ybottom+(max(ticks)-pval_lims[1])/diff(pval_lims)*(ytop-ybottom)
-  text(xright,
-       seq(ymin.ticks, ymax.ticks, length.out = length(ticks)),
-       labels = ticks,
-       pos=4,
-       xpd= T,
-       cex= 0.6,
-       offset= 0.25)
-  text(xleft,
-       1-0.5*strheight("A"),
-       labels = "-log10(pval)",
-       pos=4,
-       xpd= T,
-       cex= 0.8,
-       offset= 0)
-  
-  # Legend balloons
-  scale <- axisTicks(size_lims, log= F)
-  maxBalloonInch <- strheight("A", units = "inches", cex= max(scale))*0.75
-  bx <- grconvertX(xleft, "npc", "inches")+maxBalloonInch/2
-  bx <- grconvertX(bx, "inches", "npc")
-  btop <- grconvertY(0.6, "npc", "inches")-maxBalloonInch/2
-  bbot <- btop-maxBalloonInch*(length(scale)-1)
-  btop <- grconvertY(btop, "inches", "npc")
-  bbot <- grconvertY(bbot, "inches", "npc")
-  points(rep(bx, length(scale)),
-         seq(bbot, btop, length.out = length(scale)), 
-         xpd= T,
-         col= "black",
-         cex= scale,
-         pch= 16)
-  bx <- grconvertX(bx, "npc", "inches")+maxBalloonInch/2
-  bx <- grconvertX(bx, "inches", "npc")
-  text(rep(bx, length(scale)),
-       seq(bbot, btop, length.out = length(scale)),
-       labels= scale,
-       pos= 4,
-       xpd= T,
-       offset= 0,
-       cex= 0.8)
-  tity <- grconvertY(0.6, "npc", "inches")+grconvertY(1, "chars", "inches")/2
-  tity <- grconvertY(tity, "inches", "npc")
-  text(xleft,
-       tity,
-       labels = "log2OR",
-       pos= 4,
-       xpd= T,
-       cex= 0.8,
-       offset= 0)
-  
-  # RETURN
-  invisible(list(data= res, 
-                 plot= pl))
+  x <- as.matrix(dcast(pl, name~cluster_name, value.var = "cor_log2OR"), 1)
+  color_var <- as.matrix(dcast(pl, name~cluster_name, value.var = "-log10(pval)"), 1)
+  vl_balloons_plot(x = x,
+                   color_var= color_var,
+                   col= c("blue", "red"),
+                   main= main,
+                   cex.balloons = cex.balloons,
+                   auto_margins = auto_margins,
+                   balloon_size_legend= "OR (log2)",
+                   balloon_col_legend = "padj (-log10)")
 }
 
