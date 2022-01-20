@@ -92,6 +92,12 @@ vl_heatmap.matrix <- function(x,
 {
   if(is.null(rownames(x)))
     rownames(x) <- seq(nrow(x))
+  if(is.null(colnames(x)))
+    colnames(x) <- seq(ncol(x))
+  if(nrow(x)==1)
+    cluster_rows <- F
+  if(ncol(x)==1)
+    cluster_cols <- F
   #------------------------####
   # Init informative result DT
   #------------------------####
@@ -102,10 +108,10 @@ vl_heatmap.matrix <- function(x,
   #------------------------####
   # Clustering rows
   #------------------------####
-  if(cluster_rows & nrow(clustered_x)>1)
+  if(cluster_rows)
   {
     set.seed(3453)
-    if(missing(kmeans_k))
+    if(is.na(kmeans_k))
     {
       if(clustering_distance_rows %in% c("pearson", "spearman"))
         .d <- as.dist(1 - cor(t(clustered_x), 
@@ -114,7 +120,7 @@ vl_heatmap.matrix <- function(x,
                                 .d <- dist(clustered_x, method = clustering_distance_rows)
                               # Hierarchical clustering
                               rcl <- hclust(.d, method = clustering_method) 
-                              clustered_x <- clustered_x[rcl$order,]
+                              clustered_x <- clustered_x[rcl$order,,drop= F]
                               # Add to DT
                               result_DT[data.table(rcl$labels, 
                                                    cutree(rcl, k = cutree_rows)), rn_cl:= i.V2, on= "rn==V1"]
@@ -137,7 +143,7 @@ vl_heatmap.matrix <- function(x,
   #------------------------####
   # Clustering cols
   #------------------------####
-  if(cluster_cols & ncol(clustered_x)>1)
+  if(cluster_cols)
   {
     set.seed(3453)
     if(clustering_distance_cols %in% c("pearson", "spearman"))
@@ -148,7 +154,7 @@ vl_heatmap.matrix <- function(x,
                             # Hierarchical clustering
                             ccl <- hclust(.d, 
                                           method = clustering_method)
-                            clustered_x <- clustered_x[,ccl$order]
+                            clustered_x <- clustered_x[,ccl$order,drop=F]
                             # Extract dend
                             cdend <- data.table::as.data.table(ggdendro::dendro_data(ccl,
                                                                                      type = "rectangle", 
