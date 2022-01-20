@@ -442,7 +442,7 @@ vl_enrichBed <- function(regions,
   regions[pval==0, pval:= min(regions[pval>0, pval])]
   regions[padj==0, padj:= min(regions[padj>0, padj])]
   regions <- regions[, .(seqnames, start, end,
-                         names= paste0("peak_", .I), 
+                         name= paste0("peak_", .I), 
                          score= round(OR/max(OR, na.rm = T)*1000), 
                          strand= ".", 
                          signalValue= OR,
