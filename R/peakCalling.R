@@ -73,7 +73,7 @@ vl_peakCalling <- function(ChIP,
   #----------------------------#
   if(bw)
   {
-    final <- vl_enrichBed(peaks, 
+    final <- vl_bw_enrich(peaks, 
                           ChIP, 
                           Input)
   }else{

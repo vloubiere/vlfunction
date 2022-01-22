@@ -7,7 +7,7 @@
 vl_bw_totalReads(bw, read_length)
 }
 \arguments{
-\item{bw}{Path to target bw file (character vector)}
+\item{bw}{Path to target bw file(s) (character vector)}
 
 \item{read_length}{length of the reads used to generate bw file}
 }

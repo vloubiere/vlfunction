@@ -4,12 +4,16 @@
 \alias{vl_bw_coverage}
 \title{bw coverage}
 \usage{
-vl_bw_coverage(bed, bw)
+vl_bw_coverage(bed, bw, read_length = 50, integer_counts = F)
 }
 \arguments{
 \item{bed}{Regions to quantify. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 
 \item{bw}{Path to target bw file (character vector)}
+
+\item{read_length}{read length, used when integer_counts is set to TRUE}
+
+\item{integer_counts}{If set to TRUE, returns integer counts using approximated total read counts based on read_length}
 }
 \description{
 Quantify bw file at a set of intervals. returns mean value/region
