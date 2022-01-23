@@ -16,6 +16,6 @@ original bins file with OR, pval and padj corresponding to fisher result
 Shuffle bed file in respect of covered regions, total reads and reads length
 }
 \examples{
-ChIP_bed <- "/test/H3K27me3_PH18_merge_uniq.bed"
-res <- shuffleBed(ChIP_bed)
+ChIP <- "/test/H3K27me3_PH18_merge_uniq.bed"
+res <- shuffleBed(ChIP)
 }

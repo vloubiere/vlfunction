@@ -4,7 +4,14 @@
 \alias{vl_screenshot_simple}
 \title{Simplified version. less options, faster}
 \usage{
-vl_screenshot_simple(bed, tracks, space = 30, names = NULL, gtf = NULL)
+vl_screenshot_simple(
+  bed,
+  tracks,
+  space = 30,
+  names = NULL,
+  max = NULL,
+  gtf = NULL
+)
 }
 \arguments{
 \item{bed}{Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
