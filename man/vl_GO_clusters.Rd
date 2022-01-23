@@ -9,7 +9,6 @@ vl_GO_clusters(
   go_object = vl_fb_go_table_dm6_FB2020_05,
   all_FBgns = "all",
   go_type = "all",
-  cex = 1,
   padj_cutoff = 1e-05,
   N_top = Inf,
   auto_margins = T,
@@ -26,11 +25,11 @@ vl_GO_clusters(
 
 \item{go_type}{The type of go to be considered. Default "all" means "biological_process" AND "cellular_component" AND "molecular_function".}
 
-\item{cex}{cex ballons (usefull to adjust size)}
-
 \item{padj_cutoff}{padjust cutoff applied to GOs}
 
 \item{N_top}{Select only N top GOs/cluster}
+
+\item{cex}{cex ballons (usefull to adjust size)}
 
 \item{auto_margin}{Compute and apply optimal margins. Default= T}
 }
