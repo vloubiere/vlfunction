@@ -14,50 +14,6 @@
 #'   \item{Pwms_log_odds}{PWM expressed as log odds}
 #'   \item{Pwms_perc}{PWM expressed as percentage}
 #' }
-#' 
-#' @examples
-#' load("/mnt/d/_R_data/vlfunction/data/vl_Dmel_motifs_DB.RData")
-#' DB <- data.table(motif= name(vl_Dmel_motifs_DB$All_pwms_log_odds),
-#' pwms_log_odds= as.list(vl_Dmel_motifs_DB$All_pwms_log_odds),
-#' pwms_perc= as.list(vl_Dmel_motifs_DB$All_pwms_perc[match(name(vl_Dmel_motifs_DB$All_pwms_log_odds), 
-#'                                                          name(vl_Dmel_motifs_DB$All_pwms_perc))]))
-#' meta <- as.data.table(vl_Dmel_motifs_DB$metadata)
-#' meta <- meta[, !c("motif_id", "motif_description2", "motif_length", "S2_exp", "S2_protein_exp")]
-#' setnames(meta,         
-#'          c("motif_name", "X..motif_collection_name", "motif_collection_version", "Dmel", "motif_description"),
-#'          c("motif", "collection", "collection_version", "motif_name", "description"))
-#' DB <- merge(meta,
-#'             DB)
-#'             
-#' # load hand curated names
-#' load("/mnt/d/_R_data/vlfunction/data/vl_motifs_DB_fix_names_211002.RData")
-#' DB[fix_names, c("motif_name", "FBgn"):= .(i.new_symbol, i.FBgn), on="motif_name==old_symbol"]
-#' setcolorder(DB, c("motif", 
-#'                   "motif_name", 
-#'                   "description", 
-#'                   "FBgn", 
-#'                   "Motif_cluster_name", 
-#'                   "Motif_cluster"))
-#' vl_Dmel_motifs_DB_full <- DB
-#' save(vl_Dmel_motifs_DB_full, 
-#' file = "/mnt/d/_R_data/vlfunction/data/vl_Dmel_motifs_DB_full.RData")
-#' 
-#' # Add CP motifs (not workig yet !)
-#' load("/mnt/d/_R_data/vlfunction/data/vl_CP_motifs_DB.RData")
-#' CP <- data.table(motif= paste0("CP__", name(vl_CP_motifs_DB$Pwms_log_odds)),
-#'                  pwms_log_odds= as.list(vl_CP_motifs_DB$Pwms_log_odds),
-#'                  pwms_perc= as.list(vl_CP_motifs_DB$Pwms_perc[match(name(vl_CP_motifs_DB$Pwms_log_odds), 
-#'                                                                     name(vl_CP_motifs_DB$Pwms_perc))]),
-#'                  collection= "CP",
-#'                  collection_version= "October2021",
-#'                  Species= "Drosophila")
-#' CP[grepl("Ohler1", motif), c("motif_name", "FBgn"):= .("M1BP", "FBgn0003687")]
-#' CP[grepl("TATA", motif), c("motif_name", "FBgn"):= .("Tbp", "FBgn0003687")]
-#' CP[grepl("DRE", motif), c("motif_name", "FBgn"):= .("Dref", "FBgn0015664")]
-#' final <- rbind(DB,
-#' CP,
-#' fill= T)
-#'
 #' @source {"/groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/TF_clusters_PWMs.RData"}
 "vl_Dmel_motifs_DB_full"
 
