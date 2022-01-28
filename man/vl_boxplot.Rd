@@ -15,19 +15,37 @@ vl_boxplot(x, ...)
 \arguments{
 \item{x}{Matrix, data.atble or data.frame containing data}
 
-\item{formula}{Formula to apply to the data}
+\item{...}{Extra arguments set to plot function}
 
-\item{outline}{plot outlier values? default= F}
+\item{x}{list data}
 
-\item{xlab}{x axis label}
+\item{compute_pval}{A list containing sublists of pairwise x indexes to compute pvalues from. example-> list(c(1,2), c(1,3))}
 
-\item{ylab}{y axis label}
+\item{outline}{show outliers? default=F}
 
-\item{plot_labels}{Should box labels be plotted? Default= T}
+\item{xlab}{}
 
-\item{xlim}{x axis limits}
+\item{ylab}{}
 
-\item{ylim}{y axis limits}
+\item{xlim}{}
+
+\item{ylim}{}
+
+\item{boxcol}{box color}
+
+\item{boxwex}{box width}
+
+\item{violin}{If set to FALSE, the violin is not computed/shown}
+
+\item{violcol}{violin color}
+
+\item{violwex}{violin width}
+
+\item{at}{x position for plotting}
+
+\item{trim}{Should violin be trimmed?}
+
+\item{add}{If TRUE, plot on the top of actual plot}
 }
 \description{
 This function plots a violin plot from either matrix,

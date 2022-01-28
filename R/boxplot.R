@@ -4,13 +4,22 @@
 #' data.table, data.frame or using formula.
 #'
 #' @param x Matrix, data.atble or data.frame containing data
-#' @param formula Formula to apply to the data
-#' @param outline plot outlier values? default= F
-#' @param xlab x axis label
-#' @param ylab y axis label
-#' @param plot_labels Should box labels be plotted? Default= T
-#' @param xlim x axis limits
-#' @param ylim y axis limits
+#' @param x list data
+#' @param compute_pval A list containing sublists of pairwise x indexes to compute pvalues from. example-> list(c(1,2), c(1,3))
+#' @param outline show outliers? default=F
+#' @param xlab 
+#' @param ylab 
+#' @param xlim 
+#' @param ylim 
+#' @param boxcol box color
+#' @param boxwex box width
+#' @param violin If set to FALSE, the violin is not computed/shown
+#' @param violcol violin color
+#' @param violwex violin width
+#' @param at x position for plotting
+#' @param trim Should violin be trimmed?
+#' @param add If TRUE, plot on the top of actual plot
+#' @param ... Extra arguments set to plot function
 #' @export
 vl_boxplot <- function(x, ...) UseMethod("vl_boxplot")
 
@@ -39,22 +48,6 @@ vl_boxplot.data.table <- function(x, ...)
 }
 
 #' @describeIn vl_boxplot
-#' @param x list data
-#' @param compute_pval A list containing sublists of pairwise x indexes to compute pvalues from. example-> list(c(1,2), c(1,3))
-#' @param outline show outliers? default=F
-#' @param xlab 
-#' @param ylab 
-#' @param xlim 
-#' @param ylim 
-#' @param boxcol box color
-#' @param boxwex box width
-#' @param violin If set to FALSE, the violin is not computed/shown
-#' @param violcol violin color
-#' @param violwex violin width
-#' @param at x position for plotting
-#' @param trim Should violin be trimmed?
-#' @param add If TRUE, plot on the top of actual plot
-#' @param ... Extra arguments set to plot function
 #' @export
 vl_boxplot.default <- function(x,
                                compute_pval,
