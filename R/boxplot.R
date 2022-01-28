@@ -39,6 +39,14 @@ vl_boxplot.formula <- function(formula, x, ...)
   vl_boxplot.list(x, ...)
 }
 
+#' @describeIn vl_boxplot method for numeric
+#' @export
+vl_boxplot.numeric <- function(x, ...)
+{
+  x <- list(x)
+  vl_boxplot.default(x, ...)
+}
+
 #' @describeIn vl_boxplot method for data.table
 #' @export
 vl_boxplot.data.table <- function(x, ...)
@@ -98,7 +106,7 @@ vl_boxplot.default <- function(x,
   # Outliers
   if(outline)
   {
-    obj[, outliers:= mapply(function(min, max, value) value[value>max | value<min], min, max, value)]
+    obj[, outliers:= mapply(function(min, max, value) value[value>max | value<min], min, max, value, SIMPLIFY= F)]
     obj[lengths(outliers)>0, c("out_min", "out_max"):= .(sapply(outliers, min), sapply(outliers, max))]
   }
   # Violins
