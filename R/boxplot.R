@@ -14,9 +14,9 @@
 #' @export
 vl_boxplot <- function(x, ...) UseMethod("vl_boxplot")
 
-#' @describeIn vl_boxplot Just a wrapper that applies formula to output a list
+#' @describeIn vl_boxplot method for formula
 #' @export
-vl_boxplot.formula <- function(formula, ...)
+vl_boxplot.formula <- function(formula, x, ...)
 {
   # Format data to a bindable DT list
   if(!missing(formula))
@@ -30,7 +30,15 @@ vl_boxplot.formula <- function(formula, ...)
   vl_boxplot.list(x, ...)
 }
 
-#' @describeIn vl_boxplot Just a wrapper that collapses DT to a suitable matrix
+#' @describeIn vl_boxplot method for data.table
+#' @export
+vl_boxplot.data.table <- function(x, ...)
+{
+  x <- as.list(x)
+  vl_boxplot.default(x, ...)
+}
+
+#' @describeIn vl_boxplot
 #' @param x list data
 #' @param compute_pval A list containing sublists of pairwise x indexes to compute pvalues from. example-> list(c(1,2), c(1,3))
 #' @param outline show outliers? default=F
@@ -48,22 +56,22 @@ vl_boxplot.formula <- function(formula, ...)
 #' @param add If TRUE, plot on the top of actual plot
 #' @param ... Extra arguments set to plot function
 #' @export
-vl_boxplot.list <- function(x,
-                            compute_pval,
-                            outline= F,
-                            xlab= NA,
-                            ylab= NA,
-                            xlim,
-                            ylim,
-                            boxcol= "white",
-                            boxwex= 0.15,
-                            violin= F,
-                            violcol= "white",
-                            violwex= 0.35,
-                            at,
-                            trim= T,
-                            add= F,
-                            ...)
+vl_boxplot.default <- function(x,
+                               compute_pval,
+                               outline= F,
+                               xlab= NA,
+                               ylab= NA,
+                               xlim,
+                               ylim,
+                               boxcol= "white",
+                               boxwex= 0.15,
+                               violin= F,
+                               violcol= "white",
+                               violwex= 0.35,
+                               at,
+                               trim= T,
+                               add= F,
+                               ...)
 {
   if(!missing(compute_pval))
   {
@@ -207,6 +215,7 @@ vl_boxplot.list <- function(x,
   }
   
   # Returns object
-  invisible(list(obj,
-                 pval))
+  if(!missing(compute_pval))
+    obj <- list(obj, pval)
+  invisible(obj)
 }

@@ -3,26 +3,19 @@
 \name{vl_boxplot}
 \alias{vl_boxplot}
 \alias{vl_boxplot.formula}
-\alias{vl_boxplot.list}
+\alias{vl_boxplot.data.table}
 \title{violin plot}
 \usage{
 vl_boxplot(x, ...)
 
-\method{vl_boxplot}{formula}(formula, ...)
+\method{vl_boxplot}{formula}(formula, x, ...)
 
-\method{vl_boxplot}{list}(x, compute_pval, outline = F, xlab = NA,
-  ylab = NA, xlim, ylim, boxcol = "white", boxwex = 0.15,
-  violin = F, violcol = "white", violwex = 0.35, at, trim = T,
-  add = F, ...)
+\method{vl_boxplot}{data.table}(x, ...)
 }
 \arguments{
 \item{x}{Matrix, data.atble or data.frame containing data}
 
-\item{...}{Extra arguments set to plot function}
-
 \item{formula}{Formula to apply to the data}
-
-\item{compute_pval}{A list containing sublists of pairwise x indexes to compute pvalues from. example-> list(c(1,2), c(1,3))}
 
 \item{outline}{plot outlier values? default= F}
 
@@ -30,39 +23,11 @@ vl_boxplot(x, ...)
 
 \item{ylab}{y axis label}
 
+\item{plot_labels}{Should box labels be plotted? Default= T}
+
 \item{xlim}{x axis limits}
 
 \item{ylim}{y axis limits}
-
-\item{boxcol}{box color}
-
-\item{boxwex}{box width}
-
-\item{violin}{If set to FALSE, the violin is not computed/shown}
-
-\item{violcol}{violin color}
-
-\item{violwex}{violin width}
-
-\item{at}{x position for plotting}
-
-\item{trim}{Should violin be trimmed?}
-
-\item{add}{If TRUE, plot on the top of actual plot}
-
-\item{plot_labels}{Should box labels be plotted? Default= T}
-
-\item{x}{list data}
-
-\item{outline}{show outliers? default=F}
-
-\item{xlab}{}
-
-\item{ylab}{}
-
-\item{xlim}{}
-
-\item{ylim}{}
 }
 \description{
 This function plots a violin plot from either matrix,
@@ -70,8 +35,8 @@ data.table, data.frame or using formula.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{formula}: Just a wrapper that applies formula to output a list
+\item \code{formula}: method for formula
 
-\item \code{list}: Just a wrapper that collapses DT to a suitable matrix
+\item \code{data.table}: method for data.table
 }}
 
