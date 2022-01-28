@@ -57,7 +57,7 @@ vl_boxplot.list <- function(x,
                             ylim,
                             boxcol= "white",
                             boxwex= 0.15,
-                            violin= T,
+                            violin= F,
                             violcol= "white",
                             violwex= 0.35,
                             at,
@@ -103,7 +103,6 @@ vl_boxplot.list <- function(x,
   # Violins
   if(violin)
   {
-    obj[, violCc:= violcol[.I]]
     if(trim) # trim violin plot to data ranges
       obj[N_obs>2, dens:= lapply(value, function(x) density(x, from= min(x), to= max(x)))] else
         obj[N_obs>2, dens:= lapply(value, function(x) density(x))]
@@ -111,7 +110,7 @@ vl_boxplot.list <- function(x,
     obj[N_obs>2, y:= lapply(dens, function(x) x$x)]
     obj[lengths(y)>0, c("viol_min", "viol_max"):= .(sapply(y, min), sapply(y, max))]
   }
-  # Compute y_plot limits or each var
+  # Compute min/max ploted values for each var
   obj[, y_min:= apply(.SD, 1, min, na.rm= T), .SDcols= patterns("min$")]
   obj[, y_max:= apply(.SD, 1, max, na.rm= T), .SDcols= patterns("max$")]
   adj <- diff(c(min(obj$y_min), max(obj$y_max)))*0.04 # Adjust factor used for plotting (4% of range)
@@ -132,8 +131,12 @@ vl_boxplot.list <- function(x,
       pval <- pval[order(x0, x1)]
       pval[, overlap:= cumsum(x0-cummax(x1)[c(1, seq(.N-1))]>0)]# Make groups of overlapping segments
       pval <- pval[order(y, x1-x0, x0)]
-      pval[, adj_y:= y+adj*1.5*(seq(.N)-1), overlap]
-      pval[, y:= apply(.SD, 1, max), .SDcols= c("y", "adj_y")]
+      pval[, y:= {
+        for(i in 2:(.N)) 
+          if(y[i]<y[i-1]+adj*1.5)
+            y[i] <- y[i-1]+adj*1.5
+        y
+      }, overlap]
     }
   }
   #------------------####
@@ -143,9 +146,9 @@ vl_boxplot.list <- function(x,
     xlim <- range(obj$at)+c(-0.5,0.5)
   if(missing(ylim))
   {
-    ylim <- c(min(obj$y_min)-adj, max(obj$y_max)+adj) # adjust fact 4% range (see higher)
-    if(!missing(compute_pval) && max(pval$y)+adj>ylim[2])
-      ylim[2] <- max(pval$y)+adj
+    ylim <- range(obj[, .(y_min-adj, y_max+adj)]) # adjust fact 4% range (see higher)
+    if(!missing(compute_pval) && max(pval[,y+adj])>ylim[2])
+      ylim[2] <- max(pval[,y+adj])
   }
     
   # plot
@@ -158,11 +161,11 @@ vl_boxplot.list <- function(x,
          ylab= ylab, 
          xaxt= "n",
          ...)
+    axis(1,
+         at= unique(obj$at), 
+         labels= obj$variable)
   }
-  axis(1,
-       at= unique(obj$at), 
-       labels= obj$variable)
-  
+
   # violins
   if(violin)
   {
@@ -197,7 +200,7 @@ vl_boxplot.list <- function(x,
              pval$y,
              pval$x1,
              pval$y)
-    vl_plot_pval_text(rowMeans(pval[, x0, x1]),
+    vl_plot_pval_text(rowMeans(pval[, .(x0, x1)]),
                       pval$y,
                       pval$pval, 
                       stars_only = T)

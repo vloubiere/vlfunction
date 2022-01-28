@@ -12,7 +12,7 @@ vl_boxplot(x, ...)
 
 \method{vl_boxplot}{list}(x, compute_pval, outline = F, xlab = NA,
   ylab = NA, xlim, ylim, boxcol = "white", boxwex = 0.15,
-  violin = T, violcol = "white", violwex = 0.35, at, trim = T,
+  violin = F, violcol = "white", violwex = 0.35, at, trim = T,
   add = F, ...)
 }
 \arguments{
