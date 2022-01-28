@@ -209,6 +209,6 @@ vl_boxplot.default <- function(x,
   
   # Returns object
   if(!missing(compute_pval))
-    obj <- list(obj, pval)
+    obj <- list(obj= obj, pval= pval)
   invisible(obj)
 }
