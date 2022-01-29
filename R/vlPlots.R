@@ -219,7 +219,7 @@ vl_upset_plot <- function(dat_list,
   sets <- dat[, .(all_IDs= unlist(tstrsplit(.id, "\\|"))), dat]
   sets <- sets[, .(N= sum(N)), all_IDs]
   setorderv(sets, "N", 1)
-  sets[, y:= grconvertY(1+.I*1.5, "chars", "user")]
+  sets[, y:= grconvertY(1+.I*1.5+grconvertY(0, "nfc", "chars"), "chars", "user")]
   sets[, all_x:= .(.(dat$x))]
   tab <- dat[, .(check_IDs= unlist(tstrsplit(.id, "\\|")), x), .id]
   sets[, inter_x:= .(.(unlist(all_x) %in% tab[check_IDs %in% all_IDs, x])), all_IDs]

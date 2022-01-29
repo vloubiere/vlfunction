@@ -192,19 +192,15 @@ vl_closestBed <- function(a,
   if(is.null(b))
     b <- a else if(!vl_isDTranges(b))
       b <- vl_importBed(b)
+  a <- data.table::copy(a)
+  b <- data.table::copy(b)
   # Add indexes
-  a[, idx.a:= .I]
-  b[, idx.b:= .I]
+  a[, idx:= .I]
+  b[, idx:= .I]
+  names(a) <- ifelse(names(a)!="seqnames", paste0(names(a), ".a"), names(a))
+  names(b) <- ifelse(names(b)!="seqnames", paste0(names(b), ".b"), names(b))
   # Main function
-  res <- b[a, {
-    # Make res object
-    .c <- data.table(start.a= i.start,
-                     end.a= i.end,
-                     idx.a,
-                     start.b= start,
-                     end.b= end,
-                     idx.b)
-  }, .EACHI, on= "seqnames"]
+  res <- a[b, on= "seqnames", allow.cartesian= T]
   res[start.b>end.a, dist:= start.b-end.a]
   res[end.b<start.a, dist:= -(start.a-end.b)]
   res[start.a<=end.b & end.a>=start.b, dist:= 0]
