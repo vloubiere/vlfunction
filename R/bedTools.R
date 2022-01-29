@@ -170,7 +170,6 @@ vl_control_regions_BSgenome <- function(BSgenome,
 #'
 #' @param a Granges or data.table FOR which closest features have to be found.
 #' @param b Granges or data.table FROM which closest features have to be found. If set to NULL (default), then a is matched to itself.
-#' @param k If set to "all" (default), return all features that match the min(|distance|). Else, returns the k first features
 #' @param min_dist Min distance for closest feature 
 #' @examples 
 #' a <- data.table(chr= "chr2L", start= sample(10000, 1000))
@@ -186,7 +185,6 @@ vl_control_regions_BSgenome <- function(BSgenome,
 #' @export
 vl_closestBed <- function(a, 
                           b= NULL,
-                          k= "all",
                           min_dist= 0)
 {
   if(k!="all")
@@ -197,27 +195,23 @@ vl_closestBed <- function(a,
   if(is.null(b))
     b <- a else if(!vl_isDTranges(b))
       b <- vl_importBed(b)
+  # Add indexes
+  a[, idx.a:= .I]
+  b[, idx.b:= .I]
   # Main function
   res <- b[a, {
     # Make res object
     .c <- data.table(start.a= i.start,
                      end.a= i.end,
+                     idx.a,
                      start.b= start,
-                     end.b= end)
-    # Compute distance
-    .c[, dist:= {
-      if(end<i.start)
-        as.integer(end-i.start) else if (start>i.end)
-          as.integer(start-i.end) else
-            0L
-    }, .(start, end)]
-    # Distance check AND order based on distance
-    .c <- .c[abs(dist)>=min_dist][order(abs(dist))]
-    # Filter k closest features if specified
-    if(k=="all")
-      .c <- .c[abs(dist)==abs(dist)[1]] else
-        .c <- na.omit(.c[1:k])
+                     end.b= end,
+                     idx.b)
   }, .EACHI, on= "seqnames"]
+  res[start.b>end.a, dist:= start.b-end.a]
+  res[end.b<start.a, dist:= -(start.a-end.b)]
+  res[start.a<=end.b & end.a>=start.b, dist:= 0]
+  res <- res[abs(dist)>=min_dist]
   # Export
   return(res)
 }
