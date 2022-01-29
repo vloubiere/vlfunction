@@ -187,9 +187,6 @@ vl_closestBed <- function(a,
                           b= NULL,
                           min_dist= 0)
 {
-  if(k!="all")
-    if(!is.numeric(k))
-      stop("k should either be set to all or be a numeric value")
   if(!vl_isDTranges(a))
     a <- vl_importBed(a)
   if(is.null(b))
