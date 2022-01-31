@@ -4,14 +4,12 @@
 \alias{vl_closestBed}
 \title{Find closestBed regions}
 \usage{
-vl_closestBed(a, b = NULL, k = "all", min_dist = 0)
+vl_closestBed(a, b = NULL, min_dist = 0)
 }
 \arguments{
 \item{a}{Granges or data.table FOR which closest features have to be found.}
 
 \item{b}{Granges or data.table FROM which closest features have to be found. If set to NULL (default), then a is matched to itself.}
-
-\item{k}{If set to "all" (default), return all features that match the min(|distance|). Else, returns the k first features}
 
 \item{min_dist}{Min distance for closest feature}
 }

@@ -170,7 +170,6 @@ vl_control_regions_BSgenome <- function(BSgenome,
 #'
 #' @param a Granges or data.table FOR which closest features have to be found.
 #' @param b Granges or data.table FROM which closest features have to be found. If set to NULL (default), then a is matched to itself.
-#' @param k If set to "all" (default), return all features that match the min(|distance|). Else, returns the k first features
 #' @param min_dist Min distance for closest feature 
 #' @examples 
 #' a <- data.table(chr= "chr2L", start= sample(10000, 1000))
@@ -186,38 +185,26 @@ vl_control_regions_BSgenome <- function(BSgenome,
 #' @export
 vl_closestBed <- function(a, 
                           b= NULL,
-                          k= "all",
                           min_dist= 0)
 {
-  if(k!="all")
-    if(!is.numeric(k))
-      stop("k should either be set to all or be a numeric value")
   if(!vl_isDTranges(a))
     a <- vl_importBed(a)
   if(is.null(b))
     b <- a else if(!vl_isDTranges(b))
       b <- vl_importBed(b)
+  a <- data.table::copy(a)
+  b <- data.table::copy(b)
+  # Add indexes
+  a[, idx:= .I]
+  b[, idx:= .I]
+  names(a) <- ifelse(names(a)!="seqnames", paste0(names(a), ".a"), names(a))
+  names(b) <- ifelse(names(b)!="seqnames", paste0(names(b), ".b"), names(b))
   # Main function
-  res <- b[a, {
-    # Make res object
-    .c <- data.table(start.a= i.start,
-                     end.a= i.end,
-                     start.b= start,
-                     end.b= end)
-    # Compute distance
-    .c[, dist:= {
-      if(end<i.start)
-        as.integer(end-i.start) else if (start>i.end)
-          as.integer(start-i.end) else
-            0L
-    }, .(start, end)]
-    # Distance check AND order based on distance
-    .c <- .c[abs(dist)>=min_dist][order(abs(dist))]
-    # Filter k closest features if specified
-    if(k=="all")
-      .c <- .c[abs(dist)==abs(dist)[1]] else
-        .c <- na.omit(.c[1:k])
-  }, .EACHI, on= "seqnames"]
+  res <- a[b, on= "seqnames", allow.cartesian= T]
+  res[start.b>end.a, dist:= start.b-end.a]
+  res[end.b<start.a, dist:= -(start.a-end.b)]
+  res[start.a<=end.b & end.a>=start.b, dist:= 0]
+  res <- res[abs(dist)>=min_dist]
   # Export
   return(res)
 }

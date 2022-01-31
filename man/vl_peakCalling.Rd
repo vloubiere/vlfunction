@@ -4,10 +4,18 @@
 \alias{vl_peakCalling}
 \title{Compute peak calling}
 \usage{
-vl_peakCalling(ChIP, Input, read_length = 50,
-  average_function = function(x) ceiling(mean(x)), gaussian_blur = F,
-  BSgenome, bins_width = 100, steps_width = round(bins_width/2),
-  bins_pval_cutoff = 0.05, bins_OR_cutoff = 1)
+vl_peakCalling(
+  ChIP,
+  Input,
+  read_length = 50,
+  average_function = function(x) ceiling(mean(x)),
+  gaussian_blur = F,
+  BSgenome,
+  bins_width = 100,
+  steps_width = round(bins_width/2),
+  bins_pval_cutoff = 0.05,
+  bins_OR_cutoff = 1
+)
 }
 \arguments{
 \item{ChIP}{ChIP bed file. Should be a vector of or bw file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()}
