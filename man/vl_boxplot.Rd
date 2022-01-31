@@ -31,6 +31,8 @@ vl_boxplot(x, ...)
 
 \item{ylim}{}
 
+\item{names}{group labels (x axis). By default, names= names(x). if set to false, no labels are ploted}
+
 \item{boxcol}{box color}
 
 \item{boxwex}{box width}

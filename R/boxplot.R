@@ -11,6 +11,7 @@
 #' @param ylab 
 #' @param xlim 
 #' @param ylim 
+#' @param names group labels (x axis). By default, names= names(x). if set to false, no labels are ploted
 #' @param boxcol box color
 #' @param boxwex box width
 #' @param violin If set to FALSE, the violin is not computed/shown
@@ -39,14 +40,6 @@ vl_boxplot.formula <- function(formula, x, ...)
   vl_boxplot.list(x, ...)
 }
 
-#' @describeIn vl_boxplot method for numeric
-#' @export
-vl_boxplot.numeric <- function(x, ...)
-{
-  x <- list(x)
-  vl_boxplot.default(x, ...)
-}
-
 #' @describeIn vl_boxplot method for data.table
 #' @export
 vl_boxplot.data.table <- function(x, ...)
@@ -64,6 +57,7 @@ vl_boxplot.default <- function(x,
                                ylab= NA,
                                xlim,
                                ylim,
+                               names= NULL,
                                boxcol= "white",
                                boxwex= 0.15,
                                violin= F,
@@ -74,6 +68,14 @@ vl_boxplot.default <- function(x,
                                add= F,
                                ...)
 {
+  # Format data list
+  if(!is.list(x))
+    x <- list(x)
+  if(is.character(names))
+    names(x) <- names
+  if(is.null(names(x)))
+    names(x) <- seq(x)
+  # Format pval list
   if(!missing(compute_pval))
   {
     if(max(unlist(compute_pval))>length(x) | !is.numeric(unlist(compute_pval)))
@@ -83,10 +85,9 @@ vl_boxplot.default <- function(x,
     if(!all(lengths(compute_pval)==2))
       stop("compute_pval should be a list of vectors of length two containing pairwise x indexes to be compared")
   }
+  # Check
   if(missing(at))
     at <- seq(x)
-  if(is.null(names(x)))
-    names(x) <- seq(x)
   
   # Format as data.table
   obj <- data.table(variable= names(x),
@@ -170,9 +171,10 @@ vl_boxplot.default <- function(x,
          ylab= ylab, 
          xaxt= "n",
          ...)
-    axis(1,
-         at= unique(obj$at), 
-         labels= obj$variable)
+    if(!isFALSE(names))
+      axis(1,
+           at= unique(obj$at), 
+           labels= obj$variable)
   }
 
   # violins
