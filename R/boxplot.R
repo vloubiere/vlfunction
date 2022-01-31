@@ -24,6 +24,14 @@
 #' @export
 vl_boxplot <- function(x, ...) UseMethod("vl_boxplot")
 
+#' @describeIn vl_boxplot method for matrices
+#' @export
+vl_boxplot.matrix <- function(x, ...)
+{
+  x <- lapply(seq(ncol(x)), function(i) x[,i])
+  vl_boxplot.default(x, ...)
+}
+
 #' @describeIn vl_boxplot method for formula
 #' @export
 vl_boxplot.formula <- function(formula, x, ...)
@@ -37,7 +45,7 @@ vl_boxplot.formula <- function(formula, x, ...)
     response <- attr(attr(mf, "terms"), "response")
     x <- split(mf[[response]], mf[-response])
   }
-  vl_boxplot.list(x, ...)
+  vl_boxplot.default(x, ...)
 }
 
 #' @describeIn vl_boxplot method for data.table

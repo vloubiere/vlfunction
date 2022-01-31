@@ -10,33 +10,18 @@ vl_heatmap(x, ...)
 
 \method{vl_heatmap}{data.table}(x, rownames = names(x)[1], ...)
 
-\method{vl_heatmap}{matrix}(
-  x,
-  breaks = seq(min(x, na.rm = T), max(x, na.rm = T), length.out = length(col)),
-  show_rownames = T,
-  show_colnames = T,
-  col = c("cornflowerblue", "white", "red"),
-  main = NA,
-  auto_margins = T,
-  cluster_rows = T,
-  clustering_distance_rows = "euclidean",
-  cutree_rows = 1,
-  show_row_dendrogram = T,
-  show_row_clusters = T,
-  cluster_cols = T,
-  clustering_distance_cols = "euclidean",
-  cutree_cols = 1,
-  show_col_dendrogram = T,
-  show_col_clusters = T,
-  clustering_method = "complete",
-  kmeans_k = NA,
-  display_numbers = F,
+\method{vl_heatmap}{matrix}(x, breaks = seq(min(x, na.rm = T), max(x,
+  na.rm = T), length.out = length(col)), show_rownames = T,
+  show_colnames = T, col = c("cornflowerblue", "white", "red"),
+  main = NA, auto_margins = T, cluster_rows = T,
+  clustering_distance_rows = "euclidean", cutree_rows = 1,
+  show_row_dendrogram = T, show_row_clusters = T, cluster_cols = T,
+  clustering_distance_cols = "euclidean", cutree_cols = 1,
+  show_col_dendrogram = T, show_col_clusters = T,
+  clustering_method = "complete", kmeans_k = NA, display_numbers = F,
   display_numbers_FUN = function(x) round(x, 2),
-  display_numbers_cex = 0.5,
-  legend_title = NA,
-  na_col = "lightgrey",
-  plot = T
-)
+  display_numbers_cex = 0.5, legend_title = NA, na_col = "lightgrey",
+  plot = T)
 }
 \arguments{
 \item{x}{Data to plot. Can be one of matrix, data.table, or formula.}

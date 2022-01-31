@@ -2,23 +2,25 @@
 % Please edit documentation in R/boxplot.R
 \name{vl_boxplot}
 \alias{vl_boxplot}
+\alias{vl_boxplot.matrix}
 \alias{vl_boxplot.formula}
-\alias{vl_boxplot.numeric}
 \alias{vl_boxplot.data.table}
 \title{violin plot}
 \usage{
 vl_boxplot(x, ...)
 
-\method{vl_boxplot}{formula}(formula, x, ...)
+\method{vl_boxplot}{matrix}(x, ...)
 
-\method{vl_boxplot}{numeric}(x, ...)
+\method{vl_boxplot}{formula}(formula, x, ...)
 
 \method{vl_boxplot}{data.table}(x, ...)
 }
 \arguments{
-\item{x}{list data}
+\item{x}{Matrix, data.atble or data.frame containing data}
 
 \item{...}{Extra arguments set to plot function}
+
+\item{x}{list data}
 
 \item{compute_pval}{A list containing sublists of pairwise x indexes to compute pvalues from. example-> list(c(1,2), c(1,3))}
 
@@ -56,9 +58,9 @@ data.table, data.frame or using formula.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{formula}: method for formula
+\item \code{matrix}: method for matrices
 
-\item \code{numeric}: method for numeric
+\item \code{formula}: method for formula
 
 \item \code{data.table}: method for data.table
 }}
