@@ -200,7 +200,7 @@ vl_boxplot.default <- function(x,
   # boxplots
   obj[, segments(at, min, at, max)]
   obj[, rect(at-boxwex, Q1, at+boxwex, Q3, col= boxCc)]
-  obj[, segments(at-boxwex, Q2, at+boxwex, Q2)]
+  obj[, segments(at-boxwex, Q2, at+boxwex, Q2, lwd= 2*par("lwd"), lend= 2)]
   
   # outliers
   if(outline)
