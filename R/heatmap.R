@@ -291,6 +291,7 @@ plot.vl_heatmap_pl <- function(obj)
   im <- clustered_x
   im[!is.na(im)] <- Cc(clustered_x[!is.na(clustered_x)])
   im[is.na(im)] <- na_col
+  opar <- par(no.readonly = T)
   plot.new()
   plot.window(xlim = c(0.5,ncol(im)+0.5),
               ylim = c(0.5,nrow(im)+0.5),
