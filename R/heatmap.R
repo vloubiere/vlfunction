@@ -178,6 +178,27 @@ vl_heatmap.matrix <- function(x,
   invisible(obj)
 }
 
+#' Plot heatmap object
+#' @param obj Object of class vl_heatmap_obj such as returned by vl_heatmap
+#' @param add Matrix of new values to plot
+#' @param add_inherit_row_order Should add data inherit from row order? Default= T
+#' @param add_inherit_col_order Should add data inherit from col order? Default= F
+#' @param breaks Breaks for colors
+#' @param show_rownames show labels
+#' @param show_colnames show labels
+#' @param col Color scale. default= c("cornflowerblue", "white", "red")
+#' @param main Title. Default= NA
+#' @param auto_margins Should auto margins be computed and used?
+#' @param cutree_rows Number of cuts for rows tree. Default= 1L
+#' @param show_row_dendrogram Plot row dendrogram?
+#' @param show_row_clusters Plot row cluster names/lines?
+#' @param cutree_cols  Number of cuts for cols tree. default= 1L
+#' @param show_col_dendrogram Plot col dendrogram?
+#' @param show_col_clusters Plot col cluster names/lines?
+#' @param display_numbers Display numbers on heatmap? Default= F
+#' @param display_numbers_FUN Function to apply before displaying numbers on heatmap.
+#' @param display_numbers_cex cex display numbers 
+#' @param legend_title Character to plot as title legend
 #' @export
 plot.vl_heatmap_obj <- function(obj,
                                 add,
@@ -236,6 +257,7 @@ plot.vl_heatmap_pl <- function(obj)
   # Margins
   if(auto_margins)
   {
+    opr <- par(no.readonly = T)
     bot <- 1
     left <- 1
     top <- 1.5
@@ -428,4 +450,5 @@ plot.vl_heatmap_pl <- function(obj)
        main, 
        xpd= T)
   box(lwd= 0.25)
+  on.exit(par(opar), add=TRUE, after=FALSE)
 }

@@ -58,77 +58,72 @@ vl_motif_counts <- function(sequences= NULL,
 #' Compute motif enrichment for the cluster in cl_columns, using all the lines as background
 #'
 #' @param obj A fisher test matrix similar to ?vl_motif_cl_enrich() ouput.
+#' @param x_breaks Breaks to be used for balloons'sizes
 #' @param padj_cutoff cutoff for ballons to be ploted
 #' @param log2OR_cutoff cutoff for ballons to be ploted
 #' @param N_top Select top enriched motifs/cluster
 #' @param color_breaks Color breaks used for coloring
 #' @param col Vector of colors used for coloring
 #' @param main Title. Default= NA
-#' @param cex.balloons scaling factor for balloons size
 #' @param auto_margins Use auto margins? Default= T
 #' @return ballons plot with padj and log2OR
 #' @export
 
 vl_motif_cl_enrich_plot_only <- function(obj,
-                                         padj_cutoff= 0.00001,
+                                         x_breaks,
+                                         padj_cutoff= 0.05,
                                          log2OR_cutoff= 0,
                                          N_top= Inf,
                                          color_breaks,
                                          col= c("cornflowerblue", "lightgrey", "tomato"),
                                          main= NA,
-                                         cex.balloons = 4, 
                                          auto_margins = T)
 {
   DT <- data.table::copy(obj)
   if(log2OR_cutoff<0)
-    stop("log2OR_cutoff should be > 0")
+    stop("log2OR_cutoff should be >= 0")
   
   #----------------------------------#
   # Generate plot table
   #----------------------------------#
   # Cutoffs
-  sel <- DT[, any(padj <= padj_cutoff & log2OR > log2OR_cutoff), motif][, V1]
-  if(!any(sel))
-    stop("No enrichment found with provided paj cutoff!")
-  DT <- DT[(sel & padj < 0.05 & log2OR > 0)]
+  DT <- DT[, .(cl, log2OR, padj, any(padj <= padj_cutoff & log2OR > log2OR_cutoff)), motif][(V4), !"V4"]
+  if(nrow(DT)==0)
+    stop("No enrichment found with provided padj cutoff!")
   # Format plotting object
-  DT[, '-log10(pval)':= -log10(padj)]
-  # Select top motif/cluster
-  setorderv(DT, "-log10(pval)", order = -1)
-  top_motifs <- DT[, motif[seq(.N)<=N_top], cl]$V1
-  DT <- DT[motif %in% top_motifs]
+  DT[, '-log10(padj)':= -log10(padj)]
+  # Order and select top motif/cluster
+  setorderv(DT, 
+            c("cl", "-log10(padj)", "log2OR", "motif"), 
+            order = c(1, -1, -1, 1))
+  DT[, rank:= seq(.N), cl]
+  DT <- DT[motif %in% DT[rank<=N_top, motif]]
   # Handle infinite log2OR
   if(any(is.infinite(DT$log2OR)))
   {
-    warning("There are suspcious infinite log2OR values found after padj cutoff")
+    warning("There are suspcious infinite log2OR values found after padj cutoff -> capped to max(finite)")
     print(unique(DT[is.infinite(DT$log2OR), motif]))
+    DT[log2OR==Inf, log2OR:= max(DT[is.finite(log2OR), log2OR])]
+    DT[log2OR==(-Inf), log2OR:= min(DT[is.finite(log2OR), log2OR])]
   }
-  DT[log2OR==Inf, log2OR:= max(pl[is.finite(log2OR), log2OR])]
-  DT[log2OR==(-Inf), log2OR:= min(pl[is.finite(log2OR), log2OR])]
-  # Y ordering
-  setorderv(DT, 
-            c("cl", "-log10(pval)", "log2OR", "motif"), 
-            order = c(1, -1, -1, 1))
+  # Remove values that were useful for earlier ordering but do not meet minimum criteria
+  DT <- DT[padj<0.05 & log2OR>=0]
   DT[, motif:= factor(motif, levels= unique(DT$motif))]
   
   #-----------------------------#
   # PLOT
   #-----------------------------#
   x <- as.matrix(dcast(DT, motif~cl, value.var = "log2OR"), 1)
-  color_var <- as.matrix(dcast(DT, motif~cl, value.var = "-log10(pval)"), 1)
-  if(missing(color_breaks))
-    color_breaks <- seq(min(color_var, na.rm= T), 
-                        max(color_var, na.rm= T), 
-                        length.out= length(col))
-  vl_balloons_plot(x = x,
-                   color_var = color_var,
-                   color_breaks = color_breaks,
-                   col= col,
-                   main= main,
-                   cex.balloons = cex.balloons,
-                   auto_margins = auto_margins,
-                   balloon_size_legend= "OR (log2)",
-                   balloon_col_legend = "padj (-log10)")
+  color_var <- as.matrix(dcast(DT, motif~cl, value.var = "-log10(padj)"), 1)
+  
+  pl <- match.call()
+  pl$obj <- pl$padj_cutoff <- pl$log2OR_cutoff <- N_top <- NULL
+  pl$x <- x
+  pl$color_var <- color_var
+  pl$balloon_size_legend <- "OR (log2)"
+  pl$balloon_col_legend <- "padj (-log10)"
+  pl[[1]] <- quote(vl_balloons_plot)
+  eval(pl)
 }
 
 #' Compute motif enrichment
@@ -137,62 +132,70 @@ vl_motif_cl_enrich_plot_only <- function(obj,
 #'
 #' @param counts_matrix A matrix containing motif counts (rows= sequences, cols= motifs)
 #' @param cl_IDs vector of cluster IDs (used to split the data.table)
+#' @param control_cl IDs of clusters to be used as background. default to unique(cl_IDs), meaning all clusters are used except the one being tested
 #' @param plot Should the result be plot using balloons plot?
 #' @param padj_cutoff cutoff for ballons to be ploted
 #' @param log2OR_cutoff cutoff for ballons to be ploted
 #' @param N_top Select top enriched motifs/cluster
+#' @param x_breaks Breaks used for ballon's sizes
 #' @param color_breaks Color breaks used for coloring
 #' @param col Vector of colors used for coloring
 #' @param main Title. Default= NA
-#' @param cex.balloons scaling factor for balloons size
 #' @param auto_margins Use auto margins? Default= T
 #' @return Fisher test data.table.
 #' @export
 
 vl_motif_cl_enrich <- function(counts_matrix, 
                                cl_IDs,
+                               control_cl= unique(cl_IDs),
                                plot= F,
                                padj_cutoff= 0.00001,
                                log2OR_cutoff= 0,
                                N_top= Inf,
+                               x_breaks,
                                color_breaks,
                                col= c("cornflowerblue", "lightgrey", "tomato"),
                                main= NA,
-                               cex.balloons = 4, 
                                auto_margins = T)
 {
-  if(!is.data.table(counts_matrix))
-    counts_matrix <- as.data.table(counts_matrix, keep.rownames= T)
-  counts_matrix <- data.table::copy(counts_matrix)
+  if(!is.matrix(counts_matrix))
+    stop("counts_matrix should be a matrix")
+  if(any(sapply(seq(ncol(counts_matrix)), function(i) !is.numeric(counts_matrix[,i]))))
+    stop("counts_matrix should only contain numeric values")
+  if(is.null(rownames(counts_matrix)))
+    rownames(counts_matrix) <- seq(nrow(counts_matrix))
+  counts_matrix <- as.data.table(counts_matrix, keep.rownames= T)
   
   # Format table
   res <- melt(cbind(cl= cl_IDs, counts_matrix), 
-              measure.vars = names(counts_matrix), 
+              id.vars = c("rn", "cl"),
               variable.name = "motif")
-  res[, value:= value>0]
-  res <- merge(dcast(res, motif~value, fun.aggregate = length), 
-               dcast(res, motif+cl~value, fun.aggregate = length), 
-               suffixes= c("_all", "_cluster"))
-  # Compute only sequences for which counts>0
-  check <- res[, FALSE_cluster>0 & TRUE_cluster>0]
-  res[(check), c("OR", "pval"):= {
-    mat <- matrix(unlist(.BY), nrow= 2, byrow = T)
-    fisher.test(mat)[c("estimate", "p.value")]
-  }, .(TRUE_cluster, FALSE_cluster, TRUE_all, FALSE_all)]
+  # Enrichment
+  res <- res[, {
+    counts <- data.table(ccl= cl, 
+                         cval= value,
+                         key= "ccl")
+    .c <- .SD[, {
+      # Contingency table restricted to control cluster(s) and the tested one
+      tab <- table(counts[.(unique(c(cl, control_cl))), .(ccl==cl, cval>0)])
+      if(identical(c(2L,2L), dim(tab))) # Filter out motif for which all counts fall within one category
+        fisher.test(tab)[c("estimate", "p.value")] else
+          list(estimate= as.numeric(NA), `p.value`= as.numeric(NA))
+    }, cl]
+  }, motif]
+  setnames(res, c("estimate", "p.value"), c("OR", "pval"))
+  # padj...
   res[, padj:= p.adjust(pval, method = "fdr"), pval]
   res[, log2OR:= log2(OR)]
   res <- res[, .(motif, cl, log2OR, padj)]
+  # Plot
   if(plot)
   {
-    vl_motif_cl_enrich_plot_only(obj = res,
-                                 padj_cutoff= padj_cutoff,
-                                 log2OR_cutoff= log2OR_cutoff,
-                                 N_top= N_top,
-                                 color_breaks= color_breaks,
-                                 col= col,
-                                 main= main,
-                                 cex.balloons = cex.balloons, 
-                                 auto_margins = auto_margins)
+    pl <- match.call()
+    pl$counts_matrix <- pl$cl_IDs <- pl$control_cl <- pl$plot <- NULL
+    pl$obj <- res
+    pl[[1]] <- quote(vl_motif_cl_enrich_plot_only)
+    eval(pl)
   }
   
   return(res)
