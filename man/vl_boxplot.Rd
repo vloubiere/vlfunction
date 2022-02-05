@@ -2,16 +2,16 @@
 % Please edit documentation in R/boxplot.R
 \name{vl_boxplot}
 \alias{vl_boxplot}
+\alias{vl_boxplot.matrix}
 \alias{vl_boxplot.formula}
-\alias{vl_boxplot.numeric}
 \alias{vl_boxplot.data.table}
 \title{violin plot}
 \usage{
 vl_boxplot(x, ...)
 
-\method{vl_boxplot}{formula}(formula, x, ...)
+\method{vl_boxplot}{matrix}(x, ...)
 
-\method{vl_boxplot}{numeric}(x, ...)
+\method{vl_boxplot}{formula}(formula, x, ...)
 
 \method{vl_boxplot}{data.table}(x, ...)
 }
@@ -31,6 +31,8 @@ vl_boxplot(x, ...)
 \item{xlim}{}
 
 \item{ylim}{}
+
+\item{names}{group labels (x axis). By default, names= names(x). if set to false, no labels are ploted}
 
 \item{boxcol}{box color}
 
@@ -54,9 +56,9 @@ data.table, data.frame or using formula.
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{formula}: method for formula
+\item \code{matrix}: method for matrices
 
-\item \code{numeric}: method for numeric
+\item \code{formula}: method for formula
 
 \item \code{data.table}: method for data.table
 }}

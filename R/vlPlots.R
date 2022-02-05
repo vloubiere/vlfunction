@@ -164,6 +164,7 @@ vl_upset_plot <- function(dat_list,
   # Initiate plotting area
   #------------------------#
   N_cditions <- length(unique(na.omit(unlist(tstrsplit(dat$.id, "\\|")))))
+  opar <- par(no.readonly = T)
   plot.new()
   par(mar = c(grconvertY(N_cditions*1.5+2, "chars", to= "lines"),
               6+grconvertX(max(strwidth(names(dat_list), "inches")), "inches", to= "lines"),
@@ -295,10 +296,9 @@ vl_upset_plot <- function(dat_list,
        cex= 0.8, 
        xpd= T, 
        pos= 3)
-  
-  # on.exit(par(init), add=TRUE, after=FALSE)
-  invisible(list(dat=dat,
-                 sets= sets))
+ 
+  on.exit(par(opar), add=TRUE, after=FALSE)
+  invisible(sets)
 }
 
 
@@ -425,7 +425,6 @@ vl_fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
 #' @param main Title. Default= NA
 #' @param balloon_size_legend Title size legend
 #' @param balloon_col_legend Title color legend
-#' @param cex.balloons scaling factor for balloons size
 #' @param auto_margins Use auto margins? Default= T
 #' @examples
 #' mat <- matrix(0:11, ncol = 3)
@@ -440,7 +439,6 @@ vl_fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
 #' color_var = col,
 #' balloon_size_legend = "test",
 #' balloon_col_legend = "test2", 
-#' cex.balloons = 8,
 #' main= "Check!")
 #' 
 #' @return Balloon plot
@@ -458,21 +456,15 @@ vl_balloons_plot.matrix <- function(x,
                                     x_breaks,
                                     color_breaks,
                                     col= c("cornflowerblue", "lightgrey", "tomato"),
+                                    cex.balloons= 1,
                                     main= NA, 
                                     balloon_size_legend= NA,
                                     balloon_col_legend= NA,
-                                    cex.balloons= 4,
                                     auto_margins= T)
 {
-  # Functions
-  cex_scale <- function(x)
-    (x-min(x_breaks, na.rm = T))/(max(x_breaks, na.rm = T)-min(x_breaks, na.rm = T))*cex.balloons+1
-  compute_balloon_radius <- function(cex= cex.balloons)
-    grconvertX(0.75/2, "chars", "in")*cex/2
-  
   # Checks
   if(missing(x_breaks))
-    x_breaks <- range(x, na.rm= T)
+    x_breaks <- axisTicks(range(x, na.rm= T), log= F, nint = 4)
   if(missing(color_var))
   {
     color_var <- matrix(rep(1, nrow(x)*ncol(x)), 
@@ -480,147 +472,128 @@ vl_balloons_plot.matrix <- function(x,
                         ncol = ncol(x))
     color_breaks <- c(0,1,2)
   }
-  color_var <- color_var[nrow(color_var):1,]
-  if(!identical(dim(x), dim(color_var)))
-    stop("x and color_var matrices should have identical dimensions")
   if(missing(color_breaks))
     color_breaks <- seq(min(color_var, na.rm= T), 
                         max(color_var, na.rm= T), 
                         length.out= length(col))
+  if(!identical(dim(x), dim(color_var)))
+    stop("x and color_var matrices should have identical dimensions")
+  
+  #---------------------------------#
+  # Plot
+  #---------------------------------#
+  # Reverse matrices for plotting
+  x <- x[nrow(x):1,,drop=F]
+  color_var <- color_var[nrow(color_var):1,,drop=F]
+  
+  # Color scale
   Cc <- circlize::colorRamp2(color_breaks, col)
   
-  
-  # Scale data
-  scaled <- cex_scale(x)
-  if(is.null(colnames(scaled)))
-    colnames(scaled) <- seq(ncol(scaled))
-  if(is.null(rownames(scaled)))
-    rownames(scaled) <- seq(nrow(scaled))
-  scaled <- scaled[nrow(scaled):1,]
-  
   # Margins
+  opar <- as.call(c(par, par()[c("mar", "xaxs", "yaxs")])) # Used to reinitialize plotting on exit
   if(auto_margins)
   {
     bot <- 0.5+max(strwidth(colnames(x), "inches"))
-    left <- 0.5+max(strwidth(rownames(x), "inches"))
-    top <- 0.5+strheight(main, units = "inches")
+    left <- 0.5+max(strwidth(rownames(x), "inches", cex = par("cex.axis")/par("cex")))
+    top <- 0.5+strheight(main, units = "inches", cex = par("cex.axis")/par("cex"))
     leg.width <- strwidth(c(balloon_size_legend, balloon_col_legend), "in")
     right <- 0.5+max(c(leg.width, 0.5))
     par(mai= c(bot, left, top, right),
         xaxs= "i",
         yaxs= "i")
   }
+  
   # Init plot
   plot.new()
-  # Compute xlim
-  ball.radius <- compute_balloon_radius(cex= cex.balloons+1)
-  plot.size.x <- grconvertX(1, "npc", "in")-grconvertX(0, "npc", "in")
-  adj.x <- (ball.radius*1.3)/plot.size.x
-  ext.x <- (ncol(scaled)-1)*adj.x
-  xl <- c(1-ext.x, ncol(scaled)+ext.x)
-  # Compute ylim
-  plot.size.y <- grconvertY(1, "npc", "in")-grconvertY(0, "npc", "in")
-  adj.y <- (ball.radius*1.3)/plot.size.y
-  ext.y <- (nrow(scaled)-1)*adj.y
-  yl <- c(1-ext.y, nrow(scaled)+ext.y)
-  # Plot window
-  plot.window(xlim = xl,
-              ylim = yl)
+  window.w <- par("usr")[2]-par("usr")[1]
+  window.h <- par("usr")[4]-par("usr")[3]
+  max_point_rad.w <- strwidth(1, cex = 0.5*max(x, na.rm=T)*par("cex")*cex.balloons)
+  max_point_rad.h <- strheight(1, cex = 0.5*max(x, na.rm=T)*par("cex")*cex.balloons)
+  adj.x <- max_point_rad.w/window.w*(ncol(x)-1)
+  adj.y <- max_point_rad.h/window.h*(nrow(x)-1)
+  plot.window(xlim = c(1-adj.x, ncol(x)+adj.x),
+              ylim = c(1-adj.y, nrow(x)+adj.y))
+  max_point_rad.w <- strwidth(1, cex = 0.38*max(x, na.rm=T)*par("cex")*cex.balloons)
+  max_point_rad.h <- strheight(1, cex = 0.38*max(x, na.rm=T)*par("cex")*cex.balloons)
+  
   # Title
   title(main)
+  
   # Grid
-  segments(1, 
-           seq(nrow(scaled)), 
-           ncol(scaled),
-           seq(nrow(scaled)))
-  segments(seq(ncol(scaled)),
-           1,
-           seq(ncol(scaled)),
-           nrow(scaled))
-  # Points
-  col_vec <- c(color_var)
-  col_vec[!is.na(col_vec)] <- Cc(col_vec[!is.na(col_vec)])
-  points(col(scaled),
-         row(scaled),
-         cex= c(scaled),
-         pch= 21,
-         bg= col_vec,
-         col= "black")
+  segments(1, seq(nrow(x)), ncol(x), seq(nrow(x)))
+  segments(seq(ncol(x)), 1, seq(ncol(x)), nrow(x))
+  
   # Axes
   axis(1,
-       at= seq(ncol(scaled)),
-       labels = colnames(x),
-       las= 2,
-       lwd= 0,
-       line= -0.5)
-  axis(2,
-       at= seq(nrow(scaled)),
-       labels = rownames(scaled),
-       las= 2,
-       lwd= 0,
-       line= -0.5)
-
-  # Size legend
-  x.leg <- grconvertX(1, "npc", "in")+grconvertX(0.5, "line", "in")+ball.radius
-  x.leg.title <- grconvertX(x.leg-ball.radius, "in", "user")
-  x.leg.text <- grconvertX(x.leg+ball.radius, "in", "user")
-  x.leg <- grconvertX(x.leg, "in", "user")
-  b.top <- grconvertY(nrow(scaled), "user", "in")-grconvertY(0.5, "line", "in")-ball.radius
-  scale.values <- rev(axisTicks(x_breaks, log= F, nint = 4))
-  scale.cex <- cex_scale(scale.values)
-  scale.radius <- compute_balloon_radius(cex= scale.cex)
-  scale.y <- sapply(seq(scale.cex[-1]), function(i) scale.radius[i]+scale.radius[i+1]+0.05)
-  scale.y <- grconvertY(b.top-cumsum(c(0, scale.y)), "in", "user")
-  points(rep(x.leg, length(scale.y)),
-         scale.y, 
-         cex= scale.cex, 
-         xpd= T)
-  text(x.leg.text, 
-       scale.y, 
-       scale.values,
-       xpd= T, 
-       pos= 4, 
-       cex= 0.6,
-       offset = 0.25)
-  text(x.leg.title, 
-       nrow(scaled), 
-       balloon_size_legend,
-       xpd= T, 
-       pos= 4,
-       offset = 0.5)
+       at= seq(ncol(x)),
+       labels= colnames(x),
+       lwd= NA,
+       line = 0)
+  axis(2, 
+       at= seq(nrow(x)),
+       labels= rownames(x), 
+       lwd= NA,
+       line = 0,
+       las= 2)
   
+  # Points
+  points(col(x)[!is.na(x)],
+         row(x)[!is.na(x)],
+         pch= ifelse(x[!is.na(x)]>0, 21, 22),
+         cex= abs(x[!is.na(x)]*par("cex")*cex.balloons),
+         col= "black",
+         bg= Cc(color_var[!is.na(x)]))
+  
+  # Size Legend
+  left <- par("usr")[2]
+  b.top <- nrow(x)-strheight("M", cex= 1.5)
+  b.height <- max_point_rad.h*(length(x_breaks)-1)*2
+  b.y <- seq(b.top-max_point_rad.h-b.height,
+             b.top-max_point_rad.h, 
+             length.out= length(x_breaks))
+  points(rep(left+max_point_rad.w, length(b.y)),
+         b.y,
+         cex= abs(x_breaks*par("cex")*cex.balloons),
+         pch= ifelse(x_breaks[!is.na(x_breaks)]>0, 21, 22),
+         xpd= T)
+  text(c(left, 
+         rep(left+max_point_rad.w*2+strwidth("M", cex= 0.5), length(x_breaks))),
+       c(nrow(x)-strheight("M", cex= 0.5),
+         b.y),
+       labels = c(balloon_size_legend, x_breaks),
+       cex= c(1, rep(0.8, length(x_breaks))),
+       pos= 4,
+       offset= 0,
+       xpd=T)
+
   # Color legend
-  x.left <- grconvertX(x.leg, "user", "in")-ball.radius/2
-  x.right <- x.left+grconvertX(1, "line", "in")
-  y.leg <- grconvertY(min(scale.y), "user", "in")-grconvertY(2, "line", "in")
-  y.top <- grconvertY(min(scale.y), "user", "in")-grconvertY(3, "line", "in")
-  y.bot <- y.top-grconvertY(5, "line", "in")
-  x.left <- grconvertX(x.left, "in", "user")
-  y.bot <- grconvertY(y.bot, "in", "user")
-  y.leg <- grconvertY(y.leg, "in", "user")
-  x.right <- grconvertX(x.right, "in", "user")
-  y.top <- grconvertY(y.top, "in", "user")
-  col.im <- matrix(Cc(seq(max(color_breaks), min(color_breaks), length.out = 100)), ncol= 1)
+  top <- b.y[1]-strheight("M", cex= abs(x_breaks[1])-0.38*par("cex")*cex.balloons)-strheight("M", cex= 3)
+  w <- strwidth(1, cex = 1.5)
+  h <- strheight(1, cex= 6)
+  text(x = left,
+       y= top+strheight("M", cex= 1.5),
+       labels= balloon_col_legend,
+       offset= 0,
+       pos = 4, 
+       xpd=T)
+  col.im <- matrix(Cc(seq(max(color_breaks),
+                          min(color_breaks),
+                          length.out = 100)),
+                   ncol= 1)
   rasterImage(col.im,
-              x.left, 
-              y.bot, 
-              x.right,
-              y.top, 
+              left,
+              top-h,
+              left+w,
+              top,
               xpd= T)
   tick.lab <- axisTicks(range(color_breaks), log= F, nint = 4)
-  tick.y <- y.bot+(y.top-y.bot)*(tick.lab-min(color_breaks))/(max(color_breaks)-min(color_breaks))
-  text(rep(x.right, length(tick.y)), 
-       tick.y,
+  text(rep(left+w, length(tick.lab)),
+       top-(1-(tick.lab-min(color_breaks))/diff(range(color_breaks)))*h,
        labels = tick.lab,
-       cex= 0.6,
-       pos= 4, 
-       xpd= T, 
+       cex= 0.8,
+       pos= 4,
+       xpd= T,
        offset = 0.25)
-  text(x.leg.title,
-       y.leg,
-       labels = balloon_col_legend,
-       pos= 4, 
-       xpd= T, 
-       offset = 0.5)
+  on.exit(eval(opar), add=TRUE, after=FALSE)
 }
 

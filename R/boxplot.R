@@ -11,6 +11,7 @@
 #' @param ylab 
 #' @param xlim 
 #' @param ylim 
+#' @param names group labels (x axis). By default, names= names(x). if set to false, no labels are ploted
 #' @param boxcol box color
 #' @param boxwex box width
 #' @param violin If set to FALSE, the violin is not computed/shown
@@ -22,6 +23,14 @@
 #' @param ... Extra arguments set to plot function
 #' @export
 vl_boxplot <- function(x, ...) UseMethod("vl_boxplot")
+
+#' @describeIn vl_boxplot method for matrices
+#' @export
+vl_boxplot.matrix <- function(x, ...)
+{
+  x <- lapply(seq(ncol(x)), function(i) x[,i])
+  vl_boxplot.default(x, ...)
+}
 
 #' @describeIn vl_boxplot method for formula
 #' @export
@@ -36,14 +45,6 @@ vl_boxplot.formula <- function(formula, x, ...)
     response <- attr(attr(mf, "terms"), "response")
     x <- split(mf[[response]], mf[-response])
   }
-  vl_boxplot.list(x, ...)
-}
-
-#' @describeIn vl_boxplot method for numeric
-#' @export
-vl_boxplot.numeric <- function(x, ...)
-{
-  x <- list(x)
   vl_boxplot.default(x, ...)
 }
 
@@ -64,6 +65,7 @@ vl_boxplot.default <- function(x,
                                ylab= NA,
                                xlim,
                                ylim,
+                               names= NULL,
                                boxcol= "white",
                                boxwex= 0.15,
                                violin= F,
@@ -74,6 +76,14 @@ vl_boxplot.default <- function(x,
                                add= F,
                                ...)
 {
+  # Format data list
+  if(!is.list(x))
+    x <- list(x)
+  if(is.character(names))
+    names(x) <- names
+  if(is.null(names(x)))
+    names(x) <- seq(x)
+  # Format pval list
   if(!missing(compute_pval))
   {
     if(max(unlist(compute_pval))>length(x) | !is.numeric(unlist(compute_pval)))
@@ -83,10 +93,9 @@ vl_boxplot.default <- function(x,
     if(!all(lengths(compute_pval)==2))
       stop("compute_pval should be a list of vectors of length two containing pairwise x indexes to be compared")
   }
+  # Check
   if(missing(at))
     at <- seq(x)
-  if(is.null(names(x)))
-    names(x) <- seq(x)
   
   # Format as data.table
   obj <- data.table(variable= names(x),
@@ -170,9 +179,10 @@ vl_boxplot.default <- function(x,
          ylab= ylab, 
          xaxt= "n",
          ...)
-    axis(1,
-         at= unique(obj$at), 
-         labels= obj$variable)
+    if(!isFALSE(names))
+      axis(1,
+           at= unique(obj$at), 
+           labels= obj$variable)
   }
 
   # violins
@@ -190,7 +200,7 @@ vl_boxplot.default <- function(x,
   # boxplots
   obj[, segments(at, min, at, max)]
   obj[, rect(at-boxwex, Q1, at+boxwex, Q3, col= boxCc)]
-  obj[, segments(at-boxwex, Q2, at+boxwex, Q2)]
+  obj[, segments(at-boxwex, Q2, at+boxwex, Q2, lwd= 2*par("lwd"), lend= 2)]
   
   # outliers
   if(outline)

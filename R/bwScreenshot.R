@@ -211,13 +211,13 @@ vl_screenshot <- function(bed,
   im <- as.matrix(data.table::dcast(res, y~x, value.var = "value"), 1)
   
   # image
-  if(identical(par("mar"), c(5.1, 4.1, 4.1, 2.1)))
-    par(xaxs= "i", 
-        yaxs= "i",
-        mai= c(0.25,
-               max(strwidth(unique(res$name), units = "inches"))+0.25,
-               0.25,
-               0.25))
+  opar <- as.call(c(par, par()[c("mar", "xaxs", "yaxs")])) # Used to reinitialize plotting on exit
+  par(xaxs= "i", 
+      yaxs= "i",
+      mai= c(0.25,
+             max(strwidth(unique(res$name), units = "inches"))+0.25,
+             0.25,
+             0.25))
   plot.new()
   rasterImage(im, 0, 0+gband, 1, 1, interpolate = F)
   
@@ -271,4 +271,5 @@ vl_screenshot <- function(bed,
                   cex= 0.8)
          }, .(TXNAME, region_ID)]
     }
+  on.exit(eval(opar), add=TRUE, after=FALSE)
 }

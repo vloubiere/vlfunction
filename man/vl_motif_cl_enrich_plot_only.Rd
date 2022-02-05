@@ -6,18 +6,20 @@
 \usage{
 vl_motif_cl_enrich_plot_only(
   obj,
-  padj_cutoff = 1e-05,
+  x_breaks,
+  padj_cutoff = 0.05,
   log2OR_cutoff = 0,
   N_top = Inf,
   color_breaks,
   col = c("cornflowerblue", "lightgrey", "tomato"),
   main = NA,
-  cex.balloons = 4,
   auto_margins = T
 )
 }
 \arguments{
 \item{obj}{A fisher test matrix similar to ?vl_motif_cl_enrich() ouput.}
+
+\item{x_breaks}{Breaks to be used for balloons'sizes}
 
 \item{padj_cutoff}{cutoff for ballons to be ploted}
 
@@ -30,8 +32,6 @@ vl_motif_cl_enrich_plot_only(
 \item{col}{Vector of colors used for coloring}
 
 \item{main}{Title. Default= NA}
-
-\item{cex.balloons}{scaling factor for balloons size}
 
 \item{auto_margins}{Use auto margins? Default= T}
 }

@@ -13,10 +13,10 @@ vl_balloons_plot(x, ...)
   x_breaks,
   color_breaks,
   col = c("cornflowerblue", "lightgrey", "tomato"),
+  cex.balloons = 1,
   main = NA,
   balloon_size_legend = NA,
   balloon_col_legend = NA,
-  cex.balloons = 4,
   auto_margins = T
 )
 }
@@ -34,8 +34,6 @@ vl_balloons_plot(x, ...)
 \item{balloon_size_legend}{Title size legend}
 
 \item{balloon_col_legend}{Title color legend}
-
-\item{cex.balloons}{scaling factor for balloons size}
 
 \item{auto_margins}{Use auto margins? Default= T}
 }
@@ -63,7 +61,6 @@ vl_balloons_plot(x= mat,
 color_var = col,
 balloon_size_legend = "test",
 balloon_col_legend = "test2", 
-cex.balloons = 8,
 main= "Check!")
 
 }

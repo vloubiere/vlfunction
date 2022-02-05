@@ -7,14 +7,15 @@
 vl_motif_cl_enrich(
   counts_matrix,
   cl_IDs,
+  control_cl = unique(cl_IDs),
   plot = F,
   padj_cutoff = 1e-05,
   log2OR_cutoff = 0,
   N_top = Inf,
+  x_breaks,
   color_breaks,
   col = c("cornflowerblue", "lightgrey", "tomato"),
   main = NA,
-  cex.balloons = 4,
   auto_margins = T
 )
 }
@@ -22,6 +23,8 @@ vl_motif_cl_enrich(
 \item{counts_matrix}{A matrix containing motif counts (rows= sequences, cols= motifs)}
 
 \item{cl_IDs}{vector of cluster IDs (used to split the data.table)}
+
+\item{control_cl}{IDs of clusters to be used as background. default to unique(cl_IDs), meaning all clusters are used except the one being tested}
 
 \item{plot}{Should the result be plot using balloons plot?}
 
@@ -31,13 +34,13 @@ vl_motif_cl_enrich(
 
 \item{N_top}{Select top enriched motifs/cluster}
 
+\item{x_breaks}{Breaks used for ballon's sizes}
+
 \item{color_breaks}{Color breaks used for coloring}
 
 \item{col}{Vector of colors used for coloring}
 
 \item{main}{Title. Default= NA}
-
-\item{cex.balloons}{scaling factor for balloons size}
 
 \item{auto_margins}{Use auto margins? Default= T}
 }
