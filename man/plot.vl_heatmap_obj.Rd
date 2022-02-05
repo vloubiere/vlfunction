@@ -4,28 +4,15 @@
 \alias{plot.vl_heatmap_obj}
 \title{Plot heatmap object}
 \usage{
-\method{plot}{vl_heatmap_obj}(
-  obj,
-  add,
-  add_inherit_row_order = T,
-  add_inherit_col_order = F,
-  breaks = seq(min(obj$x, na.rm = T), max(obj$x, na.rm = T), length.out = length(col)),
-  show_rownames = T,
-  show_colnames = T,
-  col = c("cornflowerblue", "white", "red"),
-  main = NA,
-  auto_margins = T,
-  cutree_rows = 1,
-  show_row_dendrogram = T,
-  show_row_clusters = T,
-  cutree_cols = 1,
-  show_col_dendrogram = T,
-  show_col_clusters = T,
-  display_numbers = F,
-  display_numbers_FUN = function(x) round(x, 2),
-  display_numbers_cex = 0.5,
-  legend_title = NA
-)
+\method{plot}{vl_heatmap_obj}(obj, add, add_inherit_row_order = T,
+  add_inherit_col_order = F, breaks = seq(min(obj$x, na.rm = T),
+  max(obj$x, na.rm = T), length.out = length(col)), show_rownames = T,
+  show_colnames = T, col = c("cornflowerblue", "white", "red"),
+  main = NA, auto_margins = T, cutree_rows = 1,
+  show_row_dendrogram = T, show_row_clusters = T, cutree_cols = 1,
+  show_col_dendrogram = T, show_col_clusters = T,
+  display_numbers = F, display_numbers_FUN = function(x) round(x, 2),
+  display_numbers_cex = 0.5, legend_title = NA)
 }
 \arguments{
 \item{obj}{Object of class vl_heatmap_obj such as returned by vl_heatmap}

@@ -545,7 +545,7 @@ vl_balloons_plot.matrix <- function(x,
          bg= Cc(color_var[!is.na(x)]))
   
   # Size Legend
-  left <- par("usr")[2]
+  left <- par("usr")[2]+strwidth("M")
   b.top <- nrow(x)-strheight("M", cex= 1.5)
   b.height <- max_point_rad.h*(length(x_breaks)-1)*2
   b.y <- seq(b.top-max_point_rad.h-b.height,

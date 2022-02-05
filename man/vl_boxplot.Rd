@@ -16,9 +16,11 @@ vl_boxplot(x, ...)
 \method{vl_boxplot}{data.table}(x, ...)
 }
 \arguments{
-\item{x}{list data}
+\item{x}{Matrix, data.atble or data.frame containing data}
 
 \item{...}{Extra arguments set to plot function}
+
+\item{x}{list data}
 
 \item{compute_pval}{A list containing sublists of pairwise x indexes to compute pvalues from. example-> list(c(1,2), c(1,3))}
 

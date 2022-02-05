@@ -4,17 +4,10 @@
 \alias{vl_motif_cl_enrich_plot_only}
 \title{Compute motif enrichment}
 \usage{
-vl_motif_cl_enrich_plot_only(
-  obj,
-  x_breaks,
-  padj_cutoff = 0.05,
-  log2OR_cutoff = 0,
-  N_top = Inf,
-  color_breaks,
-  col = c("cornflowerblue", "lightgrey", "tomato"),
-  main = NA,
-  auto_margins = T
-)
+vl_motif_cl_enrich_plot_only(obj, x_breaks, padj_cutoff = 0.05,
+  log2OR_cutoff = 0, N_top = Inf, color_breaks,
+  col = c("cornflowerblue", "lightgrey", "tomato"), main = NA,
+  auto_margins = T)
 }
 \arguments{
 \item{obj}{A fisher test matrix similar to ?vl_motif_cl_enrich() ouput.}

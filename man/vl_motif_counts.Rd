@@ -4,12 +4,9 @@
 \alias{vl_motif_counts}
 \title{Counts motifs}
 \usage{
-vl_motif_counts(
-  sequences = NULL,
-  bed = NULL,
-  genome,
-  sel = vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn), motif]
-)
+vl_motif_counts(sequences = NULL, bed = NULL, genome,
+  sel = vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn),
+  motif])
 }
 \arguments{
 \item{sequences}{Sequences to analyse. If provided takes over bed argument (in the case where both are specified)}
