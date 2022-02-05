@@ -456,6 +456,7 @@ vl_balloons_plot.matrix <- function(x,
                                     x_breaks,
                                     color_breaks,
                                     col= c("cornflowerblue", "lightgrey", "tomato"),
+                                    cex.balloons= 1,
                                     main= NA, 
                                     balloon_size_legend= NA,
                                     balloon_col_legend= NA,
@@ -484,88 +485,115 @@ vl_balloons_plot.matrix <- function(x,
   # Reverse matrices for plotting
   x <- x[nrow(x):1,,drop=F]
   color_var <- color_var[nrow(color_var):1,,drop=F]
+  
   # Color scale
   Cc <- circlize::colorRamp2(color_breaks, col)
   
   # Margins
-  opar <- par(no.readonly = T)
+  opar <- as.call(c(par, par()[c("mar", "xaxs", "yaxs")])) # Used to reinitialize plotting on exit
   if(auto_margins)
   {
-    opar <- par(no.readonly = T)
     bot <- 0.5+max(strwidth(colnames(x), "inches"))
-    left <- 0.5+max(strwidth(rownames(x), "inches"))
-    top <- 0.5+strheight(main, units = "inches")
+    left <- 0.5+max(strwidth(rownames(x), "inches", cex = par("cex.axis")/par("cex")))
+    top <- 0.5+strheight(main, units = "inches", cex = par("cex.axis")/par("cex"))
     leg.width <- strwidth(c(balloon_size_legend, balloon_col_legend), "in")
     right <- 0.5+max(c(leg.width, 0.5))
-    par(mai= c(bot, left, top, right))
+    par(mai= c(bot, left, top, right),
+        xaxs= "i",
+        yaxs= "i")
   }
   
   # Init plot
   plot.new()
-  plot.window(xlim = c(1, ncol(x)),
-              ylim = c(1, nrow(x)))
+  window.w <- par("usr")[2]-par("usr")[1]
+  window.h <- par("usr")[4]-par("usr")[3]
+  max_point_rad.w <- strwidth(1, cex = 0.5*max(x, na.rm=T)*par("cex")*cex.balloons)
+  max_point_rad.h <- strheight(1, cex = 0.5*max(x, na.rm=T)*par("cex")*cex.balloons)
+  adj.x <- max_point_rad.w/window.w*(ncol(x)-1)
+  adj.y <- max_point_rad.h/window.h*(nrow(x)-1)
+  plot.window(xlim = c(1-adj.x, ncol(x)+adj.x),
+              ylim = c(1-adj.y, nrow(x)+adj.y))
+  max_point_rad.w <- strwidth(1, cex = 0.38*max(x, na.rm=T)*par("cex")*cex.balloons)
+  max_point_rad.h <- strheight(1, cex = 0.38*max(x, na.rm=T)*par("cex")*cex.balloons)
+  
   # Title
   title(main)
+  
   # Grid
   segments(1, seq(nrow(x)), ncol(x), seq(nrow(x)))
   segments(seq(ncol(x)), 1, seq(ncol(x)), nrow(x))
+  
   # Axes
   axis(1,
        at= seq(ncol(x)),
        labels= colnames(x),
        lwd= NA,
-       line = grconvertY(max(x[nrow(x),], na.rm= T)*0.25, "chars", "lines"))
+       line = 0)
   axis(2, 
        at= seq(nrow(x)),
        labels= rownames(x), 
-       lwd= NA, 
-       line = grconvertX(max(x[,1], na.rm= T)*0.25, "chars", "lines"), 
+       lwd= NA,
+       line = 0,
        las= 2)
+  
   # Points
   points(col(x)[!is.na(x)],
          row(x)[!is.na(x)],
-         pch= 21,
-         cex= x[!is.na(x)]*par("cex"),
+         pch= ifelse(x[!is.na(x)]>0, 21, 22),
+         cex= abs(x[!is.na(x)]*par("cex")*cex.balloons),
          col= "black",
          bg= Cc(color_var[!is.na(x)]))
-  # Legend
-  leg1 <- legend(par("usr")[2],
-                 nrow(x),
-                 bty= "n", 
-                 pch= rep(21, length(x_breaks)),
-                 pt.cex = rev(x_breaks*par("cex")),
-                 legend= rev(x_breaks),
-                 xpd= T,
-                 y.intersp = 1.5,
-                 title= "OR (log2)")
-  leg2 <- legend(par("usr")[2], 
-                 leg1$rect$top-leg1$rect$h, 
-                 title = "padj (-log10)", 
-                 legend = NA, 
-                 xpd= T, 
-                 bty="n")
+  
+  # Size Legend
+  left <- par("usr")[2]
+  b.top <- nrow(x)-strheight("M", cex= 1.5)
+  b.height <- max_point_rad.h*(length(x_breaks)-1)*2
+  b.y <- seq(b.top-max_point_rad.h-b.height,
+             b.top-max_point_rad.h, 
+             length.out= length(x_breaks))
+  points(rep(left+max_point_rad.w, length(b.y)),
+         b.y,
+         cex= abs(x_breaks*par("cex")*cex.balloons),
+         pch= ifelse(x_breaks[!is.na(x_breaks)]>0, 21, 22),
+         xpd= T)
+  text(c(left, 
+         rep(left+max_point_rad.w*2+strwidth("M", cex= 0.5), length(x_breaks))),
+       c(nrow(x)-strheight("M", cex= 0.5),
+         b.y),
+       labels = c(balloon_size_legend, x_breaks),
+       cex= c(1, rep(0.8, length(x_breaks))),
+       pos= 4,
+       offset= 0,
+       xpd=T)
 
   # Color legend
-  max_balloon_rad <- max(strwidth("a")*0.75/2*max(x, na.rm=T)*par("cex"))
-  left <- leg1$text$x[1]-max_balloon_rad*2
-  top <- leg2$text$y+max_balloon_rad
-  w <- max_balloon_rad*2
-  h <- (par("usr")[4]-par("usr")[3])/8
-  col.im <- matrix(Cc(seq(max(color_breaks), min(color_breaks), length.out = 100)), ncol= 1)
+  top <- b.y[1]-strheight("M", cex= abs(x_breaks[1])-0.38*par("cex")*cex.balloons)-strheight("M", cex= 3)
+  w <- strwidth(1, cex = 1.5)
+  h <- strheight(1, cex= 6)
+  text(x = left,
+       y= top+strheight("M", cex= 1.5),
+       labels= balloon_col_legend,
+       offset= 0,
+       pos = 4, 
+       xpd=T)
+  col.im <- matrix(Cc(seq(max(color_breaks),
+                          min(color_breaks),
+                          length.out = 100)),
+                   ncol= 1)
   rasterImage(col.im,
-              left, 
-              top-h, 
+              left,
+              top-h,
               left+w,
               top,
               xpd= T)
   tick.lab <- axisTicks(range(color_breaks), log= F, nint = 4)
-  text(rep(left+w, length(tick.lab)), 
+  text(rep(left+w, length(tick.lab)),
        top-(1-(tick.lab-min(color_breaks))/diff(range(color_breaks)))*h,
        labels = tick.lab,
-       cex= 0.6,
-       pos= 4, 
-       xpd= T, 
+       cex= 0.8,
+       pos= 4,
+       xpd= T,
        offset = 0.25)
-  on.exit(par(opar), add=TRUE, after=FALSE)
+  on.exit(eval(opar), add=TRUE, after=FALSE)
 }
 

@@ -72,9 +72,9 @@ vl_screenshot_simple <- function(bed,
   #----------------------------------#
   # PLOT
   #----------------------------------#
+  opar <- as.call(c(par, par()[c("mar", "xaxs", "yaxs")])) # Used to reinitialize plotting on exit
   im <- dcast(obj, -y~x, value.var = "Cc")
   im <- as.matrix(im, 1)
-  opar <- par(no.readonly = T)
   plot.new()
   plot.window(xlim= c(1, ncol(im)),
               ylim= c(1, nrow(im)))
@@ -155,5 +155,5 @@ vl_screenshot_simple <- function(bed,
         text(x= (x0+x1)/2, y= ypos_gn, labels= gene_symbol, xpd= T)
     }, .(head, print)]
   }
-  on.exit(par(opar), add=TRUE, after=FALSE)
+  on.exit(eval(opar), add=TRUE, after=FALSE)
 }

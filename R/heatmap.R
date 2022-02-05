@@ -254,10 +254,10 @@ plot.vl_heatmap_obj <- function(obj,
 plot.vl_heatmap_pl <- function(obj)
 {
   list2env(obj, envir = environment())
+  opar <- as.call(c(par, par()[c("mar", "xaxs", "yaxs")])) # Used to reinitialize plotting on exit
   # Margins
   if(auto_margins)
   {
-    opr <- par(no.readonly = T)
     bot <- 1
     left <- 1
     top <- 1.5
@@ -291,7 +291,6 @@ plot.vl_heatmap_pl <- function(obj)
   im <- clustered_x
   im[!is.na(im)] <- Cc(clustered_x[!is.na(clustered_x)])
   im[is.na(im)] <- na_col
-  opar <- par(no.readonly = T)
   plot.new()
   plot.window(xlim = c(0.5,ncol(im)+0.5),
               ylim = c(0.5,nrow(im)+0.5),
@@ -451,5 +450,5 @@ plot.vl_heatmap_pl <- function(obj)
        main, 
        xpd= T)
   box(lwd= 0.25)
-  on.exit(par(opar), add=TRUE, after=FALSE)
+  on.exit(eval(opar), add=TRUE, after=FALSE)
 }

@@ -8,8 +8,8 @@
 vl_balloons_plot(x, ...)
 
 \method{vl_balloons_plot}{matrix}(x, color_var, x_breaks, color_breaks,
-  col = c("cornflowerblue", "lightgrey", "tomato"), main = NA,
-  balloon_size_legend = NA, balloon_col_legend = NA,
+  col = c("cornflowerblue", "lightgrey", "tomato"), cex.balloons = 1,
+  main = NA, balloon_size_legend = NA, balloon_col_legend = NA,
   auto_margins = T)
 }
 \arguments{

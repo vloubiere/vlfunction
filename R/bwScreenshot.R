@@ -211,7 +211,7 @@ vl_screenshot <- function(bed,
   im <- as.matrix(data.table::dcast(res, y~x, value.var = "value"), 1)
   
   # image
-  opar <- par(no.readonly = T)
+  opar <- as.call(c(par, par()[c("mar", "xaxs", "yaxs")])) # Used to reinitialize plotting on exit
   par(xaxs= "i", 
       yaxs= "i",
       mai= c(0.25,
@@ -271,5 +271,5 @@ vl_screenshot <- function(bed,
                   cex= 0.8)
          }, .(TXNAME, region_ID)]
     }
-  on.exit(par(opar), add=TRUE, after=FALSE)
+  on.exit(eval(opar), add=TRUE, after=FALSE)
 }
