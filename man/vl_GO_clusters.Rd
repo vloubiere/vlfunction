@@ -9,7 +9,7 @@ vl_GO_clusters(
   go_object = vl_fb_go_table_dm6_FB2020_05,
   all_FBgns = "all",
   go_type = "all",
-  padj_cutoff = 0.00001,
+  padj_cutoff = 1e-05,
   N_top = Inf,
   auto_margins = T,
   cex.balloons = 4,

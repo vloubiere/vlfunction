@@ -15,3 +15,26 @@ vl_gaussian_blur <- function(signal) {
   smooth <- sapply(seq(signal), function(i) sum(var[i:(i+20)]*kernel, na.rm= T)/sum(kernel, na.rm= T))
   return(smooth)
 }
+
+#' Title
+#'
+#' @param x number of colours ro return
+#' @return vector of colors
+#' @export
+vl_palette_categ1 <- function(x){
+  colorRampPalette(c("orchid1", "darkorchid1", "purple", "darkorchid4", 
+                     "olivedrab1", "limegreen", "olivedrab3", "olivedrab4", 
+                     "lightsteelblue1", "cornflowerblue", "blue", "navy", 
+                     "pink", "pink3", "indianred2", "red2", 
+                     "black", "gold", "goldenrod", "goldenrod4", "sienna4"))(x)
+}
+
+#' Title
+#'
+#' @param x number of colours ro return
+#' @return vector of colors
+#' @export
+vl_palette_categ2 <- function(x){
+  colorRampPalette(c("#E69F00", "#56B4E9", "#009E73", "#F0E442", 
+                     "#0072B2", "#D55E00", "#CC79A7", "#999999"))(x)
+}

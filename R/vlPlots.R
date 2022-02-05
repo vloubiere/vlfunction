@@ -156,7 +156,7 @@ vl_upset_plot <- function(dat_list,
   dat <- rbindlist(lapply(dat_list, as.data.table), idcol = T)
   colnames(dat)[2] <- "intersect"
   dat <- dat[, .(.id= paste(.id, collapse = "|")), intersect]
-  dat <- dat[, .(N= .N), .id]
+  dat <- dat[, .(N= .N, vars= paste0(intersect, collapse = ",")), .id]
   dat <- dat[N>=intersection_cutoff]
   setorderv(dat, "N", -1)
   
@@ -186,14 +186,14 @@ vl_upset_plot <- function(dat_list,
              top[1], 
              border = NA, 
              col= "grey20",
-             xpd= T), (dat)]
+             xpd= T), .(left, bottom, right, top)]
   # Print N on top
   dat[, text(x[1], 
              top[1],
              N[1],
              xpd= T,
              cex= 0.6,
-             pos=3), (dat)]
+             pos=3), .(x, top, N)]
   
   # Y axis
   ticks <- axisTicks(c(0, max(dat$N)), log= F)
@@ -297,7 +297,8 @@ vl_upset_plot <- function(dat_list,
        pos= 3)
   
   # on.exit(par(init), add=TRUE, after=FALSE)
-  invisible(sets)
+  invisible(list(dat=dat,
+                 sets= sets))
 }
 
 

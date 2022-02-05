@@ -19,7 +19,7 @@
 
 vl_motif_counts <- function(sequences= NULL,
                             bed= NULL, 
-                            genome= "dm6",
+                            genome,
                             sel= vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn), motif])
 {
   # Checks
@@ -30,7 +30,7 @@ vl_motif_counts <- function(sequences= NULL,
     {
       if(!vl_isDTranges(bed))
         bed <- vl_importBed(bed)
-      sequences <- BSgenome::getSeq(BSgenome::getBSgenome(genome), seqnames, start, end, as.character= T)
+      sequences <- BSgenome::getSeq(BSgenome::getBSgenome(genome), bed$seqnames, bed$start, bed$end, as.character= T)
     }
   } 
   

@@ -6,7 +6,7 @@
 \usage{
 vl_motif_cl_enrich_plot_only(
   obj,
-  padj_cutoff = 0.00001,
+  padj_cutoff = 1e-05,
   log2OR_cutoff = 0,
   N_top = Inf,
   color_breaks,

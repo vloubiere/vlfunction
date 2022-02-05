@@ -7,7 +7,7 @@
 vl_motif_counts(
   sequences = NULL,
   bed = NULL,
-  genome = "dm6",
+  genome,
   sel = vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn), motif]
 )
 }
