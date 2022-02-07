@@ -11,7 +11,7 @@ vl_boxplot(x, ...)
 
 \method{vl_boxplot}{matrix}(x, ...)
 
-\method{vl_boxplot}{formula}(formula, x, ...)
+\method{vl_boxplot}{formula}(formula, data = NULL, ...)
 
 \method{vl_boxplot}{data.table}(x, ...)
 }

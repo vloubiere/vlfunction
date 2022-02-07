@@ -34,18 +34,19 @@ vl_boxplot.matrix <- function(x, ...)
 
 #' @describeIn vl_boxplot method for formula
 #' @export
-vl_boxplot.formula <- function(formula, x, ...)
+vl_boxplot.formula <- function(formula, data = NULL, ...)
 {
-  # Format data to a bindable DT list
-  if(!missing(formula))
-  {
-    if(length(formula) != 3L)
-      stop("'formula' incorrect")
-    mf <- stats::model.frame.default(formula, x)
-    response <- attr(attr(mf, "terms"), "response")
-    x <- split(mf[[response]], mf[-response])
-  }
-  vl_boxplot.default(x, ...)
+  if(missing(formula) || (length(formula) != 3L))
+    stop("'formula' missing or incorrect")
+  m <- match.call(expand.dots = FALSE)
+  if(is.matrix(eval(m$data, parent.frame())))
+    m$data <- as.data.frame(data)
+  m$... <- NULL
+  ## need stats:: for non-standard evaluation
+  m[[1L]] <- quote(stats::model.frame)
+  mf <- eval(m, parent.frame())
+  response <- attr(attr(mf, "terms"), "response")
+  vl_boxplot.default(split(mf[[response]], mf[-response]), ...)
 }
 
 #' @describeIn vl_boxplot method for data.table
@@ -111,50 +112,61 @@ vl_boxplot.default <- function(x,
   # Box
   obj[, c("Q1", "Q2", "Q3"):= lapply(c(0.25, 0.5, 0.75), function(q) sapply(value, function(x) quantile(x, q)))]
   obj[, c("min", "max"):= .(Q1-1.5*sapply(value, IQR),
-                            Q3+1.5*sapply(value, IQR))]
+                                   Q3+1.5*sapply(value, IQR))]
   # Outliers
   if(outline)
   {
     obj[, outliers:= mapply(function(min, max, value) value[value>max | value<min], min, max, value, SIMPLIFY= F)]
     obj[lengths(outliers)>0, c("out_min", "out_max"):= .(sapply(outliers, min), sapply(outliers, max))]
   }
+  
   # Violins
   if(violin)
   {
     if(trim) # trim violin plot to data ranges
-      obj[N_obs>2, dens:= lapply(value, function(x) density(x, from= min(x), to= max(x)))] else
+      obj[N_obs>2, dens:= lapply(value, function(x) density(x, from= min(x, na.rm= T), to= max(x, na.rm= T)))] else
         obj[N_obs>2, dens:= lapply(value, function(x) density(x))]
     obj[N_obs>2, x:= lapply(dens, function(x) x$y/max(x$y)*violwex)]
     obj[N_obs>2, y:= lapply(dens, function(x) x$x)]
     obj[lengths(y)>0, c("viol_min", "viol_max"):= .(sapply(y, min), sapply(y, max))]
   }
+  
   # Compute min/max ploted values for each var
-  obj[, y_min:= apply(.SD, 1, min, na.rm= T), .SDcols= patterns("min$")]
-  obj[, y_max:= apply(.SD, 1, max, na.rm= T), .SDcols= patterns("max$")]
-  adj <- diff(c(min(obj$y_min), max(obj$y_max)))*0.04 # Adjust factor used for plotting (4% of range)
+  obj[N_obs>0, y_min:= apply(.SD, 1, min), .SDcols= patterns("min$")]
+  obj[N_obs>0, y_max:= apply(.SD, 1, max), .SDcols= patterns("max$")]
+  adj <- diff(c(min(obj$y_min, na.rm = T), max(obj$y_max, na.rm = T)))*0.04 # Adjust factor used for plotting (4% of range)
+  
   # Compute pvalues
   if(!missing(compute_pval))
   {
     pval <- as.data.table(do.call(rbind, compute_pval))
-    # Wilcoxon
-    pval[, pval:= wilcox.test(obj[V1, unlist(value)],
-                              obj[V2, unlist(value)])$p.value, .(V1, V2)]
-    # x values correspond to obj "at" position
-    pval[, c("x0", "x1"):= as.list(range(obj[c(V1, V2), at])), .(V1, V2)]
-    # y position is the max of crossing boxes + adjustment
-    pval$y <- obj[pval, max(y_max+adj*1.5), .EACHI, on= c("at<=x1", "at>=x0")]$V1
-    # Avoid overlapping segments by requiring some space between consecutive y values
-    if(nrow(pval)>1)
+    # Remove combinations for which there are not enough values
+    enough_obs <- pval[, .(check= all(lengths(obj[c(V1,V2), value])>0)), .(V1, V2)]$check
+    if(any(!enough_obs))
+      print("Some pval groups did not contain enough finite obs and were discarded")
+    pval <- pval[(enough_obs)]
+    if(nrow(pval)>0)
     {
-      pval <- pval[order(x0, x1)]
-      pval[, overlap:= cumsum(x0-cummax(x1)[c(1, seq(.N-1))]>0)]# Make groups of overlapping segments
-      pval <- pval[order(y, x1-x0, x0)]
-      pval[, y:= {
-        for(i in 2:(.N)) 
-          if(y[i]<y[i-1]+adj*1.5)
-            y[i] <- y[i-1]+adj*1.5
-        y
-      }, overlap]
+      # Wilcoxon
+      pval[, pval:= wilcox.test(obj[V1, unlist(value)],
+                                obj[V2, unlist(value)])$p.value, .(V1, V2)]
+      # x values correspond to obj "at" position
+      pval[, c("x0", "x1"):= as.list(range(obj[c(V1, V2), at])), .(V1, V2)]
+      # y position is the max of crossing boxes + adjustment
+      pval$y <- obj[pval, max(y_max+adj*1.5, na.rm = T), .EACHI, on= c("at<=x1", "at>=x0")]$V1
+      # Avoid overlapping segments by requiring some space between consecutive y values
+      if(nrow(pval)>1)
+      {
+        pval <- pval[order(x0, x1)]
+        pval[, overlap:= cumsum(x0-cummax(x1)[c(1, seq(.N-1))]>0)]# Make groups of overlapping segments
+        pval <- pval[order(y, x1-x0, x0)]
+        pval[, y:= {
+          for(i in 2:(.N)) 
+            if(y[i]<y[i-1]+adj*1.5)
+              y[i] <- y[i-1]+adj*1.5
+          y
+        }, overlap]
+      }
     }
   }
   #------------------####
@@ -164,8 +176,8 @@ vl_boxplot.default <- function(x,
     xlim <- range(obj$at)+c(-0.5,0.5)
   if(missing(ylim))
   {
-    ylim <- range(obj[, .(y_min-adj, y_max+adj)]) # adjust fact 4% range (see higher)
-    if(!missing(compute_pval) && max(pval[,y+adj])>ylim[2])
+    ylim <- range(obj[, .(y_min-adj, y_max+adj)], na.rm= T) # adjust fact 4% range (see higher)
+    if(!missing(compute_pval) && nrow(pval)>0 && max(pval[,y+adj])>ylim[2])
       ylim[2] <- max(pval[,y+adj])
   }
     
@@ -213,7 +225,7 @@ vl_boxplot.default <- function(x,
     }, at, min, max, outliers)]
   
   # pval
-  if(!missing(compute_pval))
+  if(!missing(compute_pval) && nrow(pval)>0)
   {
     segments(pval$x0,
              pval$y,
@@ -226,7 +238,7 @@ vl_boxplot.default <- function(x,
   }
   
   # Returns object
-  if(!missing(compute_pval))
+  if(!missing(compute_pval) && nrow(pval)>0)
     obj <- list(obj= obj, pval= pval)
   invisible(obj)
 }

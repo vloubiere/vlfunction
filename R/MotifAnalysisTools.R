@@ -96,7 +96,7 @@ vl_motif_cl_enrich_plot_only <- function(obj,
   setorderv(DT, 
             c("cl", "-log10(padj)", "log2OR", "motif"), 
             order = c(1, -1, -1, 1))
-  DT[, rank:= seq(.N), cl]
+  DT[log2OR>0, rank:= seq(.N), cl]
   DT <- DT[motif %in% DT[rank<=N_top, motif]]
   # Handle infinite log2OR
   if(any(is.infinite(DT$log2OR)))
@@ -117,7 +117,7 @@ vl_motif_cl_enrich_plot_only <- function(obj,
   color_var <- as.matrix(dcast(DT, motif~cl, value.var = "-log10(padj)"), 1)
   
   pl <- match.call()
-  pl$obj <- pl$padj_cutoff <- pl$log2OR_cutoff <- N_top <- NULL
+  pl$obj <- pl$padj_cutoff <- pl$log2OR_cutoff <- pl$N_top <- NULL
   pl$x <- x
   pl$color_var <- color_var
   pl$balloon_size_legend <- "OR (log2)"
