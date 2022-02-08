@@ -163,8 +163,8 @@ vl_screenshot_simple <- function(bed,
       overlap[, text.x:= rowMeans(.SD), .SDcols= c("seg.x0", "seg.x1")] # gene names pos
       overlap[seg.x1-seg.x0<(par("usr")[2]-par("usr")[1])/20, SYMBOL:= NA] # Do not write name small genes
       setorderv(overlap, # y position transcript ordering
-                c("regionID", "type", "width", "start"), 
-                order = c(1, -1, -1, 1))
+                c("regionID", "type", "width", "start", "end"), 
+                order = c(1, -1, -1, 1, 1))
       # Adjust y position depending on overlaps
       overlap[, groups:= rleid(seg.x0<=shift(seg.x1, 1, Inf)), regionID] # Check if overlaps previous line
       overlap[type=="transcript", y:= par("usr")[3]-strheight("M", cex= 1.8)*rowid(regionID, groups)] 
