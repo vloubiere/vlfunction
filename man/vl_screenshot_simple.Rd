@@ -4,8 +4,8 @@
 \alias{vl_screenshot_simple}
 \title{Simplified version. less options, faster}
 \usage{
-vl_screenshot_simple(bed, tracks, space = 30, names = NULL,
-  max = NULL, genome)
+vl_screenshot_simple(bed, tracks, space = 30, widths = c(100L, 20L),
+  names = NULL, max = NULL, genome)
 }
 \arguments{
 \item{bed}{Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
@@ -13,6 +13,8 @@ vl_screenshot_simple(bed, tracks, space = 30, names = NULL,
 \item{tracks}{bw of bed (peaks)}
 
 \item{space}{space between regions. Default is 30 px}
+
+\item{widths}{Length 2 integer vector specifying the width of bw and bed tracks, respectively. Default= c(100L, 20L)}
 
 \item{names}{names for bw/bed files}
 

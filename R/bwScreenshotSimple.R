@@ -3,6 +3,7 @@
 #' @param bed Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
 #' @param tracks bw of bed (peaks)
 #' @param space space between regions. Default is 30 px
+#' @param widths Length 2 integer vector specifying the width of bw and bed tracks, respectively. Default= c(100L, 20L)
 #' @param names names for bw/bed files
 #' @param gtf Optional gtf file(plot genes)
 #'
@@ -12,6 +13,7 @@
 vl_screenshot_simple <- function(bed,
                                  tracks,
                                  space= 30,
+                                 widths= c(100L, 20L),
                                  names= NULL,
                                  max= NULL,
                                  genome)
@@ -24,6 +26,8 @@ vl_screenshot_simple <- function(bed,
     names <- gsub("(.*)[.].*", "\\1", basename(tracks))
   if(!identical(names, unique(names)))
     stop("Please provide unique names")
+  if(!is.integer(widths) | any(widths<10))
+    stop("widths should be integers >= 10")
   
   #----------------------------------#
   # Compute object
@@ -35,23 +39,24 @@ vl_screenshot_simple <- function(bed,
                       length.out= round(1000/nrow(bed))+1))
     if(.GRP<.NGRP)  # Interpolate NAs between regions
       coor <- append(coor, rep(NA, space))
-    .(start= coor[-length(coor)], 
-      end= coor[-1])
+    res <- data.table(start= coor[-length(coor)], 
+                      end= coor[-1])
+    res[-1, start:= start+1]
   }, .(seqnames, 
        regionID= rleid(seqnames, start, end))]
   # Init obj
   obj <- data.table(file= tracks,
                     name= names,
                     type= ifelse(grepl(".bw", tracks), "bw", "bed"))
+  obj <- obj[, bins[], (obj)]
   # Quantif signal
-  obj <- obj[, {
-    signal <- bins[!is.na(end), 
-                   value:= switch(type,
-                                  "bw"= vl_bw_coverage(.SD, file),
-                                  "bed"= vl_importBed(file)[.SD, ifelse(.N>0, 1, 0), 
-                                                            .EACHI, 
-                                                            on= c("seqnames", "start<=end", "end>=start")]$V1)]
-  }, .(file, name, type)]
+  obj[!is.na(end), value:= {
+    switch(type,
+           "bw"= vl_bw_coverage(.SD, file),
+           "bed"= vl_importBed(file)[.SD, ifelse(.N>0, 1, 0), 
+                                     .EACHI, 
+                                     on= c("seqnames", "start<=end", "end>=start")]$V1)
+  }, .(file, type)]
   # Compute max
   if(is.null(max))
     obj[type=="bw", max:= max(value, na.rm= T), name] else if(length(max) == uniqueN(obj[type=="bw"], "name"))
@@ -61,11 +66,18 @@ vl_screenshot_simple <- function(bed,
   # Compute x,y pos and color
   obj[, x:= rowid(name)]
   obj <- obj[, {
-    y <- seq(switch(type, "bw"= 100, "bed"= 15))
+    y <- seq(switch(type, 
+                    "bw"= widths[1], 
+                    "bed"= widths[2]))
     .(y, 
       Cc= as.character(ifelse(y>value/max*100, "white", "black")))
   }, .(seqnames, start, end, regionID, x, type, name, max)]
-  obj[y==1 & Cc=="white" & type=="bw", Cc:= "black"] # Always keep black line at the bottom of bw tracks
+  obj[y==1 # Always keep black line at the bottom of bw tracks
+      & Cc=="white" 
+      & type=="bw", Cc:= "black"]
+  obj[(y<=5 | y>=widths[2]-5) # Always keep white lines around bed tracks
+      & Cc=="black" 
+      & type=="bed", Cc:= "white"]
   # Shift the different track bands in y
   yshift <- rev(cumsum(shift(rev(obj[, max(y), name]$V1), 1, fill = 0)))
   obj[, y:= y+yshift[.GRP], name]
@@ -90,7 +102,9 @@ vl_screenshot_simple <- function(bed,
          name[1],
          pos= 2,
          xpd= T,
-         cex= 1)
+         cex= switch(type,
+                     "bw"= 1,
+                     "bed"= (widths[2]-5)/strheight("M", "user")))
     rect(0, 
          min(y)-strheight("M")/10,
          ncol(im)+1,
@@ -127,7 +141,7 @@ vl_screenshot_simple <- function(bed,
                                                                                     columns= c("TXNAME", "GENEID")))
     if(nrow(transcripts)>0)
     {
-      transcripts <- transcripts[, .(GENEID= as.character(unlist(GENEID))), seqnames:TXNAME]
+      transcripts <- transcripts[, .(GENEID= as.character(unlist(GENEID))), setdiff(names(transcripts), "GENEID")]
       # Try to find symbols
       transcripts[, SYMBOL:= {
         symbols <- try(AnnotationDbi::mapIds(annotation$org,
