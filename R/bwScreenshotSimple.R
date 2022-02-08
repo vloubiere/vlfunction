@@ -155,20 +155,19 @@ vl_screenshot_simple <- function(bed,
       setkeyv(overlap, c("seqnames", "start", "end"))
       setkeyv(transcripts, c("seqnames", "start", "end"))
       overlap <- foverlaps(transcripts, overlap, nomatch = NULL)
-      # Compute plotting positions
+      # Compute x plotting positions
       overlap[i.start<start, i.start:= start] # Cap window borders
       overlap[i.end>end, i.end:= end]
       overlap[, seg.x0:= (i.start-start)/(end-start)*(x1-x0+1)+x0] # compute gene segments
       overlap[, seg.x1:= (i.end-start)/(end-start)*(x1-x0+1)+x0]
       overlap[, text.x:= rowMeans(.SD), .SDcols= c("seg.x0", "seg.x1")] # gene names pos
       overlap[seg.x1-seg.x0<(par("usr")[2]-par("usr")[1])/20, SYMBOL:= NA] # Do not write name small genes
-      setorderv(overlap, # y position transcript ordering
-                c("regionID", "type", "width", "start", "end"), 
-                order = c(1, -1, -1, 1, 1))
       # Adjust y position depending on overlaps
-      overlap[, groups:= rleid(seg.x0<=shift(seg.x1, 1, Inf)), regionID] # Check if overlaps previous line
-      overlap[type=="transcript", y:= par("usr")[3]-strheight("M", cex= 1.8)*rowid(regionID, groups)] 
-      overlap[, y:= y[1], .(regionID, TXNAME)]
+      overlap <- overlap[order(seg.x0-seg.x1, seg.x0)]
+      overlap[type=="transcript", idx:= .I]
+      overlap$y <- overlap[overlap, .N, .EACHI, on= c("idx<idx", "seg.x0<=seg.x1", "seg.x1>=seg.x0")]$N
+      overlap[, y:= y[type=="transcript"], TXNAME]
+      overlap[, y:= par("usr")[3]-strheight("M", cex= 1.8)*y] 
       # Line width and col
       overlap[, lwd:= switch(type, 
                              "transcript"= 1,
