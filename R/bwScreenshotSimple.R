@@ -14,7 +14,7 @@ vl_screenshot_simple <- function(bed,
                                  space= 30,
                                  names= NULL,
                                  max= NULL,
-                                 gtf= NULL)
+                                 genome)
 {
   if(!vl_isDTranges(bed))
     bed <- vl_importBed(bed)
@@ -29,45 +29,46 @@ vl_screenshot_simple <- function(bed,
   # Compute object
   #----------------------------------#
   # Binning
-  obj <- bed[, {
-    coor <- round(seq(start, end, length.out= round(1000/nrow(bed))+1))
+  bins <- bed[, {
+    coor <- round(seq(start, 
+                      end, 
+                      length.out= round(1000/nrow(bed))+1))
+    if(.GRP<.NGRP)  # Interpolate NAs between regions
+      coor <- append(coor, rep(NA, space))
     .(start= coor[-length(coor)], 
-      end= coor[-1]-c(rep(1, length(coor)-2),0))
+      end= coor[-1])
   }, .(seqnames, 
-       region_start= start, 
-       region_end= end)]
-  # quantif signal
-  obj <- cbind(obj, 
-               sapply(setNames(tracks, names), function(x) {
-                 if(grepl(".bw$", x))
-                   vl_bw_coverage(obj, x) else
-                   {
-                     x <- vl_importBed(x)
-                     x[obj, ifelse(.N>0, 1, 0), .EACHI, on= c("seqnames", "start<=end", "end>=start")]$V1
-                   }
-               }))
-  # Compute x pos
-  obj[, x:= .I+((.GRP-1)*space), .(seqnames, region_start, region_end)]
-  obj <- rbind(obj, 
-               data.table(x= seq(max(obj$x))[!seq(max(obj$x)) %in% obj$x]), 
-               fill= T)
-  # Melt and compute tracks type
-  obj <- melt(obj, measure.vars = names)
-  obj[, type:= ifelse(grepl(".bw", tracks), "bw", "bed")[.GRP], variable]
+       regionID= rleid(seqnames, start, end))]
+  # Init obj
+  obj <- data.table(file= tracks,
+                    name= names,
+                    type= ifelse(grepl(".bw", tracks), "bw", "bed"))
+  # Quantif signal
+  obj <- obj[, {
+    signal <- bins[!is.na(end), 
+                   value:= switch(type,
+                                  "bw"= vl_bw_coverage(.SD, file),
+                                  "bed"= vl_importBed(file)[.SD, ifelse(.N>0, 1, 0), 
+                                                            .EACHI, 
+                                                            on= c("seqnames", "start<=end", "end>=start")]$V1)]
+  }, .(file, name, type)]
   # Compute max
   if(is.null(max))
-    obj[, max:= max(value, na.rm= T), variable] else
-    {
-      obj[type=="bw", max:= max[.GRP], variable]
-      obj[type=="bed", max:= 1, variable]
-    }
-  # Compute y pos and col    
+    obj[type=="bw", max:= max(value, na.rm= T), name] else if(length(max) == uniqueN(obj[type=="bw"], "name"))
+      obj[type=="bw", max:= max[.GRP], name] else
+        stop("length max should match the length of bw tracks (bed tracks handled automatically!)")
+  obj[type=="bed", max:= as.numeric(1)]
+  # Compute x,y pos and color
+  obj[, x:= rowid(name)]
   obj <- obj[, {
     y <- seq(switch(type, "bw"= 100, "bed"= 15))
-    .(y,
+    .(y, 
       Cc= as.character(ifelse(y>value/max*100, "white", "black")))
-  }, .(seqnames, region_start, region_end, x, type, variable, max)]
-  obj[, y:= y+100*(length(tracks)-.GRP), variable]
+  }, .(seqnames, start, end, regionID, x, type, name, max)]
+  obj[y==1 & Cc=="white" & type=="bw", Cc:= "black"] # Always keep black line at the bottom of bw tracks
+  # Shift the different track bands in y
+  yshift <- rev(cumsum(shift(rev(obj[, max(y), name]$V1), 1, fill = 0)))
+  obj[, y:= y+yshift[.GRP], name]
   
   #----------------------------------#
   # PLOT
@@ -83,77 +84,116 @@ vl_screenshot_simple <- function(bed,
               xright = ncol(im),
               ybottom = 1, 
               ytop = nrow(im))
-  text(0,
-       obj[, mean(y), variable]$V1,
-       unique(obj$variable),
-       pos= 2,
-       xpd= T,
-       cex= 1)
-  max_y <- grconvertY(obj[, max(y), variable]$V1, "user", "nfc")-grconvertY(0.5, "char", "nfc")
-  text(0,
-       grconvertY(max_y, "nfc", "user"),
-       obj[, switch(type, 
-                    "bw"= round(max, 1), 
-                    bed= as.numeric(NA)), .(variable, type, max)]$V1,
-       pos= 2,
-       xpd= T,
-       cex= 0.5)
+  obj[, {
+    text(0,
+         mean(y),
+         name[1],
+         pos= 2,
+         xpd= T,
+         cex= 1)
+    rect(0, 
+         min(y)-strheight("M")/10,
+         ncol(im)+1,
+         min(y),
+         border= NA,
+         col= "white",
+         lwd= 1)
+    if(type=="bw")
+      text(0,
+           max(y)-strheight(max[1], cex= 0.5),
+           formatC(max[1], format= "g"),
+           pos= 2,
+           xpd= T,
+           cex= 0.5)
+  }, .(name, type, max)]
   
-  #----------------------------------#
-  # Add genes
-  #----------------------------------#
-  if(!is.null(gtf))
+  #--------------------------#
+  # Transcripts
+  #--------------------------#
+  if(!missing(genome))
   {
-    if(!vl_isDTranges(gtf))
+    annotation <- switch(genome, 
+                         "dm3"= list(TxDb= TxDb.Dmelanogaster.UCSC.dm3.ensGene::TxDb.Dmelanogaster.UCSC.dm3.ensGene,
+                                     org= org.Dm.eg.db::org.Dm.eg.db,
+                                     Keytype= "FLYBASE"),
+                         "dm6"= list(TxDb= TxDb.Dmelanogaster.UCSC.dm6.ensGene::TxDb.Dmelanogaster.UCSC.dm6.ensGene,
+                                     org= org.Dm.eg.db::org.Dm.eg.db,
+                                     Keytype= "FLYBASE"),
+                         "mm10"= list(TxDb= TxDb.Mmusculus.UCSC.mm10.knownGene::TxDb.Mmusculus.UCSC.mm10.knownGene,
+                                      org= org.Mm.eg.db::org.Mm.eg.db,
+                                      Keytype= "ENTREZID"))
+    transcripts <- data.table::as.data.table(GenomicFeatures::transcriptsByOverlaps(annotation$TxDb,
+                                                                                    GenomicRanges::GRanges(bed),
+                                                                                    columns= c("TXNAME", "GENEID")))
+    if(nrow(transcripts)>0)
     {
-      gtf <- rtracklayer::import(gtf)
-      GenomeInfoDb::seqlevelsStyle(gtf) <- "UCSC"
-      gtf <- as.data.table(gtf)
-      gtf <- gtf[type=="gene"]
-      gtf[, seqnames:= as.character(seqnames)]
-      gtf[, start:= as.numeric(start)]
-      gtf[, end:= as.numeric(end)]
-      gtf[, strand:= as.character(strand)]
-    }
-    # Extract overlapping genes
-    genes <- obj[, data.table(x_start= min(x), 
-                              x_end= max(x),
-                              gtf[seqnames==.BY[[1]] 
-                                  & start<=region_end 
-                                  & end>=region_start, .(start, 
-                                                         end, 
-                                                         strand, 
-                                                         gene_symbol)]), 
-                 .(seqnames, region_start, region_end)]
-    # No arrow head for genes that finish outside 
-    genes[, head:= T]
-    genes[start<region_start, c("start", "head"):= .(region_start, F)]
-    genes[end>region_end, c("end", "head"):= .(region_end, F)]
-    # Compute arrows start and end
-    genes[, x0:= (start-region_start)/(region_end-region_start)*(x_end-x_start)+x_start]
-    genes[, x1:= (end-region_start)/(region_end-region_start)*(x_end-x_start)+x_start]
-    genes <- genes[x1-x0>0]
-    genes[, print:= x1-x0>(x_end-x_start)*0.25]
-    # Compute Genes y plotting position
-    ypos <- grconvertY(0, "npc", "nfc")
-    ypos_g <- grconvertY(ypos-grconvertY(1, "char", "nfc"), "nfc", "user")
-    ypos_gn <- grconvertY(ypos-grconvertY(2, "char", "nfc"), "nfc", "user")
-    # plot genes and Symbols
-    genes[, {
-      suppressWarnings(
-        arrows(ifelse(strand=="+", x0, x1),
-               ypos_g,
-               ifelse(strand=="+", x1, x0), 
-               ypos_g, 
+      transcripts <- transcripts[, .(GENEID= as.character(unlist(GENEID))), seqnames:TXNAME]
+      # Try to find symbols
+      transcripts[, SYMBOL:= {
+        symbols <- try(AnnotationDbi::mapIds(annotation$org,
+                                             key= as.character(GENEID),
+                                             column= "SYMBOL",
+                                             keytype= annotation$Keytype,
+                                             multiVals= "first"), silent = T)
+        # Fix error when no symbols can be ma[apped
+        if(class(symbols)=="try-error")
+          GENEID else
+            symbols
+      }]
+      # Add exons
+      exons <- as.data.table(GenomicFeatures::exons(annotation$TxDb, columns= "TXNAME", filter= list(tx_name= transcripts$TXNAME)))
+      exons <- exons[, .(TXNAME= unlist(TXNAME)), setdiff(names(exons), "TXNAME")]
+      transcripts <- rbindlist(list(transcript= transcripts,
+                                    exon= exons), 
+                               idcol = "type",
+                               fill= T)
+      # overlap with regions
+      overlap <- obj[!is.na(end), .(start= first(start), 
+                                    end= last(end), 
+                                    x0= first(x), 
+                                    x1= last(x)), .(regionID, seqnames)]
+      setkeyv(overlap, c("seqnames", "start", "end"))
+      setkeyv(transcripts, c("seqnames", "start", "end"))
+      overlap <- foverlaps(transcripts, overlap, nomatch = NULL)
+      # Compute plotting positions
+      overlap[i.start<start, i.start:= start] # Cap window borders
+      overlap[i.end>end, i.end:= end]
+      overlap[, seg.x0:= (i.start-start)/(end-start)*(x1-x0+1)+x0] # compute gene segments
+      overlap[, seg.x1:= (i.end-start)/(end-start)*(x1-x0+1)+x0]
+      overlap[, text.x:= rowMeans(.SD), .SDcols= c("seg.x0", "seg.x1")] # gene names pos
+      overlap[seg.x1-seg.x0<(par("usr")[2]-par("usr")[1])/20, SYMBOL:= NA] # Do not write name small genes
+      setorderv(overlap, # y position transcript ordering
+                c("regionID", "type", "width", "start"), 
+                order = c(1, -1, -1, 1))
+      # Adjust y position depending on overlaps
+      overlap[, groups:= rleid(seg.x0<=shift(seg.x1, 1, Inf)), regionID] # Check if overlaps previous line
+      overlap[type=="transcript", y:= par("usr")[3]-strheight("M", cex= 1.8)*rowid(regionID, groups)] 
+      overlap[, y:= y[1], .(regionID, TXNAME)]
+      # Line width and col
+      overlap[, lwd:= switch(type, 
+                             "transcript"= 1,
+                             "exon"= 3), type]
+      overlap[, col:= switch(as.character(strand), 
+                             "+"= "tomato",
+                             "-"= "cornflowerblue"), strand]
+      # Plot
+      segments(overlap$seg.x0, 
+               overlap$y,
+               overlap$seg.x1, 
+               overlap$y, 
+               lwd= overlap$lwd,
+               col= overlap$col,
                xpd= T,
-               col= ifelse(strand=="+", "tomato", "cornflowerblue"),
-               lwd= 2, 
-               lend= 2,
-               length = ifelse(head, 0.025, 0))
-      )
-      if(print)
-        text(x= (x0+x1)/2, y= ypos_gn, labels= gene_symbol, xpd= T)
-    }, .(head, print)]
+               lend= 2)
+      text(overlap$text.x,
+           overlap$y,
+           overlap$SYMBOL,
+           xpd= T,
+           pos= 3,
+           offset= 0.2,
+           cex= 0.8)
+    }
+    on.exit(eval(opar), add=TRUE, after=FALSE)
   }
-  on.exit(eval(opar), add=TRUE, after=FALSE)
 }
+  
