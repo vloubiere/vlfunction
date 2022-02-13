@@ -34,17 +34,17 @@ vl_bw_coverage <- function(bed,
   data.table::setkeyv(var, keys)
   
   # Compute counts
-  ov <- data.table::foverlaps(var, .b)
-  ov[i.start<start, i.start:= start]
-  ov[i.end>end, i.end:= end]
-  ov <- ov[, .(score= sum(score*(i.end-i.start+1))/(end-start+1)), .(.ID, start, end)]
+  ov <- data.table::foverlaps(.b, var)
+  ov[start<i.start, start:= i.start]
+  ov[end>i.end, end:= i.end]
+  ov <- ov[, .(score= sum(score*(end-start+1))/(i.end-i.start+1)), .(.ID, i.start, i.end)]
   if(integer_counts)
   {
     total_counts <- sum(var[, score*width])/read_length
     total_width <- sum(var[, (end-start+1)])
-    ov[, score:= round((end-start+1)/total_width*total_counts)]
+    ov[, score:= round(score*(i.end-i.start+1)/total_width*total_counts)]
   }
-  return(ov[.b, score, on= ".ID"])
+  return(ov[order(.ID), score])
 }
 
 #' bw total reads

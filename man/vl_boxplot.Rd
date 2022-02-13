@@ -5,6 +5,7 @@
 \alias{vl_boxplot.matrix}
 \alias{vl_boxplot.formula}
 \alias{vl_boxplot.data.table}
+\alias{vl_boxplot.default}
 \title{violin plot}
 \usage{
 vl_boxplot(x, ...)
@@ -14,6 +15,26 @@ vl_boxplot(x, ...)
 \method{vl_boxplot}{formula}(formula, data = NULL, ...)
 
 \method{vl_boxplot}{data.table}(x, ...)
+
+\method{vl_boxplot}{default}(
+  x,
+  compute_pval,
+  outline = F,
+  xlab = NA,
+  ylab = NA,
+  xlim,
+  ylim,
+  names = NULL,
+  boxcol = "white",
+  boxwex = 0.15,
+  violin = F,
+  violcol = "white",
+  violwex = 0.35,
+  at,
+  trim = T,
+  add = F,
+  ...
+)
 }
 \arguments{
 \item{x}{list data}
@@ -61,5 +82,20 @@ data.table, data.frame or using formula.
 \item \code{formula}: method for formula
 
 \item \code{data.table}: method for data.table
+
+\item \code{default}: default method
 }}
 
+\examples{
+# Create test matrix
+set.seed(1234)
+test = matrix(rnorm(200), 20, 10)
+test[1:10, seq(1, 10, 2)] = test[1:10, seq(1, 10, 2)] + 3
+test[11:20, seq(2, 10, 2)] = test[11:20, seq(2, 10, 2)] + 2
+test[15:20, seq(2, 10, 2)] = test[15:20, seq(2, 10, 2)] + 4
+colnames(test) = paste("Test", 1:10, sep = "")
+rownames(test) = paste("Gene", 1:20, sep = "")
+
+vl_boxplot(test, violin= T, outline= T, compute_pval= list(c(1,2),c(1,3),c(3,5)))
+
+}

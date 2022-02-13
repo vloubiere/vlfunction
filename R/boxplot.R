@@ -21,7 +21,7 @@
 #' @param trim Should violin be trimmed?
 #' @param add If TRUE, plot on the top of actual plot
 #' @param ... Extra arguments set to plot function
-#' @Examples 
+#' @examples
 #' # Create test matrix
 #' set.seed(1234)
 #' test = matrix(rnorm(200), 20, 10)
@@ -69,7 +69,7 @@ vl_boxplot.data.table <- function(x, ...)
   vl_boxplot.default(x, ...)
 }
 
-#' @describeIn vl_boxplot
+#' @describeIn vl_boxplot default method
 #' @export
 vl_boxplot.default <- function(x,
                                compute_pval,

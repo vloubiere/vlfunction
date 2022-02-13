@@ -3,6 +3,7 @@
 #' @param bed Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
 #' @param tracks bw of bed (peaks)
 #' @param space space between regions. Default is 30 px
+#' @param widths Length 2 integer vector specifying the width of bw and bed tracks, respectively. Default= c(100L, 20L)
 #' @param names names for bw/bed files
 #' @param gtf Optional gtf file(plot genes)
 #'
@@ -15,6 +16,7 @@ vl_screenshot_simple <- function(bed,
                                  col= "black",
                                  highlight_col= "lightgrey",
                                  space= 30,
+                                 widths= c(100L, 20L),
                                  names= NULL,
                                  max= NULL,
                                  genome)
@@ -27,6 +29,8 @@ vl_screenshot_simple <- function(bed,
     names <- gsub("(.*)[.].*", "\\1", basename(tracks))
   if(!identical(names, unique(names)))
     stop("Please provide unique names")
+  if(!is.integer(widths) | any(widths<10))
+    stop("widths should be integers >= 10")
   
   #----------------------------------#
   # Compute object
@@ -38,8 +42,9 @@ vl_screenshot_simple <- function(bed,
                       length.out= round(1000/nrow(bed))+1))
     if(.GRP<.NGRP)  # Interpolate NAs between regions
       coor <- append(coor, rep(NA, space))
-    .(start= coor[-length(coor)], 
-      end= coor[-1])
+    res <- data.table(start= coor[-length(coor)], 
+                      end= coor[-1])
+    res[-1, start:= start+1]
   }, .(seqnames, 
        regionID= rleid(seqnames, start, end))]
   # Init obj
@@ -47,15 +52,15 @@ vl_screenshot_simple <- function(bed,
                     name= names,
                     type= ifelse(grepl(".bw", tracks), "bw", "bed"),
                     col= col)
+  obj <- obj[, bins[], (obj)]
   # Quantif signal
-  obj <- obj[, {
-    bins[!is.na(end), 
-         value:= switch(type,
-                        "bw"= vl_bw_coverage(.SD, file),
-                        "bed"= vl_importBed(file)[.SD, ifelse(.N>0, 1, 0), 
-                                                  .EACHI, 
-                                                  on= c("seqnames", "start<=end", "end>=start")]$V1)]
-  }, .(file, name, type, col)]
+  obj[!is.na(end), value:= {
+    switch(type,
+           "bw"= vl_bw_coverage(.SD, file),
+           "bed"= vl_importBed(file)[.SD, ifelse(.N>0, 1, 0), 
+                                     .EACHI, 
+                                     on= c("seqnames", "start<=end", "end>=start")]$V1)
+  }, .(file, type)]
   # background col
   obj[, bg:= "white"]
   if(!is.null(highlight_bed))
@@ -74,11 +79,15 @@ vl_screenshot_simple <- function(bed,
   # Compute x,y pos and color
   obj[, x:= rowid(name)]
   obj <- obj[, {
-    y <- seq(switch(type, "bw"= 100, "bed"= 15))
+    y <- seq(switch(type, 
+                    "bw"= widths[1], 
+                    "bed"= widths[2]))
     .(y, 
       Cc= as.character(ifelse(y>value/max*100, bg, col)))
-  }, .(seqnames, start, end, regionID, x, type, name, max, col, bg)]
-  obj[y==1 & Cc=="white" & type=="bw", Cc:= "black"] # Always keep black line at the bottom of bw tracks
+  }, .(seqnames, start, end, regionID, x, type, name, max, bg, col)]
+  # Borders
+  obj[y==1 & Cc=="white" & type=="bw", Cc:= col] # Full line at the bottom of bw tracks
+  obj[(y<=5 | y>=widths[2]-5) & Cc=="black" & type=="bed", Cc:= bg] # Bg lines around bed tracks
   # Shift the different track bands in y
   yshift <- rev(cumsum(data.table::shift(rev(obj[, max(y), name]$V1), 1, fill = 0)))
   obj[, y:= y+yshift[.GRP], name]
@@ -97,28 +106,28 @@ vl_screenshot_simple <- function(bed,
               xright = ncol(im),
               ybottom = 1, 
               ytop = nrow(im))
+  # Labels
+  obj[, `:=`(lab.y= mean(y),
+             lab.cex= switch(type,
+                             "bw"= 1,
+                             "bed"= (widths[2]-5)/strheight("M", "user")),
+             max.y= max(y)-strheight(max, cex= 0.5),
+             max.val= formatC(max, format= "g")), .(name, type, max)]
   obj[, {
     text(0,
-         mean(y),
+         lab.y[1],
          name[1],
          pos= 2,
          xpd= T,
-         cex= 1)
-    rect(0, 
-         min(y)-strheight("M")/10,
-         ncol(im)+1,
-         min(y),
-         border= NA,
-         col= "white",
-         lwd= 1)
+         cex= ifelse(lab.cex<1, lab.cex, 1)) #Adjust size of peak tracks
     if(type=="bw")
       text(0,
-           max(y)-strheight(max[1], cex= 0.5),
-           formatC(max[1], format= "g"),
+           max.y[1],
+           max.val[1],
            pos= 2,
            xpd= T,
            cex= 0.5)
-  }, .(name, type, max)]
+  }, .(name, type, lab.y, lab.cex, max.y, max.val)]
   
   #--------------------------#
   # Transcripts
@@ -140,7 +149,7 @@ vl_screenshot_simple <- function(bed,
                                                                                     columns= c("TXNAME", "GENEID")))
     if(nrow(transcripts)>0)
     {
-      transcripts <- transcripts[, .(GENEID= as.character(unlist(GENEID))), seqnames:TXNAME]
+      transcripts <- transcripts[, .(GENEID= as.character(unlist(GENEID))), setdiff(names(transcripts), "GENEID")]
       # Try to find symbols
       transcripts[, SYMBOL:= {
         symbols <- try(AnnotationDbi::mapIds(annotation$org,
