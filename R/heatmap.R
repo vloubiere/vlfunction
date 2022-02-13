@@ -199,6 +199,7 @@ vl_heatmap.matrix <- function(x,
 #' @param display_numbers_FUN Function to apply before displaying numbers on heatmap.
 #' @param display_numbers_cex cex display numbers 
 #' @param legend_title Character to plot as title legend
+#' @describeIn vl_heatmap plot vl_heatmap
 #' @export
 plot.vl_heatmap_obj <- function(obj,
                                 add,

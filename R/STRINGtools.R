@@ -6,7 +6,6 @@
 #' @param size For each gene symbol, the size of corresponding vertice (i.e, absolute FC)
 #' @param col For each gene symbol, the color of corresponding vertice (i.e, tomato for up, cornflowerblue for down)
 #' @param cex.label cex factor to be applied to correponding vertices labels
-#' @param score_cutoff Interaction score cutoff. Default is 200, max value in DB is 999. Also used to compute edge widths!
 #' @param db_path Path to an existing db, or filename where to create it. See examples
 #' @examples 
 #' #USAGE
@@ -43,8 +42,6 @@ vl_STRING_interaction <- function(symbols= NULL,
                                   size= NULL,
                                   col= NULL,
                                   cex.label= NULL,
-                                  score_cutoff= 200,
-                                  top_N= NA,
                                   db_path= "/mnt/d/_R_data/genomes/dm6/STRING/dmel_7227_v11.5_vl_db.rds")
 {
   # Checks
@@ -93,33 +90,25 @@ vl_STRING_interaction <- function(symbols= NULL,
   # Print info
   check <- 100-length(which(symbols %in% c(DB$protein1, DB$protein2)))/length(unique(symbols))*100
   print(paste0(check, "% of symbols have not correpondance in DB"))
-  # Score cutoff
-  sub <- sub[combined_score>=score_cutoff]
   # Make Vertices object
   V <- data.table(name= symbols,
                   size, 
                   color= col, 
                   cex.label= cex.label)
   V <- unique(V)
-  # Make Edges object
-  E <- V[, sub[.BY, .(to= protein2_symbol, 
-                      width= combined_score/999*5), on= "protein1_symbol==from"], .(from= name)]
-  E <- na.omit(E)
-  setorderv(E, "width", order = -1)
-  if(!is.na(top_N) & nrow(E)>top_N)
-    E <- E[1:top_N]
-  # Keep only vertices which are represented
-  V <- V[name %in% E$from | name %in% E$to]
+
   # RETURN
-  return(list(vertices= V, 
-              edges= E))
+  return(list(obj= sub,
+              V= V))
 }
 
 #' plot STRING interactions
 #'
 #' Network plotting funciton for vl_STRING_interaction output
 #'
-#' @param symbols vector of Dmel gene symbols
+#' @param object Object returned by ?vl_STRING_interaction()
+#' @param score_cutoff Interaction score cutoff. Default is 200, max value in DB is 999. Also used to compute edge widths!
+#' @param top_N top N cutoff
 #' @param cex.vertices Scaling factor vertices
 #' @param cex.vertices.labels Scaling factor vertices labels
 #' @param vertex.border.col Color of vertices' borders
@@ -133,7 +122,9 @@ vl_STRING_interaction <- function(symbols= NULL,
 #' @return Network plot.
 #' @export
 #' 
-vl_STRING_network <- function(obj,
+vl_STRING_network <- function(object,
+                              score_cutoff= 900,
+                              top_N= NA,
                               cex.vertices= 1,
                               cex.vertices.labels= 1,
                               vertex.border.col= "black")
@@ -143,13 +134,30 @@ vl_STRING_network <- function(obj,
   if(length(cex.vertices.labels)!=1)
     stop("lenght(cex.vertices.labels) should be 1, applied to all vertices equally")
   
-  .c <- data.table::copy(obj)
-  .c$vertices[, size:= size*cex.vertices]
-  .c$vertices[, cex.label:= cex.label*cex.vertices.labels]
-  .g <- igraph::graph_from_data_frame(d = .c$edges, 
-                                      vertices = .c$vertices,
+  list2env(object, 
+           environment())
+  
+  # Score cutoff
+  obj <- obj[combined_score>=score_cutoff]
+  # Make Edges object
+  E <- V[, obj[.BY, .(to= protein2_symbol, 
+                      width= combined_score/999*5), on= "protein1_symbol==from"], .(from= name)]
+  E <- na.omit(E)
+  setorderv(E, "width", order = -1)
+  if(!is.na(top_N) & nrow(E)>top_N)
+    E <- E[1:top_N]
+  # Keep only vertices which are represented
+  V <- V[name %in% E$from | name %in% E$to]
+  
+  #--------------#
+  # PLOT
+  #--------------#
+  V[, size:= size*cex.vertices]
+  V[, cex.label:= cex.label*cex.vertices.labels]
+  .g <- igraph::graph_from_data_frame(d = E, 
+                                      vertices = V,
                                       directed = F)
   plot(.g, 
-       vertex.label.cex= .c$vertices$cex.label, 
+       vertex.label.cex= V$cex.label, 
        vertex.frame.color= vertex.border.col)
 }

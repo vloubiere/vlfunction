@@ -4,17 +4,27 @@
 \alias{vl_STRING_network}
 \title{plot STRING interactions}
 \usage{
-vl_STRING_network(obj, cex.vertices = 1, cex.vertices.labels = 1,
-  vertex.border.col = "black")
+vl_STRING_network(
+  object,
+  score_cutoff = 900,
+  top_N = NA,
+  cex.vertices = 1,
+  cex.vertices.labels = 1,
+  vertex.border.col = "black"
+)
 }
 \arguments{
+\item{object}{Object returned by ?vl_STRING_interaction()}
+
+\item{score_cutoff}{Interaction score cutoff. Default is 200, max value in DB is 999. Also used to compute edge widths!}
+
+\item{top_N}{top N cutoff}
+
 \item{cex.vertices}{Scaling factor vertices}
 
 \item{cex.vertices.labels}{Scaling factor vertices labels}
 
 \item{vertex.border.col}{Color of vertices' borders}
-
-\item{symbols}{vector of Dmel gene symbols}
 }
 \value{
 Network plot.

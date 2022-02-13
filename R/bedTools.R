@@ -234,28 +234,22 @@ vl_resizeBed <- function(bed,
   if(!center %in% c("center", "start", "end"))
     stop("center should be one of center, start or end")
   
-  if(center=="center")
-    regions[, start:= round(rowMeans(.SD)), .SDcols= c("start", "end")]
-  if(center=="start")
-    if(!ignore.strand)
-      regions[strand=="-", start:= end]
-  if(center=="end")
-    if(ignore.strand)
-      regions[, start:= end] else
-        regions[strand!="-", start:= end]
-  regions[, end:= start]
-  
-  if(ignore.strand)
-  {
-    regions[, start:= start-upstream]
-    regions[, end:= end+downstream-1]
-  }else
-  {
-    regions[, start:= start-ifelse(strand=="-", downstream, upstream)]
-    regions[, end:= end+(ifelse(strand!="-", downstream, upstream)-1)]
-  }
-  
-  return(regions)
+  # Check strand
+  if(!ignore.strand & "strand" %in% names(regions))
+    regions[strand=="-", c("start", "end"):= .(end, start)]
+  # define start
+  regions <- data.table(start= switch(center,
+                                      "center"= round(rowMeans(regions[, .(start, end)])),
+                                      "start"= regions$start,
+                                      "end"= regions$end))
+  # ext
+  regions[, c("start", "end"):= .(start-upstream,
+                                  start+downstream)]
+
+  # Return
+  res <- data.table::copy(bed)
+  res[, c("start", "end"):= regions]
+  return(res)
 }
 
 #' Collapse ranges with a certain min dist

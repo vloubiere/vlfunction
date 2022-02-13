@@ -137,20 +137,22 @@ vl_GO_enrich <- function(FBgn_vector,
 #' @param go_object object containing GO data. see ?vl_fb_go_table_dm6_FB2020_05
 #' @param all_FBgns Vector of FBgns to be used in the universe, typically all the genes tested with DESeq. Default= "all" FBgns present in go_object.
 #' @param go_type The type of go to be considered. Default "all" means "biological_process" AND "cellular_component" AND "molecular_function". 
-#' @param cex cex ballons (usefull to adjust size)
+#' @param cex.balloons cex ballons (usefull to adjust size)
 #' @param padj_cutoff padjust cutoff applied to GOs
 #' @param N_top Select only N top GOs/cluster
 #' @param auto_margin Compute and apply optimal margins. Default= T
+#' @param main title
 #' @export
 
 vl_GO_clusters <- function(FBgn_list,
                            go_object= vl_fb_go_table_dm6_FB2020_05,
                            all_FBgns= "all",
                            go_type= "all",
+                           plot= T,
                            padj_cutoff= 1e-5,
                            N_top= Inf,
                            auto_margins= T,
-                           cex.balloons= 4,
+                           cex.balloons= 1,
                            main= NA)
 {
   # Checks
@@ -213,6 +215,41 @@ vl_GO_clusters <- function(FBgn_list,
   res[, padj:= p.adjust(pvalue, method = "fdr")]
   res[, log2OR:= log2(estimate)]
   
+  #---------------------------------------#
+  # Plot
+  #---------------------------------------#
+  if(plot)
+  {
+    vl_GO_clusters_plot_only(obj,
+                             padj_cutoff= padj_cutoff,
+                             N_top= N_top,
+                             auto_margins= auto_margins,
+                             cex.balloons= cex.balloons,
+                             main= main)
+  }
+  invisible(res)
+}
+
+#' GO plotting function
+#'
+#' This function compares GO enrichments for several groups
+#'
+#' @param obj An object as the one produced by ?vl_GO_clusters()
+#' @param padj_cutoff padjust cutoff applied to GOs
+#' @param N_top Select only N top GOs/cluster
+#' @param auto_margins Compute and apply optimal margins. Default= T
+#' @param cex.balloons cex factor for balloons
+#' @param main Title
+#' @export
+
+vl_GO_clusters_plot_only <- function(obj,
+                                     padj_cutoff= 1e-5,
+                                     N_top= Inf,
+                                     auto_margins= T,
+                                     cex.balloons= 1,
+                                     main= NA)
+{
+  res <- copy(obj)
   #----------------------------------#
   # Generate plot table
   #----------------------------------#
@@ -221,8 +258,6 @@ vl_GO_clusters <- function(FBgn_list,
   # Select top GO/cluster
   setorderv(pl, "-log10(pval)", order = -1)
   pl <- pl[GO %in% pl[, GO[seq(.N)<=N_top], cluster_name]$V1]
-  # Make cluster names as factor
-  pl[, cluster_name:= factor(cluster_name, levels = names(FBgn_list))]
   # Handle infinite values
   pl[, cor_log2OR:= log2OR]
   pl[log2OR==Inf, cor_log2OR:= max(pl$log2OR[is.finite(pl$log2OR)], na.rm= T)]
@@ -248,4 +283,3 @@ vl_GO_clusters <- function(FBgn_list,
                    balloon_size_legend= "OR (log2)",
                    balloon_col_legend = "padj (-log10)")
 }
-

@@ -21,6 +21,18 @@
 #' @param trim Should violin be trimmed?
 #' @param add If TRUE, plot on the top of actual plot
 #' @param ... Extra arguments set to plot function
+#' @Examples 
+#' # Create test matrix
+#' set.seed(1234)
+#' test = matrix(rnorm(200), 20, 10)
+#' test[1:10, seq(1, 10, 2)] = test[1:10, seq(1, 10, 2)] + 3
+#' test[11:20, seq(2, 10, 2)] = test[11:20, seq(2, 10, 2)] + 2
+#' test[15:20, seq(2, 10, 2)] = test[15:20, seq(2, 10, 2)] + 4
+#' colnames(test) = paste("Test", 1:10, sep = "")
+#' rownames(test) = paste("Gene", 1:20, sep = "")
+#' 
+#' vl_boxplot(test, violin= T, outline= T, compute_pval= list(c(1,2),c(1,3),c(3,5)))
+#' 
 #' @export
 vl_boxplot <- function(x, ...) UseMethod("vl_boxplot")
 
@@ -115,10 +127,7 @@ vl_boxplot.default <- function(x,
                                    Q3+1.5*sapply(value, IQR))]
   # Outliers
   if(outline)
-  {
     obj[, outliers:= mapply(function(min, max, value) value[value>max | value<min], min, max, value, SIMPLIFY= F)]
-    obj[lengths(outliers)>0, c("out_min", "out_max"):= .(sapply(outliers, min), sapply(outliers, max))]
-  }
   
   # Violins
   if(violin)
@@ -128,13 +137,14 @@ vl_boxplot.default <- function(x,
         obj[N_obs>2, dens:= lapply(value, function(x) density(x))]
     obj[N_obs>2, x:= lapply(dens, function(x) x$y/max(x$y)*violwex)]
     obj[N_obs>2, y:= lapply(dens, function(x) x$x)]
-    obj[lengths(y)>0, c("viol_min", "viol_max"):= .(sapply(y, min), sapply(y, max))]
   }
   
   # Compute min/max ploted values for each var
-  obj[N_obs>0, y_min:= apply(.SD, 1, min), .SDcols= patterns("min$")]
-  obj[N_obs>0, y_max:= apply(.SD, 1, max), .SDcols= patterns("max$")]
-  adj <- diff(c(min(obj$y_min, na.rm = T), max(obj$y_max, na.rm = T)))*0.04 # Adjust factor used for plotting (4% of range)
+  cols <- intersect(c("min", "max", "outliers", "y"), names(obj))
+  obj[N_obs>0, y_min:= min(unlist(.SD), na.rm= T), .SDcols= cols]
+  obj[N_obs>0, y_max:= max(unlist(.SD), na.rm= T), .SDcols= cols]
+  adj <- diff(c(min(obj$y_min, na.rm = T), # Adjust factor used for plotting (4% of range)
+                max(obj$y_max, na.rm = T)))*0.04
   
   # Compute pvalues
   if(!missing(compute_pval))

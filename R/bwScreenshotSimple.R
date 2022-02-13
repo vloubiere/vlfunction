@@ -11,6 +11,9 @@
 
 vl_screenshot_simple <- function(bed,
                                  tracks,
+                                 highlight_bed= NULL,
+                                 col= "black",
+                                 highlight_col= "lightgrey",
                                  space= 30,
                                  names= NULL,
                                  max= NULL,
@@ -42,16 +45,26 @@ vl_screenshot_simple <- function(bed,
   # Init obj
   obj <- data.table(file= tracks,
                     name= names,
-                    type= ifelse(grepl(".bw", tracks), "bw", "bed"))
+                    type= ifelse(grepl(".bw", tracks), "bw", "bed"),
+                    col= col)
   # Quantif signal
   obj <- obj[, {
-    signal <- bins[!is.na(end), 
-                   value:= switch(type,
-                                  "bw"= vl_bw_coverage(.SD, file),
-                                  "bed"= vl_importBed(file)[.SD, ifelse(.N>0, 1, 0), 
-                                                            .EACHI, 
-                                                            on= c("seqnames", "start<=end", "end>=start")]$V1)]
-  }, .(file, name, type)]
+    bins[!is.na(end), 
+         value:= switch(type,
+                        "bw"= vl_bw_coverage(.SD, file),
+                        "bed"= vl_importBed(file)[.SD, ifelse(.N>0, 1, 0), 
+                                                  .EACHI, 
+                                                  on= c("seqnames", "start<=end", "end>=start")]$V1)]
+  }, .(file, name, type, col)]
+  # background col
+  obj[, bg:= "white"]
+  if(!is.null(highlight_bed))
+  {
+    if(!vl_isDTranges(highlight_bed))
+      highlight_bed <- vl_importBed(highlight_bed)
+    obj[highlight_bed, bg:= highlight_col, on= c("seqnames", "start<=end", "end>=start")]
+    
+  }
   # Compute max
   if(is.null(max))
     obj[type=="bw", max:= max(value, na.rm= T), name] else if(length(max) == uniqueN(obj[type=="bw"], "name"))
@@ -63,11 +76,11 @@ vl_screenshot_simple <- function(bed,
   obj <- obj[, {
     y <- seq(switch(type, "bw"= 100, "bed"= 15))
     .(y, 
-      Cc= as.character(ifelse(y>value/max*100, "white", "black")))
-  }, .(seqnames, start, end, regionID, x, type, name, max)]
+      Cc= as.character(ifelse(y>value/max*100, bg, col)))
+  }, .(seqnames, start, end, regionID, x, type, name, max, col, bg)]
   obj[y==1 & Cc=="white" & type=="bw", Cc:= "black"] # Always keep black line at the bottom of bw tracks
   # Shift the different track bands in y
-  yshift <- rev(cumsum(shift(rev(obj[, max(y), name]$V1), 1, fill = 0)))
+  yshift <- rev(cumsum(data.table::shift(rev(obj[, max(y), name]$V1), 1, fill = 0)))
   obj[, y:= y+yshift[.GRP], name]
   
   #----------------------------------#

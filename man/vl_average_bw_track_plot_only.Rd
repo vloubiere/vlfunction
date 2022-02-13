@@ -4,9 +4,14 @@
 \alias{vl_average_bw_track_plot_only}
 \title{bw Average tracks plot only}
 \usage{
-vl_average_bw_track_plot_only(obj, ylim = NULL,
-  xlab = "genomic distance", ylab = "Enrichment", axes = T,
-  legend = T)
+vl_average_bw_track_plot_only(
+  obj,
+  ylim = NULL,
+  xlab = "genomic distance",
+  ylab = "Enrichment",
+  axes = T,
+  legend = T
+)
 }
 \arguments{
 \item{obj}{An object returned by the vl_average_bw_track() function. The object can easily be modified to change colors and so on...}
