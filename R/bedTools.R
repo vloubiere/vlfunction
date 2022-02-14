@@ -98,6 +98,7 @@ vl_exportBed.data.table <- function(bed, filename)
 #' @param BSgenome BSgenome object to use.
 #' @param bins_width bins width default to 50bp
 #' @param steps_width steps width separating each bin. default set to bins_width
+#' @param restrict_seqnames If specified, bins are restricted to provided seqnames
 #' @examples 
 #' vl_binBSgenome(BSgenome= BSgenome.Dmelanogaster.UCSC.dm3, bins_width= 50)
 #' @return data.table containing bin coordinates
@@ -105,15 +106,21 @@ vl_exportBed.data.table <- function(bed, filename)
 
 vl_binBSgenome <- function(BSgenome,
                            bins_width= 50,
-                           steps_width= bins_width)
+                           steps_width= bins_width,
+                           restrict_seqnames= NULL)
 {
   if(!class(BSgenome)=="BSgenome")
     stop("genome should be a BSgenome object!")
+  if(steps_width>bins_width)
+    warning("steps_width>bins_width, meaining bins will not be contiguous")
   dat <- as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome)))
+  if(!is.null(restrict_seqnames))
+    dat <- dat[seqnames %in% restrict_seqnames]
   bins <- dat[, .(start= seq(1, end, steps_width)), .(seqnames, end, width)]
   bins[, end:= start+bins_width-1]
   bins[end>width, end:= width]
   bins <- bins[end-start>0, .(seqnames, start, end)]
+  setkeyv(bins, c("seqnames", "start", "end"))
   return(bins)
 }
 

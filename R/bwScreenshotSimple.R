@@ -86,8 +86,8 @@ vl_screenshot_simple <- function(bed,
       Cc= as.character(ifelse(y>value/max*100, bg, col)))
   }, .(seqnames, start, end, regionID, x, type, name, max, bg, col)]
   # Borders
-  obj[y==1 & Cc=="white" & type=="bw", Cc:= col] # Full line at the bottom of bw tracks
-  obj[(y<=5 | y>=widths[2]-5) & Cc=="black" & type=="bed", Cc:= bg] # Bg lines around bed tracks
+  obj[y==1 & Cc==bg & type=="bw", Cc:= col] # Full line at the bottom of bw tracks
+  obj[(y<=5 | y>=widths[2]-5) & Cc!=bg & type=="bed", Cc:= bg] # Bg lines around bed tracks
   # Shift the different track bands in y
   yshift <- rev(cumsum(data.table::shift(rev(obj[, max(y), name]$V1), 1, fill = 0)))
   obj[, y:= y+yshift[.GRP], name]
@@ -144,77 +144,97 @@ vl_screenshot_simple <- function(bed,
                          "mm10"= list(TxDb= TxDb.Mmusculus.UCSC.mm10.knownGene::TxDb.Mmusculus.UCSC.mm10.knownGene,
                                       org= org.Mm.eg.db::org.Mm.eg.db,
                                       Keytype= "ENTREZID"))
-    transcripts <- data.table::as.data.table(GenomicFeatures::transcriptsByOverlaps(annotation$TxDb,
-                                                                                    GenomicRanges::GRanges(bed),
-                                                                                    columns= c("TXNAME", "GENEID")))
+    # Extract overlapping transcripts
+    transcripts <- as.data.table(GenomicFeatures::transcripts(annotation$TxDb, c("TXNAME", "GENEID")))
+    transcripts <- transcripts[, .(GENEID= unlist(GENEID)), setdiff(names(transcripts), "GENEID")]
+    transcripts <- transcripts[bed[transcripts, .N>0, .EACHI, on= c("seqnames", "start<=end", "end>=start")]$V1]
+
     if(nrow(transcripts)>0)
     {
-      transcripts <- transcripts[, .(GENEID= as.character(unlist(GENEID))), setdiff(names(transcripts), "GENEID")]
-      # Try to find symbols
-      transcripts[, SYMBOL:= {
-        symbols <- try(AnnotationDbi::mapIds(annotation$org,
-                                             key= as.character(GENEID),
-                                             column= "SYMBOL",
-                                             keytype= annotation$Keytype,
-                                             multiVals= "first"), silent = T)
-        # Fix error when no symbols can be ma[apped
-        if(class(symbols)=="try-error")
-          GENEID else
-            symbols
-      }]
-      # Add exons
-      exons <- as.data.table(GenomicFeatures::exons(annotation$TxDb, columns= "TXNAME", filter= list(tx_name= transcripts$TXNAME)))
-      exons <- exons[, .(TXNAME= unlist(TXNAME)), setdiff(names(exons), "TXNAME")]
-      transcripts <- rbindlist(list(transcript= transcripts,
-                                    exon= exons), 
-                               idcol = "type",
-                               fill= T)
       # overlap with regions
       overlap <- obj[!is.na(end), .(start= first(start), 
                                     end= last(end), 
                                     x0= first(x), 
                                     x1= last(x)), .(regionID, seqnames)]
       setkeyv(overlap, c("seqnames", "start", "end"))
+      #--------------------#
+      # TRANSCRIPTS
+      #--------------------#
       setkeyv(transcripts, c("seqnames", "start", "end"))
-      overlap <- foverlaps(transcripts, overlap, nomatch = NULL)
+      transcripts <- foverlaps(transcripts, overlap, nomatch = NULL)
       # Compute x plotting positions
-      overlap[i.start<start, i.start:= start] # Cap window borders
-      overlap[i.end>end, i.end:= end]
-      overlap[, seg.x0:= (i.start-start)/(end-start)*(x1-x0+1)+x0] # compute gene segments
-      overlap[, seg.x1:= (i.end-start)/(end-start)*(x1-x0+1)+x0]
-      overlap[, text.x:= rowMeans(.SD), .SDcols= c("seg.x0", "seg.x1")] # gene names pos
-      overlap[seg.x1-seg.x0<(par("usr")[2]-par("usr")[1])/20, SYMBOL:= NA] # Do not write name small genes
+      transcripts[i.start<start, i.start:= start] # Cap window borders
+      transcripts[i.end>end, i.end:= end]
+      transcripts[, seg.x0:= (i.start-start)/(end-start)*(x1-x0+1)+x0] # compute gene segments
+      transcripts[, seg.x1:= (i.end-start)/(end-start)*(x1-x0+1)+x0]
       # Adjust y position depending on overlaps
-      overlap <- overlap[order(seg.x0-seg.x1, seg.x0)]
-      overlap[type=="transcript", idx:= .I]
-      overlap$y <- overlap[overlap, .N, .EACHI, on= c("idx<idx", "seg.x0<=seg.x1", "seg.x1>=seg.x0")]$N
-      overlap[, y:= y[type=="transcript"], TXNAME]
-      overlap[, y:= par("usr")[3]-strheight("M", cex= 1.8)*y] 
-      # Line width and col
-      overlap[, lwd:= switch(type, 
-                             "transcript"= 1,
-                             "exon"= 3), type]
-      overlap[, col:= switch(as.character(strand), 
-                             "+"= "tomato",
-                             "-"= "cornflowerblue"), strand]
+      transcripts <- transcripts[order(seg.x0-seg.x1, seg.x0)]
+      transcripts[, idx:= .I]
+      transcripts$y <- transcripts[transcripts, .N, .EACHI, on= c("idx<idx", "seg.x0<=seg.x1", "seg.x1>=seg.x0")]$N
+      transcripts[, y:= par("usr")[3]-strheight("M", cex= 1.8)*y]
+      # Color
+      transcripts[, Cc:= switch(as.integer(strand), 
+                                "+"= "tomato",
+                                "+"= "cornflowerblue"), strand]
       # Plot
-      segments(overlap$seg.x0, 
-               overlap$y,
-               overlap$seg.x1, 
-               overlap$y, 
-               lwd= overlap$lwd,
-               col= overlap$col,
-               xpd= T,
-               lend= 2)
-      text(overlap$text.x,
-           overlap$y,
-           overlap$SYMBOL,
-           xpd= T,
+      transcripts[, segments(seg.x0,
+                             y,
+                             seg.x1,
+                             y,
+                             col= Cc,
+                             xpd=T,
+                             lwd= 3)]
+      #--------------------#
+      # SYMBOLS
+      #--------------------#
+      symbol <- transcripts[seg.x1-seg.x0>(par("usr")[2]-par("usr")[1])/20, # Restrict to long genes
+                        .(x= rowMeans(.SD),
+                          y= mean(y),
+                          symbol= GENEID), 
+                        .(TXNAME, GENEID), 
+                        .SDcols= c("seg.x0", "seg.x1")]
+      symbols <- try(AnnotationDbi::mapIds(annotation$org,
+                                           key= as.character(symbol$GENEID),
+                                           column= "SYMBOL",
+                                           keytype= annotation$Keytype,
+                                           multiVals= "first"), silent = T)
+      if(class(symbols)=="character")
+        symbol[, symbol:= symbols[data.table::chmatch(GENEID, names(symbols))]]
+      # Plot
+      text(symbol$x,
+           symbol$y,
+           symbol$symbol,
+           xpd=T,
            pos= 3,
            offset= 0.2,
            cex= 0.8)
+      #--------------------#
+      # EXONS
+      #--------------------#
+      exons <- as.data.table(GenomicFeatures::exons(annotation$TxDb, 
+                                                    filter= list("tx_name"= transcripts$TXNAME), 
+                                                    columns= "TXNAME"))
+      exons <- exons[, .(TXNAME= unlist(TXNAME)), setdiff(names(exons), "TXNAME")]
+      setkeyv(exons, c("seqnames", "start", "end"))
+      exons <- foverlaps(exons, overlap, nomatch = NULL)
+      # Compute x/y plotting positions and color
+      exons[i.start<start, i.start:= start] # Cap window borders
+      exons[i.end>end, i.end:= end]
+      exons[, seg.x0:= (i.start-start)/(end-start)*(x1-x0+1)+x0] # compute gene segments
+      exons[, seg.x1:= (i.end-start)/(end-start)*(x1-x0+1)+x0]
+      exons[transcripts, y:= i.y, on= c("TXNAME", "regionID")]
+      exons[, Cc:= switch(as.integer(strand), 
+                          "+"= "tomato",
+                          "+"= "cornflowerblue"), strand]
+      #plot
+      exons[, segments(seg.x0,
+                       y,
+                       seg.x1,
+                       y,
+                       col= Cc,
+                       xpd=T,
+                       lwd= 3)]
     }
     on.exit(eval(opar), add=TRUE, after=FALSE)
   }
 }
-  
