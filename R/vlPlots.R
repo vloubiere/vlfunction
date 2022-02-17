@@ -597,3 +597,51 @@ vl_balloons_plot.matrix <- function(x,
   on.exit(eval(opar), add=TRUE, after=FALSE)
 }
 
+
+#' Title
+#'
+#' @param var The variable to which heatkey is referring to
+#' @param Cc Function taking values within var ranges as input and returning color. Can be created using ?circlize::colorRamp2()
+#' @param x x position in npc
+#' @param y y position in npc
+#' @param main Title
+#'
+#' @return Plots heatkey
+#' @export
+
+vl_heatkey <- function(var, 
+                       Cc, 
+                       x, 
+                       y, 
+                       main= NA)
+{
+  if(!is.function(Cc))
+    stop("Cc should be a function taking values within var ranges as input and returning color")
+  
+  mat <- matrix(Cc(rev(seq(min(var, na.rm= T), 
+                           max(var, na.rm= T), 
+                           length.out= 100))),
+                ncol= 1)
+  left <- par("usr")[1]+(par("usr")[2]-par("usr")[1])*x
+  top <- par("usr")[3]+(par("usr")[4]-par("usr")[3])*y
+  width <- strwidth("M")*1.5
+  height <- strheight("M")*10
+  rasterImage(mat, 
+              xleft = left,
+              ybottom = top-height, 
+              xright = left+width, 
+              ytop = top)
+  ticks <- axisTicks(range(var, na.rm= T), 
+                     log= F, 
+                     nint = 4)
+  text(left+width,
+       (top-height)+height*((ticks-min(var, na.rm= T))/diff(range(var, na.rm=T))),
+       ticks,
+       cex= 0.6,
+       pos= 4)
+  text(left,
+       top+strheight("M"),
+       main, 
+       pos= 4, 
+       offset= 0)
+}

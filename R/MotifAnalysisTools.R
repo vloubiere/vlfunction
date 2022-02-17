@@ -165,8 +165,11 @@ vl_motif_cl_enrich <- function(counts_matrix,
   if(is.null(rownames(counts_matrix)))
     rownames(counts_matrix) <- seq(nrow(counts_matrix))
   counts_matrix <- as.data.table(counts_matrix, keep.rownames= T)
+  if(!is.vector(cl_IDs))
+    stop("cl_IDs should be a vector")
   
   # Format table
+  names(cl_IDs) <- NULL
   res <- melt(cbind(cl= cl_IDs, counts_matrix), 
               id.vars = c("rn", "cl"),
               variable.name = "motif")
