@@ -4,13 +4,8 @@
 \alias{vl_GO_enrich}
 \title{GO analysis}
 \usage{
-vl_GO_enrich(
-  FBgn_vector,
-  go_object = vl_fb_go_table_dm6_FB2020_05,
-  FBgn_universe = "all",
-  go_type = "all",
-  main = ""
-)
+vl_GO_enrich(FBgn_vector, go_object = vl_fb_go_table_dm6_FB2020_05,
+  FBgn_universe = "all", go_type = "all", main = "")
 }
 \arguments{
 \item{go_object}{object containing GO data. see ?vl_fb_go_table_dm6_FB2020_05}

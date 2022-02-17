@@ -4,21 +4,17 @@
 \alias{vl_bw_merge}
 \title{Merge bw files}
 \usage{
-vl_bw_merge(x, output, BSgenome = BSgenome, bins = 25)
+vl_bw_merge(x, output, BSgenome = BSgenome, bins = NA)
 }
 \arguments{
 \item{x}{fastq file path (read1)}
 
-\item{output_folder}{Folder where to put processed files}
+\item{output}{Output files}
 
-\item{output_prefix}{prefix for processed files}
+\item{BSgenome}{Used to extract bw}
+
+\item{bins}{bin size used to simplify bw. Default to NA (no simplification)}
 }
 \description{
 Merge bw files
-}
-\examples{
-vl_bw_merge(x= c("db/bw/cutnrun_reps/H3K27Ac_PH18_rep1.bw",
-"db/bw/cutnrun_reps/H3K27Ac_PH18_rep2.bw"), 
-output_folder = "db/bw/cutnrun_merge/",
-output_prefix = "H3K27Ac_PH18_merge.bw")
 }

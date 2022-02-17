@@ -4,7 +4,8 @@
 \alias{vl_binBSgenome}
 \title{Bin BS genome}
 \usage{
-vl_binBSgenome(BSgenome, bins_width = 50, steps_width = bins_width)
+vl_binBSgenome(BSgenome, bins_width = 50, steps_width = bins_width,
+  restrict_seqnames = NULL)
 }
 \arguments{
 \item{BSgenome}{BSgenome object to use.}
@@ -12,6 +13,8 @@ vl_binBSgenome(BSgenome, bins_width = 50, steps_width = bins_width)
 \item{bins_width}{bins width default to 50bp}
 
 \item{steps_width}{steps width separating each bin. default set to bins_width}
+
+\item{restrict_seqnames}{If specified, bins are restricted to provided seqnames}
 }
 \value{
 data.table containing bin coordinates

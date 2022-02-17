@@ -4,13 +4,9 @@
 \alias{vl_STRING_interaction}
 \title{get STRING intrations DT}
 \usage{
-vl_STRING_interaction(
-  symbols = NULL,
-  size = NULL,
-  col = NULL,
+vl_STRING_interaction(symbols = NULL, size = NULL, col = NULL,
   cex.label = NULL,
-  db_path = "/mnt/d/_R_data/genomes/dm6/STRING/dmel_7227_v11.5_vl_db.rds"
-)
+  db_path = "/mnt/d/_R_data/genomes/dm6/STRING/dmel_7227_v11.5_vl_db.rds")
 }
 \arguments{
 \item{symbols}{vector of Dmel gene symbols}

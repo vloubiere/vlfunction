@@ -4,8 +4,7 @@
 \name{vl_Dmel_motifs_DB_full}
 \alias{vl_Dmel_motifs_DB_full}
 \title{Dmel motifs data base}
-\format{
-An object containing 13899 motifs and related metadata
+\format{An object containing 13899 motifs and related metadata
 \describe{
   \item{motif}{motif IDs consitent with Bernardo's ones.}
   \item{motif_name}{Curated Dmel symbols. sep= "/"}
@@ -14,8 +13,7 @@ An object containing 13899 motifs and related metadata
   \item{Motif_cluster_name}{Cluster names with the respective motif types.}
   \item{Pwms_log_odds}{PWM expressed as log odds}
   \item{Pwms_perc}{PWM expressed as percentage}
-}
-}
+}}
 \source{
 {"/groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/TF_clusters_PWMs.RData"}
 }

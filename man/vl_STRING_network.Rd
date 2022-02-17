@@ -4,14 +4,9 @@
 \alias{vl_STRING_network}
 \title{plot STRING interactions}
 \usage{
-vl_STRING_network(
-  object,
-  score_cutoff = 900,
-  top_N = NA,
-  cex.vertices = 1,
-  cex.vertices.labels = 1,
-  vertex.border.col = "black"
-)
+vl_STRING_network(object, score_cutoff = 900, top_N = NA,
+  cex.vertices = 1, cex.vertices.labels = 1,
+  vertex.border.col = "black")
 }
 \arguments{
 \item{object}{Object returned by ?vl_STRING_interaction()}

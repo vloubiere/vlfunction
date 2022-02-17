@@ -4,14 +4,8 @@
 \alias{vl_GO_clusters_plot_only}
 \title{GO plotting function}
 \usage{
-vl_GO_clusters_plot_only(
-  obj,
-  padj_cutoff = 1e-05,
-  N_top = Inf,
-  auto_margins = T,
-  cex.balloons = 1,
-  main = NA
-)
+vl_GO_clusters_plot_only(obj, padj_cutoff = 1e-05, N_top = Inf,
+  auto_margins = T, cex.balloons = 1, main = NA)
 }
 \arguments{
 \item{obj}{An object as the one produced by ?vl_GO_clusters()}

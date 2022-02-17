@@ -4,19 +4,9 @@
 \alias{vl_screenshot}
 \title{bw screenshot}
 \usage{
-vl_screenshot(
-  bed,
-  tracks,
-  genome,
-  highlight_regions = NULL,
-  highlight_col = "lightgrey",
-  names = NULL,
-  max = NULL,
-  strand = NULL,
-  col = NULL,
-  n_genes = 4,
-  gband = 0.1
-)
+vl_screenshot(bed, tracks, genome, highlight_regions = NULL,
+  highlight_col = "lightgrey", names = NULL, max = NULL,
+  strand = NULL, col = NULL, n_genes = 4, gband = 0.1)
 }
 \arguments{
 \item{bed}{Regions to plot. Can be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start' and 'end' columns}

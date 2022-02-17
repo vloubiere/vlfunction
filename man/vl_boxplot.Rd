@@ -16,28 +16,13 @@ vl_boxplot(x, ...)
 
 \method{vl_boxplot}{data.table}(x, ...)
 
-\method{vl_boxplot}{default}(
-  x,
-  compute_pval,
-  outline = F,
-  xlab = NA,
-  ylab = NA,
-  xlim,
-  ylim,
-  names = NULL,
-  boxcol = "white",
-  boxwex = 0.15,
-  violin = F,
-  violcol = "white",
-  violwex = 0.35,
-  at,
-  trim = T,
-  add = F,
-  ...
-)
+\method{vl_boxplot}{default}(x, compute_pval, outline = F, xlab = NA,
+  ylab = NA, xlim, ylim, names = NULL, boxcol = "white",
+  boxwex = 0.15, violin = F, violcol = "white", violwex = 0.35, at,
+  trim = T, add = F, ...)
 }
 \arguments{
-\item{x}{list data}
+\item{x}{Matrix, data.atble or data.frame containing data}
 
 \item{...}{Extra arguments set to plot function}
 
@@ -70,6 +55,8 @@ vl_boxplot(x, ...)
 \item{trim}{Should violin be trimmed?}
 
 \item{add}{If TRUE, plot on the top of actual plot}
+
+\item{x}{list data}
 }
 \description{
 This function plots a violin plot from either matrix,

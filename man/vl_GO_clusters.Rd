@@ -4,18 +4,10 @@
 \alias{vl_GO_clusters}
 \title{GO analysis}
 \usage{
-vl_GO_clusters(
-  FBgn_list,
-  go_object = vl_fb_go_table_dm6_FB2020_05,
-  all_FBgns = "all",
-  go_type = "all",
-  plot = T,
-  padj_cutoff = 1e-05,
-  N_top = Inf,
-  auto_margins = T,
-  cex.balloons = 1,
-  main = NA
-)
+vl_GO_clusters(FBgn_list, go_object = vl_fb_go_table_dm6_FB2020_05,
+  all_FBgns = "all", go_type = "all", plot = T,
+  padj_cutoff = 1e-05, N_top = Inf, auto_margins = T,
+  cex.balloons = 1, main = NA)
 }
 \arguments{
 \item{FBgn_list}{A nameds list of FBgn IDs (1 sublist/cluster)}
