@@ -2,55 +2,47 @@
 % Please edit documentation in R/STRINGtools.R
 \name{vl_STRING_interaction}
 \alias{vl_STRING_interaction}
+\alias{plot.vl_STRING}
 \title{get STRING intrations DT}
 \usage{
-vl_STRING_interaction(symbols = NULL, size = NULL, col = NULL,
-  cex.label = NULL,
-  db_path = "/mnt/d/_R_data/genomes/dm6/STRING/dmel_7227_v11.5_vl_db.rds")
+vl_STRING_interaction(symbols, plot = T, score_cutoff = 900,
+  top_N = NA, col = "tomato", size = 10, cex.label = 1)
+
+plot.vl_STRING(obj, score_cutoff = 900, top_N = NA, col, size,
+  cex.label)
 }
 \arguments{
 \item{symbols}{vector of Dmel gene symbols}
 
-\item{size}{For each gene symbol, the size of corresponding vertice (i.e, absolute FC)}
+\item{plot}{Should the graph be plotted?}
+
+\item{score_cutoff}{If specified, only plot interactions with score>=cutoff}
+
+\item{top_N}{If specified, only plot top N interactions}
 
 \item{col}{For each gene symbol, the color of corresponding vertice (i.e, tomato for up, cornflowerblue for down)}
 
-\item{cex.label}{cex factor to be applied to correponding vertices labels}
+\item{size}{For each gene symbol, the size of corresponding vertice (i.e, absolute FC)}
 
-\item{db_path}{Path to an existing db, or filename where to create it. See examples}
+\item{cex.label}{cex factor to be applied to correponding vertices labels}
 }
 \value{
-An object that can be used with the vl_STRING_network() function.
+An object that can be used with the plot.vl_STRING() method
 }
 \description{
 Extract interactions form STRIN db (Dmel only for now)
 }
+\section{Functions}{
+\itemize{
+\item \code{plot.vl_STRING}: Method to plot STRING interaction igraphs
+}}
+
 \examples{
 #USAGE
-symbols <- c("Pc", "Psc", "E(z)", "dgt1", "Rcd1")
-interactions <- vl_STRING_interaction(symbols)
-vl_STRING_network(interactions)
-
-
-#------------#
-# Code used to create DB
-#------------#
-# Download STRING db v11.5 fro Dmel
-link <- "https://stringdb-static.org/download/protein.links.detailed.v11.5/7227.protein.links.detailed.v11.5.txt.gz"
-tmp <- tempfile(fileext = ".txt.gz")
-download.file(link, tmp)
-DB <- fread(tmp)
-# Download correspondance Dmel symbols
-link <- "https://stringdb-static.org/download/protein.info.v11.5/7227.protein.info.v11.5.txt.gz"
-download.file(link, tmp)
-sym <- fread(tmp)
-DB[sym, protein1_symbol:= i.preferred_name, on= "protein1==`#string_protein_id`"]
-DB[sym, protein2_symbol:= i.preferred_name, on= "protein2==`#string_protein_id`"]
-# Collapse unique interactions
-DB[, merge:= paste0(sort(c(protein1_symbol, protein2_symbol)), collapse= ""), .(protein1_symbol, protein2_symbol)]
-DB <- DB[, .SD[1], merge]
-# SAVE
-saveRDS(DB[, .(protein1_symbol, protein2_symbol, combined_score)], 
-file = db_path)
-
+symbols <- c("Pc", "Psc", "E(z)", "RpL10", "RpL11", "RpL12")
+vl_STRING_interaction(symbols)
+test <- vl_STRING_interaction(symbols, col= vl_palette_categ1(6))
+plot(test)
+plot(test, size= 10*1:6)
+plot(test, col= "red")
 }

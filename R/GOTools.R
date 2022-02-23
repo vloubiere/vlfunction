@@ -5,128 +5,73 @@
 #' @param FBgn_list A vector of FBgn IDs
 #' @param go_object object containing GO data. see ?vl_fb_go_table_dm6_FB2020_05
 #' @param FBgn_universe Vector of FBgn IDs to which the analysis will be restricted. default= "all" (i.e. all the FBGns present in the table)
-#' @param main title
+#' @param plot Plot result?
+#' @param padj_cutoff cutoff for plotting
+#' @param top_enrich Show only n top enriched motifs
+#' @examples
+#' RpL <- vl_genes_set[GO=="RpL_genes", FBgn]
+#' par(mar= c(4,20,2,6))
+#' vl_GO_enrich(RpL)
 #' @export
 
 vl_GO_enrich <- function(FBgn_vector,
                          go_object= vl_fb_go_table_dm6_FB2020_05,
                          FBgn_universe= "all",
                          go_type= "all",
-                         main= "")
+                         plot= T,
+                         padj_cutoff= 0.05,
+                         top_enrich= Inf)
 {
-  # Checks
-  if(!is.vector(FBgn_vector))
-    stop(paste0("FBgn_vector should be a vector FBgn IDs"))
-  if(!all(grepl("FBgn", FBgn_vector)))
-    stop(paste0("Some FBgn_vector components are not FBgn IDs"))
-  if(length(FBgn_universe)==1)
+  # Select
+  counts <- go_object$FBgn_GO_counts_matrix
+  if(FBgn_universe != "all")
+    counts <- counts[FBgn %in% FBgn_universe]
+  names <- go_object$GO_names
+  if(go_type != "all")
   {
-    if(FBgn_universe=="all")
-      FBgn_universe <- unique(go_object$FBgn)
+    names <- names[type %in% go_type]
+    cols <- c("FBgn", names$GO)
+    counts <- counts[, ..cols]
   }
-  if(length(go_type)!=1)
-    stop("length(go_type)!=1")
-  if(!(go_type %in% c("all", "biological_process", "cellular_component", "molecular_function")))
-     stop("go_type should be one of 'all', 'biological_process', 'cellular_component', 'molecular_function'")
-    
-  # Restrict GO object to universe
-  go_current <- copy(go_object)[FBgn %in% FBgn_universe, .(GO, name, type= unlist(type), FBgn, Symbol)]
-  
-  # Restrict to type
-  if(go_type!="all")
-    go_current <- go_current[type==go_type]
-  
-  # Compute go and total counts
-  go_current[, total_FBgn:= length(FBgn_universe)]
-  go_current[, total_go:= length(unique(FBgn)), GO]
-  
-  # Add cluster counts
-  go_current <- go_current[FBgn %in% FBgn_vector]
-  go_current[, total_cluster:= length(unique(FBgn))]
-  go_current[, go_cluster:= length(unique(FBgn)), GO]
-  
-  # Compute statistically enriched GOs
-  go_current <- go_current[, .(Symbol= .(Symbol), FBgn= .(FBgn)), 
-                           .(GO, name, type, total_go, total_FBgn, total_cluster, go_cluster)]
-  go_current[, c("estimate", "pvalue"):= {
-    fisher.test(matrix(c(go_cluster, # go+ cluster +
-                         total_cluster-go_cluster, # go- cluster +
-                         total_go-go_cluster, # go+ cluster -
-                         total_FBgn-total_cluster-total_go+go_cluster), # go- cluster -
-                       nrow=2, 
-                       byrow = T), 
-                alternative = "greater")[c("estimate", "p.value")]
-  }, total_go:go_cluster]
-  go_current[, '-log10(padj)':= -log10(p.adjust(pvalue, method = "fdr"))]
-  go_current[, log2OR:= log2(estimate)]
-  
-  #----------------------------#
-  # Generate plot table
-  #----------------------------#
-  pl <- go_current[`-log10(padj)`>5 & log2OR>0]
-  # Handle infinite values
-  pl[, cor_log2OR:= log2OR]
-  pl[log2OR==Inf, cor_log2OR:= max(pl$log2OR[is.finite(pl$log2OR)], na.rm= T)]
-  Cc <- colorRamp2(range(pl$cor_log2OR, na.rm = T), 
-                   colors = c("blue", "red"))
-  pl[, col:= Cc(log2OR)]
-  setorderv(pl, "-log10(padj)")
-  
-  #----------------------------#
-  # PLOT
-  #----------------------------#
-  par(mai= c(1, 
-             max(strwidth(pl$name, "inches"))+1, 
-             0.5, 
-             1))
-  barplot(pl$`-log10(padj)`, 
-          col= pl$col, 
-          horiz = T,
-          xlab= "-log10(padj)", 
-          names.arg = pl$name,
-          las= 1, 
-          main= main, 
-          space = 0,
-          border= "white")
-  rasterImage(matrix(Cc(seq(min(pl$cor_log2OR), 
-                            max(pl$cor_log2OR), 
-                            length.out = 100)), 
-                     ncol= 1), 
-              xleft = grconvertX(1.075, "npc", "user"),
-              ybottom = grconvertY(0.93, "npc", "user"),
-              xright = grconvertX(1.125, "npc", "user"),
-              ytop = grconvertY(0.75, "npc", "user"), 
-              xpd= T)
-  text(grconvertX(1.075, "npc", "user"),
-       grconvertY(0.955, "npc", "user"), 
-       pos= 4,
-       "log2(OR)", 
-       xpd= T, 
-       offset= 0, 
-       cex= 0.8)
-  ticks <- axisTicks(range(pl$cor_log2OR), log= F)
-  at <- grconvertY(0.75+(ticks-min(pl$cor_log2OR))/(max(pl$cor_log2OR)-min(pl$cor_log2OR))*(0.93-0.75), "npc", "user")
-  segments(grconvertX(1.125+0.005, "npc", "user"),
-           at,
-           grconvertX(1.125+0.01, "npc", "user"),
-           at,
-           xpd= T,
-           lend= 2)
 
-  text(grconvertX(1.125+0.01, "npc", "user"), 
-       at,
-       labels = ticks,
-       cex= 0.6,
-       offset= 0.1,
-       pos= 4,
-       xpd= T)
+  # Select GOs for which at least one of the genes is represented 
+  sel <- counts[FBgn_vector, apply(.SD, 2, function(x) any(x>0)), on= "FBgn", .SDcols= patterns("GO:")]
+  sel <- c("FBgn", names(sel)[sel])
+  counts <- counts[, ..sel]
+  # Melt
+  .m <- melt(counts, id.vars = "FBgn")
+  .m[FBgn_vector, cl:= 1, on= "FBgn"]
+  .m[is.na(cl), cl:= 0]
+  # Compute enrichment
+  res <- .m[, {
+    tab <- table(value>0, cl>0)
+    if(identical(dim(tab), c(2L,2L)))
+    {
+      .f <- fisher.test(tab, 
+                        alternative = "greater")
+      .(OR= .f$estimate,
+        pval= .f$p.value)
+    }else
+      .(OR= as.numeric(NA),
+        pval= as.numeric(NA))
+  }, variable]
   
-  # RETURN
-  invisible(list(data= go_current, 
-                 plot= pl, 
-                 legend_ticks= ticks,
-                 ticks_at= at))  
+  #-----------------------#
+  # Plot
+  #-----------------------#
+  # padj...
+  res[, padj:= p.adjust(pval, method = "fdr"), pval]
+  res[, log2OR:= log2(OR)]
+  res[names, variable:= i.name, on= "variable==GO"]
+  res <- res[, .(variable, log2OR, padj)]
+  setattr(res, "class", c("vl_enr", "data.table", "data.frame"))
   
+  if(plot)
+    plot(res,
+         padj_cutoff= padj_cutoff,
+         top_enrich= top_enrich)
+
+  invisible(res)  
 }
 
 #' GO analysis
@@ -137,11 +82,20 @@ vl_GO_enrich <- function(FBgn_vector,
 #' @param go_object object containing GO data. see ?vl_fb_go_table_dm6_FB2020_05
 #' @param all_FBgns Vector of FBgns to be used in the universe, typically all the genes tested with DESeq. Default= "all" FBgns present in go_object.
 #' @param go_type The type of go to be considered. Default "all" means "biological_process" AND "cellular_component" AND "molecular_function". 
-#' @param cex.balloons cex ballons (usefull to adjust size)
-#' @param padj_cutoff padjust cutoff applied to GOs
-#' @param N_top Select only N top GOs/cluster
-#' @param auto_margin Compute and apply optimal margins. Default= T
-#' @param main title
+#' @param plot Should the result be plot using balloons plot?
+#' @param padj_cutoff cutoff for ballons to be ploted
+#' @param log2OR_cutoff cutoff for ballons to be ploted
+#' @param N_top Select top enriched motifs/cluster
+#' @param x_breaks Breaks used for ballon's sizes
+#' @param color_breaks Color breaks used for coloring
+#' @param cex.balloons Expansion factor for balloons
+#' @param col Vector of colors used for coloring
+#' @param main Title. Default= NA
+#' @param auto_margins Use auto margins? Default= T
+#' @examples
+#' FBgn_list <- split(vl_genes_set$FBgn, vl_genes_set$GO)
+#' par(mar= c(5,25,2,5), las= 1)
+#' vl_GO_clusters(FBgn_list, auto_margins = F, cex.balloons = 0.3)
 #' @export
 
 vl_GO_clusters <- function(FBgn_list,
@@ -149,137 +103,69 @@ vl_GO_clusters <- function(FBgn_list,
                            all_FBgns= "all",
                            go_type= "all",
                            plot= T,
-                           padj_cutoff= 1e-5,
+                           padj_cutoff= 0.00001,
+                           log2OR_cutoff= 0,
                            N_top= Inf,
-                           auto_margins= T,
+                           x_breaks,
+                           color_breaks,
                            cex.balloons= 1,
-                           main= NA)
+                           col= c("cornflowerblue", "lightgrey", "tomato"),
+                           main= NA,
+                           auto_margins = T)
 {
-  # Checks
-  if(!is.list(FBgn_list))
-    stop(paste0("FBgn_list should be a named list of gene FBgn IDs"))
-  if(is.null(names(FBgn_list)))
-    names(FBgn_list) <- paste0("Group_", seq(FBgn_list))
-  if(length(unique(names(FBgn_list)))!=length(FBgn_list))
-    stop("All FBgn list names should be unique!")
-  if(!all(grepl("FBgn", unlist(FBgn_list))))
-    stop(paste0("Some FBgn_list components are not FBgn IDs"))
-  if(length(all_FBgns)==1)
+  counts <- go_object$FBgn_GO_counts_matrix
+  if(FBgn_universe != "all")
+    counts <- counts[FBgn %in% FBgn_universe]
+  names <- go_object$GO_names
+  if(go_type != "all")
   {
-    if(all_FBgns!="all")
-      stop(paste0("When length(all_FBgns)==1, only valid value is 'all'"))
-    else
-      all_FBgns <- unique(go_object$FBgn)
+    names <- names[type %in% go_type]
+    cols <- c("FBgn", names$GO)
+    counts <- counts[, ..cols]
   }
-  if(length(go_type)!=1 |
-     !(go_type %in% c("all", "biological_process", "cellular_component", "molecular_function")))
-    stop("go_type should be one of 'all', 'biological_process', 'cellular_component', 'molecular_function'")
   
-  # Restrict GO object to universe
-  go_current <- copy(go_object)[FBgn %in% all_FBgns, .(GO, name, type= unlist(type), FBgn, Symbol)]
-  perc_noGO <- length(which(!unlist(FBgn_list) %in% go_current$FBgn))/length(unlist(FBgn_list))*100
-  perc_noGO <- round(perc_noGO, 1)
-  print(paste0(perc_noGO, "% of provided FBgns were not found in GO database!\n"))
-  
-  # Restrict to type
-  if(go_type!="all")
-    go_current <- go_current[type==go_type]
-  
-  # Compute go and total counts
-  tab <- copy(go_current)
-  tab[, total_FBgn:= length(unique(go_current$FBgn))]
-  tab[, total_go:= length(unique(FBgn)), GO]
-  
-  # Add cluster counts
-  FBgn_DT <- rbindlist(lapply(FBgn_list, as.data.table), idcol = "cluster_name")
-  FBgn_DT[, total_cluster:= .N, cluster_name]
-  tab <- merge(tab,
-               FBgn_DT, 
-               by.x= "FBgn",
-               by.y= "V1")
-  tab[, go_cluster:= length(unique(FBgn)), .(GO, cluster_name)]
-  
-  # Compute statistically enriched GOs
-  res <- tab[, .(Symbol= .(Symbol), FBgn= .(FBgn)), 
-             .(GO, name, type, cluster_name, total_go, total_FBgn, total_cluster, go_cluster)]
-  res[, c("estimate", "pvalue"):= {
-    fisher.test(matrix(c(go_cluster, # go+ cluster +
-                         total_cluster-go_cluster, # go- cluster +
-                         total_go-go_cluster, # go+ cluster -
-                         total_FBgn-total_cluster-total_go+go_cluster), # go- cluster -
-                       nrow=2, 
-                       byrow = T), 
-                alternative = "greater")[c("estimate", "p.value")]
-  }, total_go:go_cluster]
-  res[, "-log10(pval)":= -log10(pvalue)]
-  res[, padj:= p.adjust(pvalue, method = "fdr")]
-  res[, log2OR:= log2(estimate)]
+  # Select GOs for which at least one of the genes is represented 
+  sel <- counts[unique(unlist(FBgn_list)), apply(.SD, 2, function(x) any(x>0)), on= "FBgn", .SDcols= patterns("GO:")]
+  sel <- c("FBgn", names(sel)[sel])
+  counts <- counts[, ..sel]
+  # Melt
+  .m <- melt(counts, id.vars = "FBgn")
+  .m[, names(FBgn_list):= lapply(FBgn_list, function(x) as.numeric(FBgn %in% x))]
+  .m <- melt(.m, id.vars = c("FBgn", "variable", "value"), variable.name = "cl", value.name = "cl_count")
+  # Compute enrichment
+  res <- .m[, {
+    tab <- table(value>0, cl_count>0)
+    if(identical(dim(tab), c(2L,2L)))
+    {
+      .f <- fisher.test(tab, 
+                        alternative = "greater")
+      .(OR= .f$estimate,
+        pval= .f$p.value)
+    }else
+      .(OR= as.numeric(NA),
+        pval= as.numeric(NA))
+  }, .(variable, cl)]
+  # padj...
+  res[, padj:= p.adjust(pval, method = "fdr"), pval]
+  res[, log2OR:= log2(OR)]
+  res <- res[, .(variable, cl, log2OR, padj)]
+  res[names, variable:= i.name, on= "variable==GO"]
+  class(res) <- c("vl_enr_cl", "data.table", "data.frame")
   
   #---------------------------------------#
   # Plot
   #---------------------------------------#
   if(plot)
-  {
-    vl_GO_clusters_plot_only(obj,
-                             padj_cutoff= padj_cutoff,
-                             N_top= N_top,
-                             auto_margins= auto_margins,
-                             cex.balloons= cex.balloons,
-                             main= main)
-  }
-  invisible(res)
-}
-
-#' GO plotting function
-#'
-#' This function compares GO enrichments for several groups
-#'
-#' @param obj An object as the one produced by ?vl_GO_clusters()
-#' @param padj_cutoff padjust cutoff applied to GOs
-#' @param N_top Select only N top GOs/cluster
-#' @param auto_margins Compute and apply optimal margins. Default= T
-#' @param cex.balloons cex factor for balloons
-#' @param main Title
-#' @export
-
-vl_GO_clusters_plot_only <- function(obj,
-                                     padj_cutoff= 1e-5,
-                                     N_top= Inf,
-                                     auto_margins= T,
-                                     cex.balloons= 1,
-                                     main= NA)
-{
-  res <- copy(obj)
-  #----------------------------------#
-  # Generate plot table
-  #----------------------------------#
-  sel <- res[any(padj<=padj_cutoff & log2OR>0), GO]
-  pl <- res[GO %in% sel & padj<0.05 & log2OR>0]
-  # Select top GO/cluster
-  setorderv(pl, "-log10(pval)", order = -1)
-  pl <- pl[GO %in% pl[, GO[seq(.N)<=N_top], cluster_name]$V1]
-  # Handle infinite values
-  pl[, cor_log2OR:= log2OR]
-  pl[log2OR==Inf, cor_log2OR:= max(pl$log2OR[is.finite(pl$log2OR)], na.rm= T)]
-  # Colors
-  pval_lims <- range(pl$`-log10(pval)`)
-  # Y ordering
-  setorderv(pl, 
-            c("cluster_name", "-log10(pval)", "cor_log2OR", "GO"), 
-            order = c(1, -1, -1, 1))
-  pl[, name:= factor(name, levels= unique(pl$name))]
+    plot(res,
+         padj_cutoff= padj_cutoff,
+         log2OR_cutoff= log2OR_cutoff,
+         N_top= N_top,
+         x_breaks= x_breaks,
+         color_breaks= color_breaks,
+         col= col,
+         main= main,
+         cex.balloons= cex.balloons,
+         auto_margins = auto_margins)
   
-  #-----------------------------#
-  # PLOT
-  #-----------------------------#
-  x <- as.matrix(dcast(pl, name~cluster_name, value.var = "cor_log2OR"), 1)
-  color_var <- as.matrix(dcast(pl, name~cluster_name, value.var = "-log10(pval)"), 1)
-  vl_balloons_plot(x = x,
-                   color_var= color_var,
-                   col= c("blue", "red"),
-                   main= main,
-                   cex.balloons = cex.balloons,
-                   auto_margins = auto_margins,
-                   balloon_size_legend= "OR (log2)",
-                   balloon_col_legend = "padj (-log10)")
+  invisible(res)
 }

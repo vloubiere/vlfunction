@@ -6,8 +6,9 @@
 \usage{
 vl_GO_clusters(FBgn_list, go_object = vl_fb_go_table_dm6_FB2020_05,
   all_FBgns = "all", go_type = "all", plot = T,
-  padj_cutoff = 1e-05, N_top = Inf, auto_margins = T,
-  cex.balloons = 1, main = NA)
+  padj_cutoff = 1e-05, log2OR_cutoff = 0, N_top = Inf, x_breaks,
+  color_breaks, cex.balloons = 1, col = c("cornflowerblue",
+  "lightgrey", "tomato"), main = NA, auto_margins = T)
 }
 \arguments{
 \item{FBgn_list}{A nameds list of FBgn IDs (1 sublist/cluster)}
@@ -18,16 +19,31 @@ vl_GO_clusters(FBgn_list, go_object = vl_fb_go_table_dm6_FB2020_05,
 
 \item{go_type}{The type of go to be considered. Default "all" means "biological_process" AND "cellular_component" AND "molecular_function".}
 
-\item{padj_cutoff}{padjust cutoff applied to GOs}
+\item{plot}{Should the result be plot using balloons plot?}
 
-\item{N_top}{Select only N top GOs/cluster}
+\item{padj_cutoff}{cutoff for ballons to be ploted}
 
-\item{cex.balloons}{cex ballons (usefull to adjust size)}
+\item{log2OR_cutoff}{cutoff for ballons to be ploted}
 
-\item{main}{title}
+\item{N_top}{Select top enriched motifs/cluster}
 
-\item{auto_margin}{Compute and apply optimal margins. Default= T}
+\item{x_breaks}{Breaks used for ballon's sizes}
+
+\item{color_breaks}{Color breaks used for coloring}
+
+\item{cex.balloons}{Expansion factor for balloons}
+
+\item{col}{Vector of colors used for coloring}
+
+\item{main}{Title. Default= NA}
+
+\item{auto_margins}{Use auto margins? Default= T}
 }
 \description{
 This function compares GO enrichments for several groups
+}
+\examples{
+FBgn_list <- split(vl_genes_set$FBgn, vl_genes_set$GO)
+par(mar= c(5,25,2,5), las= 1)
+vl_GO_clusters(FBgn_list, auto_margins = F, cex.balloons = 0.3)
 }

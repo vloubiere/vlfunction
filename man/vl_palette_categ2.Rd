@@ -10,7 +10,7 @@ vl_palette_categ2(x)
 \item{x}{number of colours ro return}
 }
 \value{
-vector of colors
+vector of colors of length x
 }
 \description{
 Title

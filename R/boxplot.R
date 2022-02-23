@@ -31,7 +31,7 @@
 #' colnames(test) = paste("Test", 1:10, sep = "")
 #' rownames(test) = paste("Gene", 1:20, sep = "")
 #' 
-#' vl_boxplot(test, violin= T, outline= T, compute_pval= list(c(1,2),c(1,3),c(3,5)))
+#' vl_boxplot(test, compute_pval= list(c(1,2), c(1,4), c(1,5), c(5,6), c(1,10), c(9,10)), outline= F, violcol= c("red", "yellow"), boxcol= c("green", "purple"))
 #' 
 #' @export
 vl_boxplot <- function(x, ...) UseMethod("vl_boxplot")
@@ -69,6 +69,26 @@ vl_boxplot.data.table <- function(x, ...)
   vl_boxplot.default(x, ...)
 }
 
+#' @title Boxplot
+#' @description Just a wrapper around boxplot that makes it nicer and allows to add violins and wilcox pvals
+#' 
+#' @param x list of variables to be plotted
+#' @param compute_pval list of vectors of length two containing pairwise x indexes to be compared
+#' @param outline Should outliers be plotted?
+#' @param xlab x label
+#' @param ylab y label
+#' @param xlim x lim
+#' @param ylim y lim
+#' @param names box names (x axis)
+#' @param boxcol Box colors (recycled)
+#' @param boxwex Boxes expansion factor. default to 0.4, 0.25 if violin= T
+#' @param box.lty Line type used for boxplots, default= 1
+#' @param staplewex Staples expansion factor. default= NA
+#' @param violin Should violins be plotted?
+#' @param violcol Violin colors (recycled) 
+#' @param violwex violins expansion factor. default to 0.4
+#' @param ... Extra parameters passed to boxplot, such as las, lwd... 
+#'
 #' @describeIn vl_boxplot default method
 #' @export
 vl_boxplot.default <- function(x,
@@ -80,15 +100,18 @@ vl_boxplot.default <- function(x,
                                ylim,
                                names= NULL,
                                boxcol= "white",
-                               boxwex= 0.15,
+                               boxwex= ifelse(violin, 0.25, 0.4),
+                               box.lty= 1,
+                               staplewex= NA,
                                violin= F,
                                violcol= "white",
-                               violwex= 0.35,
-                               at,
+                               violwex= 0.4,
                                trim= T,
-                               add= F,
                                ...)
 {
+  if(!missing(compute_pval) && !is.list(compute_pval))
+    stop("compute_pval should be a list of vectors of length two containing pairwise x indexes to be compared")
+  
   # Format data list
   if(!is.list(x))
     x <- list(x)
@@ -96,159 +119,97 @@ vl_boxplot.default <- function(x,
     names(x) <- names
   if(is.null(names(x)))
     names(x) <- seq(x)
-  # Format pval list
+  
+  # Compute box stats and lims
+  box <- sapply(x, 
+                boxplot.stats,
+                do.out= outline | violin)
+  if(missing(xlim))
+    xlim <- c(0.5, length(x)+0.5)
+  if(missing(ylim))
+    ylim <- range(box[c("out", "stats"),])
+  
+  # Compute pvals
   if(!missing(compute_pval))
   {
-    if(max(unlist(compute_pval))>length(x) | !is.numeric(unlist(compute_pval)))
-      stop("All elements in compute_pval should be numeric and be smaller than length(x)")
-    if(!is.list(compute_pval))
-      compute_pval <- list(compute_pval)
-    if(!all(lengths(compute_pval)==2))
-      stop("compute_pval should be a list of vectors of length two containing pairwise x indexes to be compared")
-  }
-  # Check
-  if(missing(at))
-    at <- seq(x)
-  
-  # Format as data.table
-  obj <- data.table(variable= names(x),
-                    value= lapply(x, na.omit),
-                    at= at,
-                    boxCc= boxcol,
-                    violCc= violcol)
-  obj[, N_obs:= lengths(value)]
-  
-  #--------------------------#
-  # Compute results
-  #--------------------------#
-  # Box
-  obj[, c("Q1", "Q2", "Q3"):= lapply(c(0.25, 0.5, 0.75), function(q) sapply(value, function(x) quantile(x, q)))]
-  obj[, c("min", "max"):= .(Q1-1.5*sapply(value, IQR),
-                                   Q3+1.5*sapply(value, IQR))]
-  # Outliers
-  if(outline)
-    obj[, outliers:= mapply(function(min, max, value) value[value>max | value<min], min, max, value, SIMPLIFY= F)]
-  
-  # Violins
-  if(violin)
-  {
-    if(trim) # trim violin plot to data ranges
-      obj[N_obs>2, dens:= lapply(value, function(x) density(x, from= min(x, na.rm= T), to= max(x, na.rm= T)))] else
-        obj[N_obs>2, dens:= lapply(value, function(x) density(x))]
-    obj[N_obs>2, x:= lapply(dens, function(x) x$y/max(x$y)*violwex)]
-    obj[N_obs>2, y:= lapply(dens, function(x) x$x)]
-  }
-  
-  # Compute min/max ploted values for each var
-  cols <- intersect(c("min", "max", "outliers", "y"), names(obj))
-  obj[N_obs>0, y_min:= min(unlist(.SD), na.rm= T), .SDcols= cols]
-  obj[N_obs>0, y_max:= max(unlist(.SD), na.rm= T), .SDcols= cols]
-  adj <- diff(c(min(obj$y_min, na.rm = T), # Adjust factor used for plotting (4% of range)
-                max(obj$y_max, na.rm = T)))*0.04
-  
-  # Compute pvalues
-  if(!missing(compute_pval))
-  {
-    pval <- as.data.table(do.call(rbind, compute_pval))
-    # Remove combinations for which there are not enough values
-    enough_obs <- pval[, .(check= all(lengths(obj[c(V1,V2), value])>0)), .(V1, V2)]$check
-    if(any(!enough_obs))
-      print("Some pval groups did not contain enough finite obs and were discarded")
-    pval <- pval[(enough_obs)]
-    if(nrow(pval)>0)
+    adj <- diff(ylim)*0.04 # plotting adjust
+    pval <- data.table(do.call(rbind, compute_pval))
+    setnames(pval, c("x0", "x1"))
+    pval[, c("var1", "var2"):= .(x[x0], x[x1])]
+    pval <- pval[lengths(var1)>0 & lengths(var2)>0]
+    # Compute pvals
+    if(nrow(pval)>1)
     {
-      # Wilcoxon
-      pval[, pval:= wilcox.test(obj[V1, unlist(value)],
-                                obj[V2, unlist(value)])$p.value, .(V1, V2)]
-      # x values correspond to obj "at" position
-      pval[, c("x0", "x1"):= as.list(range(obj[c(V1, V2), at])), .(V1, V2)]
-      # y position is the max of crossing boxes + adjustment
-      pval$y <- obj[pval, max(y_max+adj*1.5, na.rm = T), .EACHI, on= c("at<=x1", "at>=x0")]$V1
-      # Avoid overlapping segments by requiring some space between consecutive y values
-      if(nrow(pval)>1)
-      {
-        pval <- pval[order(x0, x1)]
-        pval[, overlap:= cumsum(x0-cummax(x1)[c(1, seq(.N-1))]>0)]# Make groups of overlapping segments
-        pval <- pval[order(y, x1-x0, x0)]
-        pval[, y:= {
-          for(i in 2:(.N)) 
-            if(y[i]<y[i-1]+adj*1.5)
-              y[i] <- y[i-1]+adj*1.5
-          y
-        }, overlap]
-      }
+      pval[, pval:= wilcox.test(unlist(var1), unlist(var2))$p.value, .(x0, x1)]
+      pval[, y:= max(unlist(box[c("out", "stats"), x0:x1]), na.rm= T)+adj, .(x0, x1)]
+      pval[, c("y0", "y1", "idx"):= .(y-0.5*adj, y+0.5*adj, .I)]
+      setorderv(pval, c("x0", "x1", "y"))
+      pval$y <- pval[pval, i.y+adj*.N, .EACHI, on= c("x1>=x0", "x0<=x1", "y1>=y0", "y0<=y1", "idx<idx")]$V1
+      pval[, x:= rowMeans(.SD), .SDcols= c("x0", "x1")]
+      # Adjust max
+      if(max(pval$y+adj)>ylim[2])
+        ylim[2] <- max(pval$y+adj)
     }
   }
-  #------------------####
-  # PLOT
-  #------------------####
-  if(missing(xlim))
-    xlim <- range(obj$at)+c(-0.5,0.5)
-  if(missing(ylim))
-  {
-    ylim <- range(obj[, .(y_min-adj, y_max+adj)], na.rm= T) # adjust fact 4% range (see higher)
-    if(!missing(compute_pval) && nrow(pval)>0 && max(pval[,y+adj])>ylim[2])
-      ylim[2] <- max(pval[,y+adj])
-  }
-    
-  # plot
-  if(!add)
-  {
-    plot(NA,
-         xlim = xlim,
-         ylim = ylim,
-         xlab= xlab,
-         ylab= ylab, 
-         xaxt= "n",
-         ...)
-    if(!isFALSE(names))
-      axis(1,
-           at= unique(obj$at), 
-           labels= obj$variable)
-  }
-
-  # violins
+  
+  # Compute violins
   if(violin)
   {
-    obj[N_obs>2, 
-        mapply(function(x, y, at, violCc)
-        {
-          x <- c(at+x, at-rev(x))
-          y <- c(y, rev(y))
-          polygon(x, y, col = violCc)
-        }, x, y, at, violCc)]
+    violcols <- c(matrix(violcol, ncol= 1, nrow= length(x)))
+    viols <- lapply(seq(x), function(i) {
+      var <- x[[i]]
+      if(length(var)>2)
+      {
+        dens <- density(var,
+                        from= min(var, na.rm= T),
+                        to= max(var, na.rm= T))
+        xp <- dens$y/max(dens$y)*violwex
+        xp <- c(i+xp, i-rev(xp))
+        yp <- c(dens$x, rev(dens$x))
+        list(x= xp, 
+             y= yp,
+             col= violcols[i])
+      }else
+        list()
+    })
+    viols <- rbindlist(viols[lengths(viols)>0],
+                       idcol = T)
+    viols <- viols[, .(x= .(x),
+                       y= .(y)), .(.id, col)]
   }
   
-  # boxplots
-  obj[, segments(at, min, at, max)]
-  obj[, rect(at-boxwex, Q1, at+boxwex, Q3, col= boxCc)]
-  obj[, segments(at-boxwex, Q2, at+boxwex, Q2, lwd= 2*par("lwd"), lend= 2)]
-  
-  # outliers
+  #------------------------#
+  # Plot
+  #------------------------#
+  plot.new()
+  plot.window(xlim= xlim,
+              ylim= ylim)
+  if(violin && nrow(viols)>0)
+    viols[, {
+      polygon(unlist(x), 
+              unlist(y), 
+              col= col[1])
+    }, .(.id, col)]
+  boxplot(x,
+          pch= NA,
+          outline= F,
+          add= T,
+          staplewex= staplewex, 
+          lty= box.lty, 
+          boxwex= boxwex,
+          col= boxcol,
+          xlab= xlab,
+          ylab= ylab,
+          names= names,
+          ...)
   if(outline)
-    obj[, mapply(function(at, min, max, outliers) {
-      x <- jitter(rep(at, length(outliers)))
-      points(x, 
-             outliers, 
-             pch= 16, 
-             col= adjustcolor("lightgrey", 0.6))
-    }, at, min, max, outliers)]
-  
-  # pval
+    points(x= jitter(rep(seq(x), lengths(box["out",]))),
+           y= unlist(box["out",]),
+           pch= 16,
+           col= adjustcolor("grey", 0.5))
   if(!missing(compute_pval) && nrow(pval)>0)
-  {
-    segments(pval$x0,
-             pval$y,
-             pval$x1,
-             pval$y)
-    vl_plot_pval_text(rowMeans(pval[, .(x0, x1)]),
-                      pval$y,
-                      pval$pval, 
-                      stars_only = T)
-  }
-  
-  # Returns object
-  if(!missing(compute_pval) && nrow(pval)>0)
-    obj <- list(obj= obj, pval= pval)
-  invisible(obj)
+    pval[, {
+      segments(x0, y, x1, y)
+      vl_plot_pval_text(x, y, pval, stars_only = T)
+    }]
 }

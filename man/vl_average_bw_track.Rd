@@ -2,23 +2,35 @@
 % Please edit documentation in R/bwTools.R
 \name{vl_average_bw_track}
 \alias{vl_average_bw_track}
+\alias{plot.vl_bw_average_track}
 \title{bw Average tracks}
 \usage{
-vl_average_bw_track(bed, set_IDs = NULL, tracks, extend = c(-5000,
-  5000), stranded = F, nbins = 501, names = NULL, plot = T,
-  xlab = "genomic distance", ylab = "Enrichment", ylim = NULL,
-  col = NULL, axes = T, legend = T)
+vl_average_bw_track(bed, tracks, set_IDs = 1, upstream = 5000,
+  downstream = 5000, stranded = F, nbins = 500,
+  names = gsub(".bw$", "", basename(tracks)), center_label = "Center",
+  plot = T, xlab = "genomic distance", ylab = "Enrichment", ylim,
+  col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A",
+  "#4F6A6F", "#D26429", "#C57DA5", "#999999"), legend = T)
+
+plot.vl_bw_average_track(obj, xlab = "genomic distance",
+  xaxis = c("Upstream", "Center", "Downstream"), ylab = "Enrichment",
+  ylim, col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A",
+  "#4F6A6F", "#D26429", "#C57DA5", "#999999"), legend = T)
 }
 \arguments{
 \item{bed}{Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 
 \item{tracks}{Vector of bw files to plot. Use full paths to avoid pbs.}
 
-\item{extend}{How much should the bed regions be extended (starting from the center). dEfault= c(-5000, 5000)}
+\item{set_IDs}{Set IDs specifying the groups as subsets of the bed file}
 
-\item{stranded}{Should the average track be stranded? If yes, - features are reversed :D}
+\item{upstream}{Upstream  extension of bed regions (centered on center)}
 
-\item{nbins}{Number of bins spanning the extended regions. Default= 501}
+\item{downstream}{Downstream  extension of bed regions (centered on center)}
+
+\item{stranded}{Should the average track be stranded?}
+
+\item{nbins}{Number of bins spanning the extended regions. Default= 500}
 
 \item{names}{Track names to plot. If specified, must be the same length as bw vector. By default, bw basenames will be used.}
 
@@ -30,11 +42,9 @@ vl_average_bw_track(bed, set_IDs = NULL, tracks, extend = c(-5000,
 
 \item{ylim}{ylim for plotting. default= range(data)}
 
-\item{col}{Colors to use. If specified, should match length(tracks)*length(unique(set_IDs)). default= NULL (redirects to rainbow)}
+\item{col}{Color to be used for plotting.}
 
-\item{axes}{Should the x axis be plotted? Default to T}
-
-\item{legend}{Should the legen be plotted? default to T}
+\item{legend}{Should the legeng be plotted? default to T}
 }
 \value{
 An object that can be used with the vl_average_bw_track_plot_only() function.
@@ -42,23 +52,14 @@ An object that can be used with the vl_average_bw_track_plot_only() function.
 \description{
 Plots average tracks for a set bw files around (potentially) several sets of peaks
 }
-\examples{
-Unstranded 
-STARR <- fread("/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/peaks/DSCP_600bp_gw_cut_merged.peaks.txt", select = c(1,2))
-STARR <- STARR[, .(seqnames= V1, start= V2, end= V2)]
-obj1 <- vl_average_bw_track(bed= STARR,
-                            set_IDs = c(rep("High", 2000), rep("Low", 2781)),
-                            #' extend = c(-5000, 5000),
-                            stranded = F,
-                            tracks= "/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_600bp_gw_cut_merged.bw", 
-                            col= c("lightgrey", "red"), 
-                            names = c("STARR-Seq"))
+\section{Functions}{
+\itemize{
+\item \code{plot.vl_bw_average_track}: Method to plot average tracks
+}}
 
-Stranded 
-prom <- readRDS("/groups/stark/hendy/Projects/Chromatin_remodeler_specificity/Analyses/Rdata/unique_proms_merged.df.RDS")
-prom <- as.data.table(GRanges(unique(prom$Flybase.TSS)))
-obj2 <- vl_average_bw_track(bed= prom,
-                            extend = c(-5000, 5000),
-                            stranded = T,
-                            tracks= "/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE81795_H3K4me3_rep1_uniq.bw")
+\examples{
+bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
+sets <- c(rep("suhw", 100), rep("STARR", 1000))
+tracks <- c("../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", "../gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
+vl_average_bw_track(bed, tracks, plot= T, upstream = 1000, downstream = 1000, set_IDs = sets)
 }

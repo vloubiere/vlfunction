@@ -6,14 +6,24 @@
 #'
 #' @param bed Regions to quantify. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
 #' @param bw Path to target bw file (character vector)
-#' @param read_length read length, used when integer_counts is set to TRUE
-#' @param integer_counts If set to TRUE, returns integer counts using approximated total read counts based on read_length
+#' @param na_value Value to use for NAs. default to 0
+#' @examples 
+#' bins <- vl_binBSgenome("dm3", restrict_seqnames = "chr3R")
+#' cov1 <- vl_bw_coverage(bins, "../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw")
+#' 
+#' # Compare to GRanges method
+#' binned_average_function <- function(gr, file_bw_path){
+#' file_bw <- import.bw(file_bw_path, as="RleList")
+#' seqlevels(gr) <- names(file_bw)
+#' bins1 <- binnedAverage(gr,file_bw, "average_score")
+#' return(bins1$average_score)
+#' }
+#' cov2 <- binned_average_function(GRanges(bins), "../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw")
+#' identical(cov1, cov2)
 #' @export
-
 vl_bw_coverage <- function(bed, 
                            bw,
-                           read_length= 50,
-                           integer_counts= F)
+                           na_value= 0)
 {
   if(length(bw) != 1)
     stop("length(bw) != 1")
@@ -23,193 +33,82 @@ vl_bw_coverage <- function(bed,
   # Format
   if(!vl_isDTranges(bed))
     bed <- vl_importBed(bed)
-  .b <- data.table::copy(bed)
-  .b[, .ID:= .I]
-  
+  .b <- data.table::copy(bed[, .(seqnames, start, end, .I)])
+
   # Import bw
-  sel <- rtracklayer::BigWigSelection(GenomicRanges::GRanges(.b), "score")
+  sel <- rtracklayer::BigWigSelection(GenomicRanges::GRanges(na.omit(.b)), "score")
   var <- data.table::as.data.table(rtracklayer::import.bw(bw, selection= sel))
-  keys <- c("seqnames", "start", "end")
-  data.table::setkeyv(.b, keys)
-  data.table::setkeyv(var, keys)
   
-  # Compute counts
-  ov <- data.table::foverlaps(.b, var)
-  ov[start<i.start, start:= i.start]
-  ov[end>i.end, end:= i.end]
-  ov <- ov[, .(score= sum(score*(end-start+1))/(i.end-i.start+1)), .(.ID, i.start, i.end)]
-  if(integer_counts)
-  {
-    total_counts <- sum(var[, score*width])/read_length
-    total_width <- sum(var[, (end-start+1)])
-    ov[, score:= round(score*(i.end-i.start+1)/total_width*total_counts)]
-  }
-  return(ov[order(.ID), score])
-}
-
-#' bw total reads
-#'
-#' Estimate total reads within bw file
-#'
-#' @param bw Path to target bw file(s) (character vector)
-#' @param read_length length of the reads used to generate bw file
-#' @export
-
-vl_bw_totalReads <- function(bw,
-                             read_length)
-{
-  # Import bw(s)
-  var <- rbindlist(lapply(bw, function(x) data.table::as.data.table(rtracklayer::import.bw(x))))
-  res <- var[, .(total_counts= round(sum(score*width, na.rm= T)/read_length)), seqnames]
+  # Overlap
+  res <- var[.b, .(seqnames, x.start, x.end, score, i.start, i.end, I), on= c("seqnames", "start<=end", "end>=start")]
   
+  # Clip bw ranges to bin ramges
+  res[x.start<i.start, x.start:= i.start]
+  res[x.end>i.end, x.end:= i.end]
+  
+  # Compute score
+  res <- res[, sum(score*(x.end-x.start+1))/(i.end-i.start+1), .(seqnames, i.start, i.end, I)]$V1
+  res[is.na(res)] <- na_value
   return(res)
 }
 
-#' Compute ChIP enrichment
+#' Bins bed file and compute bw signal
+#' 
+#' Compared to vl_bw_coverage, this functions bins bed file before quantifying the signal. Useful to make heatmaps/average tracks
 #'
-#' compared to enrichBed, uses bw files as Input_bw
-#'
-#' @param regions Regions to analyse. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()
-#' @param ChIP_bw ChIP bw files paths. If several provided, cat
-#' @param Input_bw Input bw files paths. If several provided, cat
-#' @param read_length Used to estimate total reads. default to 50
-#' @return original bins file with OR, pval and padj corresponding to fisher result
-#' @export
-
-vl_bw_enrich <- function(regions,
-                         ChIP_bw,
-                         Input_bw,
-                         read_length= 50)
+#' @param bed Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
+#' @param tracks Vector of bw files to plot. Use full paths to avoid pbs.
+#' @param set_IDs Set IDs specifying the groups as subsets of the bed file
+#' @param upstream Upstream  extension of bed regions (centered on center)
+#' @param downstream Downstream  extension of bed regions (centered on center)
+#' @param stranded Should the average track be stranded?
+#' @param nbins Number of bins spanning the extended regions. Default= 500
+#' @param names Track names to plot. If specified, must be the same length as bw vector. By default, bw basenames will be used.
+vl_bw_coverage_bins <- function(bed,
+                                tracks,
+                                set_IDs,
+                                upstream, 
+                                downstream,
+                                stranded,
+                                nbins, 
+                                names)
 {
-  if(!all(grepl(".bw$", c(ChIP_bw, Input_bw))))
-    stop("ChIP_bw and Input_bw should be bw files")
+  # Hard copy bed
+  if(!vl_isDTranges(bed))
+    bed <- vl_importBed(bed)
+  # Checks
+  if(!"strand" %in% names(bed))
+    bed[, strand:= factor("*")]
+  if(!identical(unique(tracks), tracks))
+    stop("tracks should be unique")
+  if(!identical(unique(names), names))
+    stop("names should be unique")
   
-  # Hard copy regions
-  if(!vl_isDTranges(regions))
-    regions <- vl_importBed(regions)
-  regions <- copy(regions)
-
-  # bw coverage
-  count_wrap <- function(bw)
-  {
-    .c <- lapply(bw, function(x) 
-    {
-      vl_bw_coverage(regions, 
-                     x, 
-                     read_length = read_length, 
-                     integer_counts = T)
-    })
-    .c <- do.call(cbind, .c)
-    .t <- vl_bw_totalReads(bw, 
-                           read_length = read_length)
-    setkeyv(.t, "seqnames")
-    data.table(rowSums(.c, na.rm= T),
-               .t[as.character(regions$seqnames), total_counts])
-  }
-  regions[, c("ChIP_counts", "ChIP_total_counts"):= count_wrap(ChIP_bw)]
-  regions[, c("Input_counts", "Input_total_counts"):= count_wrap(Input_bw)]
+  # Binning
+  bins <- data.table(bed, set_IDs)
+  bins[, region_ID:= .I]
+  bins <- vl_resizeBed(bins, "center", upstream, downstream)
+  bins <- bins[, {
+    coor <- round(seq(start, end, length.out= nbins+1))
+    coor <- data.table(start= coor[-length(coor)],
+                       end= coor[-1])
+    coor[-1, start:= start+1]
+  }, .(seqnames,
+       region_ID,
+       set_IDs,
+       strand)]
+  bins[, bin.x:= rowid(region_ID)]
+  if(stranded)
+    bins[as.character(strand)=="-", bin.x:= nbins-bin.x+1]
   
-  # Compute enrichment and pval
-  check <- regions[, ChIP_counts>0 & Input_counts>0] # Only regions containing reads
-  regions[(check), c("OR", "pval"):= {
-    mat <- matrix(unlist(.BY), nrow= 2, byrow = T)
-    fisher.test(mat, alternative = "greater")[c("estimate", "p.value")]
-  }, .(ChIP_counts, Input_counts, ChIP_total_counts, Input_total_counts)]
-  regions[, padj:= p.adjust(pval, "fdr")]
-  # Format narrowpeak file
-  regions[pval==0, pval:= min(regions[pval>0, pval])]
-  regions[padj==0, padj:= min(regions[padj>0, padj])]
-  regions <- regions[, .(seqnames, start, end,
-                         name= paste0("peak_", .I), 
-                         score= round(OR/max(OR, na.rm = T)*1000), 
-                         strand= ".", 
-                         signalValue= OR,
-                         pValue= -log10(pval),
-                         qValue= -log10(padj),
-                         peak= -1)]
-  
-  return(regions)
+  #--------------------------#
+  # Quantif tracks
+  #--------------------------#
+  obj <- data.table(file= tracks,
+                    name= names)
+  obj <- obj[, data.table(bins[, .(set_IDs, region_ID, bin.x)], score= vl_bw_coverage(bins, file)), (obj)]
+  return(obj)
 }
-
-#' bw Average tracks plot only
-#'
-#' Plots method for bigwig tracks generated by vl_average_bw_track
-#'
-#' @param obj An object returned by the vl_average_bw_track() function. The object can easily be modified to change colors and so on...
-#' @param ylim ylim for plotting. default= range(data)
-#' @param xlab X label. default= "genomic distance"
-#' @param ylab Y labels. default= "Enrichment"
-#' @param axes Should the x axis be plotted? Default to T
-#' @param legend Should the legend be plotted? default to T
-#' @examples 
-#' Unstranded 
-#' STARR <- fread("/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/peaks/DSCP_600bp_gw_cut_merged.peaks.txt", select = c(1,2))
-#' STARR <- STARR[, .(seqnames= V1, start= V2, end= V2)]
-#' obj1 <- vl_average_bw_track(bed= STARR,
-#'                             set_IDs = c(rep("High", 2000), rep("Low", 2781)),
-#'                             #' extend = c(-5000, 5000),
-#'                             stranded = F,
-#'                             tracks= "/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_600bp_gw_cut_merged.bw", 
-#'                             col= c("lightgrey", "red"), 
-#'                             names = c("STARR-Seq"), 
-#'                             plot=F)
-#' vl_average_bw_track_plot_only(obj = obj1)
-#'
-#' Stranded 
-#' prom <- readRDS("/groups/stark/hendy/Projects/Chromatin_remodeler_specificity/Analyses/Rdata/unique_proms_merged.df.RDS")
-#' prom <- as.data.table(GRanges(unique(prom$Flybase.TSS)))
-#' obj2 <- vl_average_bw_track(bed= prom,
-#'                             extend = c(-5000, 5000),
-#'                             stranded = T,
-#'                             tracks= "/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE81795_H3K4me3_rep1_uniq.bw",
-#'                             plot= F)
-#' plot(obj2)
-#' @export
-
-plot.bw_track <- function(obj, 
-                          ylim= NULL,
-                          xlab= "genomic distance",
-                          ylab= "Enrichment",
-                          axes= T, 
-                          legend= T)
-{
-  if(is.null(ylim))
-    ylim <- range(c(obj$heatmap[, mean-se], obj$heatmap[, mean+se]), na.rm = T)
-  plot(NA, 
-       xaxt= "n", 
-       xlim = c(1, obj$nbins), 
-       ylim = ylim, 
-       xlab= xlab,
-       ylab= ylab)
-  if(axes)
-    axis(1, 
-         at= seq(1, obj$nbins, length.out = 3), 
-         labels = seq(obj$extend[1], obj$extend[2], length.out = 3))
-  
-  obj$heatmap[, 
-              {
-                polygon(c(bin_ID, rev(bin_ID)), 
-                        c(mean+se, rev(mean-se)), 
-                        border= NA, 
-                        col= adjustcolor(Cc, 0.5))
-                lines(bin_ID, mean, 
-                      col= Cc)
-              }, .(track, set_ID, Cc)]
-  
-  
-  if(legend)
-  {
-    .u <- unique(obj$heatmap[, .(name, set_ID, Cc)])
-    if(length(unique(.u$set_ID))>1) # Only specify set_IDs if several sets are used!
-      labels <- paste0(.u$name , " @ ", .u$set_ID) else 
-        labels <- .u$name
-      legend("topleft", 
-             bty= "n", 
-             fill = .u$Cc, 
-             legend = labels)
-  }
-}
-
 
 #' bw Average tracks
 #'
@@ -217,363 +116,230 @@ plot.bw_track <- function(obj,
 #'
 #' @param bed Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
 #' @param tracks Vector of bw files to plot. Use full paths to avoid pbs.
-#' @param extend How much should the bed regions be extended (starting from the center). dEfault= c(-5000, 5000)
-#' @param stranded Should the average track be stranded? If yes, - features are reversed :D
-#' @param nbins Number of bins spanning the extended regions. Default= 501
+#' @param set_IDs Set IDs specifying the groups as subsets of the bed file
+#' @param upstream Upstream  extension of bed regions (centered on center)
+#' @param downstream Downstream  extension of bed regions (centered on center)
+#' @param stranded Should the average track be stranded?
+#' @param nbins Number of bins spanning the extended regions. Default= 500
 #' @param names Track names to plot. If specified, must be the same length as bw vector. By default, bw basenames will be used.
 #' @param plot Should the average track be ploted? default= T
 #' @param xlab X label. default= "genomic distance"
 #' @param ylab Y labels. default= "Enrichment"
 #' @param ylim ylim for plotting. default= range(data)
-#' @param col Colors to use. If specified, should match length(tracks)*length(unique(set_IDs)). default= NULL (redirects to rainbow)
-#' @param axes Should the x axis be plotted? Default to T
-#' @param legend Should the legen be plotted? default to T
+#' @param col Color to be used for plotting. 
+#' @param legend Should the legeng be plotted? default to T
 #' @examples 
-#' Unstranded 
-#' STARR <- fread("/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/peaks/DSCP_600bp_gw_cut_merged.peaks.txt", select = c(1,2))
-#' STARR <- STARR[, .(seqnames= V1, start= V2, end= V2)]
-#' obj1 <- vl_average_bw_track(bed= STARR,
-#'                             set_IDs = c(rep("High", 2000), rep("Low", 2781)),
-#'                             #' extend = c(-5000, 5000),
-#'                             stranded = F,
-#'                             tracks= "/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_600bp_gw_cut_merged.bw", 
-#'                             col= c("lightgrey", "red"), 
-#'                             names = c("STARR-Seq"))
-#'
-#' Stranded 
-#' prom <- readRDS("/groups/stark/hendy/Projects/Chromatin_remodeler_specificity/Analyses/Rdata/unique_proms_merged.df.RDS")
-#' prom <- as.data.table(GRanges(unique(prom$Flybase.TSS)))
-#' obj2 <- vl_average_bw_track(bed= prom,
-#'                             extend = c(-5000, 5000),
-#'                             stranded = T,
-#'                             tracks= "/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE81795_H3K4me3_rep1_uniq.bw")
+#' bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
+#' sets <- c(rep("suhw", 100), rep("STARR", 1000))
+#' tracks <- c("../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", "../gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
+#' vl_average_bw_track(bed, tracks, plot= T, upstream = 1000, downstream = 1000, set_IDs = sets)
 #' @return An object that can be used with the vl_average_bw_track_plot_only() function.
 #' @export
-
 vl_average_bw_track <- function(bed,
-                                set_IDs= NULL,
                                 tracks,
-                                extend= c(-5000, 5000),
+                                set_IDs= 1,
+                                upstream= 5000,
+                                downstream= 5000,
                                 stranded= F,
-                                nbins= 501, 
-                                names= NULL,
+                                nbins= 500, 
+                                names= gsub(".bw$", "", basename(tracks)),
+                                center_label= "Center",
                                 plot= T,
                                 xlab= "genomic distance",
                                 ylab= "Enrichment",
-                                ylim= NULL,
-                                col= NULL, 
-                                axes= T,
+                                ylim,
+                                col= c("#E69F00","#68B1CB","#15A390","#96C954","#77AB7A","#4F6A6F","#D26429","#C57DA5","#999999"),
                                 legend= T)
 {
-  # Hard copy bed
-  if(!vl_isDTranges(bed))
-    bed <- vl_importBed(bed)
-  bins <- data.table::copy(bed)
-  if(is.null(set_IDs))
-    set_IDs <- rep(1, nrow(bins))
-  if(length(set_IDs)!=nrow(bins))
-    stop("set_IDs length should match nrows(bed)!")
-  if(stranded & !("strand" %in% colnames(bins)))
-    stop("stranded= T but no 'strand' column in bed file")
-  if(any(!file.exists(tracks)))
-    stop("some bw files could not be found! full paths prodvided?")
-  if(is.null(names))
-    names <- gsub(".bw$", "", basename(tracks))
-  if(length(names) != length(tracks))
-    stop("names vector length should be the same as bw files vector length(", length(tracks), ")")
-  if(is.null(col))
-    col <- grDevices::rainbow(length(tracks)*length(unique(set_IDs)))
-  if(length(col) != length(tracks)*length(unique(set_IDs)))
-    stop("Colors vector length should be the same as bw files vector length * unique set_IDs (", 
-         length(tracks)*length(unique(set_IDs)), ")")
-  
-  # Format bins
-  bins[, set_ID:= set_IDs]
-  add <- seq(extend[1], extend[2], length.out = nbins+1)
-  if(!stranded)
-    bins[, strand:= "+"]
-  bins[, center:= round(rowMeans(.SD)), .SDcols= c("start", "end")]
-  bins[, region_ID:= .I]
-  bins <- bins[, .(start= ceiling(center+add[-length(add)]),
-                   end= floor(center+add[-1]), 
-                   bin_ID= if(strand=="+") seq(nbins) else rev(seq(nbins))), 
-                 .(set_ID, region_ID, seqnames, strand)]
-  setkeyv(bins, c("seqnames", "start", "end"))
-  
-  #--------------------------#
-  # Quantif tracks
-  #--------------------------#
-  sel <- GenomicRanges::GRanges(bins[, .(seqnames= seqnames[1], 
-                                         start= min(start), 
-                                         end= max(end)), .(region_ID)])
-  sel <- rtracklayer::BigWigSelection(sel, "score")
-  q <- parallel::mclapply(tracks, function(x)
-  {
-    .c <- data.table::as.data.table(rtracklayer::import.bw(x, selection= sel))
-    data.table::setkeyv(.c, c("seqnames", "start", "end"))
-    res <- data.table::foverlaps(.c, bins, nomatch = 0)
-    res <- res[, .(score= max(abs(score), na.rm= T)), .(set_ID, region_ID, bin_ID)]
-    res <- res[, .(mean= mean(score, na.rm = T), se= sd(score, na.rm = T)/sqrt(length(score))), .(set_ID, bin_ID)]
-  })
-  names(q) <- tracks
-  final <- data.table::rbindlist(q, idcol = "track")
-  final[, Cc:= col[.GRP], .(track, set_ID)]
-  final[, name:= names[.GRP], track]
-  setorderv(final, "bin_ID")
-  
-  #-------------------------#
-  # Make object
-  #-------------------------#
-  obj <- list(heatmap= final, 
-              nbins= nbins,
-              extend= extend)
-  
-  #--------------------------#
-  # PLOT
-  #--------------------------#
-  class(obj) <- "bw_track"
+  obj <- vl_bw_coverage_bins(bed= bed,
+                             tracks= tracks,
+                             set_IDs= set_IDs,
+                             upstream= upstream, 
+                             downstream= downstream,
+                             stranded= stranded,
+                             nbins= nbins, 
+                             names= names)
+  setattr(obj, "class", c("vl_bw_average_track", "data.table", "data.frame"))
   if(plot)
-    plot(obj, 
-         ylim = ylim,
-         xlab= xlab,
-         ylab= ylab, 
-         axes= axes, 
-         legend= legend)
-  invisible(obj) 
+    plot.vl_bw_average_track(obj,
+                             xlab= xlab,
+                             xaxis= c(upstream, center_label, downstream),
+                             ylab= ylab,
+                             ylim= ylim,
+                             col= col,
+                             legend= legend)
+  invisible(obj)
 }
 
-
-#' bw heatmap plot only
-#'
-#' Plotting method for bw_heatmap retuned by vl_heatmap_bw_track output object
-#'
-#' @param obj An object returned by the vl_heatmap_bw_track() function. The object can easily be modified to change colors and so on...
-#' @param center_label Label for the center of the heatmaps
-#' @param col Color vector to be used for heatmaps. col= c("blue", "yellow", "white")
-#' @param max_FUN Function used to compute clipping max for each track. default= function(x) quantile(x, 0.995, na.rm =T)
-#' @export
-
-plot.bw_heatmap <- function(obj,
-                            col= c("blue", "yellow", "white"),
-                            center_label= "TSS",
-                            max_FUN= function(x) quantile(x, 0.995, na.rm= T),
-                            order_col_idx= 1,
-                            order_FUN= function(x) max(x, na.rm= T))
+#' @describeIn vl_average_bw_track Method to plot average tracks
+plot.vl_bw_average_track <- function(obj,
+                                     xlab= "genomic distance",
+                                     xaxis= c("Upstream", "Center", "Downstream"),
+                                     ylab= "Enrichment",
+                                     ylim,
+                                     col= c("#E69F00","#68B1CB","#15A390","#96C954","#77AB7A","#4F6A6F","#D26429","#C57DA5","#999999"),
+                                     legend= T)
 {
-  list2env(obj, 
-           environment())
-  # Compute order
-  orderCol <- dcast(heatmap,
-                    regionID~name, 
-                    value.var = "value", 
-                    fun.aggregate = order_FUN)
-  setorderv(orderCol, 
-            names(orderCol)[-1][order_col_idx], 
-            order = -1)
-  orderCol[, order:= .I]
-  heatmap[orderCol, row_order:= i.order, on= "regionID"]
-  # Compute max and norm values
-  heatmap[, max:= max_FUN(value), name]
-  heatmap[, score:= value]
-  heatmap[score>max, score:= max]
-  heatmap[, score:= score/max*100]
-  # Compute colors
-  Cc <- circlize::colorRamp2(seq(0, 100, length.out=length(col)), 
-                             col)
-  heatmap[, Cc:= Cc(score)]
-  
-  # Image
-  opar <- as.call(c(par, par()[c("mar", "xaxs", "yaxs")])) # Used to reinitialize plotting on exit
-  im <- dcast(heatmap, 
-              setID+row_order~name+binID, 
-              value.var = "Cc")
-  im <- as.matrix(im[, -1], 1)
-  plot.new()
-  plot.window(xlim= c(1, ncol(im)),
-              ylim= c(1, nrow(im)))
-  rasterImage(im, 
-              xleft = 1, 
-              xright = ncol(im),
-              ybottom = 1, 
-              ytop = nrow(im))
+  cols <- colorRampPalette(col)(obj[, .NGRP, .(name, set_IDs)][1, NGRP])
+  obj[, col:= cols[.GRP], .(name, set_IDs)]
+  pl <- obj[, .(mean= mean(score, na.rm= T), 
+                se= sd(score, na.rm= T)/sqrt(.N)), .(name, col, set_IDs, bin.x)]
+  plot(NA, 
+       xlim= range(pl$bin.x),
+       ylim= if(missing(ylim)) range(c(pl[, mean-se], pl[, mean+se])) else ylim,
+       ylab= ylab,
+       xlab= xlab,
+       xaxt= "n")
+  axis(1, 
+       c(1, max(obj$bin.x)/2, max(obj$bin.x)),
+       labels= xaxis)
+  pl[, {
+    polygon(c(bin.x, rev(bin.x)), 
+            c(mean+se, rev(mean-se)),
+            border= NA,
+            col= adjustcolor(col[1], 0.5))
+    lines(mean, col= col[1])
+  }, .(name, set_IDs, col)]
+  # Legend
+  if(legend)
+  {
+    leg <- unique(pl[, .(set_IDs, name, col)])
+    if(length(unique(leg$set_IDs))>1)
+      leg[, name:=  paste0(name, " @ ", set_IDs)]
+    legend("topleft",
+           leg$name,
+           fill= leg$col,
+           bty= "n")
+  }
 }
-
 
 #' bw Average tracks
 #'
 #' Plots average tracks for a set bw files around (potentially) several sets of peaks
 #'
-#' @param bed Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
-#' @param set_IDs Vector specifying group of regions.
+#' @param bed Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
 #' @param tracks Vector of bw files to plot. Use full paths to avoid pbs.
-#' @param extend How much should the bed regions be extended (starting from the center). dEfault= c(-5000, 5000)
-#' @param stranded Should the average track be stranded? If yes, - features are reversed :D
-#' @param nbins Number of bins spanning the extended regions. Default= 501
+#' @param set_IDs Set IDs specifying the groups as subsets of the bed file
+#' @param upstream Upstream  extension of bed regions (centered on center)
+#' @param downstream Downstream  extension of bed regions (centered on center)
+#' @param stranded Should the average track be stranded?
+#' @param nbins Number of bins spanning the extended regions. Default= 100
 #' @param names Track names to plot. If specified, must be the same length as bw vector. By default, bw basenames will be used.
-#' @param plot Should the heatmap be ploted? default= T
-#' @param center_label Label for the center of the heatmaps
-#' @param max_FUN Function used to compute clipping max for each track. default= function(x) quantile(x, 0.995, na.rm =T)
-#' @param order_col_idx Idx of the track to be used for ordering the heatmaps. Default=1 (1st left heatmap)
-#' @param oder_FUN Function used for regions ordering. Default= function(x) mean(x, na.rm= T)
-#' @param col Color vector to be used for heatmaps. col= c("blue", "yellow", "white")
-#' @return An object that can be used with the vl_heatmap_bw_track_plot_only() function.
+#' @param plot Should the average track be ploted? default= T
+#' @param col Vector of colors to be used for heatmap
+#' @param order_cols Numeric vector giving the indexes of the tracks to be used for ordering
+#' @param order_FUN Function used to aggregated per region and order heatmap. default= function(x) mean(x, na.rm= T)
+#' @param max_FUN Function to be used for clipping. default= function(x) quantile(x, 0.995, na.rm= T). Using max -> no clipping
+#' @examples 
+#' bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
+#' tracks <- c("../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", "../gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
+#' set_IDs <- c(rep("suhw", 100), rep("STARR", 1000))
+#' test <- vl_bw_heatmap(bed, tracks, set_IDs= set_IDs, plot= T, upstream = 1000, downstream = 1000, order_FUN = mean, order_cols = 2)
+#' plot(test)
+#' @return An object that can be used with the vl_average_bw_track_plot_only() function.
 #' @export
-
-vl_heatmap_bw_track <- function(bed,
-                                set_IDs= NULL,
-                                tracks,
-                                extend= c(5000, 5000),
-                                stranded= F,
-                                nbins= 100, 
-                                names= NULL,
-                                plot= T,
-                                center_label= "TSS",
-                                max_FUN= function(x) quantile(x, 0.995, na.rm= T),
-                                order_col_idx= 1,
-                                col= c("blue", "yellow", "white"))
+vl_bw_heatmap <- function(bed,
+                          tracks,
+                          set_IDs= 1,
+                          upstream= 5000,
+                          downstream= 5000,
+                          stranded= F,
+                          nbins= 100, 
+                          names= gsub(".bw$", "", basename(tracks)),
+                          plot= T,
+                          col= c("blue", "yellow"),
+                          order_cols= 1,
+                          order_FUN= function(x) mean(x, na.rm= T),
+                          max_FUN= function(x) quantile(x, 0.995, na.rm= T),
+                          na_col= "lightgrey")
 {
-  # Hard copy bed
-  if(!vl_isDTranges(bed))
-    bed <- vl_importBed(bed)
-  bins <- copy(bed)
-  if(is.null(set_IDs))
-    set_IDs <- rep(1, nrow(bins))
-  if(length(set_IDs)!=nrow(bins))
-    stop("set_IDs length should match nrows(bed)!")
-  if(stranded & !("strand" %in% colnames(bins)))
-    stop("stranded= T but no 'strand' column in bed file")
-  if(any(!file.exists(tracks)))
-    stop("some bw files could not be found! full paths prodvided?")
-  if(is.null(names))
-    names <- gsub(".bw$", "", basename(tracks))
-  if(length(names)!=length(unique(names)))
-    stop("")
-  if(length(unique(names)) != length(tracks))
-    stop("names should be unique and match the length of tracks'vector")
-  
-  #--------------------------#
-  # Compute bins
-  #--------------------------#
-  bins[, c("center", "setID"):= .(rowMeans(.SD), set_IDs), .SDcols= c("start", "end")]
-  bins <- bins[, {
-    coor <- round(seq(center-extend[1], 
-                      center+extend[2], 
-                      length.out= nbins+1))
-    res <- data.table(start= coor[-length(coor)], 
-                      end= coor[-1])
-    res[-1, start:= start+1]
-  }, .(seqnames,
-       strand,
-       setID,
-       regionID= rleid(seqnames, start, end))]
-  bins[, binID:= rowid(regionID, strand)]
-  if(stranded)
-    bins[strand=="-", binID:= rev(binID), regionID]
-  
-  #--------------------------#
-  # Quantif tracks
-  #--------------------------#
-  obj <- data.table(file= tracks,
-                    name= names)
-  obj <- obj[, bins[], (obj)]
-  obj[, value:= vl_bw_coverage(.SD, file), file]
-  
-  #--------------------------#
-  # PLOT
-  #--------------------------#
-  obj <- list(heatmap= obj,
-              extend= extend,
-              stranded= stranded,
-              nbins= nbins)
-  class(obj) <- c("bw_heatmap", "list")
+  obj <- vl_bw_coverage_bins(bed= bed,
+                             tracks= tracks,
+                             set_IDs= set_IDs,
+                             upstream= upstream, 
+                             downstream= downstream,
+                             stranded= stranded,
+                             nbins= nbins, 
+                             names= names)
+  setattr(obj, "class", c("vl_bw_heatmap", "data.table", "data.frame"))
   if(plot)
-    plot(obj,
-         col= col,
-         center_label= center_label,
-         order_col_idx= order_col_idx,
-         max_FUN= max_FUN)
-  invisible(obj) 
+    plot.vl_bw_heatmap(obj,
+                       col= col,
+                       order_cols= order_cols,
+                       max_FUN= max_FUN,
+                       order_FUN= order_FUN,
+                       na_col= na_col)
+  invisible(obj)
 }
 
-#' Merge bw files
-#'
-#' @param x fastq file path (read1)
-#' @param output Output files
-#' @param BSgenome Used to extract bw
-#' @param bins bin size used to simplify bw. Default to NA (no simplification)
-#' @examples
-#' @export
-
-vl_bw_merge <- function(x, 
-                        output,
-                        BSgenome= BSgenome,
-                        bins= NA)
+#' @describeIn vl_bw_heatmap Method to plot vl_bw_heatmap objects. See ?vl_bw_heatmap()
+plot.vl_bw_heatmap <- function(obj, 
+                               col= c("blue", "yellow"),
+                               order_cols= 1,
+                               order_FUN= function(x) mean(x, na.rm= T),
+                               max_FUN= function(x) quantile(x, 0.995, na.rm= T),
+                               na_col= "lightgrey")
 {
-  if(!is.character(x))
-    stop("x should bw a character vector of bw paths")
-  if(length(x)<2)
-    stop("x should have a length of at least 2")
-  if(class(BSgenome)[1]!="BSgenome")
-    stop("BSgenome should be an pbject of class BSgenome")
-  
-  # Import first bw
-  merged <- as.data.table(import.bw(x[1]))
-  merged <- merged[, .(seqnames, start, end, score)]
-  setkeyv(merged, c("seqnames", "start", "end"))
-  for(i in 2:length(x))
+  # Format 
+  if(!is.factor(obj$name))
+    obj[, name:= factor(name, unique(as.character(name)))]
+  if(!is.factor(obj$set_IDs))
+    obj[, set_IDs:= factor(set_IDs, unique(as.character(set_IDs)))]
+  # Reorder region_ID if order cols specified
+  if(is.numeric(order_cols))
   {
-    # Import next bw
-    add <- as.data.table(import.bw(x[i]))
-    add <- add[, .(seqnames, start, end, score)]
-    setkeyv(add, c("seqnames", "start", "end"))
-    
-    # Merge with previous files
-    res <- foverlaps(merged, add, nomatch= NA)
-    res[, score:= score+i.score]
-    
-    # Simplify
-    res <- res[, .(start= max(c(start, i.start)),
-                   end= min(c(end, i.end))), 
-               .(seqnames, score, rleid(score))]
-    res$rleid <- NULL
-    
-    # Add rows present in add that do not overlap res
-    merged <- rbind(res,
-                    add[res[add, .N==0, .EACHI, on= c("seqnames", "start<=end", "end>=start")]$V1])
-    
-    # Clean
-    merged <- na.omit(merged)
-    setkeyv(merged, c("seqnames", "start", "end"))
-    print(".")
+    order_cols <- levels(obj$name)[order_cols]
+    ord <- dcast(obj[name %in% order_cols], 
+                 region_ID~name, 
+                 value.var = "score", 
+                 fun.aggregate = order_FUN)
+    setorderv(ord, order_cols, -1)
+    ord[, order:= .I]
+    obj[ord, region_ID:= i.order, on= "region_ID"]
+  }
+  # Clip outliers
+  obj[, max:= max_FUN(score), name]
+  obj[score>max, score:= max]
+  # Dcast image
+  dmat <- dcast(obj, set_IDs+region_ID~name+bin.x, value.var = "score")
+  im <- mat <- as.matrix(dmat[, !c("set_IDs", "region_ID")])
+  # Plotting parameters
+  Cc <- circlize::colorRamp2(range(im, na.rm= T), col)
+  im[!is.na(im)] <- Cc(im[!is.na(im)])
+  im[is.na(im)] <- na_col
+  Nbins <- max(obj$bin.x)
+  track.names.x <- seq(1, ncol(mat)-Nbins, length.out= length(levels(obj$name)))+Nbins/2
+  Sets.y <- c(0,cumsum(table(unique(obj[, .(set_IDs, region_ID)])$set_IDs)))
+  if(length(Sets.y)>2)
+  {
+    Sets.lines.y <- nrow(mat)-Sets.y[-c(1, length(Sets.y))]
+    Sets.names.y <- nrow(mat)-(Sets.y[-1]-diff(Sets.y)/2)
   }
   
-  # Export
-  print("Collapse bin size")
-  if(!is.na(bins))
-    merged <- merged[, {
-      # Bin chromosome
-      chrEnd <- max(end)
-      .b <- data.table(start= seq(1, chrEnd, bins))
-      .b[, end:= start+bins-1]
-      .b[end>chrEnd, end:= chrEnd]
-      .b <- .b[end-start>0]
-      # copy data and key
-      var <- copy(.SD)
-      setkeyv(.b, c("start", "end"))
-      setkeyv(var, c("start", "end"))
-      # Overlap
-      ov <- data.table::foverlaps(.b, var)
-      ov[start<i.start, start:= i.start]
-      ov[end>i.end, end:= i.end]
-      ov <- ov[, .(score= sum(score*(end-start+1))/(i.end-i.start+1)), .(i.start, i.end)]
-      # Simplify and return
-      ov[, .(start= first(i.start),
-             end= last(i.end)), .(score, rleid(score))]
-    }, seqnames]
-  
-  # Export
-  merged <- GRanges(merged[, .(seqnames, start, end, score)])
-  seqlengths(merged) <- seqlengths(BSgenome)
-  rtracklayer::export.bw(object = merged, 
-                         output)
+  #--------------------------------#
+  # PLOT
+  #--------------------------------#
+  plot.new()
+  plot.window(xlim= c(0.5, ncol(mat)+0.5),
+              ylim= c(0.5, nrow(mat)+0.5))
+  rasterImage(xleft = 1, 
+              ybottom = 1, 
+              xright = ncol(im),
+              ytop = nrow(im),
+              im)
+  abline(v= seq(0, ncol(im), Nbins), col= "white")
+  rect(1,1,ncol(mat), nrow(mat), xpd= T)
+  text(track.names.x,
+       par("usr")[4], 
+       levels(obj$name),
+       xpd= T)
+  if(length(Sets.y)>2)
+  {
+    segments(1, Sets.lines.y, ncol(mat), Sets.lines.y, xpd= T)
+    text(0,
+         Sets.names.y,
+         levels(obj$set_IDs),
+         pos= 2,
+         xpd= T)
+  }
 }

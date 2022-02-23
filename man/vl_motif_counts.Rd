@@ -2,32 +2,48 @@
 % Please edit documentation in R/MotifAnalysisTools.R
 \name{vl_motif_counts}
 \alias{vl_motif_counts}
+\alias{vl_motif_counts.data.table}
+\alias{vl_motif_counts.character}
 \title{Counts motifs}
 \usage{
-vl_motif_counts(sequences = NULL, bed = NULL, genome,
+vl_motif_counts(sequences, ...)
+
+\method{vl_motif_counts}{data.table}(bed, genome, ...)
+
+\method{vl_motif_counts}{character}(sequences = NULL, p.cutoff = 5e-04,
   sel = vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn),
   motif])
 }
 \arguments{
-\item{sequences}{Sequences to analyse. If provided takes over bed argument (in the case where both are specified)}
+\item{sequences}{Named character vector of sequences to analyse. If provided takes over bed argument (in the case where both are specified)}
 
 \item{bed}{Either a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns}
 
 \item{genome}{Genome to be used for coordinates ("dm6, "dm3")}
 
+\item{p.cutoff}{Pval cutoff used for motif detection}
+
 \item{sel}{List of motifs to compute. see vl_Dmel_motifs_DB_full$motif}
 }
 \value{
-Network plot.
+Matrix of motif counts
 }
 \description{
 Counts motif occurences in a set of regions
 }
-\examples{
-test <- cl_motif_counts(bed = GRanges("chr3R", IRanges(c(2e6, 3e6), c(2e6, 3e6)+1e3)),
-genome= "dm6",
-resize= T, 
-extend = c(500, 500),
-sel= vl_Dmel_motifs_DB$metadata$motif_name[1:10])
+\section{Methods (by class)}{
+\itemize{
+\item \code{data.table}: Method to extract sequences from BSgenome
 
+\item \code{character}: Identify motifs in sequences
+}}
+
+\examples{
+# Example run
+suhw <- vl_motif_counts(vl_SUHW_top_peaks, "dm3")
+ctls_regions <- vl_control_regions_BSgenome(bed= vl_SUHW_top_peaks, "dm3")
+ctl <- vl_motif_counts(ctls_regions, "dm3")
+pl <- vl_motif_enrich(suhw, ctl, plot= F)
+par(mar= c(4,8,4,6))
+plot(pl, top_enrich= 10)
 }

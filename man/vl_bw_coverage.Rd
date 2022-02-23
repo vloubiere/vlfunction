@@ -4,20 +4,32 @@
 \alias{vl_bw_coverage}
 \title{bw coverage}
 \usage{
-vl_bw_coverage(bed, bw, read_length = 50, integer_counts = F)
+vl_bw_coverage(bed, bw, na_value = 0)
 }
 \arguments{
 \item{bed}{Regions to quantify. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 
 \item{bw}{Path to target bw file (character vector)}
 
-\item{read_length}{read length, used when integer_counts is set to TRUE}
-
-\item{integer_counts}{If set to TRUE, returns integer counts using approximated total read counts based on read_length}
+\item{na_value}{Value to use for NAs. default to 0}
 }
 \description{
 Quantify bw file at a set of intervals. returns mean value/region
 }
 \details{
 Note that strand-specific overlap is not implemented! bw files do not contain strand info!?
+}
+\examples{
+bins <- vl_binBSgenome("dm3", restrict_seqnames = "chr3R")
+cov1 <- vl_bw_coverage(bins, "../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw")
+
+# Compare to GRanges method
+binned_average_function <- function(gr, file_bw_path){
+file_bw <- import.bw(file_bw_path, as="RleList")
+seqlevels(gr) <- names(file_bw)
+bins1 <- binnedAverage(gr,file_bw, "average_score")
+return(bins1$average_score)
+}
+cov2 <- binned_average_function(GRanges(bins), "../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw")
+identical(cov1, cov2)
 }

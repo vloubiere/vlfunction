@@ -2,10 +2,10 @@
 % Please edit documentation in R/bedTools.R
 \name{vl_resizeBed}
 \alias{vl_resizeBed}
-\title{Find closestBed regions}
+\title{Resize bed}
 \usage{
 vl_resizeBed(bed, center = "center", upstream = 500,
-  downstream = 500, ignore.strand = F)
+  downstream = 500, ignore.strand = F, genome)
 }
 \arguments{
 \item{bed}{Bed file to resize. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
@@ -17,10 +17,12 @@ vl_resizeBed(bed, center = "center", upstream = 500,
 \item{downstream}{Downstream extension. default= 500L}
 
 \item{ignore.strand}{Should the strand be considered when defininng start or end centering? Default= F}
+
+\item{genome}{BSgenome used to check limits of extended regions. Out of limit ranges will be resized accodtingly}
 }
 \value{
 Resized DT ranges
 }
 \description{
-For each line of a file, returns the closest lines in b
+Resize a bed file starting from specified origin
 }

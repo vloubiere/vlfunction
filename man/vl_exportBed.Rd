@@ -15,9 +15,6 @@ vl_exportBed(bed, ...)
 \arguments{
 \item{bed}{Either a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 }
-\value{
-Imported bed
-}
 \description{
 Export bed file
 }

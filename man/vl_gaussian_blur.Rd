@@ -8,11 +8,9 @@ vl_gaussian_blur(signal)
 }
 \arguments{
 \item{signal}{A numeric vector of the signal to be blurred}
-
-\item{...}{Arguments to 'format', such as 'digits' and 'trim'.}
 }
 \value{
-Equation
+Smoothed signal
 }
 \description{
 radius= +/- 10 bins

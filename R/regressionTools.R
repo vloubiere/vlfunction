@@ -1,7 +1,6 @@
 #' model equation
 #'
 #' Returns the equation from lm model. The code was found at https://stats.stackexchange.com/questions/63600/how-to-translate-the-results-from-lm-to-an-equation
-#'
 #' @param model Model
 #' @param ... Arguments to 'format', such as 'digits' and 'trim'.
 #' @return Equation
@@ -53,9 +52,10 @@ vl_model_eval <- function(observed, predicted)
 }
 
 #' Compute explained variance
+#' 
+#' From Bernardo, computes the % explained variance for each predictor
 #'
 #' @param model An object containing the results returned by a model fitting function (e.g., lm or glm).
-#'
 #' @return % of explained variance
 #' @export
 vl_model_expVar <- function(model)

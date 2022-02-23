@@ -10,7 +10,7 @@ vl_oligo_Tm(seq)
 \item{seq}{Character vector containing DNA sequence}
 }
 \value{
-pritns result
+Tm and GC% as a list
 }
 \description{
 Calculates Oligo Tm and GC %

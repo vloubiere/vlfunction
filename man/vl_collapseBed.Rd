@@ -4,9 +4,7 @@
 \alias{vl_collapseBed}
 \title{Collapse ranges with a certain min dist}
 \usage{
-vl_collapseBed(bed, mingap = 1, return_idx_only = F,
-  compute_other_columns = NULL, aggregate.fun = function(x) mean(x,
-  na.rm = T))
+vl_collapseBed(bed, mingap = 1, return_idx_only = F)
 }
 \arguments{
 \item{bed}{bed file to be collapsed. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames','start', 'end' columns. see ?vl_importBed()}
@@ -14,12 +12,6 @@ vl_collapseBed(bed, mingap = 1, return_idx_only = F,
 \item{mingap}{min gap ditance for merging. default is 1 (that is, touching coordinates)}
 
 \item{return_idx_only}{If set to T, does not collapse regions but returns idx as an extra columns. default= F}
-
-\item{compute_other_columns}{If set to T or to a vector of column names, extra columns will be compute by contig using aggregate.fun.}
-
-\item{aggregate.fun}{See compute_other_columns. Default to function(x) mean(x, na.rm= T)}
-
-\item{stranded}{If set to true and strand column is provided, only merges coordinates with similar strand.}
 }
 \value{
 Collapse coor data.table
@@ -28,8 +20,8 @@ Collapse coor data.table
 Collapse ranges with a certain min dist between them
 }
 \examples{
-ex <- GRanges(c("chr3L", "chr3L", "chr3L", "chr3L", "chr2R"), 
-IRanges(c(1000, 2000, 2100, 2200, 2000), 
-c(1500, 2099, 2199, 2299, 3000))
-vl_collapseBed(ex, mingap= 1)
+bed <- data.table(seqnames= c("chr3L", "chr3L", "chr3L", "chr3L", "chr3L", "chr2R", "chr2R", "chr2R"),
+start= c(1000, 2000, 2100, 2200, 2500, 2000, 2500, 5000),
+end= c(1500, 2099, 2199, 2299, 3000, 3000, 3500, 6000))
+vl_collapseBed(bed, mingap= 1)
 }

@@ -2,16 +2,18 @@
 % Please edit documentation in R/bedTools.R
 \name{vl_isDTranges}
 \alias{vl_isDTranges}
-\title{Check if data.table file likely corresponds to a bed}
+\title{Check if data.table file contains all bed canonical fields
+If it does, make sure that class of bed columns is correct}
 \usage{
 vl_isDTranges(x)
 }
 \arguments{
-\item{x}{Object to be testd}
+\item{x}{Object to be tested}
 }
 \value{
 boolean
 }
 \description{
-Check if data.table file likely corresponds to a bed
+Check if data.table file contains all bed canonical fields
+If it does, make sure that class of bed columns is correct
 }

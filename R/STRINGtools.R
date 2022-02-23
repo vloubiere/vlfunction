@@ -3,161 +3,100 @@
 #' Extract interactions form STRIN db (Dmel only for now)
 #'
 #' @param symbols vector of Dmel gene symbols
-#' @param size For each gene symbol, the size of corresponding vertice (i.e, absolute FC)
+#' @param plot Should the graph be plotted?
+#' @param score_cutoff If specified, only plot interactions with score>=cutoff
+#' @param top_N If specified, only plot top N interactions
 #' @param col For each gene symbol, the color of corresponding vertice (i.e, tomato for up, cornflowerblue for down)
+#' @param size For each gene symbol, the size of corresponding vertice (i.e, absolute FC)
 #' @param cex.label cex factor to be applied to correponding vertices labels
-#' @param db_path Path to an existing db, or filename where to create it. See examples
 #' @examples 
 #' #USAGE
-#' symbols <- c("Pc", "Psc", "E(z)", "dgt1", "Rcd1")
-#' interactions <- vl_STRING_interaction(symbols)
-#' vl_STRING_network(interactions)
-#' 
-#' 
-#' #------------#
-#' # Code used to create DB
-#' #------------#
-#' # Download STRING db v11.5 fro Dmel
-#' link <- "https://stringdb-static.org/download/protein.links.detailed.v11.5/7227.protein.links.detailed.v11.5.txt.gz"
-#' tmp <- tempfile(fileext = ".txt.gz")
-#' download.file(link, tmp)
-#' DB <- fread(tmp)
-#' # Download correspondance Dmel symbols
-#' link <- "https://stringdb-static.org/download/protein.info.v11.5/7227.protein.info.v11.5.txt.gz"
-#' download.file(link, tmp)
-#' sym <- fread(tmp)
-#' DB[sym, protein1_symbol:= i.preferred_name, on= "protein1==`#string_protein_id`"]
-#' DB[sym, protein2_symbol:= i.preferred_name, on= "protein2==`#string_protein_id`"]
-#' # Collapse unique interactions
-#' DB[, merge:= paste0(sort(c(protein1_symbol, protein2_symbol)), collapse= ""), .(protein1_symbol, protein2_symbol)]
-#' DB <- DB[, .SD[1], merge]
-#' # SAVE
-#' saveRDS(DB[, .(protein1_symbol, protein2_symbol, combined_score)], 
-#' file = db_path)
-#' 
-#' @return An object that can be used with the vl_STRING_network() function.
+#' symbols <- c("Pc", "Psc", "E(z)", "RpL10", "RpL11", "RpL12")
+#' vl_STRING_interaction(symbols)
+#' test <- vl_STRING_interaction(symbols, col= vl_palette_categ1(6))
+#' plot(test)
+#' plot(test, size= 10*1:6)
+#' plot(test, col= "red")
+#' @return An object that can be used with the plot.vl_STRING() method
 #' @export
-
-vl_STRING_interaction <- function(symbols= NULL, 
-                                  size= NULL,
-                                  col= NULL,
-                                  cex.label= NULL,
-                                  db_path= "/mnt/d/_R_data/genomes/dm6/STRING/dmel_7227_v11.5_vl_db.rds")
+vl_STRING_interaction <- function(symbols,
+                                  plot= T,
+                                  score_cutoff= 900,
+                                  top_N= NA,
+                                  col= "tomato",
+                                  size= 10,
+                                  cex.label= 1)
 {
-  # Checks
-  if(is.null(size))
-    size <- rep(20, length(symbols))
-  if(any(size<0))
-    stop("all size arguments should be > 0")
-  if(is.null(col))
-    col <- rep("tomato", length(symbols))
-  if(is.null(cex.label))
-    cex.label <- rep(1, length(symbols))
-  # Import DB
-  if(is.na(db_path))
-    stop("db_path should either be a path to a STRING_db object (vl) or a valid filename where the db will be created")
-  if(!file.exists(db_path))
-  {
-    check <- readline("db_path file does not exist. Should the db be created in place (~500M)? y/n ")
-    if(check=="y")
-    {
-      if(!grepl(".rds$", db_path))
-        stop("db_path should point to a valid/accesssible .rds filename")
-      # Download STRING db v11.5 fro Dmel
-      link <- "https://stringdb-static.org/download/protein.links.detailed.v11.5/7227.protein.links.detailed.v11.5.txt.gz"
-      tmp <- tempfile(fileext = ".txt.gz")
-      download.file(link, tmp)
-      DB <- fread(tmp)
-      # Download correspondance Dmel symbols
-      link <- "https://stringdb-static.org/download/protein.info.v11.5/7227.protein.info.v11.5.txt.gz"
-      download.file(link, tmp)
-      sym <- fread(tmp)
-      DB[sym, protein1_symbol:= i.preferred_name, on= "protein1==`#string_protein_id`"]
-      DB[sym, protein2_symbol:= i.preferred_name, on= "protein2==`#string_protein_id`"]
-      # Collapse unique interactions
-      DB[, merge:= paste0(sort(c(protein1_symbol, protein2_symbol)), collapse= ""), .(protein1_symbol, protein2_symbol)]
-      DB <- DB[, .SD[1], merge]
-      # SAVE
-      saveRDS(DB[, .(protein1_symbol, protein2_symbol, combined_score)], 
-              file = db_path)
-    }
-  }else
-    DB <- readRDS(db_path)
+  if(!identical(symbols, unique(symbols)))
+    stop("symbols should be unique")
   
-  # Extract interactions
-  sub <- DB[protein1_symbol %in% symbols & 
-              protein2_symbol %in% symbols]
-  # Print info
-  check <- 100-length(which(symbols %in% c(DB$protein1, DB$protein2)))/length(unique(symbols))*100
-  print(paste0(check, "% of symbols have not correpondance in DB"))
-  # Make Vertices object
+  # Get interaction
+  res <- vl_Dmel_STRING_DB[protein1_symbol %in% symbols & protein2_symbol %in% symbols]
+  
+  # Vertices
   V <- data.table(name= symbols,
                   size, 
-                  color= col, 
-                  cex.label= cex.label)
-  V <- unique(V)
-
-  # RETURN
-  return(list(obj= sub,
-              V= V))
+                  color= col,
+                  cex.label)
+  
+  # Final obj
+  obj <- list(symbols= symbols,
+              interactions= res,
+              vertices= V)
+  class(obj) <- c("vl_STRING", "list")
+  
+  # Print info
+  check <- 100-sum(symbols %in% c(vl_Dmel_STRING_DB$protein1_symbol, vl_Dmel_STRING_DB$protein2_symbol))/length(unique(symbols))*100
+  print(paste0(check, "% of symbols have no correpondance in DB"))
+  
+  # PLOT
+  if(plot)
+    plot(obj,
+         score_cutoff= score_cutoff,
+         top_N= top_N,
+         col= col,
+         size= size,
+         cex.label= cex.label)
+  
+  invisible(obj)
 }
 
-#' plot STRING interactions
-#'
-#' Network plotting funciton for vl_STRING_interaction output
-#'
-#' @param object Object returned by ?vl_STRING_interaction()
-#' @param score_cutoff Interaction score cutoff. Default is 200, max value in DB is 999. Also used to compute edge widths!
-#' @param top_N top N cutoff
-#' @param cex.vertices Scaling factor vertices
-#' @param cex.vertices.labels Scaling factor vertices labels
-#' @param vertex.border.col Color of vertices' borders
-#' 
-#' @examples 
-#' #USAGE
-#' symbols <- c("Pc", "Psc", "E(z)", "dgt1", "Rcd1")
-#' interactions <- vl_STRING_interaction(symbols)
-#' vl_STRING_network(interactions)
-#'
-#' @return Network plot.
-#' @export
-#' 
-vl_STRING_network <- function(object,
-                              score_cutoff= 900,
-                              top_N= NA,
-                              cex.vertices= 1,
-                              cex.vertices.labels= 1,
-                              vertex.border.col= "black")
+#' @describeIn vl_STRING_interaction Method to plot STRING interaction igraphs
+plot.vl_STRING <- function(obj,
+                           score_cutoff= 900,
+                           top_N= NA,
+                           col,
+                           size,
+                           cex.label)
 {
-  if(length(cex.vertices)!=1)
-    stop("lenght(cex.vertices) should be 1, applied to all vertices equally")
-  if(length(cex.vertices.labels)!=1)
-    stop("lenght(cex.vertices.labels) should be 1, applied to all vertices equally")
+  list2env(obj, environment())
   
-  list2env(object, 
-           environment())
+  # Checks and cutoffs
+  if(!is.na(score_cutoff))
+    interactions <- interactions[combined_score>=score_cutoff]
+  if(!is.na(top_N))
+    interactions <- interactions[order(combined_score)<=N_top]
   
-  # Score cutoff
-  obj <- obj[combined_score>=score_cutoff]
+  # Change vertices if new color, size or cex.label specified
+  if(!missing(size))
+    vertices$size <- size
+  if(!missing(col))
+    vertices$color <- col
+  if(!missing(cex.label))
+    vertices$cex.label <- cex.label
+  
+  # Remove vertices with no interactions
+  vertices <- vertices[name %in% interactions[, c(protein1_symbol, protein2_symbol)]]
+  
   # Make Edges object
-  E <- V[, obj[.BY, .(to= protein2_symbol, 
-                      width= combined_score/999*5), on= "protein1_symbol==from"], .(from= name)]
-  E <- na.omit(E)
-  setorderv(E, "width", order = -1)
-  if(!is.na(top_N) & nrow(E)>top_N)
-    E <- E[1:top_N]
-  # Keep only vertices which are represented
-  V <- V[name %in% E$from | name %in% E$to]
-  
-  #--------------#
-  # PLOT
-  #--------------#
-  V[, size:= size*cex.vertices]
-  V[, cex.label:= cex.label*cex.vertices.labels]
+  E <- interactions[, .(from= protein1_symbol,
+                        to= protein2_symbol,
+                        width= combined_score/999*3)]
+  # igraph
   .g <- igraph::graph_from_data_frame(d = E, 
-                                      vertices = V,
+                                      vertices = vertices,
                                       directed = F)
   plot(.g, 
        vertex.label.cex= V$cex.label, 
-       vertex.frame.color= vertex.border.col)
+       vertex.frame.color= NA)
 }

@@ -2,37 +2,45 @@
 #'
 #' Counts motif occurences in a set of regions
 #'
-#' @param sequences Sequences to analyse. If provided takes over bed argument (in the case where both are specified)
+#' @param sequences Named character vector of sequences to analyse. If provided takes over bed argument (in the case where both are specified)
 #' @param bed Either a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns
 #' @param genome Genome to be used for coordinates ("dm6, "dm3")
+#' @param p.cutoff Pval cutoff used for motif detection
 #' @param sel List of motifs to compute. see vl_Dmel_motifs_DB_full$motif
-#' 
-#' @examples 
-#' test <- cl_motif_counts(bed = GRanges("chr3R", IRanges(c(2e6, 3e6), c(2e6, 3e6)+1e3)),
-#' genome= "dm6",
-#' resize= T, 
-#' extend = c(500, 500),
-#' sel= vl_Dmel_motifs_DB$metadata$motif_name[1:10])
-#' 
-#' @return Network plot.
+#' @examples
+#' # Example run
+#' suhw <- vl_motif_counts(vl_SUHW_top_peaks, "dm3")
+#' ctls_regions <- vl_control_regions_BSgenome(bed= vl_SUHW_top_peaks, "dm3")
+#' ctl <- vl_motif_counts(ctls_regions, "dm3")
+#' pl <- vl_motif_enrich(suhw, ctl, plot= F)
+#' par(mar= c(4,8,4,6))
+#' plot(pl, top_enrich= 10)
+#' @return Matrix of motif counts
 #' @export
+vl_motif_counts <- function(sequences, ...) UseMethod("vl_motif_counts")
 
-vl_motif_counts <- function(sequences= NULL,
-                            bed= NULL, 
-                            genome,
-                            sel= vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn), motif])
+#' @describeIn vl_motif_counts Method to extract sequences from BSgenome
+vl_motif_counts.data.table <- function(bed, genome, ...)
 {
-  # Checks
-  if(is.null(sequences))
-  {
-    if(is.null(bed))
-      stop("sequences or bed+genome must be specified") else
-    {
-      if(!vl_isDTranges(bed))
-        bed <- vl_importBed(bed)
-      sequences <- BSgenome::getSeq(BSgenome::getBSgenome(genome), bed$seqnames, bed$start, bed$end, as.character= T)
-    }
-  } 
+  if(!vl_isDTranges(bed))
+    bed <- vl_importBed(bed)
+  sequences <- BSgenome::getSeq(BSgenome::getBSgenome(genome), bed$seqnames, bed$start, bed$end, as.character= T)
+  names(sequences) <- paste0(bed$seqnames, ":", bed$start, "-", bed$end, ":", if("strand" %in% names(bed)) bed$ranges else "*")
+  
+  pl <- match.call()
+  pl$bed <- pl$genome <- NULL
+  pl$sequences <- sequences
+  pl[[1]] <- quote(vl_motif_counts.character)
+  eval(pl)
+}
+
+#' @describeIn vl_motif_counts Identify motifs in sequences
+vl_motif_counts.character <- function(sequences= NULL,
+                                      p.cutoff= 5e-4,
+                                      sel= vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn), motif])
+{
+  if(is.null(names(sequences)))
+    names(sequences) <- seq(sequences)
   
   # Select motifs
   if(any(!sel %in% vl_Dmel_motifs_DB_full$motif))
@@ -42,88 +50,74 @@ vl_motif_counts <- function(sequences= NULL,
                  sub$pwms_log_odds)
   
   # Count motifs
-  res <- as.data.table(as.matrix(motifmatchr::matchMotifs(mot,
-                                                          sequences,
-                                                          p.cutoff= 5e-4,
-                                                          bg= "even",
-                                                          out= "scores")@assays@data[["motifCounts"]]))
-  res <- as.data.table(res)
-  setnames(res, sub$motif)
+  res <- as.matrix(motifmatchr::matchMotifs(mot,
+                                            sequences,
+                                            p.cutoff= p.cutoff,
+                                            bg= "even",
+                                            out= "scores")@assays@data[["motifCounts"]])
+  colnames(res) <- sub$uniqName_noSpecialChar
+  rownames(res) <- names(sequences)
   return(res)  
 }
 
-
-#' Compute motif enrichment
+#' Motif enrichment analysis
+#' 
+#' Compute motif enrichment between a set of regions and control regions
 #'
-#' Compute motif enrichment for the cluster in cl_columns, using all the lines as background
-#'
-#' @param obj A fisher test matrix similar to ?vl_motif_cl_enrich() ouput.
-#' @param x_breaks Breaks to be used for balloons'sizes
-#' @param padj_cutoff cutoff for ballons to be ploted
-#' @param log2OR_cutoff cutoff for ballons to be ploted
-#' @param N_top Select top enriched motifs/cluster
-#' @param color_breaks Color breaks used for coloring
-#' @param col Vector of colors used for coloring
-#' @param main Title. Default= NA
-#' @param auto_margins Use auto margins? Default= T
-#' @return ballons plot with padj and log2OR
+#' @param counts matrix of counts for the regions of interest
+#' @param control_counts matrix of counts for control regions
+#' @param plot Plot result?
+#' @param padj_cutoff cutoff for plotting
+#' @param top_enrich Show only n top enriched motifs
+#' @return DT of enrichment values
+#' @examples 
+#' # Example run
+#' suhw <- vl_motif_counts(vl_SUHW_top_peaks, "dm3")
+#' ctls_regions <- vl_control_regions_BSgenome(bed= vl_SUHW_top_peaks, "dm3")
+#' ctl <- vl_motif_counts(ctls_regions, "dm3")
+#' pl <- vl_motif_enrich(suhw, ctl, plot= F)
+#' par(mar= c(4,8,4,6))
+#' plot(pl, top_enrich= 10)
+#' @return Returns a table of enrichment which can be plot using ?plot.vl_GO_enr
 #' @export
-
-vl_motif_cl_enrich_plot_only <- function(obj,
-                                         x_breaks,
-                                         padj_cutoff= 0.05,
-                                         log2OR_cutoff= 0,
-                                         N_top= Inf,
-                                         color_breaks,
-                                         col= c("cornflowerblue", "lightgrey", "tomato"),
-                                         main= NA,
-                                         auto_margins = T)
+vl_motif_enrich <- function(counts,
+                            control_counts,
+                            plot= T,
+                            padj_cutoff= 0.05,
+                            top_enrich= Inf)
 {
-  DT <- data.table::copy(obj)
-  if(log2OR_cutoff<0)
-    stop("log2OR_cutoff should be >= 0")
+  if(!is.matrix(counts) | !is.matrix(control_counts) | !identical(colnames(counts), colnames(control_counts)))
+    stop("counts and control counts should be matrices of motif counts with similar colnames")
   
-  #----------------------------------#
-  # Generate plot table
-  #----------------------------------#
-  # Cutoffs
-  DT <- DT[, .(cl, log2OR, padj, any(padj <= padj_cutoff & log2OR > log2OR_cutoff)), motif][(V4), !"V4"]
-  if(nrow(DT)==0)
-    stop("No enrichment found with provided padj cutoff!")
-  # Format plotting object
-  DT[, '-log10(padj)':= -log10(padj)]
-  # Order and select top motif/cluster
-  setorderv(DT, 
-            c("cl", "-log10(padj)", "log2OR", "motif"), 
-            order = c(1, -1, -1, 1))
-  DT[log2OR>0, rank:= seq(.N), cl]
-  DT <- DT[motif %in% DT[rank<=N_top, motif]]
-  # Handle infinite log2OR
-  if(any(is.infinite(DT$log2OR)))
-  {
-    warning("There are suspcious infinite log2OR values found after padj cutoff -> capped to max(finite)")
-    print(unique(DT[is.infinite(DT$log2OR), motif]))
-    DT[log2OR==Inf, log2OR:= max(DT[is.finite(log2OR), log2OR])]
-    DT[log2OR==(-Inf), log2OR:= min(DT[is.finite(log2OR), log2OR])]
-  }
-  # Remove values that were useful for earlier ordering but do not meet minimum criteria
-  DT <- DT[padj<0.05 & log2OR>=0]
-  DT[, motif:= factor(motif, levels= unique(DT$motif))]
+  # make obj
+  obj <- rbindlist(list(set= as.data.table(counts),
+                        control= as.data.table(control_counts)),
+                   idcol = T)
+  obj <- melt(obj, id.vars = ".id")
   
-  #-----------------------------#
-  # PLOT
-  #-----------------------------#
-  x <- as.matrix(dcast(DT, motif~cl, value.var = "log2OR"), 1)
-  color_var <- as.matrix(dcast(DT, motif~cl, value.var = "-log10(padj)"), 1)
+  # Test enrichment
+  res <- obj[, {
+    # Contingency table 
+    tab <- table(.id=="set", value>0)
+    # Check contingency table -> Fisher
+    if(identical(c(2L,2L), dim(tab)))
+      fisher.test(tab)[c("estimate", "p.value")] else
+        list(estimate= as.numeric(NA), `p.value`= as.numeric(NA)) # Default to NA
+  }, variable]
+  setnames(res, c("estimate", "p.value"), c("OR", "pval"))
   
-  pl <- match.call()
-  pl$obj <- pl$padj_cutoff <- pl$log2OR_cutoff <- pl$N_top <- NULL
-  pl$x <- x
-  pl$color_var <- color_var
-  pl$balloon_size_legend <- "OR (log2)"
-  pl$balloon_col_legend <- "padj (-log10)"
-  pl[[1]] <- quote(vl_balloons_plot)
-  eval(pl)
+  # padj...
+  res[, padj:= p.adjust(pval, method = "fdr"), pval]
+  res[, log2OR:= log2(OR)]
+  res <- res[, .(variable, log2OR, padj)]
+  setattr(res, "class", c("vl_enr", "data.table", "data.frame"))
+  
+  if(plot)
+    plot(res,
+         padj_cutoff= padj_cutoff,
+         top_enrich= top_enrich)
+  
+  invisible(res)
 }
 
 #' Compute motif enrichment
@@ -142,9 +136,37 @@ vl_motif_cl_enrich_plot_only <- function(obj,
 #' @param col Vector of colors used for coloring
 #' @param main Title. Default= NA
 #' @param auto_margins Use auto margins? Default= T
+#' @examples 
+#' # Sets of peaks
+#' top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
+#' top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
+#' rdm <- vl_random_regions_BSgenome("dm3", 2000, width= 500)
+#' 
+#' # Compute enrichment SUHW vs STARR-Seq
+#' set <- rbind(top_SUHW,
+#'              top_STARR, fill= T)
+#' counts <- vl_motif_counts(set, "dm3")
+#' enr <- vl_motif_cl_enrich(counts, 
+#'                           cl_IDs = c(rep(1, nrow(top_SUHW)),
+#'                                      rep(2, nrow(top_STARR))),
+#'                           plot=F)
+#' plot(enr, padj_cutoff= 1e-2)
+#' 
+#' # Compute enrichment of SUHW & STARR-Seq over random regions
+#' counts <- vl_motif_counts(rbind(top_SUHW,
+#'                                 top_STARR, 
+#'                                 rdm, fill= T), "dm3")
+#' cl_IDs <- c(rep("suhw", nrow(top_SUHW)),
+#'             rep("STARR", nrow(top_STARR)),
+#'             rep("rdm", nrow(rdm)))
+#' enr <- vl_motif_cl_enrich(counts, 
+#'                           cl_IDs = cl_IDs,
+#'                           control_cl = "rdm",
+#'                           plot=F)
+#' par(las= 1)
+#' plot(enr, padj_cutoff= 1e-20)
 #' @return Fisher test data.table.
 #' @export
-
 vl_motif_cl_enrich <- function(counts_matrix, 
                                cl_IDs,
                                control_cl= unique(cl_IDs),
@@ -154,13 +176,14 @@ vl_motif_cl_enrich <- function(counts_matrix,
                                N_top= Inf,
                                x_breaks,
                                color_breaks,
+                               cex.balloons= 1,
                                col= c("cornflowerblue", "lightgrey", "tomato"),
                                main= NA,
                                auto_margins = T)
 {
   if(!is.matrix(counts_matrix))
     stop("counts_matrix should be a matrix")
-  if(any(sapply(seq(ncol(counts_matrix)), function(i) !is.numeric(counts_matrix[,i]))))
+  if(!all(apply(counts_matrix, 2, function(x) is.numeric(x))))
     stop("counts_matrix should only contain numeric values")
   if(is.null(rownames(counts_matrix)))
     rownames(counts_matrix) <- seq(nrow(counts_matrix))
@@ -171,8 +194,7 @@ vl_motif_cl_enrich <- function(counts_matrix,
   # Format table
   names(cl_IDs) <- NULL
   res <- melt(cbind(cl= cl_IDs, counts_matrix), 
-              id.vars = c("rn", "cl"),
-              variable.name = "motif")
+              id.vars = c("rn", "cl"))
   # Enrichment
   res <- res[, {
     counts <- data.table(ccl= cl, 
@@ -185,19 +207,21 @@ vl_motif_cl_enrich <- function(counts_matrix,
         fisher.test(tab)[c("estimate", "p.value")] else
           list(estimate= as.numeric(NA), `p.value`= as.numeric(NA))
     }, cl]
-  }, motif]
+  }, variable]
   setnames(res, c("estimate", "p.value"), c("OR", "pval"))
   # padj...
   res[, padj:= p.adjust(pval, method = "fdr"), pval]
   res[, log2OR:= log2(OR)]
-  res <- res[, .(motif, cl, log2OR, padj)]
-  # Plot
+  res <- res[, .(variable, cl, log2OR, padj)]
+  class(res) <- c("vl_enr_cl", "data.table", "data.frame")
+  
+  # plot
   if(plot)
   {
     pl <- match.call()
     pl$counts_matrix <- pl$cl_IDs <- pl$control_cl <- pl$plot <- NULL
     pl$obj <- res
-    pl[[1]] <- quote(vl_motif_cl_enrich_plot_only)
+    pl[[1]] <- quote(plot)
     eval(pl)
   }
   

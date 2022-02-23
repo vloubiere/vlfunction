@@ -2,18 +2,23 @@
 % Please edit documentation in R/vlPlots.R
 \name{vl_heatkey}
 \alias{vl_heatkey}
-\title{Title}
+\title{Heatkey plot}
 \usage{
-vl_heatkey(var, Cc, x, y, main = NA)
+vl_heatkey(breaks, col, left = par("usr")[2], top = par("usr")[4],
+  height = strheight("M") * 6, width = strwidth("M"), main = NA)
 }
 \arguments{
-\item{var}{The variable to which heatkey is referring to}
+\item{breaks}{Legend breaks}
 
-\item{Cc}{Function taking values within var ranges as input and returning color. Can be created using ?circlize::colorRamp2()}
+\item{col}{Color vectors with the same length as breaks}
 
-\item{x}{x position in npc}
+\item{left}{left pos}
 
-\item{y}{y position in npc}
+\item{top}{top pos}
+
+\item{height}{height}
+
+\item{width}{width}
 
 \item{main}{Title}
 }
@@ -21,5 +26,5 @@ vl_heatkey(var, Cc, x, y, main = NA)
 Plots heatkey
 }
 \description{
-Title
+Heatkey plot
 }

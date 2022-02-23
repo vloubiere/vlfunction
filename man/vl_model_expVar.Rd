@@ -13,5 +13,5 @@ vl_model_expVar(model)
 % of explained variance
 }
 \description{
-Compute explained variance
+From Bernardo, computes the % explained variance for each predictor
 }

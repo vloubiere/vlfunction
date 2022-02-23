@@ -34,5 +34,5 @@ vl_peakCalling(ChIP, Input, read_length = 50,
 significantly enriched peaks
 }
 \description{
-Compute peak calling using ChIP and Input
+IN DEVELOPMENT!! -> Computes peak calling using ChIP and Input
 }

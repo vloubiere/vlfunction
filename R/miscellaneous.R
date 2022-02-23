@@ -3,10 +3,8 @@
 #' radius= +/- 10 bins
 #'
 #' @param signal A numeric vector of the signal to be blurred
-#' @param ... Arguments to 'format', such as 'digits' and 'trim'.
-#' @return Equation
+#' @return Smoothed signal
 #' @export
-
 vl_gaussian_blur <- function(signal) {
   # Kernel (Pascal triangle)
   kernel <- c(1,20,190,1140,4845,15504,38760,77520,125970,167960,184756,167960,125970,77520,38760,15504,4845,1140,190,20,1)
@@ -19,7 +17,7 @@ vl_gaussian_blur <- function(signal) {
 #' Title
 #'
 #' @param x number of colours ro return
-#' @return vector of colors
+#' @return vector of colors of length x
 #' @export
 vl_palette_categ1 <- function(x){
   colorRampPalette(c("orchid1", "darkorchid1", "purple", "darkorchid4", 
@@ -32,7 +30,7 @@ vl_palette_categ1 <- function(x){
 #' Title
 #'
 #' @param x number of colours ro return
-#' @return vector of colors
+#' @return vector of colors of length x
 #' @export
 vl_palette_categ2 <- function(x){
   colorRampPalette(c("#E69F00", "#56B4E9", "#009E73", "#F0E442", 

@@ -39,6 +39,11 @@ parents= go_details$parents,
 children= go_details$children)
 vl_fb_go_table_dm6_FB2020_05 <- merge(go_details, unique(go))
 vl_fb_go_table_dm6_FB2020_05 <- vl_fb_go_table_dm6_FB2020_05[!(name \%in\% type)]
+vl_fb_go_table_dm6_FB2020_05[, type:= unlist(type)]
+GO_names <- unique(vl_fb_go_table_dm6_FB2020_05[, .(GO, type, name)])
+FBgn_GO_counts_matrix <- dcast(go_object, FBgn~GO, value.var = "Symbol", fun.aggregate = length)
+vl_fb_go_table_dm6_FB2020_05 <- list(GO_names= GO_names,
+FBgn_GO_counts_matrix= FBgn_GO_counts_matrix)
 save(vl_fb_go_table_dm6_FB2020_05, file= "../../vlfunction/data/vl_fb_go_table_dm6_FB2020_05.RData")
 
 }

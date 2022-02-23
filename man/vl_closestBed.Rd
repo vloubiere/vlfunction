@@ -20,8 +20,8 @@ Return "a" coor and closeet "b" coordinates together with distance
 For each line of a file, returns the closest lines in b
 }
 \examples{
-a <- data.table(chr= "chr2L", start= sample(10000, 1000))
-a[, end:= start:1000]
+a <- data.table(seqnames= "chr2L", start= sample(10000, 1000))
+a[, end:= start+1000]
 
 To all closest features
 vl_closestBed(a, min_dist= 0)

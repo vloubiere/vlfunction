@@ -34,7 +34,7 @@ vl_revComp <- function(DNA_char, complement= T, reverse= T)
 #' @param seq Character vector containing DNA sequence
 #' @examples 
 #' vl_oligo_Tm("GCCGATTCTCGGGCAGTTCCTC")
-#' @return pritns result
+#' @return Tm and GC% as a list
 #' @export
 vl_oligo_Tm <- function(seq)
 {
@@ -60,7 +60,6 @@ vl_oligo_Tm <- function(seq)
 #' enzyme= c("KpnI", "NotI"))
 #' @return A vector containing the digested pieces
 #' @export
-
 vl_digest <- function(seq, enzyme, keepsite= F)
 {
   seq <- toupper(seq)

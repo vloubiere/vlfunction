@@ -4,7 +4,7 @@
 \alias{vl_importBed}
 \alias{vl_importBed.character}
 \alias{vl_importBed.GRanges}
-\title{Import bed file as data.table}
+\title{Import bed file}
 \usage{
 vl_importBed(bed)
 

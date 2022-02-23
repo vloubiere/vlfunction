@@ -18,8 +18,8 @@ vl_boxplot(x, ...)
 
 \method{vl_boxplot}{default}(x, compute_pval, outline = F, xlab = NA,
   ylab = NA, xlim, ylim, names = NULL, boxcol = "white",
-  boxwex = 0.15, violin = F, violcol = "white", violwex = 0.35, at,
-  trim = T, add = F, ...)
+  boxwex = ifelse(violin, 0.25, 0.4), box.lty = 1, staplewex = NA,
+  violin = F, violcol = "white", violwex = 0.4, trim = T, ...)
 }
 \arguments{
 \item{x}{Matrix, data.atble or data.frame containing data}
@@ -44,23 +44,57 @@ vl_boxplot(x, ...)
 
 \item{boxwex}{box width}
 
+\item{box.lty}{Line type used for boxplots, default= 1}
+
+\item{staplewex}{Staples expansion factor. default= NA}
+
 \item{violin}{If set to FALSE, the violin is not computed/shown}
 
 \item{violcol}{violin color}
 
 \item{violwex}{violin width}
 
-\item{at}{x position for plotting}
-
 \item{trim}{Should violin be trimmed?}
+
+\item{x}{list data}
+
+\item{at}{x position for plotting}
 
 \item{add}{If TRUE, plot on the top of actual plot}
 
-\item{x}{list data}
+\item{x}{list of variables to be plotted}
+
+\item{compute_pval}{list of vectors of length two containing pairwise x indexes to be compared}
+
+\item{outline}{Should outliers be plotted?}
+
+\item{xlab}{x label}
+
+\item{ylab}{y label}
+
+\item{xlim}{x lim}
+
+\item{ylim}{y lim}
+
+\item{names}{box names (x axis)}
+
+\item{boxcol}{Box colors (recycled)}
+
+\item{boxwex}{Boxes expansion factor. default to 0.4, 0.25 if violin= T}
+
+\item{violin}{Should violins be plotted?}
+
+\item{violcol}{Violin colors (recycled)}
+
+\item{violwex}{violins expansion factor. default to 0.4}
+
+\item{...}{Extra parameters passed to boxplot, such as las, lwd...}
 }
 \description{
 This function plots a violin plot from either matrix,
 data.table, data.frame or using formula.
+
+Just a wrapper around boxplot that makes it nicer and allows to add violins and wilcox pvals
 }
 \section{Methods (by class)}{
 \itemize{
@@ -83,6 +117,6 @@ test[15:20, seq(2, 10, 2)] = test[15:20, seq(2, 10, 2)] + 4
 colnames(test) = paste("Test", 1:10, sep = "")
 rownames(test) = paste("Gene", 1:20, sep = "")
 
-vl_boxplot(test, violin= T, outline= T, compute_pval= list(c(1,2),c(1,3),c(3,5)))
+vl_boxplot(test, compute_pval= list(c(1,2), c(1,4), c(1,5), c(5,6), c(1,10), c(9,10)), outline= F, violcol= c("red", "yellow"), boxcol= c("green", "purple"))
 
 }

@@ -1,17 +1,32 @@
-#' Check if data.table file likely corresponds to a bed
+#' Check if data.table file contains all bed canonical fields
+#' If it does, make sure that class of bed columns is correct
 #'
-#' @param x Object to be testd
+#' @param x Object to be tested
 #' @return boolean
 #' @export
 vl_isDTranges <- function(x)
 {
-  all(c("seqnames", "start", "end") %in% names(x))
+  if(is.data.table(x) && all(c("seqnames", "start", "end") %in% names(x)))
+  {
+    if(!is.factor(x$seqnames))
+      x[, seqnames:= factor(seqnames, 
+                            levels= sort(unique(as.character(seqnames))))]
+    if(!is.integer(x$start))
+      x[, start:= as.integer(start)]
+    if(!is.integer(x$end))
+      x[, end:= as.integer(end)]
+    if("name" %in% names(x) && !is.factor(x$name))
+      x[, name:= factor(name)]
+    if("score" %in% names(x) && !is.numeric(x$score))
+      x[, score:= as.numeric(score)]
+    if("strand" %in% names(x) && !is.factor(x$strand))
+      x[, strand:= factor(strand, levels = c("+", "-", "*"))]
+    return(T)
+  }else
+    return(F)
 }
 
-#-----------------------------------------------------------------------------------------------------------------------------------------#
-# IMPORT
-#-----------------------------------------------------------------------------------------------------------------------------------------#
-#' Import bed file as data.table
+#' Import bed file
 #'
 #' Imports bed as data.table and check formats
 #'
@@ -21,39 +36,39 @@ vl_isDTranges <- function(x)
 vl_importBed <- function(bed) UseMethod("vl_importBed")
 
 #' @describeIn vl_importBed for bed paths
-#' @export
 vl_importBed.character <- function(bed)
 {
-  bed <- data.table::rbindlist(lapply(bed, function(x) fread(x, fill = T)))
+  bed <- data.table::rbindlist(lapply(bed, function(x) fread(x, 
+                                                             fill = T,
+                                                             stringsAsFactors = T)))
   if(!vl_isDTranges(bed))
   {
     bedcols <- 1:ifelse(ncol(bed)>6, 6, ncol(bed))
     setnames(bed, 
              names(bed)[bedcols],
              c("seqnames", "start", "end", "name", "score", "strand")[bedcols])
+    invisible(vl_isDTranges(bed))
   }
   return(bed)
 }
 
 #' @describeIn vl_importBed for GRanges
-#' @export
 vl_importBed.GRanges <- function(bed)
 {
-  return(data.table::as.data.table(bed))
+  bed <- data.table::as.data.table(bed)
+  bed[, seqnames:= factor(seqnames, 
+                          levels= sort(unique(as.character(seqnames))))]
+  bed[, strand:= factor(strand, 
+                        levels= c("+", "-", "*"))]
+  return(bed)
 }
 
-#-----------------------------------------------------------------------------------------------------------------------------------------#
-# EXPORT
-#-----------------------------------------------------------------------------------------------------------------------------------------#
 #' Export bed file
-#'
 #' @param bed Either a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
-#' @return Imported bed
 #' @export
 vl_exportBed <- function(bed, ...) UseMethod("vl_exportBed")
 
 #' @describeIn vl_exportBed for GRanges
-#' @export
 vl_exportBed.GRanges <- function(bed, filename)
 {
   fwrite(data.table::as.data.table(bed), 
@@ -65,7 +80,6 @@ vl_exportBed.GRanges <- function(bed, filename)
 } 
 
 #' @describeIn vl_exportBed for data.table
-#' @export
 vl_exportBed.data.table <- function(bed, filename)
 {
   if(!vl_isDTranges(bed))
@@ -87,90 +101,6 @@ vl_exportBed.data.table <- function(bed, filename)
          scipen = 20)
 } 
 
-
-#-----------------------------------------------------------------------------------------------------------------------------------------#
-# GENERATE SETS OF REGIONS
-#-----------------------------------------------------------------------------------------------------------------------------------------#
-#' Bin BS genome
-#'
-#' Very fast using data.table
-#'
-#' @param BSgenome BSgenome object to use.
-#' @param bins_width bins width default to 50bp
-#' @param steps_width steps width separating each bin. default set to bins_width
-#' @param restrict_seqnames If specified, bins are restricted to provided seqnames
-#' @examples 
-#' vl_binBSgenome(BSgenome= BSgenome.Dmelanogaster.UCSC.dm3, bins_width= 50)
-#' @return data.table containing bin coordinates
-#' @export
-
-vl_binBSgenome <- function(BSgenome,
-                           bins_width= 50,
-                           steps_width= bins_width,
-                           restrict_seqnames= NULL)
-{
-  if(!class(BSgenome)=="BSgenome")
-    stop("genome should be a BSgenome object!")
-  if(steps_width>bins_width)
-    warning("steps_width>bins_width, meaining bins will not be contiguous")
-  dat <- as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome)))
-  if(!is.null(restrict_seqnames))
-    dat <- dat[seqnames %in% restrict_seqnames]
-  bins <- dat[, .(start= seq(1, end, steps_width)), .(seqnames, end, width)]
-  bins[, end:= start+bins_width-1]
-  bins[end>width, end:= width]
-  bins <- bins[end-start>0, .(seqnames, start, end)]
-  setkeyv(bins, c("seqnames", "start", "end"))
-  return(bins)
-}
-
-#' Generate random control regions
-#'
-#' Generate control regions with given width distribution
-#'
-#' @param BSgenome BSgneome object to use.
-#' @param n Number of regions to sample
-#' @param width Widths of regions to sample (length should either be 1 or equal n)
-#' @param restrict_seqnames If specified, only the providsed seqnames will be used
-#' @param n Number of regions to sample
-#' @examples 
-#' vl_control_regions_BSgenome(BSgenome = BSgenome.Dmelanogaster.UCSC.dm3, 
-#' n= 5000, 
-#' width= 1000, 
-#' restrict_seqnames = c("chr2L", "chr2R", "chr3L", "chr3R", "chr4", "chrX"))
-#' @return data.table containing random control regions
-#' @export
-
-vl_control_regions_BSgenome <- function(BSgenome,
-                                        n,
-                                        width= 1, 
-                                        restrict_seqnames= NULL)
-{
-  if(!class(BSgenome)=="BSgenome")
-    stop("genome should be a BSgenome object!")
-  if(width<1)
-    stop("width cannot be smaller than 1")
-  dat <- data.table::as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome)))
-  if(is.null(restrict_seqnames))
-    restrict_seqnames <- dat$seqnames
-  
-  dat <- dat[seqnames %in% restrict_seqnames]
-  data.table::setnames(dat, "width", "chr_size")
-  idx <- sample(nrow(dat), 
-                replace = T, 
-                size = n, 
-                prob = dat$chr_size)
-  rdm <- dat[idx, .(seqnames, chr_size)]
-  rdm[, width:= width]
-  rdm[, start:= sample(seq(width+1, chr_size-width-1), .N), .(chr_size, width)]
-  rdm[, end:= start+width-1, .(chr_size, width)]
-  
-  return(rdm[, .(seqnames, start, end)])
-}
-
-#-----------------------------------------------------------------------------------------------------------------------------------------#
-# BEDTOOLS EQUIVALENTS
-#-----------------------------------------------------------------------------------------------------------------------------------------#
 #' Find closestBed regions
 #'
 #' For each line of a file, returns the closest lines in b
@@ -179,8 +109,8 @@ vl_control_regions_BSgenome <- function(BSgenome,
 #' @param b Granges or data.table FROM which closest features have to be found. If set to NULL (default), then a is matched to itself.
 #' @param min_dist Min distance for closest feature 
 #' @examples 
-#' a <- data.table(chr= "chr2L", start= sample(10000, 1000))
-#' a[, end:= start:1000]
+#' a <- data.table(seqnames= "chr2L", start= sample(10000, 1000))
+#' a[, end:= start+1000]
 #' 
 #' To all closest features
 #' vl_closestBed(a, min_dist= 0)
@@ -216,23 +146,25 @@ vl_closestBed <- function(a,
   return(res)
 }
 
-#' Find closestBed regions
+#' Resize bed
 #'
-#' For each line of a file, returns the closest lines in b
+#' Resize a bed file starting from specified origin
 #'
 #' @param bed Bed file to resize. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
 #' @param center From where should the region be centered before extension. Either "center", "start" or "end"
 #' @param upstream Upstream extension. default= 500L
 #' @param downstream Downstream extension. default= 500L
 #' @param ignore.strand Should the strand be considered when defininng start or end centering? Default= F
+#' @param genome BSgenome used to check limits of extended regions. Out of limit ranges will be resized accodtingly
 #' 
 #' @return Resized DT ranges
 #' @export
 vl_resizeBed <- function(bed, 
-                      center= "center",
-                      upstream= 500,
-                      downstream= 500, 
-                      ignore.strand= F)
+                         center= "center",
+                         upstream= 500,
+                         downstream= 500, 
+                         ignore.strand= F,
+                         genome)
 {
   if(!vl_isDTranges(bed))
     bed <- vl_importBed(bed)
@@ -245,7 +177,8 @@ vl_resizeBed <- function(bed,
   if(!ignore.strand & "strand" %in% names(regions))
     regions[strand=="-", c("start", "end"):= .(end, start)]
   # define start
-  regions <- data.table(start= switch(center,
+  regions <- data.table(seqnames= regions$seqnames,
+                        start= switch(center,
                                       "center"= round(rowMeans(regions[, .(start, end)])),
                                       "start"= regions$start,
                                       "end"= regions$end))
@@ -253,9 +186,18 @@ vl_resizeBed <- function(bed,
   regions[, c("start", "end"):= .(start-upstream,
                                   start+downstream)]
 
-  # Return
+  # If genome is psecified, resize accordingly
+  if(!missing(genome))
+  {
+    regions[data.table::as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome)))), seqlength:= i.width, on= "seqnames"]
+    regions[start<1, start:= 1]
+    regions[end>seqlength, end:= seqlength]
+  }
+  
+  # Finale
   res <- data.table::copy(bed)
-  res[, c("start", "end"):= regions]
+  res[, c("seqnames", "start", "end"):= regions[, .(seqnames, start, end)]]
+  
   return(res)
 }
 
@@ -265,104 +207,36 @@ vl_resizeBed <- function(bed,
 #'
 #' @param bed bed file to be collapsed. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames','start', 'end' columns. see ?vl_importBed()
 #' @param mingap min gap ditance for merging. default is 1 (that is, touching coordinates)
-#' @param stranded If set to true and strand column is provided, only merges coordinates with similar strand.
 #' @param return_idx_only If set to T, does not collapse regions but returns idx as an extra columns. default= F
-#' @param compute_other_columns If set to T or to a vector of column names, extra columns will be compute by contig using aggregate.fun. 
-#' @param aggregate.fun See compute_other_columns. Default to function(x) mean(x, na.rm= T)
 #' @examples 
-#' ex <- GRanges(c("chr3L", "chr3L", "chr3L", "chr3L", "chr2R"), 
-#' IRanges(c(1000, 2000, 2100, 2200, 2000), 
-#' c(1500, 2099, 2199, 2299, 3000))
-#' vl_collapseBed(ex, mingap= 1)
+#' bed <- data.table(seqnames= c("chr3L", "chr3L", "chr3L", "chr3L", "chr3L", "chr2R", "chr2R", "chr2R"),
+#' start= c(1000, 2000, 2100, 2200, 2500, 2000, 2500, 5000),
+#' end= c(1500, 2099, 2199, 2299, 3000, 3000, 3500, 6000))
+#' vl_collapseBed(bed, mingap= 1)
 #' @return Collapse coor data.table
 #' @export
 
+
+
 vl_collapseBed <- function(bed,
                            mingap= 1,
-                           return_idx_only= F, 
-                           compute_other_columns= NULL,
-                           aggregate.fun= function(x) mean(x, na.rm= T))
+                           return_idx_only= F)
 {
   # Hard copy of bed file
   if(!vl_isDTranges(bed))
     bed <- vl_importBed(bed)
   DT <- copy(bed)
-  setkeyv(DT, c("seqnames", "start"))
-  
-  # Checks
-  if(is.null(compute_other_columns)) # Check if compute_other_columns corresponds to bed columns or bool
-  {
-    cols <- as.character()
-    compute_other_columns <- F
-  }else 
-  {
-    if(all(compute_other_columns %in% names(bed)))
-      cols <- compute_other_columns else
-        cols <- setdiff(names(bed), c("seqnames", "start", "end"))
-      compute_other_columns <- T
-  }
+  setkeyv(DT, c("seqnames", "start", "end"))
   
   # Compute contig idx
-  DT[, idx:= cumsum(sapply(start-cummax(end)[c(1, seq(.N-1))], function(x) x>mingap)), seqnames]
-  DT[, idx:= .GRP, .(seqnames, idx)] # Make idx unique
+  DT[, idx:= cumsum(start>data.table::shift(end, fill= max(end))+mingap), seqnames]
+  DT[, idx:= .GRP, .(seqnames, idx)]
+  
+  # Collapse
   if(!return_idx_only)
-  {
-    if(compute_other_columns) # compute other columns per group
-      DT[, (cols):= lapply(.SD, aggregate.fun), idx, .SDcols= cols] else
-        DT <- DT[, .(seqnames, start, end, idx)] # Otherwise only report collapsed intervals
-    # Compute contigs start and end
-    DT[, c("start", "end") := .(min(start), max(end)), .(seqnames, idx)]
-    # Collapse
-    DT <- unique(DT[, !"idx"])
-  }
+    DT <- DT[, .(start= min(start), end= max(end)), .(seqnames, idx)]
 
-  return(DT)
-}
-
-#' Shuffle bed file
-#'
-#' Shuffle bed file in respect of covered regions, total reads and reads length
-#'
-#' @param bed bed file to shuffle. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()
-#' @examples 
-#' ChIP <- "/test/H3K27me3_PH18_merge_uniq.bed"
-#' res <- shuffleBed(ChIP)
-#' @return original bins file with OR, pval and padj corresponding to fisher result
-#' @export
-
-vl_shuffleBed <- function(bed)
-{
-  if(!vl_isDTranges(bed))
-    bed <- vl_importBed(bed)
-  
-  # Compute contigs 
-  .coll <- vl_collapseBed(bed)
-  # Compute effective chr sizes
-  .coll[, chr_size:= sum(end-start+1), keyby= seqnames]
-  # Compute sampling prob depending on the size
-  .coll[, prob:= (end-start+1)/chr_size, seqnames]
-  # Compute random reads that take into account covered chr 
-  reads <- bed[, .N, .(seqnames, read_length= end-start)]
-  .rdm <- reads[, {
-    chr <- .coll[.BY] #seqnames key
-    set.seed(.GRP)
-    .s <- chr[sample(seq(.N), N, T, prob), # Sample regions depending on their size
-              .(region_start= start, region_end= end-read_length)] # Resize regions depending on read length
-    .s[, start:= {
-      if(region_start==region_end) # sample rdm start positions
-        rep(region_start, .N) else
-        {
-          set.seed(.GRP)
-          sample(region_start:region_end, .N, replace = T)
-        }
-    },  .(region_start, region_end)]
-    .s[, end:= start+read_length]
-  }, .(seqnames, read_length, N)]
-  # Clean
-  .rdm <- .rdm[, .(seqnames, start, end)]
-  setkeyv(.rdm, c("seqnames", "start"))
-  
-  return(.rdm)
+  return(DT[, .(seqnames, start, end)])
 }
 
 #' Compute bed coverage
@@ -385,59 +259,3 @@ vl_covBed <- function(bins,
   
   return(counts)
 }
-
-#-----------------------------------------------------------------------------------------------------------------------------------------#
-# Peak-calling related functions
-#-----------------------------------------------------------------------------------------------------------------------------------------#
-#' Compute ChIP enrichment
-#'
-#' Given a set of ChIP and Input counts, performs hypergeometric test to know if ChIP is enriched compared to Input
-#'
-#' @param regions Regions to analyse. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()
-#' @param ChIP_bed ChIP bed file. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()
-#' @param Input_bed Input bed file.
-#' @return original bins file with OR, pval and padj corresponding to fisher result
-#' @export
-
-vl_enrichBed <- function(regions,
-                         ChIP_bed,
-                         Input_bed)
-{
-  # Hard copy regions
-  if(!vl_isDTranges(regions))
-    regions <- vl_importBed(regions)
-  regions <- copy(regions)
-  # ChIP coverage
-  if(!vl_isDTranges(ChIP_bed))
-    ChIP_bed <- vl_importBed(ChIP_bed)
-  regions[, ChIP_counts:= vl_covBed(regions, ChIP_bed)]
-  total <- unique(ChIP_bed[, .N, seqnames])
-  regions[total, ChIP_total_counts:= i.N, on= "seqnames"]
-  # Input coverage
-  if(!vl_isDTranges(Input_bed))
-    Input_bed <- vl_importBed(Input_bed)
-  regions[, Input_counts:= vl_covBed(regions, Input_bed)]
-  total <- unique(Input_bed[, .N, seqnames])
-  regions[total, Input_total_counts:= i.N, on= "seqnames"]
-  # Compute enrichment and pval
-  check <- regions[, ChIP_counts>0 & Input_counts>0] # Only regions containing reads
-  regions[(check), c("OR", "pval"):= {
-    mat <- matrix(unlist(.BY), nrow= 2, byrow = T)
-    fisher.test(mat, alternative = "greater")[c("estimate", "p.value")]
-  }, .(ChIP_counts, Input_counts, ChIP_total_counts, Input_total_counts)]
-  regions[, padj:= p.adjust(pval, "fdr")]
-  # Format narrowpeak file
-  regions[pval==0, pval:= min(regions[pval>0, pval])]
-  regions[padj==0, padj:= min(regions[padj>0, padj])]
-  regions <- regions[, .(seqnames, start, end,
-                         name= paste0("peak_", .I), 
-                         score= round(OR/max(OR, na.rm = T)*1000), 
-                         strand= ".", 
-                         signalValue= OR,
-                         pValue= -log10(pval),
-                         qValue= -log10(padj),
-                         peak= -1)]
-  
-  return(regions)
-}
-

@@ -4,49 +4,42 @@
 \alias{vl_heatmap}
 \alias{vl_heatmap.data.table}
 \alias{vl_heatmap.matrix}
+\alias{vl_heatmap.vl_heatmap}
 \title{Heatmap}
 \usage{
 vl_heatmap(x, ...)
 
-\method{vl_heatmap}{data.table}(x, rownames = names(x)[1], ...)
+\method{vl_heatmap}{data.table}(x, rownames = NULL,
+  rownames.value = NULL, ...)
 
-\method{vl_heatmap}{matrix}(x, breaks = seq(min(x, na.rm = T), max(x,
-  na.rm = T), length.out = length(col)), show_rownames = T,
-  show_colnames = T, col = c("cornflowerblue", "white", "red"),
-  main = NA, auto_margins = T, cluster_rows = T,
+\method{vl_heatmap}{matrix}(x, cluster_rows = T, kmeans_k = NA,
   clustering_distance_rows = "euclidean", cutree_rows = 1,
-  show_row_dendrogram = T, show_row_clusters = T, cluster_cols = T,
-  clustering_distance_cols = "euclidean", cutree_cols = 1,
-  show_col_dendrogram = T, show_col_clusters = T,
-  clustering_method = "complete", kmeans_k = NA, display_numbers = F,
+  cluster_cols = T, clustering_distance_cols = "euclidean",
+  cutree_cols = 1, clustering_method = "complete", plot = T,
+  auto_margins = T, breaks = seq(min(x, na.rm = T), max(x, na.rm = T),
+  length.out = length(col)), col = c("cornflowerblue", "white", "red"),
+  na_col = "lightgrey", main = NA, legend_title = NA,
+  show_rownames = T, show_colnames = T, show_row_clusters = T,
+  show_col_clusters = T, show_row_dendrogram = T,
+  show_col_dendrogram = T, show_legend = T, display_numbers = F,
   display_numbers_FUN = function(x) round(x, 2),
-  display_numbers_cex = 0.5, legend_title = NA, na_col = "lightgrey",
-  plot = T)
+  display_numbers_cex = 0.5)
+
+\method{vl_heatmap}{vl_heatmap}(obj, add, inherit_row_cl = T,
+  inherit_col_cl = T, ...)
 }
 \arguments{
 \item{x}{Data to plot. Can be one of matrix, data.table, or formula.}
 
-\item{breaks}{Heatmap breaks, which should be the same length as the color vector}
-
-\item{show_rownames}{Plot row names? Default= T}
-
-\item{show_colnames}{Plot col names? Default= T}
-
-\item{col}{Color scale. default= c("cornflowerblue", "white", "red")}
-
-\item{main}{Title. Default= NA}
-
-\item{auto_margins}{Should auto margins be computed and used?}
+\item{...}{Extra parameters to be passed to ?vl_heatmap().}
 
 \item{cluster_rows}{Should rows be clustered? Default= T}
+
+\item{kmeans_k}{Number of row kmean clusters. If specified, takes over row clustering.}
 
 \item{clustering_distance_rows}{Method for clustering distance rows. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"}
 
 \item{cutree_rows}{Number of cuts for rows tree. Default= 1L}
-
-\item{show_row_dendrogram}{Plot row dendrogram?}
-
-\item{show_row_clusters}{Plot row cluster names/lines?}
 
 \item{cluster_cols}{Should columns be clustered? Default= T}
 
@@ -54,13 +47,35 @@ vl_heatmap(x, ...)
 
 \item{cutree_cols}{Number of cuts for cols tree. default= 1L}
 
-\item{show_col_dendrogram}{Plot col dendrogram?}
+\item{clustering_method}{Clustering method to use. Must be one of "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median" or "centroid".}
+
+\item{plot}{Should the heatmap be plotted? Default= T}
+
+\item{auto_margins}{Should auto margins be computed and used?}
+
+\item{breaks}{Heatmap breaks, which should be the same length as the color vector}
+
+\item{col}{Color scale. default= c("cornflowerblue", "white", "red")}
+
+\item{na_col}{Color for na values. Default= "lightgrey"}
+
+\item{main}{Title. Default= NA}
+
+\item{legend_title}{Character to plot as title legend}
+
+\item{show_rownames}{Plot row names? Default= T}
+
+\item{show_colnames}{Plot col names? Default= T}
+
+\item{show_row_clusters}{Plot row cluster names/lines?}
 
 \item{show_col_clusters}{Plot col cluster names/lines?}
 
-\item{clustering_method}{Clustering method to use. Must be one of "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median" or "centroid".}
+\item{show_row_dendrogram}{Plot row dendrogram?}
 
-\item{kmeans_k}{Number of row kmean clusters. If specified, takes over row clustering.}
+\item{show_col_dendrogram}{Plot col dendrogram?}
+
+\item{show_legend}{Should the legend be plotted?}
 
 \item{display_numbers}{Display numbers on heatmap? Default= F}
 
@@ -68,14 +83,22 @@ vl_heatmap(x, ...)
 
 \item{display_numbers_cex}{cex display numbers}
 
-\item{legend_title}{Character to plot as title legend}
+\item{obj}{vl_heatmap object containing the parent clustering}
 
-\item{na_col}{Color for na values. Default= "lightgrey"}
+\item{add}{matrix that will inhiherit obj clustering}
 
-\item{plot}{Should the heatmap be plotted? Default= T}
+\item{inherit_row_cl}{Should row clustering be inherited? Default is TRUE if rownames match}
+
+\item{inherit_col_cl}{Should col clustering be inherited? Default is TRUE if colnames match}
+
+\item{x}{}
+
+\item{...}{Extra arguments to be passed to vl_heatmap}
 }
 \value{
 An object of class vl_heatmap_obj containing clustering data and can be used for plotting using plot(obj, ...)
+
+a vl_heatmap object whose clustering is inherited from obj
 }
 \description{
 This function plots a heatmap and returns an S3 object of type vl_heatmap_obj which can be modified and used for later plotting.
@@ -84,7 +107,9 @@ This function plots a heatmap and returns an S3 object of type vl_heatmap_obj wh
 \itemize{
 \item \code{data.table}: Just a wrapper that collapses DT to a suitable matrix
 
-\item \code{matrix}: Core function that clusters input matrix and plots a heatmap
+\item \code{matrix}: Default function using matrix as an input
+
+\item \code{vl_heatmap}: Inherit clustering to another matrix
 }}
 
 \examples{
@@ -99,10 +124,6 @@ rownames(test) = paste("Gene", 1:20, sep = "")
 
 par(mfrow=c(2,2))
 res <- vl_heatmap(test, kmeans_k = 4, cutree_rows = 3, cutree_cols = 5, legend_title = "log2FoldChange", main= "test")
-res$result_DT[]
 vl_heatmap(test, cutree_rows = 3, cutree_cols = 2, show_col_clusters = F, legend_title = "log2FoldChange", main= "test")
-vl_heatmap(test, cutree_rows = 3, cutree_cols = 2, show_col_dendrogram = F, legend_title = "log2FoldChange", main= "test")
-obj <- vl_heatmap(test, cutree_rows = 3, cutree_cols = 2, show_row_clusters = F, show_row_dendrogram = F,show_col_clusters = F, show_col_dendrogram = F, legend_title = "log2FoldChange", main= "test", plot= F)
-plot(obj, cutree_rows = 3, cutree_cols = 2, show_row_clusters = F, show_row_dendrogram = F,show_col_clusters = F, show_col_dendrogram = F, legend_title = "log2FoldChange", main= "test")
 
 }

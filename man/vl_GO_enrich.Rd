@@ -5,17 +5,27 @@
 \title{GO analysis}
 \usage{
 vl_GO_enrich(FBgn_vector, go_object = vl_fb_go_table_dm6_FB2020_05,
-  FBgn_universe = "all", go_type = "all", main = "")
+  FBgn_universe = "all", go_type = "all", plot = T,
+  padj_cutoff = 0.05, top_enrich = Inf)
 }
 \arguments{
 \item{go_object}{object containing GO data. see ?vl_fb_go_table_dm6_FB2020_05}
 
 \item{FBgn_universe}{Vector of FBgn IDs to which the analysis will be restricted. default= "all" (i.e. all the FBGns present in the table)}
 
-\item{main}{title}
+\item{plot}{Plot result?}
+
+\item{padj_cutoff}{cutoff for plotting}
+
+\item{top_enrich}{Show only n top enriched motifs}
 
 \item{FBgn_list}{A vector of FBgn IDs}
 }
 \description{
 This function compute GO enrichment in a group of genes
+}
+\examples{
+RpL <- vl_genes_set[GO=="RpL_genes", FBgn]
+par(mar= c(4,20,2,6))
+vl_GO_enrich(RpL)
 }
