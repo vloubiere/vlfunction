@@ -23,42 +23,43 @@
 #'
 #' @usage Can be used with vl_GO_cluster. see ?vl_GO_cluster()
 #' 
-#' @format An object containing Motifs and related metadata
-#' \describe{
-#'   \item{GO}{GO ID}
-#'   \item{name}{GO name}
-#'   \item{type}{GO category}
-#'   \item{partents}{parent GOs}
-#'   \item{children}{children GOs}
-#'   \item{Fbgn}{Gene flybase ID}
-#'   \item{symbol}{Gene symbol}
-#'   ...
-#' }
-#' 
+#' @format 
+#' A list containing two data.table containing GO information
+#' #1 data.table -> `GO_names`
+#' GO: GO id
+#' type: GO type (biological_process, molecular_function, cellular_component)
+#' name: GO full name
+#' #1 data.table -> `FBgn_GO_counts_matrix`
+#' A data.table containing genes IDs in the first columns and 1 extra columns/GO id (0/1 values)
+#' 1st colums -> gene ID
+#' other columns ...  GO IDs with 0/1 (1: gene present in GO)
 #' @examples
 #' Object was generated using the followin code:
-#' go <- fread("../../genomes/dm6/FB2020_05_gene_association.fb",
+#' tmp <- tempfile(fileext = ".gz")
+#' download.file("http://ftp.flybase.net/releases/FB2020_05/precomputed_files/go/gene_association.fb.gz", 
+#' destfile = tmp)
+#' go <- fread(tmp, 
 #' skip= 5,
-#' select = c(2,3,5))
-#' colnames(go) <- c("FBgn", "Symbol", "GO")
-#' go_details <- get_ontology("../../genomes/dm6/FB2020_05_go-basic.obo",
-#' extract_tags = "everything")
-#' go_details <- data.table(GO= go_details$id,
-#' name= go_details$name,
-#' type= go_details$namespace,
-#' parents= go_details$parents,
-#' children= go_details$children)
-#' vl_fb_go_table_dm6_FB2020_05 <- merge(go_details, unique(go))
-#' vl_fb_go_table_dm6_FB2020_05 <- vl_fb_go_table_dm6_FB2020_05[!(name %in% type)]
-#' vl_fb_go_table_dm6_FB2020_05[, type:= unlist(type)]
-#' GO_names <- unique(vl_fb_go_table_dm6_FB2020_05[, .(GO, type, name)])
-#' FBgn_GO_counts_matrix <- dcast(go_object, FBgn~GO, value.var = "Symbol", fun.aggregate = length)
-#' vl_fb_go_table_dm6_FB2020_05 <- list(GO_names= GO_names,
-#' FBgn_GO_counts_matrix= FBgn_GO_counts_matrix)
-#' save(vl_fb_go_table_dm6_FB2020_05, file= "../../vlfunction/data/vl_fb_go_table_dm6_FB2020_05.RData")
-#' 
-#' @source {"../../vlfunction/data/vl_fb_go_table_dm6_FB2020_05.RData"}
-"vl_fb_go_table_dm6_FB2020_05"
+#' select = c(2,3,5), 
+#' col.names = c("FBgn", "Symbol", "GO"))
+#' tmp <- tempfile(fileext = ".gz")
+#' download.file("http://ftp.flybase.net/releases/FB2020_05/precomputed_files/ontologies/go-basic.obo.gz", 
+#' destfile = tmp)
+#' details <- ontologyIndex::get_ontology(tmp, extract_tags = "everything")
+#' details <- data.table(GO= details$id,
+#' name= details$name,
+#' type= details$namespace)
+#' vl_Dmel_GO_FB2020_05 <- merge(details, unique(go))
+#' vl_Dmel_GO_FB2020_05 <- vl_Dmel_GO_FB2020_05[!(name %in% type)]
+#' vl_Dmel_GO_FB2020_05[, type:= unlist(type)]
+#' GO_names <- unique(vl_Dmel_GO_FB2020_05[, .(GO, type, name)])
+#' FBgn_GO_counts_matrix <- dcast(go, FBgn~GO, value.var = "Symbol", fun.aggregate = length)
+#' vl_Dmel_GO_FB2020_05 <- list(GO_names= GO_names,
+#' vl_Dmel_GO_FB2020_05= FBgn_GO_counts_matrix)
+#' save(vl_Dmel_GO_FB2020_05,
+#' file= "../../vlfunction/data/vl_Dmel_GO_FB2020_05.Rdata",
+#' compress = "bzip2")
+"vl_Dmel_GO_FB2020_05"
 
 #' Thermofisher enzymes
 #'
@@ -148,5 +149,7 @@
 #' DB[, merge:= paste0(sort(c(protein1_symbol, protein2_symbol)), collapse= ""), .(protein1_symbol, protein2_symbol)]
 #' vl_Dmel_STRING_DB <- DB[, .SD[1], merge]
 #' # SAVE
-#' save(vl_Dmel_STRING_DB, file = "../../vlfunction/data/vl_Dmel_STRING_DB.Rdata")
-"vl_genes_set"
+#' save(vl_Dmel_STRING_DB,
+#' file = "../../vlfunction/data/vl_Dmel_STRING_DB.Rdata", 
+#' compress = "bzip2")
+"vl_Dmel_STRING_DB"

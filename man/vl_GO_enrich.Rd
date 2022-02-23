@@ -4,12 +4,12 @@
 \alias{vl_GO_enrich}
 \title{GO analysis}
 \usage{
-vl_GO_enrich(FBgn_vector, go_object = vl_fb_go_table_dm6_FB2020_05,
+vl_GO_enrich(FBgn_vector, go_object = vl_Dmel_GO_FB2020_05,
   FBgn_universe = "all", go_type = "all", plot = T,
   padj_cutoff = 0.05, top_enrich = Inf)
 }
 \arguments{
-\item{go_object}{object containing GO data. see ?vl_fb_go_table_dm6_FB2020_05}
+\item{go_object}{object containing GO data. see ?vl_Dmel_GO_FB2020_05}
 
 \item{FBgn_universe}{Vector of FBgn IDs to which the analysis will be restricted. default= "all" (i.e. all the FBGns present in the table)}
 

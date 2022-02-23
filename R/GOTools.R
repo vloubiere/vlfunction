@@ -3,7 +3,7 @@
 #' This function compute GO enrichment in a group of genes
 #'
 #' @param FBgn_list A vector of FBgn IDs
-#' @param go_object object containing GO data. see ?vl_fb_go_table_dm6_FB2020_05
+#' @param go_object object containing GO data. see ?vl_Dmel_GO_FB2020_05
 #' @param FBgn_universe Vector of FBgn IDs to which the analysis will be restricted. default= "all" (i.e. all the FBGns present in the table)
 #' @param plot Plot result?
 #' @param padj_cutoff cutoff for plotting
@@ -15,7 +15,7 @@
 #' @export
 
 vl_GO_enrich <- function(FBgn_vector,
-                         go_object= vl_fb_go_table_dm6_FB2020_05,
+                         go_object= vl_Dmel_GO_FB2020_05,
                          FBgn_universe= "all",
                          go_type= "all",
                          plot= T,
