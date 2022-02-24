@@ -224,8 +224,8 @@ vl_balloonskey <- function(sizes,
   if(length(sizes) != length(labels))
     stop("sizes and labels should have the same legnth")
   width <- strwidth("M", cex= 0.55)*max(abs(sizes))
-  center.top <- top-strheight("M", cex= 0.55)/2*max(abs(sizes))
-  center.height <- strheight("M", cex= 0.55)*max(abs(sizes))*(length(sizes)-1)
+  center.top <- top-strheight("M", cex= 0.7)/2*max(abs(sizes))
+  center.height <- strheight("M", cex= 0.7)*max(abs(sizes))*(length(sizes)-1)
   y <- seq(center.top-center.height,
            center.top,
            length.out=length(sizes))
@@ -234,7 +234,7 @@ vl_balloonskey <- function(sizes,
          cex= abs(sizes)+0.1,
          pch= ifelse(sizes>=0, 21, 22),
          xpd= T)
-  text(rep(left+width, length(labels)),
+  text(rep(left+width+strwidth("M", cex= 0.7)/2, length(labels)),
        y,
        labels,
        pos= 4,

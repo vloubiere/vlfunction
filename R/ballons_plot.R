@@ -39,7 +39,7 @@ vl_balloons_plot.matrix <- function(x,
 {
   # Checks
   if(missing(x_breaks))
-    x_breaks <- axisTicks(range(x, na.rm= T), log= F)
+    x_breaks <- axisTicks(range(x, na.rm= T), log= F, nint = 4)
   if(missing(color_breaks))
     color_breaks <- seq(min(color_var, na.rm= T),
                         max(color_var, na.rm= T),
@@ -104,7 +104,7 @@ vl_balloons_plot.matrix <- function(x,
              col, 
              top= nrow(x)-strheight("M"),
              main= balloon_col_legend)
-  mtext(main)
+  mtext(main, las= 1)
   vl_balloonskey(sizes = x_breaks*cex.balloons,
                  labels = x_breaks,
                  top= nrow(x)-strheight("M")*10, 
