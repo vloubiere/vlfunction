@@ -105,7 +105,7 @@ vl_balloons_plot.matrix <- function(x,
              top= nrow(x)-strheight("M"),
              main= balloon_col_legend)
   mtext(main)
-  vl_balloonskey(sizes = x_breaks*cex.balloons+0.1,
+  vl_balloonskey(sizes = x_breaks*cex.balloons,
                  labels = x_breaks,
                  top= nrow(x)-strheight("M")*10, 
                  main = balloon_size_legend)

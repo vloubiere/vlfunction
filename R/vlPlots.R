@@ -231,7 +231,7 @@ vl_balloonskey <- function(sizes,
            length.out=length(sizes))
   points(rep(left+width/2, length(sizes)), 
          y,
-         cex= abs(sizes),
+         cex= abs(sizes)+0.1,
          pch= ifelse(sizes>=0, 21, 22),
          xpd= T)
   text(rep(left+width, length(labels)),
