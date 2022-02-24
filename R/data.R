@@ -23,8 +23,8 @@
 #'
 #' @usage Can be used with vl_GO_cluster. see ?vl_GO_cluster()
 #' 
-#' @format 
-#' A list containing two data.table containing GO information
+#' @format A list containing two data.table containing GO information
+#' @examples
 #' #1 data.table -> `GO_names`
 #' GO: GO id
 #' type: GO type (biological_process, molecular_function, cellular_component)
@@ -33,8 +33,8 @@
 #' A data.table containing genes IDs in the first columns and 1 extra columns/GO id (0/1 values)
 #' 1st colums -> gene ID
 #' other columns ...  GO IDs with 0/1 (1: gene present in GO)
-#' @examples
-#' Object was generated using the followin code:
+#' 
+#' Object was generated using the following code:
 #' tmp <- tempfile(fileext = ".gz")
 #' download.file("http://ftp.flybase.net/releases/FB2020_05/precomputed_files/go/gene_association.fb.gz", 
 #' destfile = tmp)
@@ -55,9 +55,9 @@
 #' GO_names <- unique(vl_Dmel_GO_FB2020_05[, .(GO, type, name)])
 #' FBgn_GO_counts_matrix <- dcast(go, FBgn~GO, value.var = "Symbol", fun.aggregate = length)
 #' vl_Dmel_GO_FB2020_05 <- list(GO_names= GO_names,
-#' vl_Dmel_GO_FB2020_05= FBgn_GO_counts_matrix)
+#' FBgn_GO_counts_matrix= FBgn_GO_counts_matrix)
 #' save(vl_Dmel_GO_FB2020_05,
-#' file= "../../vlfunction/data/vl_Dmel_GO_FB2020_05.Rdata",
+#' file= "/groups/stark/vloubiere/vlfunction/data/vl_Dmel_GO_FB2020_05.RData",
 #' compress = "bzip2")
 "vl_Dmel_GO_FB2020_05"
 
@@ -150,6 +150,6 @@
 #' vl_Dmel_STRING_DB <- DB[, .SD[1], merge]
 #' # SAVE
 #' save(vl_Dmel_STRING_DB,
-#' file = "../../vlfunction/data/vl_Dmel_STRING_DB.Rdata", 
+#' file = "/groups/stark/vloubiere/vlfunction/data/vl_Dmel_STRING_DB.RData", 
 #' compress = "bzip2")
 "vl_Dmel_STRING_DB"

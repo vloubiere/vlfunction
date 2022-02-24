@@ -4,15 +4,7 @@
 \name{vl_Dmel_GO_FB2020_05}
 \alias{vl_Dmel_GO_FB2020_05}
 \title{Dm6 GO database}
-\format{A list containing two data.table containing GO information
-#1 data.table -> `GO_names`
-GO: GO id
-type: GO type (biological_process, molecular_function, cellular_component)
-name: GO full name
-#1 data.table -> `FBgn_GO_counts_matrix`
-A data.table containing genes IDs in the first columns and 1 extra columns/GO id (0/1 values)
-1st colums -> gene ID
-other columns ...  GO IDs with 0/1 (1: gene present in GO)}
+\format{A list containing two data.table containing GO information}
 \usage{
 Can be used with vl_GO_cluster. see ?vl_GO_cluster()
 }
@@ -20,7 +12,16 @@ Can be used with vl_GO_cluster. see ?vl_GO_cluster()
 Contains GO annotation from FB2020_05
 }
 \examples{
-Object was generated using the followin code:
+#1 data.table -> `GO_names`
+GO: GO id
+type: GO type (biological_process, molecular_function, cellular_component)
+name: GO full name
+#1 data.table -> `FBgn_GO_counts_matrix`
+A data.table containing genes IDs in the first columns and 1 extra columns/GO id (0/1 values)
+1st colums -> gene ID
+other columns ...  GO IDs with 0/1 (1: gene present in GO)
+
+Object was generated using the following code:
 tmp <- tempfile(fileext = ".gz")
 download.file("http://ftp.flybase.net/releases/FB2020_05/precomputed_files/go/gene_association.fb.gz", 
 destfile = tmp)
@@ -41,9 +42,9 @@ vl_Dmel_GO_FB2020_05[, type:= unlist(type)]
 GO_names <- unique(vl_Dmel_GO_FB2020_05[, .(GO, type, name)])
 FBgn_GO_counts_matrix <- dcast(go, FBgn~GO, value.var = "Symbol", fun.aggregate = length)
 vl_Dmel_GO_FB2020_05 <- list(GO_names= GO_names,
-vl_Dmel_GO_FB2020_05= FBgn_GO_counts_matrix)
+FBgn_GO_counts_matrix= FBgn_GO_counts_matrix)
 save(vl_Dmel_GO_FB2020_05,
-file= "../../vlfunction/data/vl_Dmel_GO_FB2020_05.Rdata",
+file= "/groups/stark/vloubiere/vlfunction/data/vl_Dmel_GO_FB2020_05.RData",
 compress = "bzip2")
 }
 \keyword{datasets}

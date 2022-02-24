@@ -29,7 +29,7 @@ DB[, merge:= paste0(sort(c(protein1_symbol, protein2_symbol)), collapse= ""), .(
 vl_Dmel_STRING_DB <- DB[, .SD[1], merge]
 # SAVE
 save(vl_Dmel_STRING_DB,
-file = "../../vlfunction/data/vl_Dmel_STRING_DB.Rdata", 
+file = "/groups/stark/vloubiere/vlfunction/data/vl_Dmel_STRING_DB.RData", 
 compress = "bzip2")
 }
 \keyword{datasets}

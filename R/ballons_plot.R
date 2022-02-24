@@ -88,7 +88,7 @@ vl_balloons_plot.matrix <- function(x,
          rep(1:nrow(x), ncol(x)),
          bg= color_var,
          pch= ifelse(x>=0, 21, 22),
-         cex= abs(x)*cex.balloons)
+         cex= abs(x)*cex.balloons+0.1)
   # Legends
   axis(side= 1, 
        at= seq(ncol(x)),
@@ -105,7 +105,7 @@ vl_balloons_plot.matrix <- function(x,
              top= nrow(x)-strheight("M"),
              main= balloon_col_legend)
   mtext(main)
-  vl_balloonskey(sizes = x_breaks*cex.balloons,
+  vl_balloonskey(sizes = x_breaks*cex.balloons+0.1,
                  labels = x_breaks,
                  top= nrow(x)-strheight("M")*10, 
                  main = balloon_size_legend)
