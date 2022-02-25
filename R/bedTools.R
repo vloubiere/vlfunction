@@ -40,8 +40,7 @@ vl_importBed <- function(bed) UseMethod("vl_importBed")
 vl_importBed.character <- function(bed)
 {
   bed <- data.table::rbindlist(lapply(bed, function(x) fread(x, 
-                                                             fill = T,
-                                                             stringsAsFactors = T)))
+                                                             fill = T)))
   if(!vl_isDTranges(bed))
   {
     bedcols <- 1:ifelse(ncol(bed)>6, 6, ncol(bed))
