@@ -20,6 +20,7 @@
 vl_motif_counts <- function(sequences, ...) UseMethod("vl_motif_counts")
 
 #' @describeIn vl_motif_counts Method to extract sequences from BSgenome
+#' @export
 vl_motif_counts.data.table <- function(bed, genome, ...)
 {
   if(!vl_isDTranges(bed))
@@ -35,6 +36,7 @@ vl_motif_counts.data.table <- function(bed, genome, ...)
 }
 
 #' @describeIn vl_motif_counts Identify motifs in sequences
+#' @export
 vl_motif_counts.character <- function(sequences= NULL,
                                       p.cutoff= 5e-4,
                                       sel= vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn), motif])

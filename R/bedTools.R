@@ -36,6 +36,7 @@ vl_isDTranges <- function(x)
 vl_importBed <- function(bed) UseMethod("vl_importBed")
 
 #' @describeIn vl_importBed for bed paths
+#' @export
 vl_importBed.character <- function(bed)
 {
   bed <- data.table::rbindlist(lapply(bed, function(x) fread(x, 
@@ -53,6 +54,7 @@ vl_importBed.character <- function(bed)
 }
 
 #' @describeIn vl_importBed for GRanges
+#' @export
 vl_importBed.GRanges <- function(bed)
 {
   bed <- data.table::as.data.table(bed)
@@ -69,6 +71,7 @@ vl_importBed.GRanges <- function(bed)
 vl_exportBed <- function(bed, ...) UseMethod("vl_exportBed")
 
 #' @describeIn vl_exportBed for GRanges
+#' @export
 vl_exportBed.GRanges <- function(bed, filename)
 {
   fwrite(data.table::as.data.table(bed), 
@@ -80,6 +83,7 @@ vl_exportBed.GRanges <- function(bed, filename)
 } 
 
 #' @describeIn vl_exportBed for data.table
+#' @export
 vl_exportBed.data.table <- function(bed, filename)
 {
   if(!vl_isDTranges(bed))
@@ -215,9 +219,6 @@ vl_resizeBed <- function(bed,
 #' vl_collapseBed(bed, mingap= 1)
 #' @return Collapse coor data.table
 #' @export
-
-
-
 vl_collapseBed <- function(bed,
                            mingap= 1,
                            return_idx_only= F)
@@ -246,7 +247,6 @@ vl_collapseBed <- function(bed,
 #' @param bed bed file. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()
 #' @return numeric vector of the number of overlapping reads
 #' @export
-
 vl_covBed <- function(bins,
                       bed)
 {

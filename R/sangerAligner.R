@@ -31,7 +31,6 @@
 #' feat_sequences = feat_sequences,
 #' feat_cols= feat_cols)
 #' @export
-
 vl_sanger_align <- function(refseq, 
                             abfiles, 
                             revcomp= NULL,

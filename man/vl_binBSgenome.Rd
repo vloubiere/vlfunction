@@ -4,8 +4,12 @@
 \alias{vl_binBSgenome}
 \title{Bin BS genome}
 \usage{
-vl_binBSgenome(genome, bins_width = 50, steps_width = bins_width,
-  restrict_seqnames = NULL)
+vl_binBSgenome(
+  genome,
+  bins_width = 50,
+  steps_width = bins_width,
+  restrict_seqnames = NULL
+)
 }
 \arguments{
 \item{genome}{BSgenome object to use. Example "dm3"}

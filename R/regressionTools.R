@@ -5,7 +5,6 @@
 #' @param ... Arguments to 'format', such as 'digits' and 'trim'.
 #' @return Equation
 #' @export
-
 vl_model_equation <- function(model, ...) {
   format_args <- list(...)
   

@@ -7,7 +7,6 @@
 #' vl_SRR_url("SRR13325541") 
 #' @return A character vector containing the SRA download link
 #' @export
-
 vl_SRR_url <- function(SRR)
 {
   if(!"rvest" %in% rownames(installed.packages()))
@@ -38,7 +37,6 @@ vl_SRR_url <- function(SRR)
 #'   \item{ftp}{List of ftp download link}
 #' }
 #' @export
-
 vl_sra_metadata <- function(GSE,
                             SRAdb= "/groups/stark/vloubiere/exp_data/SRAmetadb.sqlite")
 {

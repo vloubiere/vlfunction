@@ -231,6 +231,8 @@ vl_heatmap.vl_heatmap <- function(obj,
 }
 
 # Default plotting function
+#' @describeIn vl_heatmap Default plotting function
+#' @export
 plot.vl_heatmap <- function(obj,
                             cluster_rows= T,
                             cluster_cols= T,

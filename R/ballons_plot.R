@@ -18,14 +18,12 @@
 #' 
 #' @return Balloon plot
 #' @export
-#' 
 vl_balloons_plot <- function(x, ...)
   UseMethod("vl_balloons_plot")
 
 
 #' @describeIn vl_balloons_plot matrix_method
 #' @export
-
 vl_balloons_plot.matrix <- function(x,
                                     color_var,
                                     x_breaks,

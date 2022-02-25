@@ -13,7 +13,6 @@
 #' par(mar= c(4,20,2,6))
 #' vl_GO_enrich(RpL)
 #' @export
-
 vl_GO_enrich <- function(FBgn_vector,
                          go_object= vl_Dmel_GO_FB2020_05,
                          FBgn_universe= "all",
@@ -97,7 +96,6 @@ vl_GO_enrich <- function(FBgn_vector,
 #' par(mar= c(5,25,2,5), las= 1)
 #' vl_GO_clusters(FBgn_list, auto_margins = F, cex.balloons = 0.3)
 #' @export
-
 vl_GO_clusters <- function(FBgn_list,
                            go_object= vl_fb_go_table_dm6_FB2020_05,
                            all_FBgns= "all",

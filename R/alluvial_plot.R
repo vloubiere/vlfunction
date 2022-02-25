@@ -13,7 +13,6 @@
 #' class_levels = c("C", "B", "A"))
 #' @return An object that can be used with the vl_average_bw_track_plot_only() function.
 #' @export
-
 vl_alluvial_plot <- function(dat,
                              col= vl_palette_categ2(length(unique(unlist(dat)))),
                              ...)

@@ -4,8 +4,15 @@
 \alias{vl_heatkey}
 \title{Heatkey plot}
 \usage{
-vl_heatkey(breaks, col, left = par("usr")[2], top = par("usr")[4],
-  height = strheight("M") * 6, width = strwidth("M"), main = NA)
+vl_heatkey(
+  breaks,
+  col,
+  left = par("usr")[2],
+  top = par("usr")[4],
+  height = strheight("M") * 6,
+  width = strwidth("M"),
+  main = NA
+)
 }
 \arguments{
 \item{breaks}{Legend breaks}

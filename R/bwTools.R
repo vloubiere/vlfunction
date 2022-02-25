@@ -64,6 +64,7 @@ vl_bw_coverage <- function(bed,
 #' @param stranded Should the average track be stranded?
 #' @param nbins Number of bins spanning the extended regions. Default= 500
 #' @param names Track names to plot. If specified, must be the same length as bw vector. By default, bw basenames will be used.
+#' @export
 vl_bw_coverage_bins <- function(bed,
                                 tracks,
                                 set_IDs,
@@ -172,6 +173,7 @@ vl_average_bw_track <- function(bed,
 }
 
 #' @describeIn vl_average_bw_track Method to plot average tracks
+#' @export
 plot.vl_bw_average_track <- function(obj,
                                      xlab= "genomic distance",
                                      xaxis= c("Upstream", "Center", "Downstream"),

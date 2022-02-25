@@ -1,4 +1,5 @@
 #' @describeIn vl_motif_enrich method to plot enrichment objects (containing variable, log2OR and padj)
+#' @export
 plot.vl_enr <- function(obj,
                         padj_cutoff= 0.05,
                         top_enrich= Inf)
@@ -33,8 +34,8 @@ plot.vl_enr <- function(obj,
              main = "FDR (-log10)")
 }
 
-
 #' @describeIn vl_motif_cl_enrich method to plot cluster enrichment objects (containing variable, log2OR and padj)
+#' @export
 plot.vl_enr_cl <- function(obj,
                            x_breaks,
                            padj_cutoff= 0.05,

@@ -11,7 +11,6 @@
 #' plot(NA, xlim= c(0,7), ylim= c(-1,1))
 #' vl_plot_pval(1:6, 0.5, pval)
 #' @export
-
 vl_plot_pval_text <- function(x, 
                               y, 
                               pval, 
@@ -57,7 +56,6 @@ vl_plot_pval_text <- function(x,
 #' plot.new()
 #' vl_seqlogo(pwm)
 #' @export
-
 vl_seqlogo <- function(pwm, 
                        xleft= 0, 
                        ybottom= 0, 
@@ -97,7 +95,6 @@ vl_seqlogo <- function(pwm,
 #' @param cex Scaling factor
 #' @param ... Extra args for text function
 #' @export
-
 vl_fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
   region <- match.arg(region, c("figure", "plot", "device"))
   pos <- match.arg(pos, c("topleft", "top", "topright", 
@@ -165,7 +162,6 @@ vl_fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
 #'
 #' @return Plots heatkey
 #' @export
-
 vl_heatkey <- function(breaks,
                        col,
                        left= par("usr")[2], 
@@ -214,7 +210,6 @@ vl_heatkey <- function(breaks,
 #'
 #' @return Plots heatkey
 #' @export
-
 vl_balloonskey <- function(sizes,
                            labels,
                            left= par("usr")[2], 

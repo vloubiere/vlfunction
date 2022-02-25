@@ -5,33 +5,72 @@
 \alias{vl_heatmap.data.table}
 \alias{vl_heatmap.matrix}
 \alias{vl_heatmap.vl_heatmap}
+\alias{plot.vl_heatmap}
 \title{Heatmap}
 \usage{
 vl_heatmap(x, ...)
 
-\method{vl_heatmap}{data.table}(x, rownames = NULL,
-  rownames.value = NULL, ...)
+\method{vl_heatmap}{data.table}(x, rownames = NULL, rownames.value = NULL, ...)
 
-\method{vl_heatmap}{matrix}(x, cluster_rows = T, kmeans_k = NA,
-  clustering_distance_rows = "euclidean", cutree_rows = 1,
-  cluster_cols = T, clustering_distance_cols = "euclidean",
-  cutree_cols = 1, clustering_method = "complete", plot = T,
-  auto_margins = T, breaks = seq(min(x, na.rm = T), max(x, na.rm = T),
-  length.out = length(col)), col = c("cornflowerblue", "white", "red"),
-  na_col = "lightgrey", main = NA, legend_title = NA,
-  show_rownames = T, show_colnames = T, show_row_clusters = T,
-  show_col_clusters = T, show_row_dendrogram = T,
-  show_col_dendrogram = T, show_legend = T, display_numbers = F,
+\method{vl_heatmap}{matrix}(
+  x,
+  cluster_rows = T,
+  kmeans_k = NA,
+  clustering_distance_rows = "euclidean",
+  cutree_rows = 1,
+  cluster_cols = T,
+  clustering_distance_cols = "euclidean",
+  cutree_cols = 1,
+  clustering_method = "complete",
+  plot = T,
+  auto_margins = T,
+  breaks = seq(min(x, na.rm = T), max(x, na.rm = T), length.out = length(col)),
+  col = c("cornflowerblue", "white", "red"),
+  na_col = "lightgrey",
+  main = NA,
+  legend_title = NA,
+  show_rownames = T,
+  show_colnames = T,
+  show_row_clusters = T,
+  show_col_clusters = T,
+  show_row_dendrogram = T,
+  show_col_dendrogram = T,
+  show_legend = T,
+  display_numbers = F,
   display_numbers_FUN = function(x) round(x, 2),
-  display_numbers_cex = 0.5)
+  display_numbers_cex = 0.5
+)
 
-\method{vl_heatmap}{vl_heatmap}(obj, add, inherit_row_cl = T,
-  inherit_col_cl = T, ...)
+\method{vl_heatmap}{vl_heatmap}(obj, add, inherit_row_cl = T, inherit_col_cl = T, ...)
+
+\method{plot}{vl_heatmap}(
+  obj,
+  cluster_rows = T,
+  cluster_cols = T,
+  cutree_rows = 1,
+  cutree_cols = 1,
+  auto_margins = T,
+  breaks = NULL,
+  col = c("cornflowerblue", "white", "red"),
+  na_col = "lightgrey",
+  main = NA,
+  show_legend = T,
+  legend_title = NA,
+  show_rownames = T,
+  show_colnames = T,
+  show_row_clusters = T,
+  show_col_clusters = T,
+  show_row_dendrogram = T,
+  show_col_dendrogram = T,
+  display_numbers = F,
+  display_numbers_FUN = function(x) round(x, 2),
+  display_numbers_cex = 0.5
+)
 }
 \arguments{
-\item{x}{Data to plot. Can be one of matrix, data.table, or formula.}
+\item{x}{}
 
-\item{...}{Extra parameters to be passed to ?vl_heatmap().}
+\item{...}{Extra arguments to be passed to vl_heatmap}
 
 \item{cluster_rows}{Should rows be clustered? Default= T}
 
@@ -90,10 +129,6 @@ vl_heatmap(x, ...)
 \item{inherit_row_cl}{Should row clustering be inherited? Default is TRUE if rownames match}
 
 \item{inherit_col_cl}{Should col clustering be inherited? Default is TRUE if colnames match}
-
-\item{x}{}
-
-\item{...}{Extra arguments to be passed to vl_heatmap}
 }
 \value{
 An object of class vl_heatmap_obj containing clustering data and can be used for plotting using plot(obj, ...)
@@ -110,6 +145,8 @@ This function plots a heatmap and returns an S3 object of type vl_heatmap_obj wh
 \item \code{matrix}: Default function using matrix as an input
 
 \item \code{vl_heatmap}: Inherit clustering to another matrix
+
+\item \code{vl_heatmap}: Default plotting function
 }}
 
 \examples{

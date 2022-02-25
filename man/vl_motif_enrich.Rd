@@ -6,8 +6,13 @@
 \alias{plot.vl_enr}
 \title{Motif enrichment analysis}
 \usage{
-vl_motif_enrich(counts, control_counts, plot = T, padj_cutoff = 0.05,
-  top_enrich = Inf)
+vl_motif_enrich(
+  counts,
+  control_counts,
+  plot = T,
+  padj_cutoff = 0.05,
+  top_enrich = Inf
+)
 
 \method{plot}{vl_enr}(obj, padj_cutoff = 0.05, top_enrich = Inf)
 }

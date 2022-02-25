@@ -62,6 +62,7 @@ vl_STRING_interaction <- function(symbols,
 }
 
 #' @describeIn vl_STRING_interaction Method to plot STRING interaction igraphs
+#' @export
 plot.vl_STRING <- function(obj,
                            score_cutoff= 900,
                            top_N= NA,
