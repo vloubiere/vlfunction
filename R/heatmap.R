@@ -277,7 +277,7 @@ plot.vl_heatmap <- function(obj,
     bot <- 1
     left <- 1
     top <- 1.5
-    right <- 0.5
+    right <- 1
     if(show_colnames)
       bot <- bot+grconvertY(max(strwidth(cols$col, "inches")), "inches", "lines")
     if(show_rownames)
@@ -288,13 +288,13 @@ plot.vl_heatmap <- function(obj,
       top <- top+1.5 else if(show_col_clusters)
           top <- top+1
     if(show_row_dendrogram)
-      right <- right+1.5
-    if(show_row_clusters)
-      right <- right+1
-    leg_width <- grconvertX(strwidth(legend_title, units = "inches", cex= 0.8), "inches", "lines")
+      right <- right+1.5 else if(show_row_clusters)
+        right <- right+1
+    leg_width <- strwidth(legend_title, units = "inches", cex= 0.8)+par("cin")[1]
+    leg_width <- grconvertX(leg_width, "inches", "lines")
     if(leg_width>3.5)
       right <- right+leg_width else
-        right <- right+2.5
+        right <- right+3.5
     par(mar= c(bot, left, top, right))
   }
   
@@ -418,6 +418,6 @@ plot.vl_heatmap <- function(obj,
                top,
                mar.lh*6,
                mar.lw,
-               main= main)
+               main= legend_title)
   }
 }
