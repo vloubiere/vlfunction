@@ -174,7 +174,7 @@ vl_heatmap.matrix <- function(x,
               ccl= ccl,
               rdend= rdend,
               cdend= cdend)
-  class(obj) <- c("vl_heatmap", "list")
+  setattr(obj, "class", c("vl_heatmap", "list"))
   if(plot)
   {
     pl <- match.call()
@@ -306,7 +306,7 @@ plot.vl_heatmap <- function(obj,
     x <- x[,(cols$col_order)]
   # Breaks
   if(is.null(breaks))
-    breaks <- seq(min(x), max(x), length.out= length(col))
+    breaks <- seq(min(x, na.rm= T), max(x, na.rm= T), length.out= length(col))
   Cc <- circlize::colorRamp2(breaks, 
                              colors= col)
   # Image
@@ -341,13 +341,23 @@ plot.vl_heatmap <- function(obj,
       rows[, row_cl:= cutree(rcl, cutree_rows)]
     pos <- cumsum(rev(rows[(row_order), .N, row_cl]$N))
     abline(h= pos[-length(pos)]+0.5)
+    text(x = par("usr")[2], 
+         y= pos-diff(c(0, pos))/2, 
+         labels = rev(unique(rows[(row_order), row_cl])),
+         pos= 4,
+         xpd= T)
   }
   if(show_col_clusters)
   {
     if(cutree_cols>max(cols$col_cl))
       cols[, col_cl:= cutree(ccl, cutree_cols)]
-    pos <- cumsum(rev(cols[(col_order), .N, col_cl]$N))
+    pos <- cumsum(cols[(col_order), .N, col_cl]$N)
     abline(v= pos[-length(pos)]+0.5)
+    text(x = pos-diff(c(0, pos))/2,
+         y= par("usr")[4],
+         labels = unique(cols[(col_order), col_cl]),
+         pos= 3,
+         xpd= T)
   }
 
   #----------------------------------#

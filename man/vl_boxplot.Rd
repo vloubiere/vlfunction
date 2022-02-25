@@ -19,7 +19,8 @@ vl_boxplot(x, ...)
 \method{vl_boxplot}{default}(x, compute_pval, outline = F, xlab = NA,
   ylab = NA, xlim, ylim, names = NULL, boxcol = "white",
   boxwex = ifelse(violin, 0.25, 0.4), box.lty = 1, staplewex = NA,
-  violin = F, violcol = "white", violwex = 0.4, trim = T, ...)
+  violin = F, violcol = "white", violwex = 0.4, trim = T,
+  xlab.line = 3, ylab.line = 3, ...)
 }
 \arguments{
 \item{x}{Matrix, data.atble or data.frame containing data}

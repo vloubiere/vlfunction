@@ -107,6 +107,8 @@ vl_boxplot.default <- function(x,
                                violcol= "white",
                                violwex= 0.4,
                                trim= T,
+                               xlab.line= 3,
+                               ylab.line= 3,
                                ...)
 {
   if(!missing(compute_pval) && !is.list(compute_pval))
@@ -198,10 +200,10 @@ vl_boxplot.default <- function(x,
           lty= box.lty, 
           boxwex= boxwex,
           col= boxcol,
-          xlab= xlab,
-          ylab= ylab,
-          names= names,
+          names= names(x),
           ...)
+  mtext(xlab, side= 1, line = xlab.line)
+  mtext(ylab, side= 2, line = ylab.line)
   if(outline)
     points(x= jitter(rep(seq(x), lengths(box["out",]))),
            y= unlist(box["out",]),
@@ -212,4 +214,11 @@ vl_boxplot.default <- function(x,
       segments(x0, y, x1, y)
       vl_plot_pval_text(x, y, pval, stars_only = T)
     }]
+  
+  obj <- list(stats= as.data.table(box["stats",]))
+  if(violin && nrow(viols)>0)
+    obj <- c(obj, list(violins= viols))
+  if(!missing(compute_pval) && nrow(pval)>0)
+    obj <- c(obj, list(pval= pval))
+  invisible(obj)
 }
