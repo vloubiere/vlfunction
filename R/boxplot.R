@@ -138,7 +138,7 @@ vl_boxplot.default <- function(x,
     pval[, c("var1", "var2"):= .(x[x0], x[x1])]
     pval <- pval[lengths(var1)>0 & lengths(var2)>0]
     # Compute pvals
-    if(nrow(pval)>1)
+    if(nrow(pval)>0)
     {
       pval[, pval:= wilcox.test(unlist(var1), unlist(var2))$p.value, .(x0, x1)]
       pval[, y:= max(unlist(box[c("out", "stats"), x0:x1]), na.rm= T)+adj, .(x0, x1)]
