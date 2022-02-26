@@ -9,6 +9,8 @@ vl_balloonskey(
   labels,
   left = par("usr")[2],
   top = par("usr")[4],
+  ticks.cex = 0.6,
+  main.cex = 1,
   main = NA
 )
 }
@@ -20,6 +22,10 @@ vl_balloonskey(
 \item{left}{left pos}
 
 \item{top}{top pos}
+
+\item{ticks.cex}{cex expansion factor for ticks labels}
+
+\item{main.cex}{cex expansion factor for legend title}
 
 \item{main}{Title}
 

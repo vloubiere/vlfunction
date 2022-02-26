@@ -159,6 +159,8 @@ vl_fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
 #' @param height height
 #' @param width width
 #' @param main Title
+#' @param ticks.cex cex expansion factor for ticks labels
+#' @param main.cex cex expansion factor for legend title
 #'
 #' @return Plots heatkey
 #' @export
@@ -168,6 +170,8 @@ vl_heatkey <- function(breaks,
                        top= par("usr")[4],
                        height= strheight("M")*6,
                        width= strwidth("M"),
+                       ticks.cex= 0.6,
+                       main.cex= 1,
                        main= NA)
 {
   Cc <- circlize::colorRamp2(breaks = breaks, 
@@ -188,12 +192,13 @@ vl_heatkey <- function(breaks,
   text(left+width,
        (top-height)+height*((ticks-min(breaks, na.rm= T))/diff(range(breaks, na.rm=T))),
        ticks,
-       cex= 0.6,
+       cex= ticks.cex,
        pos= 4,
        xpd= T)
   text(left,
        top+strheight("M"),
-       main, 
+       main,
+       cex= main.cex,
        pos= 4, 
        offset= 0,
        xpd= T)
@@ -207,6 +212,8 @@ vl_heatkey <- function(breaks,
 #' @param top top pos
 #' @param height height
 #' @param main Title
+#' @param ticks.cex cex expansion factor for ticks labels
+#' @param main.cex cex expansion factor for legend title
 #'
 #' @return Plots heatkey
 #' @export
@@ -214,6 +221,8 @@ vl_balloonskey <- function(sizes,
                            labels,
                            left= par("usr")[2], 
                            top= par("usr")[4],
+                           ticks.cex= 0.6,
+                           main.cex= 1,
                            main= NA)
 {
   if(length(sizes) != length(labels))
@@ -235,11 +244,12 @@ vl_balloonskey <- function(sizes,
        pos= 4,
        offset= 0.25,
        xpd=T,
-       cex= 0.6)
+       cex= ticks.cex)
   text(left,
        top+strheight("M"),
        main, 
        pos= 4, 
+       cex= main.cex,
        offset= 0,
        xpd= T)
 }

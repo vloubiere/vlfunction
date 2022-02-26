@@ -413,6 +413,7 @@ plot.vl_heatmap <- function(obj,
     top <- par("usr")[4]-mar.lh*2
     width <- mar.lw
     vl_heatkey(breaks,
+               main.cex= 0.8,
                col,
                left,
                top,

@@ -11,6 +11,8 @@ vl_heatkey(
   top = par("usr")[4],
   height = strheight("M") * 6,
   width = strwidth("M"),
+  ticks.cex = 0.6,
+  main.cex = 1,
   main = NA
 )
 }
@@ -26,6 +28,10 @@ vl_heatkey(
 \item{height}{height}
 
 \item{width}{width}
+
+\item{ticks.cex}{cex expansion factor for ticks labels}
+
+\item{main.cex}{cex expansion factor for legend title}
 
 \item{main}{Title}
 }
