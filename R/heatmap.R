@@ -293,7 +293,7 @@ plot.vl_heatmap <- function(obj,
     leg_width <- strwidth(legend_title, units = "inches", cex= 0.8)+par("cin")[1]
     leg_width <- grconvertX(leg_width, "inches", "lines")
     if(leg_width>3.5)
-      right <- right+leg_width else
+      right <- right+leg_width else if(show_legend)
         right <- right+3.5
     par(mar= c(bot, left, top, right))
   }
