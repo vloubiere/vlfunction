@@ -198,10 +198,6 @@ vl_motif_cl_enrich <- function(counts_matrix,
                                                              plot= F))
   names(res) <- levels(cl_IDs)
   res <- rbindlist(res, idcol = "cl")
-    
-  names(cl_IDs) <- NULL
-  res <- melt(cbind(cl= cl_IDs, counts_matrix), 
-              id.vars = c("rn", "cl"))
   class(res) <- c("vl_enr_cl", "data.table", "data.frame")
   
   # plot
