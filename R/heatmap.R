@@ -55,9 +55,9 @@ vl_heatmap.data.table <- function(x,
                                   rownames.value= NULL, 
                                   ...)
 {
-  mat <- data.table::as.matrix(x, 
-                               rownames= rownames, 
-                               rownames.value= rownames.value)
+  mat <- as.matrix(x, 
+                   rownames= rownames, 
+                   rownames.value= rownames.value)
   vl_heatmap.matrix(mat, ...)
 }
 
@@ -179,7 +179,7 @@ vl_heatmap.matrix <- function(x,
   {
     pl <- match.call()
     pl$obj <- obj
-    pl$x <- NULL
+    pl$x <- pl$plot <- NULL
     pl$kmeans_k <- pl$clustering_distance_rows <- NULL
     pl$clustering_distance_cols <- NULL
     pl$clustering_method <- NULL

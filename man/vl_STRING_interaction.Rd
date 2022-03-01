@@ -5,17 +5,11 @@
 \alias{plot.vl_STRING}
 \title{get STRING intrations DT}
 \usage{
-vl_STRING_interaction(
-  symbols,
-  plot = T,
-  score_cutoff = 900,
-  top_N = NA,
-  col = "tomato",
-  size = 10,
-  cex.label = 1
-)
+vl_STRING_interaction(symbols, plot = T, score_cutoff = 900,
+  top_N = NA, col = "tomato", size = 10, cex.label = 1)
 
-\method{plot}{vl_STRING}(obj, score_cutoff = 900, top_N = NA, col, size, cex.label)
+plot.vl_STRING(obj, score_cutoff = 900, top_N = NA, col, size,
+  cex.label)
 }
 \arguments{
 \item{symbols}{vector of Dmel gene symbols}
@@ -38,9 +32,9 @@ An object that can be used with the plot.vl_STRING() method
 \description{
 Extract interactions form STRIN db (Dmel only for now)
 }
-\section{Methods (by generic)}{
+\section{Functions}{
 \itemize{
-\item \code{plot}: Method to plot STRING interaction igraphs
+\item \code{plot.vl_STRING}: Method to plot STRING interaction igraphs
 }}
 
 \examples{

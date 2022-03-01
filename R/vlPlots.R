@@ -57,10 +57,10 @@ vl_plot_pval_text <- function(x,
 #' vl_seqlogo(pwm)
 #' @export
 vl_seqlogo <- function(pwm, 
-                       xleft= 0, 
-                       ybottom= 0, 
-                       xright= 1, 
-                       ytop= 1, 
+                       xleft= par("usr")[1], 
+                       ytop= par("usr")[4], 
+                       width= strwidth("M")*ncol(pwm), 
+                       height= strheight("M")*4, 
                        add= T)
 {
   if(!is.matrix(pwm))
@@ -72,7 +72,7 @@ vl_seqlogo <- function(pwm,
   require(png)
   require(colorspace)
   
-  tmp <- base::tempfile(fileext = ".png") 
+  tmp <- base::tempfile(fileext = ".png")
   grDevices::png(tmp, type="cairo", width = 1000, height = 1000, units = "px")
   seqLogo::seqLogo(pwm, xaxis = F, yaxis = F)
   dev.off()
@@ -83,7 +83,7 @@ vl_seqlogo <- function(pwm,
   res[im[,,1]==0 & im[,,2]==1 & im[,,3]==0] <- "forestgreen"
   res[im[,,1]==0 & im[,,2]==0 & im[,,3]==1] <- "dodgerblue2"
   if(!add) plot.new()
-  rasterImage(res[50:950,50:950], xleft= xleft, ybottom= ybottom, xright= xright, ytop= ytop, xpd= T)
+  rasterImage(res[70:930,70:930], xleft= xleft, ybottom= ytop-height, xright= xleft+width, ytop= ytop, xpd= T)
 }
 
 #' figure label

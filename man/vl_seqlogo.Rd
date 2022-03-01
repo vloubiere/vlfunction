@@ -4,20 +4,22 @@
 \alias{vl_seqlogo}
 \title{plot seqlogo rasterImage}
 \usage{
-vl_seqlogo(pwm, xleft = 0, ybottom = 0, xright = 1, ytop = 1, add = T)
+vl_seqlogo(pwm, xleft = par("usr")[1], ytop = par("usr")[4],
+  width = strwidth("M") * ncol(pwm), height = strheight("M") * 4,
+  add = T)
 }
 \arguments{
 \item{pwm}{pwm matrix}
 
 \item{xleft}{left plot limit. Default= 0}
 
-\item{ybottom}{bottom plot limit. Default= 0}
-
-\item{xright}{right plot limit. Default= 1}
-
 \item{ytop}{top plot limit. Default= 1}
 
 \item{add}{Should the pwm be plot on the top of opened device? Default= T}
+
+\item{ybottom}{bottom plot limit. Default= 0}
+
+\item{xright}{right plot limit. Default= 1}
 }
 \description{
 plot seqlogo from pwm matrix

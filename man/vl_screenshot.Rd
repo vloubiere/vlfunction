@@ -4,18 +4,9 @@
 \alias{vl_screenshot}
 \title{Simplified version. less options, faster}
 \usage{
-vl_screenshot(
-  bed,
-  tracks,
-  highlight_bed = NULL,
-  col = "black",
-  highlight_col = "lightgrey",
-  space = 30,
-  widths = c(100L, 20L),
-  names = NULL,
-  max = NULL,
-  genome
-)
+vl_screenshot(bed, tracks, highlight_bed = NULL, col = "black",
+  highlight_col = "lightgrey", space = 30, widths = c(100L, 20L),
+  names = NULL, max = NULL, genome)
 }
 \arguments{
 \item{bed}{Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}

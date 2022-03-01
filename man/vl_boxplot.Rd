@@ -16,32 +16,54 @@ vl_boxplot(x, ...)
 
 \method{vl_boxplot}{data.table}(x, ...)
 
-\method{vl_boxplot}{default}(
-  x,
-  compute_pval,
-  outline = F,
-  xlab = NA,
-  ylab = NA,
-  xlim,
-  ylim,
-  names = NULL,
-  boxcol = "white",
-  boxwex = ifelse(violin, 0.25, 0.4),
-  box.lty = 1,
-  staplewex = NA,
-  violin = F,
-  violcol = "white",
-  violwex = 0.4,
-  trim = T,
-  xlab.line = 3,
-  ylab.line = 3,
-  ...
-)
+\method{vl_boxplot}{default}(x, compute_pval, outline = F, xlab = NA,
+  ylab = NA, xlim, ylim, names = NULL, boxcol = "white",
+  boxwex = ifelse(violin, 0.25, 0.4), box.lty = 1, staplewex = NA,
+  violin = F, violcol = "white", violwex = 0.4, trim = T,
+  xlab.line = 3, ylab.line = 3, ...)
 }
 \arguments{
-\item{x}{list of variables to be plotted}
+\item{x}{Matrix, data.atble or data.frame containing data}
 
-\item{...}{Extra parameters passed to boxplot, such as las, lwd...}
+\item{...}{Extra arguments set to plot function}
+
+\item{compute_pval}{A list containing sublists of pairwise x indexes to compute pvalues from. example-> list(c(1,2), c(1,3))}
+
+\item{outline}{show outliers? default=F}
+
+\item{xlab}{}
+
+\item{ylab}{}
+
+\item{xlim}{}
+
+\item{ylim}{}
+
+\item{names}{group labels (x axis). By default, names= names(x). if set to false, no labels are ploted}
+
+\item{boxcol}{box color}
+
+\item{boxwex}{box width}
+
+\item{box.lty}{Line type used for boxplots, default= 1}
+
+\item{staplewex}{Staples expansion factor. default= NA}
+
+\item{violin}{If set to FALSE, the violin is not computed/shown}
+
+\item{violcol}{violin color}
+
+\item{violwex}{violin width}
+
+\item{trim}{Should violin be trimmed?}
+
+\item{x}{list data}
+
+\item{at}{x position for plotting}
+
+\item{add}{If TRUE, plot on the top of actual plot}
+
+\item{x}{list of variables to be plotted}
 
 \item{compute_pval}{list of vectors of length two containing pairwise x indexes to be compared}
 
@@ -61,21 +83,13 @@ vl_boxplot(x, ...)
 
 \item{boxwex}{Boxes expansion factor. default to 0.4, 0.25 if violin= T}
 
-\item{box.lty}{Line type used for boxplots, default= 1}
-
-\item{staplewex}{Staples expansion factor. default= NA}
-
 \item{violin}{Should violins be plotted?}
 
 \item{violcol}{Violin colors (recycled)}
 
 \item{violwex}{violins expansion factor. default to 0.4}
 
-\item{trim}{Should violin be trimmed?}
-
-\item{at}{x position for plotting}
-
-\item{add}{If TRUE, plot on the top of actual plot}
+\item{...}{Extra parameters passed to boxplot, such as las, lwd...}
 }
 \description{
 This function plots a violin plot from either matrix,

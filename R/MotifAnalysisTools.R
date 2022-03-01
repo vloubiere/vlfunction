@@ -88,8 +88,10 @@ vl_motif_enrich <- function(counts,
                             padj_cutoff= 0.05,
                             top_enrich= Inf)
 {
-  if(!is.matrix(counts) | !is.matrix(control_counts) | !identical(colnames(counts), colnames(control_counts)))
-    stop("counts and control counts should be matrices of motif counts with similar colnames")
+  if(!is.numeric(unlist(counts)))
+    stop("counts_matrix should only contain numeric values")
+  if(!is.numeric(unlist(control_counts)))
+    stop("counts_matrix should only contain numeric values")
   
   # make obj
   obj <- rbindlist(list(set= as.data.table(counts),
@@ -172,7 +174,7 @@ vl_motif_enrich <- function(counts,
 vl_motif_cl_enrich <- function(counts_matrix, 
                                cl_IDs,
                                control_cl= unique(cl_IDs),
-                               plot= F,
+                               plot= T,
                                padj_cutoff= 0.00001,
                                log2OR_cutoff= 0,
                                N_top= Inf,
@@ -183,38 +185,23 @@ vl_motif_cl_enrich <- function(counts_matrix,
                                main= NA,
                                auto_margins = T)
 {
-  if(!is.matrix(counts_matrix))
-    stop("counts_matrix should be a matrix")
-  if(!all(apply(counts_matrix, 2, function(x) is.numeric(x))))
+  if(!is.numeric(unlist(counts_matrix)))
     stop("counts_matrix should only contain numeric values")
-  if(is.null(rownames(counts_matrix)))
-    rownames(counts_matrix) <- seq(nrow(counts_matrix))
-  counts_matrix <- as.data.table(counts_matrix, keep.rownames= T)
-  if(!is.vector(cl_IDs))
-    stop("cl_IDs should be a vector")
+  if(!is.data.table(counts_matrix))
+    counts_matrix <- as.data.table(counts_matrix)
+  if(!is.factor(cl_IDs))
+    cl_IDs <- factor(cl_IDs)
   
-  # Format table
+  # Compute enrichment
+  res <- lapply(levels(cl_IDs), function(cl) vl_motif_enrich(counts = counts_matrix[cl_IDs==cl],
+                                                             control_counts = counts_matrix[cl_IDs!=cl & cl_IDs %in% control_cl],
+                                                             plot= F))
+  names(res) <- levels(cl_IDs)
+  res <- rbindlist(res, idcol = "cl")
+    
   names(cl_IDs) <- NULL
   res <- melt(cbind(cl= cl_IDs, counts_matrix), 
               id.vars = c("rn", "cl"))
-  # Enrichment
-  res <- res[, {
-    counts <- data.table(ccl= cl, 
-                         cval= value,
-                         key= "ccl")
-    .c <- .SD[, {
-      # Contingency table restricted to control cluster(s) and the tested one
-      tab <- table(counts[.(unique(c(cl, control_cl))), .(ccl==cl, cval>0)])
-      if(identical(c(2L,2L), dim(tab))) # Filter out motif for which all counts fall within one category
-        fisher.test(tab)[c("estimate", "p.value")] else
-          list(estimate= as.numeric(NA), `p.value`= as.numeric(NA))
-    }, cl]
-  }, variable]
-  setnames(res, c("estimate", "p.value"), c("OR", "pval"))
-  # padj...
-  res[, padj:= p.adjust(pval, method = "fdr"), pval]
-  res[, log2OR:= log2(OR)]
-  res <- res[, .(variable, cl, log2OR, padj)]
   class(res) <- c("vl_enr_cl", "data.table", "data.frame")
   
   # plot

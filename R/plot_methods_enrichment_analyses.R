@@ -67,13 +67,14 @@ plot.vl_enr_cl <- function(obj,
             order = c(1, -1, -1, 1))
   DT[log2OR>0, rank:= seq(.N), cl]
   DT <- DT[variable %in% DT[rank<=N_top, variable]]
-  # Handle infinite log2OR
-  if(any(is.infinite(DT$log2OR)))
+  # Handle infinite log2OR/padj
+  if(any(is.infinite(DT[, c(log2OR, `-log10(padj)`)])))
   {
-    warning("There are suspcious infinite log2OR values found after padj cutoff -> capped to max(finite)")
-    print(unique(DT[is.infinite(DT$log2OR), variable]))
-    DT[log2OR==Inf, log2OR:= max(DT[is.finite(log2OR) & log2OR>=0, log2OR])]
-    DT[log2OR==(-Inf), log2OR:= min(DT[is.finite(log2OR)  & log2OR<=0, log2OR])]
+    warning("There are suspcious infinite log2OR/padj values found after padj cutoff -> capped to max(finite)")
+    cols <- c("log2OR", "-log10(padj)")
+    DT[, (cols):= lapply(.SD, function(x) fcase(!is.finite(x) & x<0, min(x[is.finite(x)]),
+                                                !is.finite(x) & x>0, max(x[is.finite(x)]),
+                                                is.finite(x), x)), .SDcols= cols]
   }
   # Remove values that were useful for earlier ordering but do not meet minimum criteria
   DT <- DT[padj<0.05 & log2OR>=0]
