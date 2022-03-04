@@ -202,8 +202,8 @@ vl_boxplot.default <- function(x,
           col= boxcol,
           names= names(x),
           ...)
-  mtext(xlab, side= 1, line = xlab.line)
-  mtext(ylab, side= 2, line = ylab.line)
+  mtext(xlab, side= 1, line = xlab.line, las= 1)
+  mtext(ylab, side= 2, line = ylab.line, las= 0)
   if(outline)
     points(x= jitter(rep(seq(x), lengths(box["out",]))),
            y= unlist(box["out",]),
