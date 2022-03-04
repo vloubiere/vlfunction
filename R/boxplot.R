@@ -87,6 +87,7 @@ vl_boxplot.data.table <- function(x, ...)
 #' @param violin Should violins be plotted?
 #' @param violcol Violin colors (recycled) 
 #' @param violwex violins expansion factor. default to 0.4
+#' @param wilcox.alternative When compute_pval is specified, alternative of the wilcox.test. default= "two.sided"
 #' @param ... Extra parameters passed to boxplot, such as las, lwd... 
 #'
 #' @describeIn vl_boxplot default method
@@ -109,6 +110,7 @@ vl_boxplot.default <- function(x,
                                trim= T,
                                xlab.line= 3,
                                ylab.line= 3,
+                               wilcox.alternative= "two.sided",
                                ...)
 {
   if(!missing(compute_pval) && !is.list(compute_pval))
@@ -142,7 +144,8 @@ vl_boxplot.default <- function(x,
     # Compute pvals
     if(nrow(pval)>0)
     {
-      pval[, pval:= wilcox.test(unlist(var1), unlist(var2))$p.value, .(x0, x1)]
+      pval[, pval:= wilcox.test(unlist(var1), unlist(var2), 
+                                alternative= wilcox.alternative)$p.value, .(x0, x1)]
       pval[, y:= max(unlist(box[c("out", "stats"), x0:x1]), na.rm= T)+adj, .(x0, x1)]
       pval[, c("y0", "y1", "idx"):= .(y-0.5*adj, y+0.5*adj, .I)]
       setorderv(pval, c("x0", "x1", "y"))
