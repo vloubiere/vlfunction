@@ -88,6 +88,7 @@ vl_boxplot.data.table <- function(x, ...)
 #' @param violcol Violin colors (recycled) 
 #' @param violwex violins expansion factor. default to 0.4
 #' @param wilcox.alternative When compute_pval is specified, alternative of the wilcox.test. default= "two.sided"
+#' @param horizontal Whould the plot be made horizontal?
 #' @param ... Extra parameters passed to boxplot, such as las, lwd... 
 #'
 #' @describeIn vl_boxplot default method
@@ -111,6 +112,7 @@ vl_boxplot.default <- function(x,
                                xlab.line= 3,
                                ylab.line= 3,
                                wilcox.alternative= "two.sided",
+                               horizontal= F,
                                ...)
 {
   if(!missing(compute_pval) && !is.list(compute_pval))
@@ -187,12 +189,12 @@ vl_boxplot.default <- function(x,
   # Plot
   #------------------------#
   plot.new()
-  plot.window(xlim= xlim,
-              ylim= ylim)
+  plot.window(xlim= if(horizontal) ylim else xlim,
+              ylim= if(horizontal) xlim else ylim)
   if(violin && nrow(viols)>0)
     viols[, {
-      polygon(unlist(x), 
-              unlist(y), 
+      polygon(if(horizontal) unlist(y) else unlist(x), 
+              if(horizontal) unlist(x) else unlist(y), 
               col= col[1])
     }, .(.id, col)]
   boxplot(x,
@@ -204,18 +206,36 @@ vl_boxplot.default <- function(x,
           boxwex= boxwex,
           col= boxcol,
           names= names(x),
+          horizontal= horizontal,
           ...)
-  mtext(xlab, side= 1, line = xlab.line, las= 1)
-  mtext(ylab, side= 2, line = ylab.line, las= 0)
+  mtext(xlab, 
+        side= 1, 
+        line = xlab.line, 
+        las= 1)
+  mtext(ylab, 
+        side= 2, 
+        line = ylab.line, 
+        las= 0)
   if(outline)
-    points(x= jitter(rep(seq(x), lengths(box["out",]))),
-           y= unlist(box["out",]),
+  {
+    points(if(horizontal) unlist(box["out",]) else jitter(rep(seq(x), lengths(box["out",]))),
+           if(horizontal) jitter(rep(seq(x), lengths(box["out",]))) else unlist(box["out",]),
            pch= 16,
            col= adjustcolor("grey", 0.5))
+  }
+    
   if(!missing(compute_pval) && nrow(pval)>0)
     pval[, {
-      segments(x0, y, x1, y)
-      vl_plot_pval_text(x, y, pval, stars_only = T)
+      segments(if(horizontal) y else x0, 
+               if(horizontal) x0 else y, 
+               if(horizontal) y else x1,
+               if(horizontal) x1 else y)
+      vl_plot_pval_text(if(horizontal) y else x, 
+                        if(horizontal) x else y, 
+                        pval, 
+                        stars_only = T,
+                        pos= ifelse(horizontal, 4, 3),
+                        srt= ifelse(horizontal, 270, 0))
     }]
   
   obj <- list(stats= as.data.table(box["stats",]))

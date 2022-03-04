@@ -20,7 +20,8 @@ vl_boxplot(x, ...)
   ylab = NA, xlim, ylim, names = NULL, boxcol = "white",
   boxwex = ifelse(violin, 0.25, 0.4), box.lty = 1, staplewex = NA,
   violin = F, violcol = "white", violwex = 0.4, trim = T,
-  xlab.line = 3, ylab.line = 3, ...)
+  xlab.line = 3, ylab.line = 3, wilcox.alternative = "two.sided",
+  horizontal = F, ...)
 }
 \arguments{
 \item{x}{Matrix, data.atble or data.frame containing data}
@@ -56,6 +57,10 @@ vl_boxplot(x, ...)
 \item{violwex}{violin width}
 
 \item{trim}{Should violin be trimmed?}
+
+\item{wilcox.alternative}{When compute_pval is specified, alternative of the wilcox.test. default= "two.sided"}
+
+\item{horizontal}{Whould the plot be made horizontal?}
 
 \item{x}{list data}
 
