@@ -87,6 +87,7 @@ vl_boxplot.data.table <- function(x, ...)
 #' @param violin Should violins be plotted?
 #' @param violcol Violin colors (recycled) 
 #' @param violwex violins expansion factor. default to 0.4
+#' @param pval_adj Adjustment value for pval segments. Default is 0.04 (4% plot)
 #' @param wilcox.alternative When compute_pval is specified, alternative of the wilcox.test. default= "two.sided"
 #' @param horizontal Whould the plot be made horizontal?
 #' @param ... Extra parameters passed to boxplot, such as las, lwd... 
@@ -111,6 +112,7 @@ vl_boxplot.default <- function(x,
                                trim= T,
                                xlab.line= 3,
                                ylab.line= 3,
+                               pval_adj= 0.04,
                                wilcox.alternative= "two.sided",
                                horizontal= F,
                                ...)
@@ -138,20 +140,23 @@ vl_boxplot.default <- function(x,
   # Compute pvals
   if(!missing(compute_pval))
   {
-    adj <- diff(ylim)*0.04 # plotting adjust
-    pval <- data.table(do.call(rbind, compute_pval))
+    adj <- diff(ylim)*pval_adj # plotting adjust
+    pval <- as.data.table(matrix(sapply(compute_pval, sort), ncol= 2, byrow = T))
     setnames(pval, c("x0", "x1"))
     pval[, c("var1", "var2"):= .(x[x0], x[x1])]
     pval <- pval[lengths(var1)>0 & lengths(var2)>0]
     # Compute pvals
     if(nrow(pval)>0)
     {
-      pval[, pval:= wilcox.test(unlist(var1), unlist(var2), 
+      pval[, pval:= wilcox.test(unlist(var1), 
+                                unlist(var2), 
                                 alternative= wilcox.alternative)$p.value, .(x0, x1)]
-      pval[, y:= max(unlist(box[c("out", "stats"), x0:x1]), na.rm= T)+adj, .(x0, x1)]
-      pval[, c("y0", "y1", "idx"):= .(y-0.5*adj, y+0.5*adj, .I)]
-      setorderv(pval, c("x0", "x1", "y"))
-      pval$y <- pval[pval, i.y+adj*.N, .EACHI, on= c("x1>=x0", "x0<=x1", "y1>=y0", "y0<=y1", "idx<idx")]$V1
+      pval[, max:= max(unlist(box[c("out", "stats"), x0:x1]), na.rm= T)+adj, .(x0, x1)]
+      setorderv(pval, c("x0", "x1", "max"))
+      # Compute contig idx and adjust y
+      pval[, idx:= cumsum(x0>data.table::shift(x1, fill= max(x1)))]
+      pval[, y:= min(max)+adj*(rowid(idx)-1)]
+      pval[, y:= y+cumsum(max>y)*adj] # in case where max is bigger than adj. y
       pval[, x:= rowMeans(.SD), .SDcols= c("x0", "x1")]
       # Adjust max
       if(max(pval$y+adj)>ylim[2])

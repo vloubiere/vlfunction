@@ -5,6 +5,7 @@
 \alias{vl_heatmap.data.table}
 \alias{vl_heatmap.matrix}
 \alias{vl_heatmap.vl_heatmap}
+\alias{plot.vl_heatmap}
 \title{Heatmap}
 \usage{
 vl_heatmap(x, ...)
@@ -27,6 +28,16 @@ vl_heatmap(x, ...)
 
 \method{vl_heatmap}{vl_heatmap}(obj, add, inherit_row_cl = T,
   inherit_col_cl = T, ...)
+
+\method{plot}{vl_heatmap}(obj, cluster_rows = T, cluster_cols = T,
+  cutree_rows = 1, cutree_cols = 1, auto_margins = T,
+  breaks = NULL, col = c("cornflowerblue", "white", "red"),
+  na_col = "lightgrey", main = NA, show_legend = T,
+  legend_title = NA, show_rownames = T, show_colnames = T,
+  show_row_clusters = T, show_col_clusters = T,
+  show_row_dendrogram = T, show_col_dendrogram = T,
+  display_numbers = F, display_numbers_FUN = function(x) round(x, 2),
+  display_numbers_cex = 0.5)
 }
 \arguments{
 \item{x}{Data to plot. Can be one of matrix, data.table, or formula.}
@@ -110,6 +121,8 @@ This function plots a heatmap and returns an S3 object of type vl_heatmap_obj wh
 \item \code{matrix}: Default function using matrix as an input
 
 \item \code{vl_heatmap}: Inherit clustering to another matrix
+
+\item \code{vl_heatmap}: Default plotting function
 }}
 
 \examples{
