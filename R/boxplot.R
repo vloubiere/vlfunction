@@ -133,7 +133,7 @@ vl_boxplot.default <- function(x,
   if(missing(xlim))
     xlim <- c(0.5, length(x)+0.5)
   if(missing(ylim))
-    ylim <- range(box[c("out", "stats"),])
+    ylim <- range(box[c("out", "stats"),], na.rm= T)
   
   # Compute pvals
   if(!missing(compute_pval))
