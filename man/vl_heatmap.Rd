@@ -4,7 +4,6 @@
 \alias{vl_heatmap}
 \alias{vl_heatmap.data.table}
 \alias{vl_heatmap.matrix}
-\alias{vl_heatmap.vl_heatmap}
 \alias{plot.vl_heatmap}
 \title{Heatmap}
 \usage{
@@ -26,18 +25,7 @@ vl_heatmap(x, ...)
   display_numbers_FUN = function(x) round(x, 2),
   display_numbers_cex = 0.5)
 
-\method{vl_heatmap}{vl_heatmap}(obj, add, inherit_row_cl = T,
-  inherit_col_cl = T, ...)
-
-\method{plot}{vl_heatmap}(obj, cluster_rows = T, cluster_cols = T,
-  cutree_rows = 1, cutree_cols = 1, auto_margins = T,
-  breaks = NULL, col = c("cornflowerblue", "white", "red"),
-  na_col = "lightgrey", main = NA, show_legend = T,
-  legend_title = NA, show_rownames = T, show_colnames = T,
-  show_row_clusters = T, show_col_clusters = T,
-  show_row_dendrogram = T, show_col_dendrogram = T,
-  display_numbers = F, display_numbers_FUN = function(x) round(x, 2),
-  display_numbers_cex = 0.5)
+\method{plot}{vl_heatmap}(obj)
 }
 \arguments{
 \item{x}{Data to plot. Can be one of matrix, data.table, or formula.}
@@ -94,22 +82,10 @@ vl_heatmap(x, ...)
 
 \item{display_numbers_cex}{cex display numbers}
 
-\item{obj}{vl_heatmap object containing the parent clustering}
-
-\item{add}{matrix that will inhiherit obj clustering}
-
-\item{inherit_row_cl}{Should row clustering be inherited? Default is TRUE if rownames match}
-
-\item{inherit_col_cl}{Should col clustering be inherited? Default is TRUE if colnames match}
-
 \item{x}{}
-
-\item{...}{Extra arguments to be passed to vl_heatmap}
 }
 \value{
 An object of class vl_heatmap_obj containing clustering data and can be used for plotting using plot(obj, ...)
-
-a vl_heatmap object whose clustering is inherited from obj
 }
 \description{
 This function plots a heatmap and returns an S3 object of type vl_heatmap_obj which can be modified and used for later plotting.
@@ -119,8 +95,6 @@ This function plots a heatmap and returns an S3 object of type vl_heatmap_obj wh
 \item \code{data.table}: Just a wrapper that collapses DT to a suitable matrix
 
 \item \code{matrix}: Default function using matrix as an input
-
-\item \code{vl_heatmap}: Inherit clustering to another matrix
 
 \item \code{vl_heatmap}: Default plotting function
 }}
