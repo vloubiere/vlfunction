@@ -19,7 +19,7 @@ vl_gaussian_blur <- function(signal) {
 #' @param x number of colours ro return
 #' @return vector of colors of length x
 #' @export
-vl_palette_categ1 <- function(x){
+vl_palette_many_categ <- function(x){
   colorRampPalette(c("orchid1", "darkorchid1", "purple", "darkorchid4", 
                      "olivedrab1", "limegreen", "olivedrab3", "olivedrab4", 
                      "lightsteelblue1", "cornflowerblue", "blue", "navy", 
@@ -32,7 +32,19 @@ vl_palette_categ1 <- function(x){
 #' @param x number of colours ro return
 #' @return vector of colors of length x
 #' @export
-vl_palette_categ2 <- function(x){
+vl_palette_few_categ <- function(x){
   colorRampPalette(c("#E69F00", "#56B4E9", "#009E73", "#F0E442", 
                      "#0072B2", "#D55E00", "#CC79A7", "#999999"))(x)
+}
+
+#' Title
+#'
+#' @param x number of colours ro return
+#' @return vector of colors of length x
+#' @export
+vl_palette_blueWhiteRed <- function(x){
+  colorRampPalette(c("#000000", "#04043D","#183570", "#1B4089","#2848AF", "#3F68C9",
+                     "#3A86DF","#49B3FF", "#5ADBFC","#BCFBFD", "#EDFEFE", "#FFFFFD",
+                     "#F5F8D1", "#F4F655", "#F1EC4A", "#F3D031", "#EFB73D", "#FFA510", 
+                     "#FA7C11", "#FC5615", "#F6451A", "#EC3A1A", "#E51F2E"))(x)
 }
