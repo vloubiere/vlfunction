@@ -4,7 +4,6 @@
 \alias{vl_heatmap}
 \alias{vl_heatmap.data.table}
 \alias{vl_heatmap.matrix}
-\alias{plot.vl_heatmap}
 \title{Heatmap}
 \usage{
 vl_heatmap(x, ...)
@@ -24,8 +23,6 @@ vl_heatmap(x, ...)
   show_col_dendrogram = T, show_legend = T, display_numbers = F,
   display_numbers_FUN = function(x) round(x, 2),
   display_numbers_cex = 0.5)
-
-\method{plot}{vl_heatmap}(obj)
 }
 \arguments{
 \item{x}{Data to plot. Can be one of matrix, data.table, or formula.}
@@ -95,8 +92,6 @@ This function plots a heatmap and returns an S3 object of type vl_heatmap_obj wh
 \item \code{data.table}: Just a wrapper that collapses DT to a suitable matrix
 
 \item \code{matrix}: Default function using matrix as an input
-
-\item \code{vl_heatmap}: Default plotting function
 }}
 
 \examples{

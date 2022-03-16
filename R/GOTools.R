@@ -63,6 +63,7 @@ vl_GO_enrich <- function(FBgn_vector,
   res[, log2OR:= log2(OR)]
   res[names, variable:= i.name, on= "variable==GO"]
   res <- res[, .(variable, log2OR, padj)]
+  setorderv(res, "log2OR")
   setattr(res, "class", c("vl_enr", "data.table", "data.frame"))
   
   if(plot)

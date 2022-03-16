@@ -1,11 +1,18 @@
+#' @param obj An object of class vl_enr
+#'
+#' @param padj_cutoff padjust cutoff to be applied before plotting
+#' @param top_enrich Top enrichments to plot (negative enrichments removed!)
+#' @param ... Extra args to be passed to barplot
+#'
 #' @describeIn vl_motif_enrich method to plot enrichment objects (containing variable, log2OR and padj)
 #' @export
 plot.vl_enr <- function(obj,
                         padj_cutoff= 0.05,
-                        top_enrich= Inf)
+                        top_enrich= Inf,
+                        ...)
 {
   DT <- data.table::copy(obj)
-  DT <- na.omit(DT[padj<=padj_cutoff][order(log2OR)])
+  DT <- na.omit(DT[padj<=padj_cutoff])
   DT[, `-log10(padj)`:= -log10(padj)]
   DT[, rank:= order(log2OR, decreasing = T)]
   # Handle infinite
@@ -26,7 +33,8 @@ plot.vl_enr <- function(obj,
                      border= NA,
                      col= Cc(`-log10(padj)`),
                      las= 1,
-                     xlab= "Odd Ratio (log2)")]
+                     xlab= "Odd Ratio (log2)",
+                     ...)]
   vl_heatkey(breaks = breaks,
              top = last(DT$bar),
              left = par("usr")[2]+strwidth("M"),

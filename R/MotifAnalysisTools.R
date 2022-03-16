@@ -114,6 +114,7 @@ vl_motif_enrich <- function(counts,
   res[, padj:= p.adjust(pval, method = "fdr"), pval]
   res[, log2OR:= log2(OR)]
   res <- res[, .(variable, log2OR, padj)]
+  setorderv(res, "log2OR")
   setattr(res, "class", c("vl_enr", "data.table", "data.frame"))
   
   if(plot)

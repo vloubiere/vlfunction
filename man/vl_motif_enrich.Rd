@@ -9,7 +9,7 @@
 vl_motif_enrich(counts, control_counts, plot = T, padj_cutoff = 0.05,
   top_enrich = Inf)
 
-\method{plot}{vl_enr}(obj, padj_cutoff = 0.05, top_enrich = Inf)
+plot.vl_enr(obj, padj_cutoff = 0.05, top_enrich = Inf, ...)
 }
 \arguments{
 \item{counts}{matrix of counts for the regions of interest}
@@ -21,6 +21,14 @@ vl_motif_enrich(counts, control_counts, plot = T, padj_cutoff = 0.05,
 \item{padj_cutoff}{cutoff for plotting}
 
 \item{top_enrich}{Show only n top enriched motifs}
+
+\item{obj}{An object of class vl_enr}
+
+\item{...}{Extra args to be passed to barplot}
+
+\item{padj_cutoff}{padjust cutoff to be applied before plotting}
+
+\item{top_enrich}{Top enrichments to plot (negative enrichments removed!)}
 }
 \value{
 DT of enrichment values
@@ -30,9 +38,9 @@ Returns a table of enrichment which can be plot using ?plot.vl_GO_enr
 \description{
 Compute motif enrichment between a set of regions and control regions
 }
-\section{Methods (by generic)}{
+\section{Functions}{
 \itemize{
-\item \code{plot}: method to plot enrichment objects (containing variable, log2OR and padj)
+\item \code{plot.vl_enr}: method to plot enrichment objects (containing variable, log2OR and padj)
 }}
 
 \examples{
