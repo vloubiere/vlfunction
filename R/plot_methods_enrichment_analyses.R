@@ -20,18 +20,19 @@ plot.vl_enr <- function(obj,
   breaks <- range(DT$`-log10(padj)`, na.rm= T)
   Cc <- circlize::colorRamp2(breaks,
                              c("blue", "red"))
-  bar <- barplot(DT$log2OR,
-                 horiz= T,
-                 names= DT$variable,
-                 border= NA,
-                 col= Cc(DT$`-log10(padj)`),
-                 las= 1,
-                 xlab= "Odd Ratio (log2)")
+  DT[, bar:= barplot(log2OR,
+                     horiz= T,
+                     names= variable,
+                     border= NA,
+                     col= Cc(`-log10(padj)`),
+                     las= 1,
+                     xlab= "Odd Ratio (log2)")]
   vl_heatkey(breaks = breaks,
-             top = last(bar[,1]),
+             top = last(DT$bar),
              left = par("usr")[2]+strwidth("M"),
              col = c("blue", "red"),
              main = "FDR (-log10)")
+  invisible(DT)
 }
 
 #' @describeIn vl_motif_cl_enrich method to plot cluster enrichment objects (containing variable, log2OR and padj)
