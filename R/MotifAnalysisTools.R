@@ -7,6 +7,7 @@
 #' @param genome Genome to be used for coordinates ("dm6, "dm3")
 #' @param p.cutoff Pval cutoff used for motif detection
 #' @param sel List of motifs to compute. see vl_Dmel_motifs_DB_full$motif
+#' @param what Waht value should be return. Either "motifMatches" (logical), "motifCounts" (numeric) or "motifScores" (numeric)
 #' @examples
 #' # Example run
 #' suhw <- vl_motif_counts(vl_SUHW_top_peaks, "dm3")
@@ -39,7 +40,8 @@ vl_motif_counts.data.table <- function(bed, genome, ...)
 #' @export
 vl_motif_counts.character <- function(sequences= NULL,
                                       p.cutoff= 5e-4,
-                                      sel= vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn), motif])
+                                      sel= vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn), motif],
+                                      what= "motifCounts")
 {
   if(is.null(names(sequences)))
     names(sequences) <- seq(sequences)
@@ -56,7 +58,7 @@ vl_motif_counts.character <- function(sequences= NULL,
                                             sequences,
                                             p.cutoff= p.cutoff,
                                             bg= "even",
-                                            out= "scores")@assays@data[["motifCounts"]])
+                                            out= "scores")@assays@data[[what]])
   colnames(res) <- sub$uniqName_noSpecialChar
   rownames(res) <- names(sequences)
   return(res)  

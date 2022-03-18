@@ -9,6 +9,7 @@
 plot.vl_enr <- function(obj,
                         padj_cutoff= 0.05,
                         top_enrich= Inf,
+                        xlab= "Odd Ratio (log2)",
                         ...)
 {
   DT <- data.table::copy(obj)
@@ -33,7 +34,7 @@ plot.vl_enr <- function(obj,
                      border= NA,
                      col= Cc(`-log10(padj)`),
                      las= 1,
-                     xlab= "Odd Ratio (log2)",
+                     xlab= xlab,
                      ...)]
   vl_heatkey(breaks = breaks,
              top = last(DT$bar),
