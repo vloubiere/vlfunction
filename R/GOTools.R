@@ -99,7 +99,7 @@ vl_GO_enrich <- function(FBgn_vector,
 #' @export
 vl_GO_clusters <- function(FBgn_list,
                            go_object= vl_Dmel_GO_FB2020_05,
-                           all_FBgns= "all",
+                           FBgn_universe= "all",
                            go_type= "all",
                            plot= T,
                            padj_cutoff= 0.00001,
