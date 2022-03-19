@@ -36,14 +36,14 @@
 #' 
 #' Object was generated using the following code:
 #' tmp <- tempfile(fileext = ".gz")
-#' download.file("http://ftp.flybase.net/releases/FB2020_05/precomputed_files/go/gene_association.fb.gz", 
+#' download.file("http://ftp.flybase.net/releases/FB2020_05/precomputed_files/go/gene_association.fb.gz",
 #' destfile = tmp)
-#' go <- fread(tmp, 
+#' go <- fread(tmp,
 #' skip= 5,
-#' select = c(2,3,5), 
+#' select = c(2,3,5),
 #' col.names = c("FBgn", "Symbol", "GO"))
 #' tmp <- tempfile(fileext = ".gz")
-#' download.file("http://ftp.flybase.net/releases/FB2020_05/precomputed_files/ontologies/go-basic.obo.gz", 
+#' download.file("http://ftp.flybase.net/releases/FB2020_05/precomputed_files/ontologies/go-basic.obo.gz",
 #' destfile = tmp)
 #' details <- ontologyIndex::get_ontology(tmp, extract_tags = "everything")
 #' details <- data.table(GO= details$id,
@@ -52,13 +52,8 @@
 #' vl_Dmel_GO_FB2020_05 <- merge(details, unique(go))
 #' vl_Dmel_GO_FB2020_05 <- vl_Dmel_GO_FB2020_05[!(name %in% type)]
 #' vl_Dmel_GO_FB2020_05[, type:= unlist(type)]
-#' GO_names <- unique(vl_Dmel_GO_FB2020_05[, .(GO, type, name)])
-#' FBgn_GO_counts_matrix <- dcast(go, FBgn~GO, value.var = "Symbol", fun.aggregate = length)
-#' vl_Dmel_GO_FB2020_05 <- list(GO_names= GO_names,
-#' FBgn_GO_counts_matrix= FBgn_GO_counts_matrix)
 #' save(vl_Dmel_GO_FB2020_05,
-#' file= "/groups/stark/vloubiere/vlfunction/data/vl_Dmel_GO_FB2020_05.RData",
-#' compress = "bzip2")
+#' file= "/groups/stark/vloubiere/vlfunction/data/vl_Dmel_GO_FB2020_05.RData")
 "vl_Dmel_GO_FB2020_05"
 
 #' Thermofisher enzymes

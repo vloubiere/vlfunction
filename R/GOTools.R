@@ -21,51 +21,34 @@ vl_GO_enrich <- function(FBgn_vector,
                          padj_cutoff= 0.05,
                          top_enrich= Inf)
 {
-  # Select
-  counts <- go_object$FBgn_GO_counts_matrix
-  if(FBgn_universe != "all")
-    counts <- counts[FBgn %in% FBgn_universe]
-  names <- go_object$GO_names
-  if(go_type != "all")
-  {
-    names <- names[type %in% go_type]
-    cols <- c("FBgn", names$GO)
-    counts <- counts[, ..cols]
-  }
-
-  # Select GOs for which at least one of the genes is represented 
-  sel <- counts[FBgn_vector, apply(.SD, 2, function(x) any(x>0)), on= "FBgn", .SDcols= patterns("GO:")]
-  sel <- c("FBgn", names(sel)[sel])
-  counts <- counts[, ..sel]
-  # Melt
-  .m <- melt(counts, id.vars = "FBgn")
-  .m[FBgn_vector, cl:= 1, on= "FBgn"]
-  .m[is.na(cl), cl:= 0]
-  # Compute enrichment
-  res <- .m[, {
-    tab <- table(value>0, cl>0)
-    if(identical(dim(tab), c(2L,2L)))
-    {
-      .f <- fisher.test(tab, 
-                        alternative = "greater")
-      .(OR= .f$estimate,
-        pval= .f$p.value)
-    }else
-      .(OR= as.numeric(NA),
-        pval= as.numeric(NA))
-  }, variable]
+  obj <- data.table::copy(go_object)
+  FBgn_vector <- unique(FBgn_vector)
+  # Filter DB with depending on Universe
+  if(FBgn_universe!="all")
+    obj <- obj[FBgn %in% FBgn_universe]
+  # Keeps only GOs with at least one match
+  obj <- obj[GO %chin% obj[FBgn_vector, on= "FBgn"][,GO]]
+  # Counts genes per GO
+  all_genes <- unique(obj$FBgn)
+  check <- all_genes %chin% FBgn_vector
+  obj[, c("OR", "pval"):= {
+    tab <- table(all_genes %chin% FBgn,
+                 check)
+    fisher.test(tab, alternative = "greater")[c("estimate", "p.value")]
+  }, GO]
   
+  # padj...
+  res <- obj[, .(GO, 
+                 variable= name,
+                 log2OR= log2(OR),
+                 padj= p.adjust(pval, method = "fdr"))]
+  res <- unique(res)
+  setorderv(res, "log2OR")
+  setattr(res, "class", c("vl_enr", "data.table", "data.frame"))
+
   #-----------------------#
   # Plot
   #-----------------------#
-  # padj...
-  res[, padj:= p.adjust(pval, method = "fdr"), pval]
-  res[, log2OR:= log2(OR)]
-  res[names, variable:= i.name, on= "variable==GO"]
-  res <- res[, .(variable, log2OR, padj)]
-  setorderv(res, "log2OR")
-  setattr(res, "class", c("vl_enr", "data.table", "data.frame"))
-  
   if(plot)
     plot(res,
          padj_cutoff= padj_cutoff,
@@ -112,43 +95,25 @@ vl_GO_clusters <- function(FBgn_list,
                            main= NA,
                            auto_margins = T)
 {
-  counts <- go_object$FBgn_GO_counts_matrix
-  if(FBgn_universe != "all")
-    counts <- counts[FBgn %in% FBgn_universe]
-  names <- go_object$GO_names
-  if(go_type != "all")
-  {
-    names <- names[type %in% go_type]
-    cols <- c("FBgn", names$GO)
-    counts <- counts[, ..cols]
-  }
+  obj <- data.table::copy(go_object)
+  # Filter DB with depending on Universe
+  if(FBgn_universe!="all")
+    obj <- obj[FBgn %in% FBgn_universe]
+  if(is.null(names(FBgn_list)))
+    names(FBgn_list) <- paste0("cl", seq(FBgn_list))
   
-  # Select GOs for which at least one of the genes is represented 
-  sel <- counts[unique(unlist(FBgn_list)), apply(.SD, 2, function(x) any(x>0)), on= "FBgn", .SDcols= patterns("GO:")]
-  sel <- c("FBgn", names(sel)[sel])
-  counts <- counts[, ..sel]
-  # Melt
-  .m <- melt(counts, id.vars = "FBgn")
-  .m[, names(FBgn_list):= lapply(FBgn_list, function(x) as.numeric(FBgn %in% x))]
-  .m <- melt(.m, id.vars = c("FBgn", "variable", "value"), variable.name = "cl", value.name = "cl_count")
-  # Compute enrichment
-  res <- .m[, {
-    tab <- table(value>0, cl_count>0)
-    if(identical(dim(tab), c(2L,2L)))
-    {
-      .f <- fisher.test(tab, 
-                        alternative = "greater")
-      .(OR= .f$estimate,
-        pval= .f$p.value)
-    }else
-      .(OR= as.numeric(NA),
-        pval= as.numeric(NA))
-  }, .(variable, cl)]
-  # padj...
-  res[, padj:= p.adjust(pval, method = "fdr"), pval]
-  res[, log2OR:= log2(OR)]
-  res <- res[, .(variable, cl, log2OR, padj)]
-  res[names, variable:= i.name, on= "variable==GO"]
+  # Compute enrichment per cluster
+  obj <- lapply(FBgn_list, function(x) {
+    vl_GO_enrich(x,
+                 go_object,
+                 FBgn_universe,
+                 go_type,
+                 plot= F)
+  })
+  names(obj) <- names(FBgn_list)
+  
+  # Result
+  res <- rbindlist(obj, idcol = "cl")
   class(res) <- c("vl_enr_cl", "data.table", "data.frame")
   
   #---------------------------------------#

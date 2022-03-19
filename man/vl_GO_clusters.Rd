@@ -4,18 +4,27 @@
 \alias{vl_GO_clusters}
 \title{GO analysis}
 \usage{
-vl_GO_clusters(FBgn_list, go_object = vl_fb_go_table_dm6_FB2020_05,
-  all_FBgns = "all", go_type = "all", plot = T,
-  padj_cutoff = 1e-05, log2OR_cutoff = 0, N_top = Inf, x_breaks,
-  color_breaks, cex.balloons = 1, col = c("cornflowerblue",
-  "lightgrey", "tomato"), main = NA, auto_margins = T)
+vl_GO_clusters(
+  FBgn_list,
+  go_object = vl_Dmel_GO_FB2020_05,
+  FBgn_universe = "all",
+  go_type = "all",
+  plot = T,
+  padj_cutoff = 1e-05,
+  log2OR_cutoff = 0,
+  N_top = Inf,
+  x_breaks,
+  color_breaks,
+  cex.balloons = 1,
+  col = c("cornflowerblue", "lightgrey", "tomato"),
+  main = NA,
+  auto_margins = T
+)
 }
 \arguments{
 \item{FBgn_list}{A nameds list of FBgn IDs (1 sublist/cluster)}
 
 \item{go_object}{object containing GO data. see ?vl_fb_go_table_dm6_FB2020_05}
-
-\item{all_FBgns}{Vector of FBgns to be used in the universe, typically all the genes tested with DESeq. Default= "all" FBgns present in go_object.}
 
 \item{go_type}{The type of go to be considered. Default "all" means "biological_process" AND "cellular_component" AND "molecular_function".}
 
@@ -38,6 +47,8 @@ vl_GO_clusters(FBgn_list, go_object = vl_fb_go_table_dm6_FB2020_05,
 \item{main}{Title. Default= NA}
 
 \item{auto_margins}{Use auto margins? Default= T}
+
+\item{all_FBgns}{Vector of FBgns to be used in the universe, typically all the genes tested with DESeq. Default= "all" FBgns present in go_object.}
 }
 \description{
 This function compares GO enrichments for several groups
