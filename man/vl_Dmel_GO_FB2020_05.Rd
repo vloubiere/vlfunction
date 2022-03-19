@@ -5,7 +5,7 @@
 \alias{vl_Dmel_GO_FB2020_05}
 \title{Dm6 GO database}
 \format{
-A list containing two data.table containing GO information
+data.table containing GO metadata
 }
 \usage{
 Can be used with vl_GO_cluster. see ?vl_GO_cluster()
@@ -14,14 +14,11 @@ Can be used with vl_GO_cluster. see ?vl_GO_cluster()
 Contains GO annotation from FB2020_05
 }
 \examples{
-#1 data.table -> `GO_names`
 GO: GO id
-type: GO type (biological_process, molecular_function, cellular_component)
 name: GO full name
-#1 data.table -> `FBgn_GO_counts_matrix`
-A data.table containing genes IDs in the first columns and 1 extra columns/GO id (0/1 values)
-1st colums -> gene ID
-other columns ...  GO IDs with 0/1 (1: gene present in GO)
+type: GO type (biological_process, molecular_function, cellular_component)
+FBgn: gene ID
+Symbol: gene symbol
 
 Object was generated using the following code:
 tmp <- tempfile(fileext = ".gz")
