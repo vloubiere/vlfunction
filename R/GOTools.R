@@ -98,7 +98,7 @@ vl_GO_enrich <- function(FBgn_vector,
 #' vl_GO_clusters(FBgn_list, auto_margins = F, cex.balloons = 0.3)
 #' @export
 vl_GO_clusters <- function(FBgn_list,
-                           go_object= vl_fb_go_table_dm6_FB2020_05,
+                           go_object= vl_Dmel_GO_FB2020_05,
                            all_FBgns= "all",
                            go_type= "all",
                            plot= T,
