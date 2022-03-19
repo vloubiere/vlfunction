@@ -10,6 +10,7 @@ plot.vl_enr <- function(obj,
                         padj_cutoff= 0.05,
                         top_enrich= Inf,
                         xlab= "Odd Ratio (log2)",
+                        col= c("blue", "red"),
                         ...)
 {
   DT <- data.table::copy(obj)
@@ -27,7 +28,7 @@ plot.vl_enr <- function(obj,
   DT <- DT[rank<=top_enrich]
   breaks <- range(DT$`-log10(padj)`, na.rm= T)
   Cc <- circlize::colorRamp2(breaks,
-                             c("blue", "red"))
+                             col)
   DT[, bar:= barplot(log2OR,
                      horiz= T,
                      names= variable,
@@ -39,7 +40,7 @@ plot.vl_enr <- function(obj,
   vl_heatkey(breaks = breaks,
              top = last(DT$bar),
              left = par("usr")[2]+strwidth("M"),
-             col = c("blue", "red"),
+             col = col,
              main = "FDR (-log10)")
   invisible(DT)
 }

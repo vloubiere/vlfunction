@@ -167,18 +167,12 @@ vl_heatmap.matrix <- function(x,
   #------------------------####
   # PLOT
   #------------------------####
-  call.plot <- match.call()
-  call.plot$x <- call.plot$plot <- NULL
-  call.plot$kmeans_k <- call.plot$clustering_distance_rows <- NULL
-  call.plot$clustering_distance_cols <- NULL
-  call.plot$clustering_method <- NULL
-  call.plot[[1]] <- quote(plot.vl_heatmap)
-  if(plot)
-    eval(call.plot)
-  
-  # RETURN
   obj <- mget(ls())
   setattr(obj, "class", c("vl_heatmap", "list"))
+  if(plot)
+    plot.vl_heatmap(obj)
+  
+  # RETURN
   invisible(obj)
 }
 
