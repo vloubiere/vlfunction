@@ -98,6 +98,6 @@ plot.vl_STRING <- function(obj,
                                       vertices = vertices,
                                       directed = F)
   plot(.g, 
-       vertex.label.cex= V$cex.label, 
+       vertex.label.cex= vertices$cex.label, 
        vertex.frame.color= NA)
 }
