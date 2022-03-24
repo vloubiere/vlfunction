@@ -185,9 +185,8 @@ vl_screenshot <- function(bed,
                                     end= last(end), 
                                     x0= first(x), 
                                     x1= last(x)), .(regionID, seqnames)]
-      # Plot
-      transcripts[overlap, {
-        # browser()
+      # Compute plotting positions
+      pl <- transcripts[overlap, {
         .c <- data.table(x.start,
                          x.end,
                          i.start,
@@ -210,32 +209,32 @@ vl_screenshot <- function(bed,
         .c$y <- .c[.c, .N, .EACHI, on= c("idx<idx", "seg.x0<=seg.x1", "seg.x1>=seg.x0")]$N
         .c[, y:= y[type=="transcript"], TXNAME]
         .c[, y:= par("usr")[3]-strheight("M", cex= 1.8)*y]
-        # Color
-        .c[, Cc:= switch(as.character(strand), 
-                         "+"= "tomato",
-                         "-"= "cornflowerblue"), strand]
-        .c[, lwd:= switch(type, 
-                          "transcript"= 1,
-                          "exon"= 3), type]
-        # Plot
-        .c[, segments(seg.x0,
-                      y,
-                      seg.x1,
-                      y,
-                      col= Cc,
-                      xpd=T,
-                      lwd= lwd,
-                      lend= 2)]
-        .c[seg.x1-seg.x0>50 & type=="transcript", {
-          text(rowMeans(.SD),
-               y[1],
-               symbol,
-               xpd=T,
-               pos= 3,
-               offset= 0.2,
-               cex= 0.8)
-        }, .(symbol, y), .SDcols= c("seg.x0", "seg.x1")]
       }, .EACHI, on= c("seqnames", "start<=end", "end>=start")]
+      # Colors and lwd
+      pl[, c("col", "lwd"):= 
+           .(switch(as.character(strand), 
+                    "-"= "cornflowerblue", 
+                    "+"= "tomato", "grey"),
+             switch(as.character(type), 
+                    "transcript"= 1, 
+                    "exon"= 3, 1)), .(strand, type)]
+      # Plot
+      segments(pl$seg.x0,
+               pl$y,
+               pl$seg.x1,
+               pl$y,
+               col= pl$col,
+               xpd=T,
+               lwd= pl$lwd,
+               lend= 2)
+      pl <- pl[seg.x1-seg.x0>50 & type=="transcript"]
+      text(rowMeans(pl[, .(seg.x0, seg.x1)]),
+           pl$y,
+           pl$symbol,
+           xpd=T,
+           pos= 3,
+           offset= 0.2,
+           cex= 0.8)
     }
   }
 }
