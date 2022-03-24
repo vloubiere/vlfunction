@@ -155,8 +155,8 @@ vl_boxplot.default <- function(x,
       setorderv(pval, c("x0", "x1", "max"))
       # Compute contig idx and adjust y
       pval[, idx:= cumsum(x0>data.table::shift(x1, fill= max(x1)))]
-      pval[, y:= min(max)+adj*(rowid(idx)-1)]
-      pval[, y:= y+cumsum(max>y)*adj] # in case where max is bigger than adj. y
+      pval[, y:= min(max)+adj*(rowid(idx)-1), idx]
+      pval[, y:= y+cumsum(max>y)*adj, idx] # in case where max is bigger than adj. y
       pval[, x:= rowMeans(.SD), .SDcols= c("x0", "x1")]
       # Adjust max
       if(max(pval$y+adj)>ylim[2])
@@ -188,6 +188,11 @@ vl_boxplot.default <- function(x,
                        idcol = T)
     viols <- viols[, .(x= .(x),
                        y= .(y)), .(.id, col)]
+    # Adjust max
+    if(min(unlist(viols$y))<ylim[1])
+      ylim[1] <- min(unlist(viols$y))
+    if(max(unlist(viols$y))>ylim[2])
+      ylim[2] <- min(unlist(viols$y))
   }
   
   #------------------------#
