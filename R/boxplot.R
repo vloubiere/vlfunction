@@ -132,15 +132,13 @@ vl_boxplot.default <- function(x,
   box <- sapply(x, 
                 boxplot.stats,
                 do.out= outline | violin)
-  if(missing(xlim))
-    xlim <- c(0.5, length(x)+0.5)
-  if(missing(ylim))
-    ylim <- range(box[c("out", "stats"),], na.rm= T)
+  xrange <- c(0.5, length(x)+0.5)
+  yrange <- range(box[c("out", "stats"),], na.rm= T)
   
   # Compute pvals
   if(!missing(compute_pval))
   {
-    adj <- diff(ylim)*pval_adj # plotting adjust
+    adj <- diff(yrange)*pval_adj # plotting adjust
     pval <- as.data.table(matrix(sapply(compute_pval, sort), ncol= 2, byrow = T))
     setnames(pval, c("x0", "x1"))
     pval[, c("var1", "var2"):= .(x[x0], x[x1])]
@@ -159,8 +157,8 @@ vl_boxplot.default <- function(x,
       pval[, y:= y+cumsum(max>y)*adj, idx] # in case where max is bigger than adj. y
       pval[, x:= rowMeans(.SD), .SDcols= c("x0", "x1")]
       # Adjust max
-      if(max(pval$y+adj)>ylim[2])
-        ylim[2] <- max(pval$y+adj)
+      if(max(pval$y+adj)>yrange[2])
+        yrange[2] <- max(pval$y+adj)
     }
   }
   
@@ -189,15 +187,20 @@ vl_boxplot.default <- function(x,
     viols <- viols[, .(x= .(x),
                        y= .(y)), .(.id, col)]
     # Adjust max
-    if(min(unlist(viols$y))<ylim[1])
-      ylim[1] <- min(unlist(viols$y))
-    if(max(unlist(viols$y))>ylim[2])
-      ylim[2] <- min(unlist(viols$y))
+    if(min(unlist(viols$y))<yrange[1])
+      yrange[1] <- min(unlist(viols$y))
+    if(max(unlist(viols$y))>yrange[2])
+      yrange[2] <- min(unlist(viols$y))
   }
   
   #------------------------#
   # Plot
   #------------------------#
+  if(missing(xlim))
+    xlim <- xrange
+  if(missing(ylim))
+    ylim <- yrange
+  
   plot.new()
   plot.window(xlim= if(horizontal) ylim else xlim,
               ylim= if(horizontal) xlim else ylim)

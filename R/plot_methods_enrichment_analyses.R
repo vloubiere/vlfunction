@@ -106,4 +106,7 @@ plot.vl_enr_cl <- function(obj,
   pl$balloon_col_legend <- "padj (-log10)"
   pl[[1]] <- quote(vl_balloons_plot)
   eval(pl)
+  
+  invisible(list(x= x, 
+                 color_var= color_var))
 }

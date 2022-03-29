@@ -53,6 +53,7 @@ vl_balloons_plot.matrix <- function(x,
   color_var[is.na(color_var)] <- "lightgrey"
       
   # Margins
+  adj <- (par("cin")[1]*0.75/2*max(abs(x), na.rm=T)*cex.balloons*par("cex")) # Size of biggest balloon in inches
   if(auto_margins)
   {
     bot <- 0.5+max(strwidth(colnames(x), "inches"))
@@ -60,18 +61,17 @@ vl_balloons_plot.matrix <- function(x,
     top <- 0.5+strheight(main, units = "inches", cex = par("cex.axis")/par("cex"))
     leg.width <- strwidth(c(balloon_size_legend, balloon_col_legend), "in")
     right <- 0.5+max(c(leg.width, 0.5))
+    right <- right+adj
     par(mai= c(bot, left, top, right),
         xaxs= "i",
-        yaxs= "i")
+        yaxs= "i",
+        mgp= c(3, grconvertX(adj, "in", "line"), 0))
   }
   
   # Init plot
   plot.new()
-  adj <- (par("cin")[1]*0.75/2*max(abs(x), na.rm=T)*cex.balloons*par("cex"))/par("pin")[1]
-  adj.x <- adj*(ncol(x)-1)
-  adj.y <- adj*(nrow(x)-1)
-  plot.window(xlim = c(1-adj.x, ncol(x)+adj.x),
-              ylim = c(1-adj.y, nrow(x)+adj.y))
+  plot.window(xlim = c(1, ncol(x)),
+              ylim = c(1, nrow(x)))
   # Lines
   segments(1:ncol(x),
            1,
@@ -86,8 +86,9 @@ vl_balloons_plot.matrix <- function(x,
          rep(1:nrow(x), ncol(x)),
          bg= color_var,
          pch= ifelse(x>=0, 21, 22),
-         cex= abs(x)*cex.balloons+0.1)
-  # Legends
+         cex= abs(x)*cex.balloons+0.1,
+         xpd= T)
+  # Axes
   axis(side= 1, 
        at= seq(ncol(x)),
        labels = colnames(x),
@@ -98,13 +99,17 @@ vl_balloons_plot.matrix <- function(x,
        labels = rownames(x),
        lwd= NA,
        line= 0)
+  # Legends
+  left <- par("usr")[2]+(grconvertX(adj, "in", "user")-grconvertX(0, "in", "user"))
   vl_heatkey(color_breaks, 
+             left= left,
              col, 
              top= nrow(x)-strheight("M"),
              main= balloon_col_legend)
   mtext(main, las= 1)
   vl_balloonskey(sizes = x_breaks*cex.balloons,
                  labels = x_breaks,
+                 left= left,
                  top= nrow(x)-strheight("M")*10, 
                  main = balloon_size_legend)
 }
