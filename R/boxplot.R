@@ -97,8 +97,6 @@ vl_boxplot.data.table <- function(x, ...)
 vl_boxplot.default <- function(x,
                                compute_pval,
                                outline= F,
-                               xlab= NA,
-                               ylab= NA,
                                xlim,
                                ylim,
                                names= NULL,
@@ -110,8 +108,6 @@ vl_boxplot.default <- function(x,
                                violcol= "white",
                                violwex= 0.4,
                                trim= T,
-                               xlab.line= 3,
-                               ylab.line= 3,
                                pval_adj= 0.04,
                                wilcox.alternative= "two.sided",
                                horizontal= F,
@@ -149,12 +145,12 @@ vl_boxplot.default <- function(x,
       pval[, pval:= wilcox.test(unlist(var1), 
                                 unlist(var2), 
                                 alternative= wilcox.alternative)$p.value, .(x0, x1)]
-      pval[, max:= max(unlist(box[c("out", "stats"), x0:x1]), na.rm= T)+adj, .(x0, x1)]
+      pval[, max:= max(unlist(box[c("out", "stats"), x0:x1]), na.rm= T), .(x0, x1)]
       setorderv(pval, c("x0", "x1", "max"))
       # Compute contig idx and adjust y
       pval[, idx:= cumsum(x0>data.table::shift(x1, fill= max(x1)))]
-      pval[, y:= min(max)+adj*(rowid(idx)-1), idx]
-      pval[, y:= y+cumsum(max>y)*adj, idx] # in case where max is bigger than adj. y
+      pval[, y:= max]
+      pval[, y:= y+cumsum(c(0, diff(y))<adj)*adj, idx]
       pval[, x:= rowMeans(.SD), .SDcols= c("x0", "x1")]
       # Adjust max
       if(max(pval$y+adj)>yrange[2])
@@ -172,7 +168,8 @@ vl_boxplot.default <- function(x,
       {
         dens <- density(var,
                         from= min(var, na.rm= T),
-                        to= max(var, na.rm= T))
+                        to= max(var, na.rm= T), 
+                        na.rm= T)
         xp <- dens$y/max(dens$y)*violwex
         xp <- c(i+xp, i-rev(xp))
         yp <- c(dens$x, rev(dens$x))
@@ -221,14 +218,6 @@ vl_boxplot.default <- function(x,
           names= names(x),
           horizontal= horizontal,
           ...)
-  mtext(xlab, 
-        side= 1, 
-        line = xlab.line, 
-        las= 1)
-  mtext(ylab, 
-        side= 2, 
-        line = ylab.line, 
-        las= 0)
   if(outline)
   {
     points(if(horizontal) unlist(box["out",]) else jitter(rep(seq(x), lengths(box["out",]))),
