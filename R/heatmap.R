@@ -46,8 +46,6 @@
 #' @export
 vl_heatmap <- function(x, ...) UseMethod("vl_heatmap")
 
-#' @param x 
-#' @param ... Extra parameters to be passed to ?vl_heatmap().
 #' @describeIn vl_heatmap Just a wrapper that collapses DT to a suitable matrix
 #' @export
 vl_heatmap.data.table <- function(x, 
@@ -176,7 +174,6 @@ vl_heatmap.matrix <- function(x,
   invisible(obj)
 }
 
-
 #' Title
 #'
 #' @param obj vl_heatmap object containing the parent clustering
@@ -215,8 +212,6 @@ vl_heatmap_add.vl_heatmap <- function(obj,
   invisible(cl)
 }
 
-# Default plotting function
-#' @describeIn vl_heatmap Default plotting function
 #' @export
 plot.vl_heatmap <- function(obj)
 {

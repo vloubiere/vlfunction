@@ -4,9 +4,7 @@
 \name{vl_Dmel_GO_FB2020_05}
 \alias{vl_Dmel_GO_FB2020_05}
 \title{Dm6 GO database}
-\format{
-data.table containing GO metadata
-}
+\format{data.table containing GO metadata}
 \usage{
 Can be used with vl_GO_cluster. see ?vl_GO_cluster()
 }

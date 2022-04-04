@@ -5,35 +5,17 @@
 \alias{plot.vl_bw_average_track}
 \title{bw Average tracks}
 \usage{
-vl_average_bw_track(
-  bed,
-  tracks,
-  set_IDs = 1,
-  upstream = 5000,
-  downstream = 5000,
-  stranded = F,
-  nbins = 500,
-  names = gsub(".bw$", "", basename(tracks)),
-  center_label = "Center",
-  plot = T,
-  xlab = "genomic distance",
-  ylab = "Enrichment",
-  ylim,
-  col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A", "#4F6A6F", "#D26429",
-    "#C57DA5", "#999999"),
-  legend = T
-)
+vl_average_bw_track(bed, tracks, set_IDs = 1, upstream = 5000,
+  downstream = 5000, stranded = F, nbins = 500,
+  names = gsub(".bw$", "", basename(tracks)), center_label = "Center",
+  plot = T, xlab = "genomic distance", ylab = "Enrichment", ylim,
+  col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A",
+  "#4F6A6F", "#D26429", "#C57DA5", "#999999"), legend = T)
 
-\method{plot}{vl_bw_average_track}(
-  obj,
-  xlab = "genomic distance",
-  xaxis = c("Upstream", "Center", "Downstream"),
-  ylab = "Enrichment",
-  ylim,
-  col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A", "#4F6A6F", "#D26429",
-    "#C57DA5", "#999999"),
-  legend = T
-)
+plot.vl_bw_average_track(obj, xlab = "genomic distance",
+  xaxis = c("Upstream", "Center", "Downstream"), ylab = "Enrichment",
+  ylim, col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A",
+  "#4F6A6F", "#D26429", "#C57DA5", "#999999"), legend = T)
 }
 \arguments{
 \item{bed}{Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
@@ -70,9 +52,9 @@ An object that can be used with the vl_average_bw_track_plot_only() function.
 \description{
 Plots average tracks for a set bw files around (potentially) several sets of peaks
 }
-\section{Methods (by generic)}{
+\section{Functions}{
 \itemize{
-\item \code{plot}: Method to plot average tracks
+\item \code{plot.vl_bw_average_track}: Method to plot average tracks
 }}
 
 \examples{

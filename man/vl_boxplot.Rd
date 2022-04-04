@@ -6,7 +6,7 @@
 \alias{vl_boxplot.formula}
 \alias{vl_boxplot.data.table}
 \alias{vl_boxplot.default}
-\title{violin plot}
+\title{Boxplot}
 \usage{
 vl_boxplot(x, ...)
 
@@ -16,30 +16,12 @@ vl_boxplot(x, ...)
 
 \method{vl_boxplot}{data.table}(x, ...)
 
-\method{vl_boxplot}{default}(
-  x,
-  compute_pval,
-  outline = F,
-  xlab = NA,
-  ylab = NA,
-  xlim,
-  ylim,
-  names = NULL,
-  boxcol = "white",
-  boxwex = ifelse(violin, 0.25, 0.4),
-  box.lty = 1,
-  staplewex = NA,
-  violin = F,
-  violcol = "white",
-  violwex = 0.4,
-  trim = T,
-  xlab.line = 3,
-  ylab.line = 3,
-  pval_adj = 0.04,
-  wilcox.alternative = "two.sided",
-  horizontal = F,
-  ...
-)
+\method{vl_boxplot}{default}(x, compute_pval, outline = F, xlim, ylim,
+  main = NA, xlab = NA, ylab = NA, names = NULL,
+  boxcol = "white", boxwex = ifelse(violin, 0.25, 0.4), box.lty = 1,
+  staplewex = NA, violin = F, violcol = "white", violwex = 0.4,
+  pval_adj = 0.04, wilcox.alternative = "two.sided", horizontal = F,
+  ...)
 }
 \arguments{
 \item{x}{list of variables to be plotted}
@@ -50,13 +32,15 @@ vl_boxplot(x, ...)
 
 \item{outline}{Should outliers be plotted?}
 
-\item{xlab}{x label}
-
-\item{ylab}{y label}
-
 \item{xlim}{x lim}
 
 \item{ylim}{y lim}
+
+\item{main}{main title}
+
+\item{xlab}{x label}
+
+\item{ylab}{y label}
 
 \item{names}{box names (x axis)}
 
@@ -74,22 +58,13 @@ vl_boxplot(x, ...)
 
 \item{violwex}{violins expansion factor. default to 0.4}
 
-\item{trim}{Should violin be trimmed?}
-
 \item{pval_adj}{Adjustment value for pval segments. Default is 0.04 (4% plot)}
 
 \item{wilcox.alternative}{When compute_pval is specified, alternative of the wilcox.test. default= "two.sided"}
 
 \item{horizontal}{Whould the plot be made horizontal?}
-
-\item{at}{x position for plotting}
-
-\item{add}{If TRUE, plot on the top of actual plot}
 }
 \description{
-This function plots a violin plot from either matrix,
-data.table, data.frame or using formula.
-
 Just a wrapper around boxplot that makes it nicer and allows to add violins and wilcox pvals
 }
 \section{Methods (by class)}{
@@ -112,7 +87,5 @@ test[11:20, seq(2, 10, 2)] = test[11:20, seq(2, 10, 2)] + 2
 test[15:20, seq(2, 10, 2)] = test[15:20, seq(2, 10, 2)] + 4
 colnames(test) = paste("Test", 1:10, sep = "")
 rownames(test) = paste("Gene", 1:20, sep = "")
-
 vl_boxplot(test, compute_pval= list(c(1,2), c(1,4), c(1,5), c(5,6), c(1,10), c(9,10)), outline= F, violcol= c("red", "yellow"), boxcol= c("green", "purple"))
-
 }
