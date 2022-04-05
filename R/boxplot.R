@@ -4,8 +4,8 @@
 #' @param x list of variables to be plotted
 #' @param compute_pval list of vectors of length two containing pairwise x indexes to be compared
 #' @param outline Should outliers be plotted?
-#' @param xlim x lim
-#' @param ylim y lim
+#' @param xlim xlim
+#' @param ylim ylim
 #' @param names box names (x axis)
 #' @param boxcol Box colors (recycled)
 #' @param boxwex Boxes expansion factor. default to 0.4, 0.25 if violin= T
@@ -14,7 +14,6 @@
 #' @param violin Should violins be plotted?
 #' @param violcol Violin colors (recycled) 
 #' @param violwex violins expansion factor. default to 0.4
-#' @param pval_adj Adjustment value for pval segments. Default is 0.04 (4% plot)
 #' @param wilcox.alternative When compute_pval is specified, alternative of the wilcox.test. default= "two.sided"
 #' @param horizontal Whould the plot be made horizontal?
 #' @param ... Extra parameters passed to boxplot, such as las, lwd... 
@@ -72,7 +71,7 @@ vl_boxplot.data.table <- function(x, ...)
 vl_boxplot.default <- function(x,
                                compute_pval,
                                outline= F,
-                               xlim,
+                               xlim, 
                                ylim,
                                main= NA,
                                xlab= NA,
@@ -85,7 +84,6 @@ vl_boxplot.default <- function(x,
                                violin= F,
                                violcol= "white",
                                violwex= 0.4,
-                               pval_adj= 0.04,
                                wilcox.alternative= "two.sided",
                                horizontal= F,
                                ...)
@@ -107,33 +105,6 @@ vl_boxplot.default <- function(x,
                 do.out= outline | violin)
   xrange <- c(0.5, length(x)+0.5)
   yrange <- range(box[c("out", "stats"),], na.rm= T)
-  
-  # Compute pvals
-  if(!missing(compute_pval))
-  {
-    adj <- diff(yrange)*pval_adj # plotting adjust
-    pval <- as.data.table(matrix(sapply(compute_pval, sort), ncol= 2, byrow = T))
-    setnames(pval, c("x0", "x1"))
-    pval[, c("var1", "var2"):= .(x[x0], x[x1])]
-    pval <- pval[lengths(var1)>0 & lengths(var2)>0]
-    # Compute pvals
-    if(nrow(pval)>0)
-    {
-      pval[, pval:= wilcox.test(unlist(var1), 
-                                unlist(var2), 
-                                alternative= wilcox.alternative)$p.value, .(x0, x1)]
-      pval[, max:= max(unlist(box[c("out", "stats"), x0:x1]), na.rm= T), .(x0, x1)]
-      setorderv(pval, c("x0", "x1", "max"))
-      # Compute contig idx and adjust y
-      pval[, idx:= cumsum(x0>data.table::shift(x1, fill= max(x1)))]
-      pval[, y:= max]
-      pval[, y:= y+cumsum(c(0, diff(y))<adj)*adj, idx]
-      pval[, x:= rowMeans(.SD), .SDcols= c("x0", "x1")]
-      # Adjust max
-      if(max(pval$y+adj)>yrange[2])
-        yrange[2] <- max(pval$y+adj)
-    }
-  }
   
   # Compute violins
   if(violin)
@@ -167,6 +138,36 @@ vl_boxplot.default <- function(x,
       yrange[2] <- min(unlist(viols$y))
   }
   
+  # Compute pvals
+  if(!missing(compute_pval))
+  {
+    if(missing(ylim)) # plotting adjust
+      adj <- diff(yrange)*0.04 else
+        adj <- diff(ylim)*0.04
+    pval <- matrix(sapply(compute_pval, sort), ncol= 2, byrow = T)
+    pval <- as.data.table(pval)
+    setnames(pval, c("x0", "x1"))
+    pval[, c("var1", "var2"):= .(x[x0], x[x1])]
+    pval <- pval[lengths(var1)>0 & lengths(var2)>0]
+    # Compute pvals
+    if(nrow(pval)>0)
+    {
+      pval[, pval:= wilcox.test(unlist(var1),
+                                unlist(var2),
+                                alternative= wilcox.alternative)$p.value, .(x0, x1)]
+      pval[, max:= max(unlist(box[c("out", "stats"), x0:x1]), na.rm= T), .(x0, x1)]
+      setorderv(pval, c("x0", "x1", "max"))
+      # Compute contig idx and adjust y
+      pval[, idx:= cumsum(x0>data.table::shift(x1, fill= max(x1)))]
+      setorderv(pval, c("idx", "max"))
+      pval[, y:= max+cumsum(c(0, diff(max))<adj)*adj, idx]
+      pval[, x:= rowMeans(.SD), .SDcols= c("x0", "x1")]
+      # Adjust max
+      if(max(pval$y+adj)>yrange[2])
+        yrange[2] <- max(pval$y+adj)
+    }
+  }
+
   #------------------------#
   # Plot
   #------------------------#

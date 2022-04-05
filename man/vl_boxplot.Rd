@@ -20,8 +20,7 @@ vl_boxplot(x, ...)
   main = NA, xlab = NA, ylab = NA, names = NULL,
   boxcol = "white", boxwex = ifelse(violin, 0.25, 0.4), box.lty = 1,
   staplewex = NA, violin = F, violcol = "white", violwex = 0.4,
-  pval_adj = 0.04, wilcox.alternative = "two.sided", horizontal = F,
-  ...)
+  wilcox.alternative = "two.sided", horizontal = F, ...)
 }
 \arguments{
 \item{x}{list of variables to be plotted}
@@ -32,9 +31,9 @@ vl_boxplot(x, ...)
 
 \item{outline}{Should outliers be plotted?}
 
-\item{xlim}{x lim}
+\item{xlim}{xlim}
 
-\item{ylim}{y lim}
+\item{ylim}{ylim}
 
 \item{main}{main title}
 
@@ -57,8 +56,6 @@ vl_boxplot(x, ...)
 \item{violcol}{Violin colors (recycled)}
 
 \item{violwex}{violins expansion factor. default to 0.4}
-
-\item{pval_adj}{Adjustment value for pval segments. Default is 0.04 (4% plot)}
 
 \item{wilcox.alternative}{When compute_pval is specified, alternative of the wilcox.test. default= "two.sided"}
 
