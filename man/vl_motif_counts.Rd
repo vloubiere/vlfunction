@@ -10,7 +10,8 @@ vl_motif_counts(sequences, ...)
 
 \method{vl_motif_counts}{data.table}(bed, genome, ...)
 
-\method{vl_motif_counts}{character}(sequences = NULL, p.cutoff = 5e-04,
+\method{vl_motif_counts}{character}(sequences = NULL,
+  p.cutoff = 0.0005,
   sel = vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn),
   motif], what = "motifCounts")
 }

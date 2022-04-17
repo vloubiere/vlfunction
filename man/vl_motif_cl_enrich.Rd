@@ -7,7 +7,7 @@
 \title{Compute motif enrichment}
 \usage{
 vl_motif_cl_enrich(counts_matrix, cl_IDs, control_cl = unique(cl_IDs),
-  plot = T, padj_cutoff = 1e-05, log2OR_cutoff = 0, N_top = Inf,
+  plot = T, padj_cutoff = 0.00001, log2OR_cutoff = 0, N_top = Inf,
   x_breaks, color_breaks, cex.balloons = 1, col = c("cornflowerblue",
   "lightgrey", "tomato"), main = NA, auto_margins = T)
 

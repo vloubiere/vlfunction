@@ -105,9 +105,15 @@ vl_bw_coverage_bins <- function(bed,
   #--------------------------#
   # Quantif tracks
   #--------------------------#
-  obj <- data.table(file= tracks,
-                    name= names)
-  obj <- obj[, data.table(bins[, .(set_IDs, region_ID, bin.x)], score= vl_bw_coverage(bins, file)), (obj)]
+  obj <- parallel::mclapply(tracks, function(x) {
+    data.table(bins[, .(file= x, 
+                        set_IDs, 
+                        region_ID, 
+                        bin.x)], 
+               score= vl_bw_coverage(bins, x))
+  }, mc.preschedule = T)
+  names(obj) <- names
+  obj <- rbindlist(obj, idcol= "name")
   return(obj)
 }
 
@@ -129,20 +135,21 @@ vl_bw_coverage_bins <- function(bed,
 #' @param ylim ylim for plotting. default= range(data)
 #' @param col Color to be used for plotting. 
 #' @param legend Should the legeng be plotted? default to T
+#' @param legend.cex Legend cex. defaults to 1
 #' @examples 
 #' bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
 #' sets <- c(rep("suhw", 100), rep("STARR", 1000))
 #' tracks <- c("../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", "../gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
-#' vl_average_bw_track(bed, tracks, plot= T, upstream = 1000, downstream = 1000, set_IDs = sets)
+#' vl_bw_average_track(bed, tracks, plot= T, upstream = 1000, downstream = 1000, set_IDs = sets)
 #' @return An object that can be used with the vl_average_bw_track_plot_only() function.
 #' @export
-vl_average_bw_track <- function(bed,
+vl_bw_average_track <- function(bed,
                                 tracks,
                                 set_IDs= 1,
                                 upstream= 5000,
                                 downstream= 5000,
                                 stranded= F,
-                                nbins= 500, 
+                                nbins= 100, 
                                 names= gsub(".bw$", "", basename(tracks)),
                                 center_label= "Center",
                                 plot= T,
@@ -150,7 +157,8 @@ vl_average_bw_track <- function(bed,
                                 ylab= "Enrichment",
                                 ylim,
                                 col= c("#E69F00","#68B1CB","#15A390","#96C954","#77AB7A","#4F6A6F","#D26429","#C57DA5","#999999"),
-                                legend= T)
+                                legend= T,
+                                legend.cex= 1)
 {
   obj <- vl_bw_coverage_bins(bed= bed,
                              tracks= tracks,
@@ -160,6 +168,7 @@ vl_average_bw_track <- function(bed,
                              stranded= stranded,
                              nbins= nbins, 
                              names= names)
+  obj[, col:= colorRampPalette(col)(.NGRP)[.GRP], keyby= .(name, set_IDs)]
   setattr(obj, "class", c("vl_bw_average_track", "data.table", "data.frame"))
   if(plot)
     plot.vl_bw_average_track(obj,
@@ -167,8 +176,9 @@ vl_average_bw_track <- function(bed,
                              xaxis= c(upstream, center_label, downstream),
                              ylab= ylab,
                              ylim= ylim,
-                             col= col,
-                             legend= legend)
+                             col= colorRampPalette(col)(obj[, .NGRP, .(name, set_IDs)][1, NGRP]),
+                             legend= legend,
+                             legend.cex= legend.cex)
   invisible(obj)
 }
 
@@ -179,11 +189,9 @@ plot.vl_bw_average_track <- function(obj,
                                      xaxis= c("Upstream", "Center", "Downstream"),
                                      ylab= "Enrichment",
                                      ylim,
-                                     col= c("#E69F00","#68B1CB","#15A390","#96C954","#77AB7A","#4F6A6F","#D26429","#C57DA5","#999999"),
-                                     legend= T)
+                                     legend= T,
+                                     legend.cex= 1)
 {
-  cols <- colorRampPalette(col)(obj[, .NGRP, .(name, set_IDs)][1, NGRP])
-  obj[, col:= cols[.GRP], .(name, set_IDs)]
   pl <- obj[, .(mean= mean(score, na.rm= T), 
                 se= sd(score, na.rm= T)/sqrt(.N)), .(name, col, set_IDs, bin.x)]
   plot(NA, 
@@ -200,18 +208,21 @@ plot.vl_bw_average_track <- function(obj,
             c(mean+se, rev(mean-se)),
             border= NA,
             col= adjustcolor(col[1], 0.5))
-    lines(mean, col= col[1])
+    lines(bin.x, mean, col= col[1])
   }, .(name, set_IDs, col)]
   # Legend
   if(legend)
   {
     leg <- unique(pl[, .(set_IDs, name, col)])
-    if(length(unique(leg$set_IDs))>1)
-      leg[, name:=  paste0(name, " @ ", set_IDs)]
+    if(length(unique(leg$set_IDs))>1 & length(unique(leg$name))>1)
+      leg[, labels:= paste0(name, " @ ", set_IDs)] else if(length(unique(leg$set_IDs))>1)
+        leg[, labels:= set_IDs] else if(length(unique(leg$name))>1)
+          leg[, labels:= name]
     legend("topleft",
-           leg$name,
+           legend= leg$labels,
            fill= leg$col,
-           bty= "n")
+           bty= "n",
+           cex= legend.cex)
   }
 }
 
@@ -274,7 +285,7 @@ vl_bw_heatmap <- function(bed,
   invisible(obj)
 }
 
-#' @describeIn vl_bw_heatmap Method to plot vl_bw_heatmap objects. See ?vl_bw_heatmap()
+#' @export
 plot.vl_bw_heatmap <- function(obj, 
                                col= c("blue", "yellow"),
                                order_cols= 1,

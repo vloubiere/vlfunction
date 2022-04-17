@@ -15,6 +15,7 @@
 #' @param violcol Violin colors (recycled) 
 #' @param violwex violins expansion factor. default to 0.4
 #' @param wilcox.alternative When compute_pval is specified, alternative of the wilcox.test. default= "two.sided"
+#' @param pval_offset offset for pval plotting. Defaults to 0.04 (fraction of ylim)
 #' @param horizontal Whould the plot be made horizontal?
 #' @param ... Extra parameters passed to boxplot, such as las, lwd... 
 #' @param main main title
@@ -85,6 +86,7 @@ vl_boxplot.default <- function(x,
                                violcol= "white",
                                violwex= 0.4,
                                wilcox.alternative= "two.sided",
+                               pval_offset= 0.04,
                                horizontal= F,
                                ...)
 {
@@ -142,8 +144,8 @@ vl_boxplot.default <- function(x,
   if(!missing(compute_pval))
   {
     if(missing(ylim)) # plotting adjust
-      adj <- diff(yrange)*0.04 else
-        adj <- diff(ylim)*0.04
+      adj <- diff(yrange)*pval_offset else
+        adj <- diff(ylim)*pval_offset
     pval <- matrix(sapply(compute_pval, sort), ncol= 2, byrow = T)
     pval <- as.data.table(pval)
     setnames(pval, c("x0", "x1"))

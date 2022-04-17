@@ -236,7 +236,7 @@ vl_collapseBed <- function(bed,
   if(!return_idx_only)
     DT <- DT[, .(start= min(start), end= max(end)), .(seqnames, idx)]
 
-  return(DT[, .(seqnames, start, end)])
+  return(DT)
 }
 
 #' Compute bed coverage

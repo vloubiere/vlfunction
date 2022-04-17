@@ -20,7 +20,8 @@ vl_boxplot(x, ...)
   main = NA, xlab = NA, ylab = NA, names = NULL,
   boxcol = "white", boxwex = ifelse(violin, 0.25, 0.4), box.lty = 1,
   staplewex = NA, violin = F, violcol = "white", violwex = 0.4,
-  wilcox.alternative = "two.sided", horizontal = F, ...)
+  wilcox.alternative = "two.sided", pval_offset = 0.04,
+  horizontal = F, ...)
 }
 \arguments{
 \item{x}{list of variables to be plotted}
@@ -58,6 +59,8 @@ vl_boxplot(x, ...)
 \item{violwex}{violins expansion factor. default to 0.4}
 
 \item{wilcox.alternative}{When compute_pval is specified, alternative of the wilcox.test. default= "two.sided"}
+
+\item{pval_offset}{offset for pval plotting. Defaults to 0.04 (fraction of ylim)}
 
 \item{horizontal}{Whould the plot be made horizontal?}
 }
