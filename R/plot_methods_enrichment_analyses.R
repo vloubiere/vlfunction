@@ -94,8 +94,8 @@ plot.vl_enr_cl <- function(obj,
   #-----------------------------#
   # PLOT
   #-----------------------------#
-  x <- as.matrix(dcast(DT, variable~cl, value.var = "log2OR"), 1)
-  color_var <- as.matrix(dcast(DT, variable~cl, value.var = "-log10(padj)"), 1)
+  x <- as.matrix(dcast(DT, variable~cl, value.var = "log2OR", drop= F), 1)
+  color_var <- as.matrix(dcast(DT, variable~cl, value.var = "-log10(padj)", drop= F), 1)
   
   pl <- match.call()
   pl$obj <- pl$padj_cutoff <- pl$log2OR_cutoff <- pl$N_top <- NULL
