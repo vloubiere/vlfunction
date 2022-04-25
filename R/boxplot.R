@@ -6,6 +6,8 @@
 #' @param outline Should outliers be plotted?
 #' @param xlim xlim
 #' @param ylim ylim
+#' @param xlab x label
+#' @param ylab y label
 #' @param names box names (x axis)
 #' @param boxcol Box colors (recycled)
 #' @param boxwex Boxes expansion factor. default to 0.4, 0.25 if violin= T
@@ -17,10 +19,10 @@
 #' @param wilcox.alternative When compute_pval is specified, alternative of the wilcox.test. default= "two.sided"
 #' @param pval_offset offset for pval plotting. Defaults to 0.04 (fraction of ylim)
 #' @param horizontal Whould the plot be made horizontal?
-#' @param ... Extra parameters passed to boxplot, such as las, lwd... 
 #' @param main main title
-#' @param xlab x label
-#' @param ylab y label
+#' @param tilt.names Should boxes names be tilted (works only if horizontal= T)
+#' @param axes Should the box around the plot be drawn? Default= F
+#' @param ... Extra parameters passed to boxplot, such as las, lwd... 
 #' @examples
 #' # Create test matrix
 #' set.seed(1234)
@@ -88,11 +90,15 @@ vl_boxplot.default <- function(x,
                                wilcox.alternative= "two.sided",
                                pval_offset= 0.04,
                                horizontal= F,
+                               tilt.names= F,
+                               axes= F,
+                               xaxt= "o",
+                               yaxt= "o",
                                ...)
 {
   if(!missing(compute_pval) && !is.list(compute_pval))
     stop("compute_pval should be a list of vectors of length two containing pairwise x indexes to be compared")
-  
+
   # Format data list
   if(!is.list(x))
     x <- list(x)
@@ -198,9 +204,30 @@ vl_boxplot.default <- function(x,
           lty= box.lty, 
           boxwex= boxwex,
           col= boxcol,
-          names= names(x),
+          names= NA,
           horizontal= horizontal,
+          axes= axes,
+          xaxt= "n",
+          yaxt= "n",
           ...)
+  if(xaxt!="n")
+    axis(1,
+         at= seq(x),
+         labels= if(tilt.names && !horizontal) rep(NA, length(x)) else names(x),
+         lwd= ifelse(axes, 0, 1),
+         lwd.ticks= 1)
+  if(yaxt!="n")
+    axis(2, 
+         lwd= ifelse(axes, 0, 1),
+         lwd.ticks= 1)
+  if(tilt.names && !horizontal)
+    text(seq(x),
+         par("usr")[3]-(grconvertY(par("mgp")[2], "line", "user")-grconvertY(0, "line", "user")),
+         names(x),
+         srt= 45,
+         offset= -0.35,
+         pos= 2,
+         xpd= T)
   if(outline)
   {
     points(if(horizontal) unlist(box["out",]) else jitter(rep(seq(x), lengths(box["out",]))),

@@ -137,6 +137,8 @@ vl_heatmap.matrix <- function(x,
       rows[, order:= order(rcl$cluster)]
       rows[, cl:= rcl$cluster]
     }
+    # Add cluster color
+    rows[(order), col:= grDevices::gray.colors(.NGRP)[cl], cl]
   }
   
   #------------------------####
@@ -155,6 +157,8 @@ vl_heatmap.matrix <- function(x,
                             cols[, order:= ccl$order]
                             # Cutree
                             cols[, cl:= cutree(ccl, cutree_cols)]
+                            # Add cluster color
+                            cols[(order), col:= grDevices::gray.colors(.NGRP)[cl], cl]
                             # Extract dend
                             dend <- ggdendro::dendro_data(ccl,
                                                           type = "rectangle", 
@@ -244,12 +248,14 @@ plot.vl_heatmap <- function(obj)
       left <- left+grconvertX(max(strwidth(rows$name, "inches")), "inches", "lines")
     if(is.character(main))
       top <- top+grconvertY(strheight(main, cex = 0.8, units = "inches"), "inches", "lines")
+    if(show_col_clusters)
+      top <- top+1
     if(show_col_dendrogram)
-      top <- top+1.5 else if(show_col_clusters)
-          top <- top+1
+      top <- top+1.5
+    if(show_row_clusters)
+      right <- right+1
     if(show_row_dendrogram)
-      right <- right+1.5 else if(show_row_clusters)
-        right <- right+1
+      right <- right+1.5
     leg_width <- strwidth(legend_title, units = "inches", cex= 0.8)+par("cin")[1]
     leg_width <- grconvertX(leg_width, "inches", "lines")
     if(leg_width>3.5)
@@ -293,28 +299,6 @@ plot.vl_heatmap <- function(obj)
          display_numbers_FUN(c(x)),
          cex= display_numbers_cex,
          offset= 0)
-  
-  # Cluser lines
-  if(show_row_clusters)
-  {
-    pos <- cumsum(rev(rows[(order), .N, cl]$N))
-    abline(h= pos[-length(pos)]+0.5)
-    text(x = par("usr")[2], 
-         y= pos-diff(c(0, pos))/2, 
-         labels = rev(unique(rows[(order), cl])),
-         pos= 4,
-         xpd= T)
-  }
-  if(show_col_clusters)
-  {
-    pos <- cumsum(cols[(order), .N, cl]$N)
-    abline(v= pos[-length(pos)]+0.5)
-    text(x = pos-diff(c(0, pos))/2,
-         y= par("usr")[4],
-         labels = unique(cols[(order), cl]),
-         pos= 3,
-         xpd= T)
-  }
 
   #----------------------------------#
   # Margins legends
@@ -322,25 +306,83 @@ plot.vl_heatmap <- function(obj)
   # Margin lines width and height in user coordinates
   mar.lw <- diff(grconvertX(c(0,1), "lines", "user"))
   mar.lh <- diff(grconvertY(c(0,1), "lines", "user"))
+  
+  # Cluser lines
+  if(show_row_clusters)
+  {
+    pos <- rows[rev(order)][, .(y1= .N), .(cl, col)]
+    pos[, y1:= cumsum(y1)+0.5]
+    pos[, y0:= data.table::shift(y1, 1, fill = 0.5)]
+    abline(h= data.table::first(pos$y1, nrow(pos)-1))
+    rect(par("usr")[2],
+         pos$y0,
+         par("usr")[2]+mar.lw,
+         pos$y1,
+         col= pos$col,
+         xpd= T,
+         border= NA)
+    text(par("usr")[2]+mar.lw/2,
+         rowMeans(pos[, .(y0, y1)]),
+         pos$cl,
+         srt= 270,
+         xpd= T,
+         adj= 0.5)
+  }
+  if(show_col_clusters)
+  {
+    pos <- cols[(order)][, .(x1= .N), .(cl, col)]
+    pos[, x1:= cumsum(x1)+0.5]
+    pos[, x0:= data.table::shift(x1, 1, fill = 0.5)]
+    abline(v= data.table::first(pos$x1, nrow(pos)-1))
+    rect(pos$x0,
+         par("usr")[4],
+         pos$x1,
+         par("usr")[4]+mar.lh,
+         col= pos$col,
+         xpd= T,
+         border= NA)
+    text(rowMeans(pos[, .(x0, x1)]),
+         par("usr")[4]+mar.lh/2,
+         pos$cl,
+         xpd= T,
+         adj= 0.5)
+  }
 
   # Title
   if(!is.na(main))
+  {
+    main.line <- 0.25
+    if(show_col_clusters)
+      main.line <- main.line+1
+    if(show_col_dendrogram)
+      main.line <- main.line+1.5
     mtext(main,
-          line = ifelse(show_col_dendrogram, 1.75, 0.25))
+          line = main.line)
+  }
 
-  # Plot dendro and cuts
+  # Plot dendrograms
   if(show_row_dendrogram)
-    segments(rdend$y/diff(range(rdend[,c(y, yend)]))*mar.lw*1.5+par("usr")[2],
+  {
+    d.left <- par("usr")[2]
+    if(show_row_clusters)
+      d.left <- d.left+mar.lw
+    segments(rdend$y/diff(range(rdend[,c(y, yend)]))*mar.lw*1.5+d.left,
              par("usr")[4]-rdend$x+0.5,
-             rdend$yend/diff(range(rdend[,c(y, yend)]))*mar.lw*1.5+par("usr")[2],
+             rdend$yend/diff(range(rdend[,c(y, yend)]))*mar.lw*1.5+d.left,
              par("usr")[4]-rdend$xend+0.5,
              xpd= T)
+  }
   if(show_col_dendrogram)
+  {
+    d.bot <- par("usr")[4]
+    if(show_col_clusters)
+      d.bot <- d.bot+mar.lh
     segments(cdend$x,
-             cdend$y/diff(range(cdend[,c(y, yend)]))*mar.lh*1.5+par("usr")[4],
+             cdend$y/diff(range(cdend[,c(y, yend)]))*mar.lh*1.5+d.bot,
              cdend$xend,
-             cdend$yend/diff(range(cdend[,c(y, yend)]))*mar.lh*1.5+par("usr")[4],
+             cdend$yend/diff(range(cdend[,c(y, yend)]))*mar.lh*1.5+d.bot,
              xpd= T)
+  }
 
   # Plot axes
   if(show_colnames)
@@ -362,6 +404,8 @@ plot.vl_heatmap <- function(obj)
   if(show_legend)
   {
     left <- par("usr")[2]+mar.lw
+    if(show_row_clusters)
+      left <- left+mar.lw*1
     if(show_row_dendrogram)
       left <- left+mar.lw*1.5
     top <- par("usr")[4]-mar.lh*2
