@@ -14,7 +14,7 @@
 #' @return An object that can be used with the vl_average_bw_track_plot_only() function.
 #' @export
 vl_alluvial_plot <- function(dat,
-                             col= vl_palette_categ2(length(unique(unlist(dat)))),
+                             col= vl_palette_many_categ(length(unique(unlist(dat)))),
                              ...)
 {
   # Make object

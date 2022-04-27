@@ -65,7 +65,7 @@ vl_STRING_interaction <- function(symbols,
 #' @export
 plot.vl_STRING <- function(obj,
                            score_cutoff= 900,
-                           top_N= NA,
+                           N_top= NA,
                            col,
                            size,
                            cex.label)
@@ -75,7 +75,7 @@ plot.vl_STRING <- function(obj,
   # Checks and cutoffs
   if(!is.na(score_cutoff))
     interactions <- interactions[combined_score>=score_cutoff]
-  if(!is.na(top_N))
+  if(!is.na(N_top))
     interactions <- interactions[order(combined_score)<=N_top]
   
   # Change vertices if new color, size or cex.label specified
