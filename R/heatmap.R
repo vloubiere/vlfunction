@@ -314,14 +314,15 @@ plot.vl_heatmap <- function(obj)
     pos[, y1:= cumsum(y1)+0.5]
     pos[, y0:= data.table::shift(y1, 1, fill = 0.5)]
     abline(h= data.table::first(pos$y1, nrow(pos)-1))
-    rect(par("usr")[2],
+    rleft <- par("usr")[2]+mar.lw/10
+    rect(rleft,
          pos$y0,
-         par("usr")[2]+mar.lw,
+         rleft+mar.lw,
          pos$y1,
          col= pos$col,
          xpd= T,
          border= NA)
-    text(par("usr")[2]+mar.lw/2,
+    text(rleft+mar.lw/2,
          rowMeans(pos[, .(y0, y1)]),
          pos$cl,
          srt= 270,
@@ -334,15 +335,16 @@ plot.vl_heatmap <- function(obj)
     pos[, x1:= cumsum(x1)+0.5]
     pos[, x0:= data.table::shift(x1, 1, fill = 0.5)]
     abline(v= data.table::first(pos$x1, nrow(pos)-1))
+    ctop <- par("usr")[4]+mar.lh/10
     rect(pos$x0,
-         par("usr")[4],
+         ctop,
          pos$x1,
-         par("usr")[4]+mar.lh,
+         ctop+mar.lh,
          col= pos$col,
          xpd= T,
          border= NA)
     text(rowMeans(pos[, .(x0, x1)]),
-         par("usr")[4]+mar.lh/2,
+         ctop+mar.lh/2,
          pos$cl,
          xpd= T,
          adj= 0.5)
@@ -363,9 +365,9 @@ plot.vl_heatmap <- function(obj)
   # Plot dendrograms
   if(show_row_dendrogram)
   {
-    d.left <- par("usr")[2]
     if(show_row_clusters)
-      d.left <- d.left+mar.lw
+      d.left <- rleft+mar.lw else
+        d.left <- par("usr")[2]
     segments(rdend$y/diff(range(rdend[,c(y, yend)]))*mar.lw*1.5+d.left,
              par("usr")[4]-rdend$x+0.5,
              rdend$yend/diff(range(rdend[,c(y, yend)]))*mar.lw*1.5+d.left,
@@ -374,9 +376,9 @@ plot.vl_heatmap <- function(obj)
   }
   if(show_col_dendrogram)
   {
-    d.bot <- par("usr")[4]
     if(show_col_clusters)
-      d.bot <- d.bot+mar.lh
+      d.bot <- ctop+mar.lh else
+        d.bot <- par("usr")[4]
     segments(cdend$x,
              cdend$y/diff(range(cdend[,c(y, yend)]))*mar.lh*1.5+d.bot,
              cdend$xend,

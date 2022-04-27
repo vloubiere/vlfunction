@@ -4,10 +4,12 @@
 \alias{vl_palette_blueWhiteRed}
 \title{Title}
 \usage{
-vl_palette_blueWhiteRed(x)
+vl_palette_blueWhiteRed(x, rep_white = 1L)
 }
 \arguments{
 \item{x}{number of colours ro return}
+
+\item{rep_white}{Number of times the central white color should be repeated. Higher values means further extending white. Default= 1L}
 }
 \value{
 vector of colors of length x

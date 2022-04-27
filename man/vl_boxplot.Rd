@@ -21,7 +21,8 @@ vl_boxplot(x, ...)
   boxcol = "white", boxwex = ifelse(violin, 0.25, 0.4), box.lty = 1,
   staplewex = NA, violin = F, violcol = "white", violwex = 0.4,
   wilcox.alternative = "two.sided", pval_offset = 0.04,
-  horizontal = F, ...)
+  horizontal = F, tilt.names = F, axes = F, xaxt = "o",
+  yaxt = "o", ...)
 }
 \arguments{
 \item{x}{list of variables to be plotted}
@@ -63,6 +64,10 @@ vl_boxplot(x, ...)
 \item{pval_offset}{offset for pval plotting. Defaults to 0.04 (fraction of ylim)}
 
 \item{horizontal}{Whould the plot be made horizontal?}
+
+\item{tilt.names}{Should boxes names be tilted (works only if horizontal= T)}
+
+\item{axes}{Should the box around the plot be drawn? Default= F}
 }
 \description{
 Just a wrapper around boxplot that makes it nicer and allows to add violins and wilcox pvals

@@ -40,11 +40,14 @@ vl_palette_few_categ <- function(x){
 #' Title
 #'
 #' @param x number of colours ro return
+#' @param rep_white Number of times the central white color should be repeated. Higher values means further extending white. Default= 1L
 #' @return vector of colors of length x
 #' @export
-vl_palette_blueWhiteRed <- function(x){
-  colorRampPalette(c("#000000", "#04043D","#183570", "#1B4089","#2848AF", "#3F68C9",
-                     "#3A86DF","#49B3FF", "#5ADBFC","#BCFBFD", "#EDFEFE", "#FFFFFF",
-                     "#F5F8D1", "#F4F655", "#F1EC4A", "#F3D031", "#EFB73D", "#FFA510", 
-                     "#FA7C11", "#FC5615", "#F6451A", "#EC3A1A", "#E51F2E"))(x)
+vl_palette_blueWhiteRed <- function(x, rep_white= 1L){
+  Cc <- c("#000000", "#04043D","#183570", "#1B4089","#2848AF", "#3F68C9",
+          "#3A86DF","#49B3FF", "#5ADBFC","#BCFBFD", "#EDFEFE", 
+          rep("#FFFFFF", rep_white),
+          "#F5F8D1", "#F4F655", "#F1EC4A", "#F3D031", "#EFB73D", "#FFA510", 
+          "#FA7C11", "#FC5615", "#F6451A", "#EC3A1A", "#E51F2E")
+  colorRampPalette(Cc)(x)
 }
