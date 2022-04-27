@@ -234,6 +234,10 @@ plot.vl_heatmap <- function(obj)
     show_col_clusters <- F
     show_col_dendrogram <- F
   }
+  if(length(unique(rows$cl))==1)
+    show_row_clusters <- F
+  if(length(unique(cols$cl))==1)
+    show_col_clusters <- F
   
   # Margins
   if(auto_margins)
