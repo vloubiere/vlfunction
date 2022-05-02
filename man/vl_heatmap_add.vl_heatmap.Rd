@@ -4,13 +4,8 @@
 \alias{vl_heatmap_add.vl_heatmap}
 \title{Title}
 \usage{
-vl_heatmap_add.vl_heatmap(
-  obj,
-  add,
-  inherit_row_cl = T,
-  inherit_col_cl = T,
-  ...
-)
+vl_heatmap_add.vl_heatmap(obj, add, inherit_row_cl = T,
+  inherit_col_cl = T, ...)
 }
 \arguments{
 \item{obj}{vl_heatmap object containing the parent clustering}

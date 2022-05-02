@@ -22,6 +22,9 @@
 #' @param main main title
 #' @param tilt.names Should boxes names be tilted (works only if horizontal= T)
 #' @param axes Should the box around the plot be drawn? Default= F
+#' @param xaxt Should the x axis be plotted or not ("n") ? default= "o"
+#' @param yaxt Should the y axis be plotted or not ("n") ? default= "o"
+#' @param las style of axis label. see ?par()
 #' @param ... Extra parameters passed to boxplot, such as las, lwd... 
 #' @examples
 #' # Create test matrix
@@ -94,6 +97,7 @@ vl_boxplot.default <- function(x,
                                axes= F,
                                xaxt= "o",
                                yaxt= "o",
+                               las= par("las"),
                                ...)
 {
   if(!missing(compute_pval) && !is.list(compute_pval))
@@ -211,16 +215,30 @@ vl_boxplot.default <- function(x,
           yaxt= "n",
           ...)
   if(xaxt!="n")
-    axis(1,
-         at= seq(x),
-         labels= if(tilt.names && !horizontal) rep(NA, length(x)) else names(x),
-         lwd= ifelse(axes, 0, 1),
-         lwd.ticks= 1)
+    if(horizontal)
+      axis(1, 
+           lwd= ifelse(axes, 0, 1),
+           lwd.ticks= 1,
+           las= las) else
+             axis(1,
+                  at= seq(x),
+                  labels= if(tilt.names) rep(NA, length(x)) else names(x),
+                  lwd= ifelse(axes, 0, 1),
+                  lwd.ticks= 1,
+                  las= las)
   if(yaxt!="n")
-    axis(2, 
-         lwd= ifelse(axes, 0, 1),
-         lwd.ticks= 1)
-  if(tilt.names && !horizontal)
+    if(horizontal)
+      axis(2,
+           at= seq(x),
+           labels= names(x),
+           lwd= ifelse(axes, 0, 1),
+           lwd.ticks= 1,
+           las= las) else
+             axis(2, 
+                  lwd= ifelse(axes, 0, 1),
+                  lwd.ticks= 1,
+                  las= las)
+  if(tilt.names && xaxt!="n" && !horizontal)
     text(seq(x),
          par("usr")[3]-(grconvertY(par("mgp")[2], "line", "user")-grconvertY(0, "line", "user")),
          names(x),

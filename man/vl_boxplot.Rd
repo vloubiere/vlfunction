@@ -16,32 +16,13 @@ vl_boxplot(x, ...)
 
 \method{vl_boxplot}{data.table}(x, ...)
 
-\method{vl_boxplot}{default}(
-  x,
-  compute_pval,
-  outline = F,
-  xlim,
-  ylim,
-  main = NA,
-  xlab = NA,
-  ylab = NA,
-  names = NULL,
-  boxcol = "white",
-  boxwex = ifelse(violin, 0.25, 0.4),
-  box.lty = 1,
-  staplewex = NA,
-  violin = F,
-  violcol = "white",
-  violwex = 0.4,
-  wilcox.alternative = "two.sided",
-  pval_offset = 0.04,
-  horizontal = F,
-  tilt.names = F,
-  axes = F,
-  xaxt = "o",
-  yaxt = "o",
-  ...
-)
+\method{vl_boxplot}{default}(x, compute_pval, outline = F, xlim, ylim,
+  main = NA, xlab = NA, ylab = NA, names = NULL,
+  boxcol = "white", boxwex = ifelse(violin, 0.25, 0.4), box.lty = 1,
+  staplewex = NA, violin = F, violcol = "white", violwex = 0.4,
+  wilcox.alternative = "two.sided", pval_offset = 0.04,
+  horizontal = F, tilt.names = F, axes = F, xaxt = "o",
+  yaxt = "o", las = 0, ...)
 }
 \arguments{
 \item{x}{list of variables to be plotted}
@@ -87,6 +68,12 @@ vl_boxplot(x, ...)
 \item{tilt.names}{Should boxes names be tilted (works only if horizontal= T)}
 
 \item{axes}{Should the box around the plot be drawn? Default= F}
+
+\item{xaxt}{Should the x axis be plotted or not ("n") ? default= "o"}
+
+\item{yaxt}{Should the y axis be plotted or not ("n") ? default= "o"}
+
+\item{las}{style of axis label. see ?par()}
 }
 \description{
 Just a wrapper around boxplot that makes it nicer and allows to add violins and wilcox pvals
