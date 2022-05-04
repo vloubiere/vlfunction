@@ -25,6 +25,7 @@
 #' @param xaxt Should the x axis be plotted or not ("n") ? default= "o"
 #' @param yaxt Should the y axis be plotted or not ("n") ? default= "o"
 #' @param las style of axis label. see ?par()
+#' @param add Should the boxlplot be added to existing plot? default to FALSE
 #' @param ... Extra parameters passed to boxplot, such as las, lwd... 
 #' @examples
 #' # Create test matrix
@@ -98,6 +99,7 @@ vl_boxplot.default <- function(x,
                                xaxt= "o",
                                yaxt= "o",
                                las= par("las"),
+                               add= F,
                                ...)
 {
   if(!missing(compute_pval) && !is.list(compute_pval))
@@ -187,10 +189,12 @@ vl_boxplot.default <- function(x,
     xlim <- xrange
   if(missing(ylim))
     ylim <- yrange
-  
-  plot.new()
-  plot.window(xlim= if(horizontal) ylim else xlim,
-              ylim= if(horizontal) xlim else ylim)
+  if(!add)
+  {
+    plot.new()
+    plot.window(xlim= if(horizontal) ylim else xlim,
+                ylim= if(horizontal) xlim else ylim)
+  }
   title(main= main, 
         xlab= xlab, 
         ylab= ylab)

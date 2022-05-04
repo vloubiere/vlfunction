@@ -22,7 +22,7 @@ vl_boxplot(x, ...)
   staplewex = NA, violin = F, violcol = "white", violwex = 0.4,
   wilcox.alternative = "two.sided", pval_offset = 0.04,
   horizontal = F, tilt.names = F, axes = F, xaxt = "o",
-  yaxt = "o", las = 0, ...)
+  yaxt = "o", las = par("las"), add = F, ...)
 }
 \arguments{
 \item{x}{list of variables to be plotted}
@@ -74,6 +74,8 @@ vl_boxplot(x, ...)
 \item{yaxt}{Should the y axis be plotted or not ("n") ? default= "o"}
 
 \item{las}{style of axis label. see ?par()}
+
+\item{add}{Should the boxlplot be added to existing plot? default to FALSE}
 }
 \description{
 Just a wrapper around boxplot that makes it nicer and allows to add violins and wilcox pvals
