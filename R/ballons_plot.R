@@ -92,13 +92,11 @@ vl_balloons_plot.matrix <- function(x,
   axis(side= 1, 
        at= seq(ncol(x)),
        labels = colnames(x),
-       lwd= NA,
-       line= 0)
+       lwd= NA)
   axis(side= 2, 
        at= seq(nrow(x)),
        labels = rownames(x),
-       lwd= NA,
-       line= 0)
+       lwd= NA)
   # Legends
   left <- par("usr")[2]+(grconvertX(adj, "in", "user")-grconvertX(0, "in", "user"))
   vl_heatkey(color_breaks, 
