@@ -176,7 +176,6 @@ vl_bw_average_track <- function(bed,
                              xaxis= c(upstream, center_label, downstream),
                              ylab= ylab,
                              ylim= ylim,
-                             col= colorRampPalette(col)(obj[, .NGRP, .(name, set_IDs)][1, NGRP]),
                              legend= legend,
                              legend.cex= legend.cex)
   invisible(obj)

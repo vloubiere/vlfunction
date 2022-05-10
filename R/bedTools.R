@@ -159,7 +159,9 @@ vl_closestBed <- function(a,
 #' @param downstream Downstream extension. default= 500L
 #' @param ignore.strand Should the strand be considered when defininng start or end centering? Default= F
 #' @param genome BSgenome used to check limits of extended regions. Out of limit ranges will be resized accodtingly
-#' 
+#' @examples 
+#' bed <- data.table(seqnames= "chr2L", start= 10000, end= 12000, strand= c("+", "-"))
+#' vl_resizeBed(bed, center= "start", upstream = 2000, downstream = 1000)[]
 #' @return Resized DT ranges
 #' @export
 vl_resizeBed <- function(bed, 
@@ -177,8 +179,8 @@ vl_resizeBed <- function(bed,
     stop("center should be one of center, start or end")
   
   # Check strand
-  if(!ignore.strand & "strand" %in% names(regions))
-    regions[strand=="-", c("start", "end"):= .(end, start)]
+  neg <- !ignore.strand & "strand" %in% names(regions) & regions$strand=="-"
+  regions[neg, c("start", "end"):= .(end, start)]
   # define start
   regions <- data.table(seqnames= regions$seqnames,
                         start= switch(center,
@@ -186,8 +188,8 @@ vl_resizeBed <- function(bed,
                                       "start"= regions$start,
                                       "end"= regions$end))
   # ext
-  regions[, c("start", "end"):= .(start-upstream,
-                                  start+downstream)]
+  regions[, c("start", "end"):= .(start-ifelse(neg, downstream, upstream),
+                                  start+ifelse(neg, upstream, downstream))]
 
   # If genome is psecified, resize accordingly
   if(!missing(genome))
@@ -200,7 +202,6 @@ vl_resizeBed <- function(bed,
   # Finale
   res <- data.table::copy(bed)
   res[, c("seqnames", "start", "end"):= regions[, .(seqnames, start, end)]]
-  
   return(res)
 }
 
