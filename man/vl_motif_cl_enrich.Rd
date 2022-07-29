@@ -7,14 +7,15 @@
 \title{Compute motif enrichment}
 \usage{
 vl_motif_cl_enrich(counts_matrix, cl_IDs, control_cl = unique(cl_IDs),
-  plot = T, padj_cutoff = 0.00001, log2OR_cutoff = 0, N_top = Inf,
-  x_breaks, color_breaks, cex.balloons = 1, col = c("cornflowerblue",
-  "lightgrey", "tomato"), main = NA, auto_margins = T)
-
-plot.vl_enr_cl(obj, x_breaks, padj_cutoff = 0.05, log2OR_cutoff = 0,
-  N_top = Inf, color_breaks, cex.balloons = 1,
+  plot = T, padj_cutoff = 1e-05, log2OR_cutoff = 0,
+  top_enrich = Inf, x_breaks, color_breaks, cex.balloons = 1,
   col = c("cornflowerblue", "lightgrey", "tomato"), main = NA,
   auto_margins = T)
+
+\method{plot}{vl_enr_cl}(obj, x_breaks, padj_cutoff = 0.05,
+  log2OR_cutoff = 0, top_enrich = Inf, min_set_counts = 5,
+  color_breaks, cex.balloons = 1, col = c("cornflowerblue",
+  "lightgrey", "tomato"), main = NA, auto_margins = T)
 }
 \arguments{
 \item{counts_matrix}{A matrix containing motif counts (rows= sequences, cols= motifs)}
@@ -29,7 +30,7 @@ plot.vl_enr_cl(obj, x_breaks, padj_cutoff = 0.05, log2OR_cutoff = 0,
 
 \item{log2OR_cutoff}{cutoff for ballons to be ploted}
 
-\item{N_top}{Select top enriched motifs/cluster}
+\item{top_enrich}{Select top enriched motifs/cluster}
 
 \item{x_breaks}{Breaks used for ballon's sizes}
 
@@ -47,9 +48,9 @@ Fisher test data.table.
 \description{
 Compute motif enrichment for the cluster in cl_columns, using all the lines as background
 }
-\section{Functions}{
+\section{Methods (by generic)}{
 \itemize{
-\item \code{plot.vl_enr_cl}: method to plot cluster enrichment objects (containing variable, log2OR and padj)
+\item \code{plot}: method to plot cluster enrichment objects (containing variable, log2OR and padj)
 }}
 
 \examples{
@@ -66,7 +67,8 @@ enr <- vl_motif_cl_enrich(counts,
                           cl_IDs = c(rep(1, nrow(top_SUHW)),
                                      rep(2, nrow(top_STARR))),
                           plot=F)
-plot(enr, padj_cutoff= 1e-2)
+par(las= 1)
+plot(enr, padj_cutoff= 1e-5)
 
 # Compute enrichment of SUHW & STARR-Seq over random regions
 counts <- vl_motif_counts(rbind(top_SUHW,
@@ -80,5 +82,5 @@ enr <- vl_motif_cl_enrich(counts,
                           control_cl = "rdm",
                           plot=F)
 par(las= 1)
-plot(enr, padj_cutoff= 1e-20)
+plot(enr, padj_cutoff= 1e-20, top_enrich= 10)
 }

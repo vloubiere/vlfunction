@@ -104,18 +104,25 @@ vl_motif_enrich <- function(counts,
   # Test enrichment
   res <- obj[, {
     # Contingency table 
-    tab <- table(.id=="set", value>0)
+    x <- factor(.id=="set", levels = c(T, F))
+    y <- factor(value>0, levels = c(T, F))
+    tab <- table(x, y)
     # Check contingency table -> Fisher
-    if(identical(c(2L,2L), dim(tab)))
-      fisher.test(tab)[c("estimate", "p.value")] else
-        list(estimate= as.numeric(NA), `p.value`= as.numeric(NA)) # Default to NA
+    res <- fisher.test(tab)
+    .(OR= res$estimate,
+      pval= res$p.value,
+      set_hit= sum(.id=="set" & value>0),
+      set_total= sum(.id=="set"),
+      ctl_hit= sum(.id=="control" & value>0),
+      ctl_total= sum(.id=="control"))
   }, variable]
-  setnames(res, c("estimate", "p.value"), c("OR", "pval"))
   
   # padj...
   res[, padj:= p.adjust(pval, method = "fdr"), pval]
   res[, log2OR:= log2(OR)]
-  res <- res[, .(variable, log2OR, padj)]
+  res$OR <- NULL
+  setcolorder(res,
+              c("variable", "log2OR", "pval", "padj"))
   setorderv(res, "log2OR")
   setattr(res, "class", c("vl_enr", "data.table", "data.frame"))
   
@@ -137,7 +144,7 @@ vl_motif_enrich <- function(counts,
 #' @param plot Should the result be plot using balloons plot?
 #' @param padj_cutoff cutoff for ballons to be ploted
 #' @param log2OR_cutoff cutoff for ballons to be ploted
-#' @param N_top Select top enriched motifs/cluster
+#' @param top_enrich Select top enriched motifs/cluster
 #' @param x_breaks Breaks used for ballon's sizes
 #' @param color_breaks Color breaks used for coloring
 #' @param col Vector of colors used for coloring
@@ -157,7 +164,8 @@ vl_motif_enrich <- function(counts,
 #'                           cl_IDs = c(rep(1, nrow(top_SUHW)),
 #'                                      rep(2, nrow(top_STARR))),
 #'                           plot=F)
-#' plot(enr, padj_cutoff= 1e-2)
+#' par(las= 1)
+#' plot(enr, padj_cutoff= 1e-5)
 #' 
 #' # Compute enrichment of SUHW & STARR-Seq over random regions
 #' counts <- vl_motif_counts(rbind(top_SUHW,
@@ -171,16 +179,16 @@ vl_motif_enrich <- function(counts,
 #'                           control_cl = "rdm",
 #'                           plot=F)
 #' par(las= 1)
-#' plot(enr, padj_cutoff= 1e-20)
+#' plot(enr, padj_cutoff= 1e-20, top_enrich= 10)
 #' @return Fisher test data.table.
 #' @export
 vl_motif_cl_enrich <- function(counts_matrix, 
                                cl_IDs,
                                control_cl= unique(cl_IDs),
                                plot= T,
-                               padj_cutoff= 0.00001,
+                               padj_cutoff= 1e-5,
                                log2OR_cutoff= 0,
-                               N_top= Inf,
+                               top_enrich= Inf,
                                x_breaks,
                                color_breaks,
                                cex.balloons= 1,
@@ -196,9 +204,12 @@ vl_motif_cl_enrich <- function(counts_matrix,
     cl_IDs <- factor(cl_IDs)
   
   # Compute enrichment
-  res <- lapply(levels(cl_IDs), function(cl) vl_motif_enrich(counts = counts_matrix[cl_IDs==cl],
-                                                             control_counts = counts_matrix[cl_IDs!=cl & cl_IDs %in% control_cl],
-                                                             plot= F))
+  res <- lapply(levels(cl_IDs), function(cl) 
+  {
+    vl_motif_enrich(counts = counts_matrix[cl_IDs==cl],
+                    control_counts = counts_matrix[cl_IDs!=cl & cl_IDs %in% control_cl],
+                    plot= F)
+  })
   names(res) <- levels(cl_IDs)
   res <- rbindlist(res, idcol = "cl")
   class(res) <- c("vl_enr_cl", "data.table", "data.frame")

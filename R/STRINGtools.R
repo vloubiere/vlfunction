@@ -3,6 +3,7 @@
 #' Extract interactions form STRIN db (Dmel only for now)
 #'
 #' @param symbols vector of Dmel gene symbols
+#' @param species either "Dm" or "Mm"
 #' @param plot Should the graph be plotted?
 #' @param score_cutoff If specified, only plot interactions with score>=cutoff
 #' @param top_N If specified, only plot top N interactions
@@ -20,6 +21,7 @@
 #' @return An object that can be used with the plot.vl_STRING() method
 #' @export
 vl_STRING_interaction <- function(symbols,
+                                  species,
                                   plot= T,
                                   score_cutoff= 900,
                                   top_N= NA,
@@ -29,9 +31,12 @@ vl_STRING_interaction <- function(symbols,
 {
   if(!identical(symbols, unique(symbols)))
     stop("symbols should be unique")
+  if(species=="Dm")
+    DB <- vl_Dmel_STRING_DB else if(species=="Mm")
+      DB <- vl_mm_STRING_DB
   
   # Get interaction
-  res <- vl_Dmel_STRING_DB[protein1_symbol %in% symbols & protein2_symbol %in% symbols]
+  res <- DB[protein1_symbol %in% symbols & protein2_symbol %in% symbols]
   
   # Vertices
   V <- data.table(name= symbols,
@@ -46,7 +51,7 @@ vl_STRING_interaction <- function(symbols,
   class(obj) <- c("vl_STRING", "list")
   
   # Print info
-  check <- 100-sum(symbols %in% c(vl_Dmel_STRING_DB$protein1_symbol, vl_Dmel_STRING_DB$protein2_symbol))/length(unique(symbols))*100
+  check <- 100-sum(symbols %in% c(DB$protein1_symbol, DB$protein2_symbol))/length(unique(symbols))*100
   print(paste0(check, "% of symbols have no correpondance in DB"))
   
   # PLOT

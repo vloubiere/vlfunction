@@ -249,7 +249,8 @@ vl_boxplot.default <- function(x,
          srt= 45,
          offset= -0.35,
          pos= 2,
-         xpd= T)
+         xpd= T,
+         cex= par("cex.axis"))
   if(outline)
   {
     points(if(horizontal) unlist(box["out",]) else jitter(rep(seq(x), lengths(box["out",]))),

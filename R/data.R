@@ -145,3 +145,30 @@
 #' file = "/groups/stark/vloubiere/vlfunction/data/vl_Dmel_STRING_DB.RData", 
 #' compress = "bzip2")
 "vl_Dmel_STRING_DB"
+
+#' mm10 STRING database 
+#'
+#' Contains STRING annotations v11.5
+#'
+#' @usage Can be used with ?vl_STRING_interaction()
+#' @examples
+#' Code used to create DB
+#' # Download STRING db v11.5 from Dmel
+#' link <- "https://stringdb-static.org/download/protein.links.detailed.v11.5/10090.protein.links.detailed.v11.5.txt.gz"
+#' tmp <- tempfile(fileext = ".txt.gz")
+#' download.file(link, tmp)
+#' DB <- fread(tmp)
+#' # Download correspondance Dmel symbols
+#' link <- "https://stringdb-static.org/download/protein.info.v11.5/10090.protein.info.v11.5.txt.gz"
+#' download.file(link, tmp)
+#' sym <- fread(tmp)
+#' DB[sym, protein1_symbol:= i.preferred_name, on= "protein1==`#string_protein_id`"]
+#' DB[sym, protein2_symbol:= i.preferred_name, on= "protein2==`#string_protein_id`"]
+#' # Collapse unique interactions
+#' DB[, merge:= paste0(sort(c(protein1_symbol, protein2_symbol)), collapse= ""), .(protein1_symbol, protein2_symbol)]
+#' vl_mm_STRING_DB <- DB[, .SD[1], merge]
+#' # SAVE
+#' save(vl_mm_STRING_DB,
+#' file = "/groups/stark/vloubiere/vlfunction/data/vl_mm_STRING_DB.RData", 
+#' compress = "bzip2")
+"vl_mm_STRING_DB"
