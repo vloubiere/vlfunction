@@ -20,6 +20,7 @@ plot.vl_enr(
   top_enrich = Inf,
   xlab = "Odd Ratio (log2)",
   col = c("blue", "red"),
+  min_set_counts = 5,
   ...
 )
 }

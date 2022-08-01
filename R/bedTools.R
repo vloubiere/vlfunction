@@ -39,15 +39,15 @@ vl_importBed <- function(bed) UseMethod("vl_importBed")
 #' @export
 vl_importBed.character <- function(bed)
 {
-  bed <- data.table::rbindlist(lapply(bed, function(x) fread(x, 
-                                                             fill = T)))
+  bed <- lapply(bed, function(x) fread(x, fill = T))
+  bed <- data.table::rbindlist(bed)
   if(!vl_isDTranges(bed))
   {
-    bedcols <- 1:ifelse(ncol(bed)>6, 6, ncol(bed))
-    setnames(bed, 
-             names(bed)[bedcols],
-             c("seqnames", "start", "end", "name", "score", "strand")[bedcols])
-    invisible(vl_isDTranges(bed))
+    bedcols <- c("seqnames", "start", "end", "name", "score", "strand")
+    if(ncol(bed)<6)
+      bedcols <- bedcols[1:ncol(bed)]
+    setnames(bed, bedcols)
+    vl_isDTranges(bed)
   }
   return(bed)
 }
@@ -57,10 +57,7 @@ vl_importBed.character <- function(bed)
 vl_importBed.GRanges <- function(bed)
 {
   bed <- data.table::as.data.table(bed)
-  bed[, seqnames:= factor(seqnames, 
-                          levels= sort(unique(as.character(seqnames))))]
-  bed[, strand:= factor(strand, 
-                        levels= c("+", "-", "*"))]
+  vl_isDTranges(bed)
   return(bed)
 }
 
@@ -179,27 +176,34 @@ vl_resizeBed <- function(bed,
     stop("center should be one of center, start or end")
   
   # Check strand
-  neg <- !ignore.strand & "strand" %in% names(regions) & regions$strand=="-"
-  regions[neg, c("start", "end"):= .(end, start)]
+  if(!ignore.strand & !("strand" %in% names(regions)))
+    regions[, strand:= factor("*")]
+    
   # define start
-  regions <- data.table(seqnames= regions$seqnames,
-                        start= switch(center,
-                                      "center"= round(rowMeans(regions[, .(start, end)])),
-                                      "start"= regions$start,
-                                      "end"= regions$end))
-  # ext
-  regions[, c("start", "end"):= .(start-ifelse(neg, downstream, upstream),
-                                  start+ifelse(neg, upstream, downstream))]
+  if(center=="center")
+  {
+    regions[, start:= round(rowMeans(.SD)), .SDcols= c("start", "end")]
+  }else if(center=="start")
+  {
+    regions[, start:= ifelse(strand=="-", end, start)]
+  }else if(center=="end")
+    regions[, start:= ifelse(strand=="-", start, end)]
+
+  # Ext
+  regions[, c("start", "end"):= .(start-ifelse(strand=="-", downstream, upstream),
+                                  start+ifelse(strand=="-", upstream, downstream))]
 
   # If genome is psecified, resize accordingly
   if(!missing(genome))
   {
-    regions[data.table::as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome)))), seqlength:= i.width, on= "seqnames"]
+    chrSize <- GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome)))
+    chrSize <- data.table::as.data.table(chrSize)
+    regions[chrSize, seqlength:= i.width, on= "seqnames"]
     regions[start<1, start:= 1]
     regions[end>seqlength, end:= seqlength]
   }
   
-  # Finale
+  # Final
   res <- data.table::copy(bed)
   res[, c("seqnames", "start", "end"):= regions[, .(seqnames, start, end)]]
   return(res)

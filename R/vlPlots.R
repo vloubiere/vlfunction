@@ -259,3 +259,65 @@ vl_balloonskey <- function(sizes,
        offset= 0,
        xpd= T)
 }
+
+#' Table plot
+#'
+#' Plots a data.table as text
+#'
+#' @param x data.table
+#' @param colnames_col Color for col.names row
+#' @param row_col Color for data rows
+#' @return Plots heatkey
+#'
+#' @export
+vl_plot_table <- function(x, colnames_col= "white", row_col= "white")
+{
+  if(!is.data.table(x))
+    stop("x must be a data.table") else
+      x[, lapply(.SD, as.character)]
+  if(length(row_col)==1)
+    row_col <- rep(row_col, nrow(x))
+  if(length(row_col)!=nrow(x))
+    stop("row_col should be lenght 1 or match the number of rows in x")
+  if(length(colnames_col)!=1)
+    stop("colnames_col should be lenght 1") 
+  col <- c(colnames_col, row_col)
+  x <- rbind(as.data.table(matrix(names(x), ncol= ncol(x))),
+             x,
+             use.names=FALSE)
+
+  # Init plot to access str size
+  plot.new()
+  # Compute cols proportions and rows position
+  grid.p <- apply(x, 2, function(x) max(strwidth(paste0(x, "MM"))))
+  grid.p <- cumsum(grid.p/sum(grid.p))
+  grid.x <- c(par("usr")[1], grid.p*diff(par("usr")[c(1,2)])+par("usr")[1])
+  grid.y <- seq(par("usr")[1], par("usr")[2], length.out= nrow(x)+1)
+  # Compute optimal cex for text
+  cex.x <- max(diff(grid.x))/max(strwidth(paste0(unlist(x), "MM")))
+  cex.y <- min(diff(grid.y))/max(strheight(unlist(x), cex= 2))
+  cex.t <- min(c(cex.x, cex.y))
+  # Adjust grid.x to text size
+  ratio <- max(strwidth(paste0(unlist(x), "MM"), cex= cex.t))/max(diff(grid.x))
+  half_size <- diff(par("usr")[c(1,2)])*ratio/2
+  lims.x <- 0.5+half_size*c(-1,1)
+  grid.x <- c(lims.x[1], grid.p*diff(lims.x)+lims.x[1])
+  # Compute text position
+  text.x <- rowMeans(matrix(c(grid.x[-length(grid.x)], grid.x[-1]), ncol = 2))
+  text.y <- rowMeans(matrix(c(grid.y[-length(grid.y)], grid.y[-1]), ncol = 2))
+  # Plot
+  grid.y <- rev(grid.y)
+  rect(min(grid.x),
+       grid.y[-length(grid.y)],
+       max(grid.x),
+       grid.y[-1], 
+       col= col,
+       border= "white")
+  segments(grid.x, par("usr")[1], grid.x, par("usr")[2], xpd= T)
+  segments(min(grid.x), grid.y, max(grid.x), grid.y, xpd= T)
+  text(matrix(text.x, nrow= nrow(x), ncol= ncol(x), byrow = T),
+       matrix(text.y, nrow= nrow(x), ncol= ncol(x)),
+       as.matrix(x)[nrow(x):1,],
+       cex= cex.t,
+       xpd= T)
+}

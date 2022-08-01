@@ -41,6 +41,7 @@ vl_boxplot(x, ...)
   xaxt = "o",
   yaxt = "o",
   las = par("las"),
+  plot = T,
   add = F,
   ...
 )
@@ -95,6 +96,8 @@ vl_boxplot(x, ...)
 \item{yaxt}{Should the y axis be plotted or not ("n") ? default= "o"}
 
 \item{las}{style of axis label. see ?par()}
+
+\item{plot}{Should the boxlplot be ploted? default to TRUE}
 
 \item{add}{Should the boxlplot be added to existing plot? default to FALSE}
 }

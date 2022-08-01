@@ -13,7 +13,7 @@ vl_motif_cl_enrich(
   plot = T,
   padj_cutoff = 1e-05,
   log2OR_cutoff = 0,
-  N_top = Inf,
+  top_enrich = Inf,
   x_breaks,
   color_breaks,
   cex.balloons = 1,
@@ -27,7 +27,8 @@ plot.vl_enr_cl(
   x_breaks,
   padj_cutoff = 0.05,
   log2OR_cutoff = 0,
-  N_top = Inf,
+  top_enrich = Inf,
+  min_set_counts = 5,
   color_breaks,
   cex.balloons = 1,
   col = c("cornflowerblue", "lightgrey", "tomato"),
@@ -48,7 +49,7 @@ plot.vl_enr_cl(
 
 \item{log2OR_cutoff}{cutoff for ballons to be ploted}
 
-\item{N_top}{Select top enriched motifs/cluster}
+\item{top_enrich}{Select top enriched motifs/cluster}
 
 \item{x_breaks}{Breaks used for ballon's sizes}
 
@@ -85,7 +86,8 @@ enr <- vl_motif_cl_enrich(counts,
                           cl_IDs = c(rep(1, nrow(top_SUHW)),
                                      rep(2, nrow(top_STARR))),
                           plot=F)
-plot(enr, padj_cutoff= 1e-2)
+par(las= 1)
+plot(enr, padj_cutoff= 1e-5)
 
 # Compute enrichment of SUHW & STARR-Seq over random regions
 counts <- vl_motif_counts(rbind(top_SUHW,
@@ -99,5 +101,5 @@ enr <- vl_motif_cl_enrich(counts,
                           control_cl = "rdm",
                           plot=F)
 par(las= 1)
-plot(enr, padj_cutoff= 1e-20)
+plot(enr, padj_cutoff= 1e-20, top_enrich= 10)
 }

@@ -7,6 +7,7 @@
 \usage{
 vl_STRING_interaction(
   symbols,
+  species,
   plot = T,
   score_cutoff = 900,
   top_N = NA,
@@ -19,6 +20,8 @@ plot.vl_STRING(obj, score_cutoff = 900, top_N = NA, col, size, cex.label)
 }
 \arguments{
 \item{symbols}{vector of Dmel gene symbols}
+
+\item{species}{either "Dm" or "Mm"}
 
 \item{plot}{Should the graph be plotted?}
 
