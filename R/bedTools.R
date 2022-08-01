@@ -46,7 +46,7 @@ vl_importBed.character <- function(bed)
     bedcols <- c("seqnames", "start", "end", "name", "score", "strand")
     if(ncol(bed)<6)
       bedcols <- bedcols[1:ncol(bed)]
-    setnames(bed, bedcols)
+    setnames(bed, names(bed)[seq(bedcols)], bedcols)
     vl_isDTranges(bed)
   }
   return(bed)
