@@ -25,6 +25,7 @@
 #' @param xaxt Should the x axis be plotted or not ("n") ? default= "o"
 #' @param yaxt Should the y axis be plotted or not ("n") ? default= "o"
 #' @param las style of axis label. see ?par()
+#' @param plot Should the boxlplot be ploted? default to TRUE
 #' @param add Should the boxlplot be added to existing plot? default to FALSE
 #' @param ... Extra parameters passed to boxplot, such as las, lwd... 
 #' @examples
@@ -99,6 +100,7 @@ vl_boxplot.default <- function(x,
                                xaxt= "o",
                                yaxt= "o",
                                las= par("las"),
+                               plot= T,
                                add= F,
                                ...)
 {
@@ -189,91 +191,96 @@ vl_boxplot.default <- function(x,
     xlim <- xrange
   if(missing(ylim))
     ylim <- yrange
-  if(!add)
+  if(plot)
   {
-    plot.new()
-    plot.window(xlim= if(horizontal) ylim else xlim,
-                ylim= if(horizontal) xlim else ylim)
-  }
-  title(main= main, 
-        xlab= xlab, 
-        ylab= ylab)
-  if(violin && nrow(viols)>0)
-    viols[, {
-      polygon(if(horizontal) unlist(y) else unlist(x), 
-              if(horizontal) unlist(x) else unlist(y), 
-              col= col[1])
-    }, .(.id, col)]
-  boxplot(x,
-          pch= NA,
-          outline= F,
-          add= T,
-          staplewex= staplewex, 
-          lty= box.lty, 
-          boxwex= boxwex,
-          col= boxcol,
-          names= NA,
-          horizontal= horizontal,
-          axes= axes,
-          xaxt= "n",
-          yaxt= "n",
-          ...)
-  if(xaxt!="n")
-    if(horizontal)
-      axis(1, 
-           lwd= ifelse(axes, 0, 1),
-           lwd.ticks= 1,
-           las= las) else
-             axis(1,
-                  at= seq(x),
-                  labels= if(tilt.names) rep(NA, length(x)) else names(x),
-                  lwd= ifelse(axes, 0, 1),
-                  lwd.ticks= 1,
-                  las= las)
-  if(yaxt!="n")
-    if(horizontal)
-      axis(2,
-           at= seq(x),
-           labels= names(x),
-           lwd= ifelse(axes, 0, 1),
-           lwd.ticks= 1,
-           las= las) else
-             axis(2, 
-                  lwd= ifelse(axes, 0, 1),
-                  lwd.ticks= 1,
-                  las= las)
-  if(tilt.names && xaxt!="n" && !horizontal)
-    text(seq(x),
-         par("usr")[3]-(grconvertY(par("mgp")[2], "line", "user")-grconvertY(0, "line", "user")),
-         names(x),
-         srt= 45,
-         offset= -0.35,
-         pos= 2,
-         xpd= T,
-         cex= par("cex.axis"))
-  if(outline)
-  {
-    points(if(horizontal) unlist(box["out",]) else jitter(rep(seq(x), lengths(box["out",]))),
-           if(horizontal) jitter(rep(seq(x), lengths(box["out",]))) else unlist(box["out",]),
-           pch= 16,
-           col= adjustcolor("grey", 0.5))
-  }
+    if(!add)
+    {
+      plot.new()
+      plot.window(xlim= if(horizontal) ylim else xlim,
+                  ylim= if(horizontal) xlim else ylim)
+    }
+    title(main= main, 
+          xlab= xlab, 
+          ylab= ylab)
+    if(violin && nrow(viols)>0)
+      viols[, {
+        polygon(if(horizontal) unlist(y) else unlist(x), 
+                if(horizontal) unlist(x) else unlist(y), 
+                col= col[1])
+      }, .(.id, col)]
+    boxplot(x,
+            pch= NA,
+            outline= F,
+            add= T,
+            staplewex= staplewex, 
+            lty= box.lty, 
+            boxwex= boxwex,
+            col= boxcol,
+            names= NA,
+            horizontal= horizontal,
+            axes= axes,
+            xaxt= "n",
+            yaxt= "n",
+            ...)
+    if(xaxt!="n")
+      if(horizontal)
+        axis(1, 
+             lwd= ifelse(axes, 0, 1),
+             lwd.ticks= 1,
+             las= las) else
+               axis(1,
+                    at= seq(x),
+                    labels= if(tilt.names) rep(NA, length(x)) else names(x),
+                    lwd= ifelse(axes, 0, 1),
+                    lwd.ticks= 1,
+                    las= las)
+    if(yaxt!="n")
+      if(horizontal)
+        axis(2,
+             at= seq(x),
+             labels= names(x),
+             lwd= ifelse(axes, 0, 1),
+             lwd.ticks= 1,
+             las= las) else
+               axis(2, 
+                    lwd= ifelse(axes, 0, 1),
+                    lwd.ticks= 1,
+                    las= las)
+    if(tilt.names && xaxt!="n" && !horizontal)
+      text(seq(x),
+           par("usr")[3]-(grconvertY(par("mgp")[2], "line", "user")-grconvertY(0, "line", "user")),
+           names(x),
+           srt= 45,
+           offset= -0.35,
+           pos= 2,
+           xpd= T,
+           cex= par("cex.axis"))
+    if(outline)
+    {
+      points(if(horizontal) unlist(box["out",]) else jitter(rep(seq(x), lengths(box["out",]))),
+             if(horizontal) jitter(rep(seq(x), lengths(box["out",]))) else unlist(box["out",]),
+             pch= 16,
+             col= adjustcolor("grey", 0.5))
+    }
     
-  if(!missing(compute_pval) && nrow(pval)>0)
-    pval[, {
-      segments(if(horizontal) y else x0, 
-               if(horizontal) x0 else y, 
-               if(horizontal) y else x1,
-               if(horizontal) x1 else y)
-      vl_plot_pval_text(if(horizontal) y else x, 
-                        if(horizontal) x else y, 
-                        pval, 
-                        stars_only = T,
-                        pos= ifelse(horizontal, 4, 3),
-                        srt= ifelse(horizontal, 270, 0))
-    }]
+    if(!missing(compute_pval) && nrow(pval)>0)
+      pval[, {
+        segments(if(horizontal) y else x0, 
+                 if(horizontal) x0 else y, 
+                 if(horizontal) y else x1,
+                 if(horizontal) x1 else y)
+        vl_plot_pval_text(if(horizontal) y else x, 
+                          if(horizontal) x else y, 
+                          pval, 
+                          stars_only = T,
+                          pos= ifelse(horizontal, 4, 3),
+                          srt= ifelse(horizontal, 270, 0))
+      }]
+  }
   
-  obj <- list(stats= as.data.table(box["stats",]))
+  obj <- list(stats= as.data.table(box["stats",]),
+              xlim= if(horizontal) ylim else xlim,
+              ylim= if(horizontal) xlim else ylim)
   if(violin && nrow(viols)>0)
     obj <- c(obj, list(violins= viols))
   if(!missing(compute_pval) && nrow(pval)>0)
