@@ -4,9 +4,15 @@
 \alias{vl_GO_enrich}
 \title{GO analysis}
 \usage{
-vl_GO_enrich(FBgn_vector, go_object = vl_Dmel_GO_FB2020_05,
-  FBgn_universe = "all", go_type = "all", plot = T,
-  padj_cutoff = 0.05, top_enrich = Inf)
+vl_GO_enrich(
+  FBgn_vector,
+  go_object = vl_Dmel_GO_FB2020_05,
+  FBgn_universe = "all",
+  go_type = "all",
+  plot = T,
+  padj_cutoff = 0.05,
+  top_enrich = Inf
+)
 }
 \arguments{
 \item{go_object}{object containing GO data. see ?vl_Dmel_GO_FB2020_05}

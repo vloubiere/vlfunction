@@ -50,7 +50,10 @@ vl_screenshot <- function(bed,
   if(!identical(bed, unique(bed)))
     stop("Non-unique regions in bed!")
   if(is.null(names))
+  {
     names <- gsub("(.*)[.].*", "\\1", basename(tracks))
+    names <- make.unique(names)
+  }
   if(!identical(names, unique(names)))
     stop("Please provide unique names")
   if(!is.integer(widths) | any(widths<10))

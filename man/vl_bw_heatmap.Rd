@@ -2,14 +2,24 @@
 % Please edit documentation in R/bwTools.R
 \name{vl_bw_heatmap}
 \alias{vl_bw_heatmap}
-\title{bw Average tracks}
+\title{bw Average heatmap}
 \usage{
-vl_bw_heatmap(bed, tracks, set_IDs = 1, upstream = 5000,
-  downstream = 5000, stranded = F, nbins = 100,
-  names = gsub(".bw$", "", basename(tracks)), plot = T,
-  col = c("blue", "yellow"), order_cols = 1, order_FUN = function(x)
-  mean(x, na.rm = T), max_FUN = function(x) quantile(x, 0.995, na.rm =
-  T), na_col = "lightgrey")
+vl_bw_heatmap(
+  bed,
+  tracks,
+  set_IDs = 1,
+  upstream = 5000,
+  downstream = 5000,
+  stranded = F,
+  nbins = 100,
+  names = gsub(".bw$", "", basename(tracks)),
+  plot = T,
+  col = c("blue", "yellow"),
+  order_cols = 1,
+  order_FUN = function(x) mean(x, na.rm = T),
+  max_FUN = function(x) quantile(x, 0.995, na.rm = T),
+  na_col = "lightgrey"
+)
 }
 \arguments{
 \item{bed}{Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
@@ -37,9 +47,6 @@ vl_bw_heatmap(bed, tracks, set_IDs = 1, upstream = 5000,
 \item{order_FUN}{Function used to aggregated per region and order heatmap. default= function(x) mean(x, na.rm= T)}
 
 \item{max_FUN}{Function to be used for clipping. default= function(x) quantile(x, 0.995, na.rm= T). Using max -> no clipping}
-}
-\value{
-An object that can be used with the vl_average_bw_track_plot_only() function.
 }
 \description{
 Plots average tracks for a set bw files around (potentially) several sets of peaks

@@ -88,6 +88,7 @@ vl_bw_coverage_bins <- function(bed,
   # Binning
   bins <- data.table(bed, set_IDs)
   bins[, region_ID:= .I]
+  bins[, center:= rowMeans(.SD), .SDcols= c("start", "end")]
   bins <- vl_resizeBed(bins, "center", upstream, downstream)
   bins <- bins[, {
     coor <- round(seq(start, end, length.out= nbins+1))
@@ -97,8 +98,10 @@ vl_bw_coverage_bins <- function(bed,
   }, .(seqnames,
        region_ID,
        set_IDs,
-       strand)]
+       strand, 
+       center)]
   bins[, bin.x:= rowid(region_ID)]
+  bins[, center:= between(center, start, end, incbounds = T)]
   if(stranded)
     bins[as.character(strand)=="-", bin.x:= nbins-bin.x+1]
   
@@ -109,7 +112,8 @@ vl_bw_coverage_bins <- function(bed,
     data.table(bins[, .(file= x, 
                         set_IDs, 
                         region_ID, 
-                        bin.x)], 
+                        bin.x,
+                        center)], 
                score= vl_bw_coverage(bins, x))
   }, mc.preschedule = T)
   names(obj) <- names
@@ -127,7 +131,7 @@ vl_bw_coverage_bins <- function(bed,
 #' @param upstream Upstream  extension of bed regions (centered on center)
 #' @param downstream Downstream  extension of bed regions (centered on center)
 #' @param stranded Should the average track be stranded?
-#' @param nbins Number of bins spanning the extended regions. Default= 500
+#' @param nbins Number of bins spanning the extended regions. Default= 101L
 #' @param names Track names to plot. If specified, must be the same length as bw vector. By default, bw basenames will be used.
 #' @param plot Should the average track be ploted? default= T
 #' @param xlab X label. default= "genomic distance"
@@ -141,7 +145,6 @@ vl_bw_coverage_bins <- function(bed,
 #' sets <- c(rep("suhw", 100), rep("STARR", 1000))
 #' tracks <- c("../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", "../gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
 #' vl_bw_average_track(bed, tracks, plot= T, upstream = 1000, downstream = 1000, set_IDs = sets)
-#' @return An object that can be used with the vl_average_bw_track_plot_only() function.
 #' @export
 vl_bw_average_track <- function(bed,
                                 tracks,
@@ -149,7 +152,7 @@ vl_bw_average_track <- function(bed,
                                 upstream= 5000,
                                 downstream= 5000,
                                 stranded= F,
-                                nbins= 100, 
+                                nbins= 101L, 
                                 names= gsub(".bw$", "", basename(tracks)),
                                 center_label= "Center",
                                 plot= T,
@@ -181,7 +184,7 @@ vl_bw_average_track <- function(bed,
   invisible(obj)
 }
 
-#' @describeIn vl_average_bw_track Method to plot average tracks
+#' @describeIn vl_bw_average_track Method to plot average tracks
 #' @export
 plot.vl_bw_average_track <- function(obj,
                                      xlab= "genomic distance",
@@ -200,7 +203,9 @@ plot.vl_bw_average_track <- function(obj,
        xlab= xlab,
        xaxt= "n")
   axis(1, 
-       c(1, max(obj$bin.x)/2, max(obj$bin.x)),
+       c(1, 
+         obj[(center), .N, bin.x][order(N, decreasing = T)][1, bin.x], 
+         max(obj$bin.x)),
        labels= xaxis)
   pl[, {
     polygon(c(bin.x, rev(bin.x)), 
@@ -225,7 +230,7 @@ plot.vl_bw_average_track <- function(obj,
   }
 }
 
-#' bw Average tracks
+#' bw Average heatmap
 #'
 #' Plots average tracks for a set bw files around (potentially) several sets of peaks
 #'
@@ -248,7 +253,6 @@ plot.vl_bw_average_track <- function(obj,
 #' set_IDs <- c(rep("suhw", 100), rep("STARR", 1000))
 #' test <- vl_bw_heatmap(bed, tracks, set_IDs= set_IDs, plot= T, upstream = 1000, downstream = 1000, order_FUN = mean, order_cols = 2)
 #' plot(test)
-#' @return An object that can be used with the vl_average_bw_track_plot_only() function.
 #' @export
 vl_bw_heatmap <- function(bed,
                           tracks,
