@@ -107,6 +107,7 @@ vl_exportBed.data.table <- function(bed, filename)
 #'
 #' @param a Granges or data.table FOR which closest features have to be found.
 #' @param b Granges or data.table FROM which closest features have to be found. If set to NULL (default), then a is matched to itself.
+#' @param n Number of closest features to be reported. Default to Inf
 #' @param min_dist Min distance for closest feature 
 #' @examples 
 #' a <- data.table(seqnames= "chr2L", start= sample(10000, 1000))
@@ -122,6 +123,7 @@ vl_exportBed.data.table <- function(bed, filename)
 #' @export
 vl_closestBed <- function(a, 
                           b= NULL,
+                          n= Inf,
                           min_dist= 0)
 {
   if(!vl_isDTranges(a))
@@ -131,17 +133,24 @@ vl_closestBed <- function(a,
       b <- vl_importBed(b)
   a <- data.table::copy(a)
   b <- data.table::copy(b)
-  # Add indexes
-  a[, idx:= .I]
-  b[, idx:= .I]
-  names(a) <- ifelse(names(a)!="seqnames", paste0(names(a), ".a"), names(a))
-  names(b) <- ifelse(names(b)!="seqnames", paste0(names(b), ".b"), names(b))
+  if(nrow(a)*nrow(b)*n>10e6)
+    warning("nrow(a)*nrow(b)*n > 10e6 -> consider using lower n cutoff")
   # Main function
-  res <- a[b, on= "seqnames", allow.cartesian= T]
-  res[start.b>end.a, dist:= start.b-end.a]
-  res[end.b<start.a, dist:= -(start.a-end.b)]
-  res[start.a<=end.b & end.a>=start.b, dist:= 0]
-  res <- res[abs(dist)>=min_dist]
+  res <- b[a, {
+    # Measure distance
+    .c <- data.table(seqnames, 
+                     .SD, 
+                     dist= fcase(x.start>i.end, x.start-i.end,
+                                 x.end<i.start, i.end-x.start,
+                                 default= 0L))# default means a & b overlap!
+    # Order dist and apply dist & n cutoffs
+    .c <- .c[order(abs(dist))][abs(dist)>=min_dist, I:= .I][I<=n, !"I"]
+    setnames(.c, 
+             c("seqnames", "start", "end"), 
+             function(x) paste0(x, ".b"))
+    # Return a coordinates + closest b coor
+    data.table(start= i.start, end= i.end, .c)
+  }, .EACHI, on= "seqnames"]
   # Export
   return(res)
 }
@@ -193,7 +202,7 @@ vl_resizeBed <- function(bed,
   regions[, c("start", "end"):= .(start-ifelse(strand=="-", downstream, upstream),
                                   start+ifelse(strand=="-", upstream, downstream))]
 
-  # If genome is psecified, resize accordingly
+  # If genome is specified, resize accordingly
   if(!missing(genome))
   {
     chrSize <- GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome)))

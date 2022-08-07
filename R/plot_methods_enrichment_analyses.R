@@ -1,7 +1,9 @@
 #' @param obj An object of class vl_enr
 #'
 #' @param padj_cutoff padjust cutoff to be applied before plotting
-#' @param top_enrich Top enrichments to plot (negative enrichments removed!)
+#' @param top_enrich Top enrichments to plot (based on padj)
+#' @param xlab Default to "Odd Ratio (log2)"
+#' @param col Color scale
 #' @param ... Extra args to be passed to barplot
 #'
 #' @describeIn vl_motif_enrich method to plot enrichment objects (containing variable, log2OR and padj)
@@ -11,13 +13,12 @@ plot.vl_enr <- function(obj,
                         top_enrich= Inf,
                         xlab= "Odd Ratio (log2)",
                         col= c("blue", "red"),
-                        min_set_counts= 5,
                         ...)
 {
   DT <- data.table::copy(obj)
   DT[, `-log10(padj)`:= -log10(padj)]
   # padj and min set counts cutoff
-  DT <- na.omit(DT[padj<=padj_cutoff & set_hit>=min_set_counts])
+  DT <- na.omit(DT[padj<=padj_cutoff])
   # Handle infinite
   if(any(DT$log2OR==Inf))
     if(any(DT$log2OR>0 & DT$log2OR<Inf))
@@ -34,7 +35,7 @@ plot.vl_enr <- function(obj,
     }else
       stop("all(log2OR[log2OR<0]==(-Inf)) -> could not be capped")
   # select top_enrich
-  DT[, rank:= order(log2OR, decreasing = T)]
+  DT[, rank:= order(`-log10(padj)`, decreasing = T)]
   DT <- DT[rank<=top_enrich]
   # Ploting
   breaks <- range(DT$`-log10(padj)`, na.rm= T)
@@ -62,7 +63,6 @@ plot.vl_enr_cl <- function(obj,
                            padj_cutoff= 0.05,
                            log2OR_cutoff= 0,
                            top_enrich= Inf,
-                           min_set_counts= 5,
                            color_breaks,
                            cex.balloons= 1,
                            col= c("cornflowerblue", "lightgrey", "tomato"),
@@ -74,7 +74,7 @@ plot.vl_enr_cl <- function(obj,
     stop("log2OR_cutoff should be >= 0")
   DT[, `-log10(padj)`:= -log10(padj)]
   # Apply cutoffs
-  sel <- DT[padj <= padj_cutoff & log2OR > log2OR_cutoff & set_hit>=min_set_counts, variable]
+  sel <- DT[padj <= padj_cutoff & log2OR > log2OR_cutoff, variable]
   DT <- na.omit(DT[variable %in% sel & log2OR>0])
   if(nrow(DT)==0)
     stop("No enrichment found with provided padj cutoff!")
@@ -118,6 +118,6 @@ plot.vl_enr_cl <- function(obj,
   pl[[1]] <- quote(vl_balloons_plot)
   eval(pl)
   
-  invisible(list(x= x, 
+  invisible(list(x= x,
                  color_var= color_var))
 }
