@@ -12,7 +12,7 @@ vl_GO_clusters(
   plot = T,
   padj_cutoff = 1e-05,
   log2OR_cutoff = 0,
-  N_top = Inf,
+  top_enrich = Inf,
   x_breaks,
   color_breaks,
   cex.balloons = 1,
@@ -34,7 +34,7 @@ vl_GO_clusters(
 
 \item{log2OR_cutoff}{cutoff for ballons to be ploted}
 
-\item{N_top}{Select top enriched motifs/cluster}
+\item{top_enrich}{Select top enriched motifs/cluster}
 
 \item{x_breaks}{Breaks used for ballon's sizes}
 

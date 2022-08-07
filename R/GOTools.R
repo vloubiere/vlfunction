@@ -68,7 +68,7 @@ vl_GO_enrich <- function(FBgn_vector,
 #' @param plot Should the result be plot using balloons plot?
 #' @param padj_cutoff cutoff for ballons to be ploted
 #' @param log2OR_cutoff cutoff for ballons to be ploted
-#' @param N_top Select top enriched motifs/cluster
+#' @param top_enrich Select top enriched motifs/cluster
 #' @param x_breaks Breaks used for ballon's sizes
 #' @param color_breaks Color breaks used for coloring
 #' @param cex.balloons Expansion factor for balloons
@@ -87,7 +87,7 @@ vl_GO_clusters <- function(FBgn_list,
                            plot= T,
                            padj_cutoff= 0.00001,
                            log2OR_cutoff= 0,
-                           N_top= Inf,
+                           top_enrich= Inf,
                            x_breaks,
                            color_breaks,
                            cex.balloons= 1,
@@ -123,7 +123,7 @@ vl_GO_clusters <- function(FBgn_list,
     plot(res,
          padj_cutoff= padj_cutoff,
          log2OR_cutoff= log2OR_cutoff,
-         N_top= N_top,
+         top_enrich= top_enrich,
          x_breaks= x_breaks,
          color_breaks= color_breaks,
          col= col,
