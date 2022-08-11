@@ -98,10 +98,12 @@ vl_heatmap.matrix <- function(x,
   #------------------------####
   rows <- data.table(name= rownames(x), 
                      order= seq(nrow(x)),
-                     cl= 1)
+                     cl= 1,
+                     y= rev(seq(nrow(x))))
   cols <- data.table(name= colnames(x), 
                      order= seq(ncol(x)),
-                     cl= 1)
+                     cl= 1,
+                     x= seq(ncol(x)))
   rcl <- NULL
   rdend <- NULL
   ccl <- NULL
@@ -139,6 +141,7 @@ vl_heatmap.matrix <- function(x,
     }
     # Add cluster color
     rows[(order), col:= grDevices::gray.colors(.NGRP)[cl], cl]
+    rows[(order), y:= rev(.I)]
   }
   
   #------------------------####
@@ -155,6 +158,8 @@ vl_heatmap.matrix <- function(x,
                             # Hierarchical clustering
                             ccl <- hclust(.d, method = clustering_method)
                             cols[, order:= ccl$order]
+                            # x position
+                            cols[(order), x:= .I]
                             # Cutree
                             cols[, cl:= cutree(ccl, cutree_cols)]
                             # Add cluster color
