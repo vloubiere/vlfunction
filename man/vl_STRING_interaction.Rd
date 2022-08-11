@@ -5,18 +5,11 @@
 \alias{plot.vl_STRING}
 \title{get STRING intrations DT}
 \usage{
-vl_STRING_interaction(
-  symbols,
-  species,
-  plot = T,
-  score_cutoff = 900,
-  top_N = NA,
-  col = "tomato",
-  size = 10,
-  cex.label = 1
-)
+vl_STRING_interaction(symbols, species, plot = T, score_cutoff = 900,
+  top_N = NA, col = "tomato", size = 10, cex.label = 1)
 
-plot.vl_STRING(obj, score_cutoff = 900, top_N = NA, col, size, cex.label)
+plot.vl_STRING(obj, score_cutoff = 900, top_N = NA, col, size,
+  cex.label)
 }
 \arguments{
 \item{symbols}{vector of Dmel gene symbols}

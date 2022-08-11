@@ -4,9 +4,7 @@
 \name{vl_mm_STRING_DB}
 \alias{vl_mm_STRING_DB}
 \title{mm10 STRING database}
-\format{
-An object of class \code{data.table} (inherits from \code{data.frame}) with 7248179 rows and 13 columns.
-}
+\format{An object of class \code{data.table} (inherits from \code{data.frame}) with 7248179 rows and 13 columns.}
 \usage{
 Can be used with ?vl_STRING_interaction()
 }
