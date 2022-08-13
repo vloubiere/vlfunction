@@ -4,12 +4,12 @@
 #' 
 #' @param x Data to plot. Can be one of matrix, data.table, or formula.
 #' @param cluster_rows Should rows be clustered? Default= T
-#' @param row_clusters Numeric vector of row clusters (overwritten by clustering, Default= 1)
+#' @param row_clusters Vector of row clusters (overwritten by clustering, Default= 1)
 #' @param kmeans_k Number of row kmean clusters. If specified, takes over row clustering.
 #' @param clustering_distance_rows Method for clustering distance rows. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"
 #' @param cutree_rows Number of cuts for rows tree. Default= 1L
 #' @param cluster_cols Should columns be clustered? Default= T
-#' @param col_clusters Numeric vector of col clusters (overwritten by clustering, Default= 1)
+#' @param col_clusters Vector of col clusters (overwritten by clustering, Default= 1)
 #' @param clustering_distance_cols Method for clustering distance cols. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"
 #' @param cutree_cols  Number of cuts for cols tree. default= 1L
 #' @param clustering_method Clustering method to use. Must be one of "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median" or "centroid".
@@ -96,10 +96,10 @@ vl_heatmap.matrix <- function(x,
     rownames(x) <- seq(nrow(x))
   if(is.null(colnames(x)))
     colnames(x) <- seq(ncol(x))
-  if(!is.numeric(row_clusters))
-    stop("row_clusters should be a numeric vector!")
-  if(!is.numeric(col_clusters))
-    stop("col_clusters should be a numeric vector!")
+  if(is.character(row_clusters))
+    row_clusters <- factor(row_clusters)
+  if(is.character(col_clusters))
+    col_clusters <- factor(col_clusters)
   
   #------------------------####
   # Init informative result DT
