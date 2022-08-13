@@ -30,10 +30,10 @@ vl_alluvial_plot <- function(dat,
              0.82,
              0.82,
              max(strwidth(names(dat), "inch"))+1))
-  barplot(mat, 
-          col= col,
-          width = 0.5, 
-          space= 1)
+  pl <- barplot(mat, 
+                col= col,
+                width = 0.5, 
+                space= 1)
   cols <- data.table(class= rownames(mat), 
                      Cc= col)
   for(i in 1:(ncol(dat)-1))
@@ -59,4 +59,6 @@ vl_alluvial_plot <- function(dat,
          legend = cols$class,
          bty= "n",
          xpd= T)
+  
+  invisible(pl)
 }
