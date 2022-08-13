@@ -4,8 +4,11 @@
 \alias{vl_alluvial_plot}
 \title{bw Average tracks}
 \usage{
-vl_alluvial_plot(dat,
-  col = vl_palette_many_categ(length(unique(unlist(dat)))), ...)
+vl_alluvial_plot(
+  dat,
+  col = vl_palette_many_categ(length(unique(unlist(dat)))),
+  ...
+)
 }
 \arguments{
 \item{dat}{Data.table containing the variables to plot}

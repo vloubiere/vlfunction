@@ -4,7 +4,9 @@
 \name{vl_Dmel_STRING_DB}
 \alias{vl_Dmel_STRING_DB}
 \title{Dm6 STRING database}
-\format{An object of class \code{data.table} (inherits from \code{data.frame}) with 2171887 rows and 13 columns.}
+\format{
+An object of class \code{data.table} (inherits from \code{data.frame}) with 2171887 rows and 13 columns.
+}
 \usage{
 Can be used with ?vl_STRING_interaction()
 }
