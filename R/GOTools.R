@@ -60,7 +60,7 @@ vl_GO_enrich <- function(geneSet_IDs,
                  factor(value>0, c(T,F)))
     fisher.test(tab, alternative = "greater")[c("estimate", "p.value")]
   }, GO]
-  res[, variable:= AnnotationDbi::select(GO.db,
+  res[, variable:= AnnotationDbi::select(GO.db::GO.db,
                                          keys = as.character(GO),
                                          keytype= "GOID", 
                                          columns= "TERM")$TERM]
