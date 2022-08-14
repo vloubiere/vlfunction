@@ -2,7 +2,6 @@
 % Please edit documentation in R/STRINGtools.R
 \name{vl_STRING_interaction}
 \alias{vl_STRING_interaction}
-\alias{plot.vl_STRING}
 \title{get STRING intrations DT}
 \usage{
 vl_STRING_interaction(
@@ -15,8 +14,6 @@ vl_STRING_interaction(
   size = 10,
   cex.label = 1
 )
-
-\method{plot}{vl_STRING}(obj, score_cutoff = 900, top_N = NA, col, size, cex.label)
 }
 \arguments{
 \item{symbols}{vector of Dmel gene symbols}
@@ -36,22 +33,20 @@ vl_STRING_interaction(
 \item{cex.label}{cex factor to be applied to correponding vertices labels}
 }
 \value{
-An object that can be used with the plot.vl_STRING() method
+An igraph network
 }
 \description{
 Extract interactions form STRIN db (Dmel only for now)
 }
-\section{Methods (by generic)}{
-\itemize{
-\item \code{plot}: Method to plot STRING interaction igraphs
-}}
-
 \examples{
 #USAGE
 symbols <- c("Pc", "Psc", "E(z)", "RpL10", "RpL11", "RpL12")
-vl_STRING_interaction(symbols)
-test <- vl_STRING_interaction(symbols, col= vl_palette_categ1(6))
-plot(test)
-plot(test, size= 10*1:6)
-plot(test, col= "red")
+net <- vl_STRING_interaction(symbols, species= "Dm", col= vl_palette_few_categ(6))
+E <- igraph::as_data_frame(net, what= "edges") 
+V <- igraph::as_data_frame(net, what= "vertices") 
+V$color <- grey.colors(6)
+.g <- igraph::graph_from_data_frame(d = E, 
+                                    vertices = V,
+                                    directed = F)
+plot(.g)
 }

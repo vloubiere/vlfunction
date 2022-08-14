@@ -13,12 +13,15 @@
 #' @examples 
 #' #USAGE
 #' symbols <- c("Pc", "Psc", "E(z)", "RpL10", "RpL11", "RpL12")
-#' vl_STRING_interaction(symbols)
-#' test <- vl_STRING_interaction(symbols, col= vl_palette_categ1(6))
-#' plot(test)
-#' plot(test, size= 10*1:6)
-#' plot(test, col= "red")
-#' @return An object that can be used with the plot.vl_STRING() method
+#' net <- vl_STRING_interaction(symbols, species= "Dm", col= vl_palette_few_categ(6))
+#' E <- igraph::as_data_frame(net, what= "edges") 
+#' V <- igraph::as_data_frame(net, what= "vertices") 
+#' V$color <- grey.colors(6)
+#' .g <- igraph::graph_from_data_frame(d = E, 
+#'                                     vertices = V,
+#'                                     directed = F)
+#' plot(.g)
+#' @return An igraph network
 #' @export
 vl_STRING_interaction <- function(symbols,
                                   species,
@@ -29,80 +32,33 @@ vl_STRING_interaction <- function(symbols,
                                   size= 10,
                                   cex.label= 1)
 {
-  if(!identical(symbols, unique(symbols)))
-    stop("symbols should be unique")
-  if(species=="Dm")
-    DB <- vl_Dmel_STRING_DB else if(species=="Mm")
-      DB <- vl_mm_STRING_DB
+  string_db <- switch(species,
+                      "Dm" = STRINGdb$new(version = "10", species = 7227, score_threshold = score_cutoff, input_directory = ""),
+                      "Mm" = STRINGdb$new(version = "10", species = 1090, score_threshold = score_cutoff, input_directory = ""))
+  V <- data.table(symbol= symbols,
+                   size, 
+                   color= col,
+                   cex.label)
+  V <- as.data.table(string_db$map(V, "symbol", removeUnmappedRows = TRUE))
+  net <- string_db$get_subnetwork(V$STRING_id)
   
-  # Get interaction
-  res <- DB[protein1_symbol %in% symbols & protein2_symbol %in% symbols]
+  E <- igraph::as_data_frame(net, what= "edges")
+  E <- as.data.table(E)
+  E <- E[, .(from, to, width= combined_score/999*3)] 
+  E[V, from:= symbol, on= "from==STRING_id"]
+  E[V, to:= symbol, on= "to==STRING_id"]
   
-  # Vertices
-  V <- data.table(name= symbols,
-                  size, 
-                  color= col,
-                  cex.label)
-  
-  # Final obj
-  obj <- list(symbols= symbols,
-              interactions= res,
-              vertices= V)
-  class(obj) <- c("vl_STRING", "list")
-  
-  # Print info
-  check <- 100-sum(symbols %in% c(DB$protein1_symbol, DB$protein2_symbol))/length(unique(symbols))*100
-  print(paste0(check, "% of symbols have no correpondance in DB"))
+  # igraph
+  .g <- igraph::graph_from_data_frame(d = E, 
+                                      vertices = V,
+                                      directed = F)
   
   # PLOT
   if(plot)
-    plot(obj,
-         score_cutoff= score_cutoff,
-         top_N= top_N,
-         col= col,
-         size= size,
-         cex.label= cex.label)
+    plot(.g, 
+         vertex.label.cex= vertices$cex.label, 
+         vertex.frame.color= NA)
   
-  invisible(obj)
-}
-
-#' @describeIn vl_STRING_interaction Method to plot STRING interaction igraphs
-#' @export
-plot.vl_STRING <- function(obj,
-                           score_cutoff= 900,
-                           top_N= NA,
-                           col,
-                           size,
-                           cex.label)
-{
-  list2env(obj, environment())
   
-  # Checks and cutoffs
-  if(!is.na(score_cutoff))
-    interactions <- interactions[combined_score>=score_cutoff]
-  if(!is.na(top_N))
-    interactions <- interactions[order(combined_score)<=top_N]
-  
-  # Change vertices if new color, size or cex.label specified
-  if(!missing(size))
-    vertices$size <- size
-  if(!missing(col))
-    vertices$color <- col
-  if(!missing(cex.label))
-    vertices$cex.label <- cex.label
-  
-  # Remove vertices with no interactions
-  vertices <- vertices[name %in% interactions[, c(protein1_symbol, protein2_symbol)]]
-  
-  # Make Edges object
-  E <- interactions[, .(from= protein1_symbol,
-                        to= protein2_symbol,
-                        width= combined_score/999*3)]
-  # igraph
-  .g <- igraph::graph_from_data_frame(d = E, 
-                                      vertices = vertices,
-                                      directed = F)
-  plot(.g, 
-       vertex.label.cex= vertices$cex.label, 
-       vertex.frame.color= NA)
+  invisible(.g)
 }

@@ -5,16 +5,18 @@
 \title{GO analysis}
 \usage{
 vl_GO_enrich(
-  geneSet_IDs,
+  geneIDs,
   geneUniverse_IDs = NULL,
   species,
   plot = T,
   padj_cutoff = 0.05,
-  top_enrich = Inf
+  top_enrich = Inf,
+  auto_margins = T,
+  ...
 )
 }
 \arguments{
-\item{geneSet_IDs}{A vector of FBgn IDs}
+\item{geneIDs}{A vector (barplot) of a list (clusters) of gene IDs}
 
 \item{geneUniverse_IDs}{Vector of FBgn IDs to which the analysis will be restricted. If NULL, uses all genes.}
 
@@ -25,6 +27,8 @@ vl_GO_enrich(
 \item{padj_cutoff}{cutoff for plotting}
 
 \item{top_enrich}{Show only n top enriched motifs}
+
+\item{...}{Extra arguments for cl plotting method. see ?plot.vl_enr_cl}
 }
 \description{
 This function compute GO enrichment in a group of genes
@@ -35,5 +39,5 @@ Hox <- vl_genes_set[GO=="HOX_genes", FBgn]
 par(mar= c(4,20,2,6))
 vl_GO_enrich(RpL, species= "Dm")
 vl_GO_enrich(Hox, species= "Dm")
-vl_GO_enrich(RpL, Hox, species= "Dm")
+vl_GO_clusters(list(RpL, Hox), species= "Dm", auto_margins = F, cex.balloons = 0.3, padj_cutoff= 1e-5, top_enrich = 20)
 }
