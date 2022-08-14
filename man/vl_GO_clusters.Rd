@@ -6,11 +6,10 @@
 \usage{
 vl_GO_clusters(
   FBgn_list,
-  go_object = vl_Dmel_GO_FB2020_05,
-  FBgn_universe = "all",
-  go_type = "all",
+  geneUniverse_IDs = NULL,
+  species,
   plot = T,
-  padj_cutoff = 1e-05,
+  padj_cutoff = 0.05,
   log2OR_cutoff = 0,
   top_enrich = Inf,
   x_breaks,
@@ -22,11 +21,11 @@ vl_GO_clusters(
 )
 }
 \arguments{
-\item{FBgn_list}{A nameds list of FBgn IDs (1 sublist/cluster)}
+\item{FBgn_list}{A named list of FBgn IDs (1 sublist/cluster)}
 
-\item{go_object}{object containing GO data. see ?vl_fb_go_table_dm6_FB2020_05}
+\item{geneUniverse_IDs}{Vector of FBgns to be used in the universe, typically all the genes tested with DESeq. If NULL, uses all genes.}
 
-\item{go_type}{The type of go to be considered. Default "all" means "biological_process" AND "cellular_component" AND "molecular_function".}
+\item{species}{Chose between "Dm" and "Mm"}
 
 \item{plot}{Should the result be plot using balloons plot?}
 
@@ -47,8 +46,6 @@ vl_GO_clusters(
 \item{main}{Title. Default= NA}
 
 \item{auto_margins}{Use auto margins? Default= T}
-
-\item{all_FBgns}{Vector of FBgns to be used in the universe, typically all the genes tested with DESeq. Default= "all" FBgns present in go_object.}
 }
 \description{
 This function compares GO enrichments for several groups
@@ -56,5 +53,5 @@ This function compares GO enrichments for several groups
 \examples{
 FBgn_list <- split(vl_genes_set$FBgn, vl_genes_set$GO)
 par(mar= c(5,25,2,5), las= 1)
-vl_GO_clusters(FBgn_list, auto_margins = F, cex.balloons = 0.3)
+vl_GO_clusters(FBgn_list, species= "Dm", auto_margins = F, cex.balloons = 0.3, padj_cutoff= 1e-5, top_enrich = 20)
 }
