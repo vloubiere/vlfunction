@@ -8,14 +8,13 @@
 #' @param plot Plot result?
 #' @param padj_cutoff cutoff for plotting
 #' @param top_enrich Show only n top enriched motifs
-#' @param ... Extra arguments for cl plotting method. see ?plot.vl_enr_cl
 #' @examples
 #' RpL <- vl_genes_set[GO=="RpL_genes", FBgn]
 #' Hox <- vl_genes_set[GO=="HOX_genes", FBgn]
 #' par(mar= c(4,20,2,6))
 #' vl_GO_enrich(RpL, species= "Dm")
 #' vl_GO_enrich(Hox, species= "Dm")
-#' vl_GO_clusters(list(RpL, Hox), species= "Dm", auto_margins = F, cex.balloons = 0.3, padj_cutoff= 1e-5, top_enrich = 20)
+#' vl_GO_enrich(list(RpL, Hox), species= "Dm", auto_margins = F, cex.balloons = 0.3, padj_cutoff= 1e-5, top_enrich = 20)
 #' @export
 vl_GO_enrich <- function(geneIDs,
                          geneUniverse_IDs= NULL,
@@ -23,8 +22,7 @@ vl_GO_enrich <- function(geneIDs,
                          plot= T,
                          padj_cutoff= 0.05,
                          top_enrich= Inf,
-                         auto_margins = T, 
-                         ...)
+                         auto_margins = T)
 {
   db <- switch(species,
                "Dm"= org.Dm.eg.db::org.Dm.eg.db,
@@ -43,6 +41,8 @@ vl_GO_enrich <- function(geneIDs,
   setnames(set, 
            c(keyType, "GOALL"), 
            c("ID", "GO"))
+  set <- unique(set[, .(ID, GO)]) # GOs IDs are reported for each evidence type
+  set <- na.omit(set)
   uni <- AnnotationDbi::select(x= db,
                                keys = unique(set$GO), # Only GOs from test set are relevant!
                                keytype= "GOALL", 
@@ -51,6 +51,7 @@ vl_GO_enrich <- function(geneIDs,
   setnames(uni, 
            c(keyType, "GOALL"),
            c("ID", "GO"))
+  uni <- unique(uni[, .(ID, GO)]) # GOs IDs are reported for each evidence type
   if(!is.null(geneUniverse_IDs))
     uni <- uni[ID %chin% geneUniverse_IDs]
   ###############################
@@ -98,6 +99,7 @@ vl_GO_enrich <- function(geneIDs,
   res[, padj:= p.adjust(p.value, method = "fdr"), cl]
   res$estimate <- NULL
   res$p.value <- NULL
+  res <- na.omit(res)
   setorderv(res, c("cl", "log2OR"))
 
   ###############################
@@ -110,8 +112,7 @@ vl_GO_enrich <- function(geneIDs,
       plot(res,
            padj_cutoff= padj_cutoff,
            top_enrich= top_enrich,
-           auto_margins = auto_margins, 
-           ...)
+           auto_margins= auto_margins)
   }else{
     setattr(res, "class", c("vl_enr", "data.table", "data.frame"))
     if(plot)

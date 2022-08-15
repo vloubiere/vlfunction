@@ -2,18 +2,21 @@
 % Please edit documentation in R/STRINGtools.R
 \name{vl_STRING_interaction}
 \alias{vl_STRING_interaction}
+\alias{plot.vl_STRING}
 \title{get STRING intrations DT}
 \usage{
 vl_STRING_interaction(
   symbols,
   species,
   plot = T,
-  score_cutoff = 900,
-  top_N = NA,
+  score_cutoff = 400,
+  top_N = Inf,
   col = "tomato",
   size = 10,
   cex.label = 1
 )
+
+plot.vl_STRING(obj, score_cutoff = 400, top_N = Inf)
 }
 \arguments{
 \item{symbols}{vector of Dmel gene symbols}
@@ -38,6 +41,11 @@ An igraph network
 \description{
 Extract interactions form STRIN db (Dmel only for now)
 }
+\section{Functions}{
+\itemize{
+\item \code{plot.vl_STRING}: Method to plot STRING interaction igraphs
+}}
+
 \examples{
 #USAGE
 symbols <- c("Pc", "Psc", "E(z)", "RpL10", "RpL11", "RpL12")

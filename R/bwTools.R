@@ -121,6 +121,57 @@ vl_bw_coverage_bins <- function(bed,
   return(obj)
 }
 
+#' Merge several bigwig files into 1
+#' 
+#' Convenience function to merge directly into r
+#'
+#' @param bw A character vector containing the path of bw files to be merged
+#' @param output Output bw file path
+#' @param genome BSgenome. "dm3", "dm6", "mm10"
+#' @param scoreFUN A function to be applied to the score column before return
+#' @export
+vl_bw_merge <- function(tracks, output, genome, scoreFUN= NULL)
+{
+  bw <- as.data.table(rtracklayer::import(tracks[1]))
+  print(tracks[1])
+  
+  for(track in tracks[-1])
+  {
+    # Import bw2 and merge with bw
+    .c <- as.data.table(rtracklayer::import(track))
+    bw <- bw[.c, .(seqnames, x.start, x.end, i.start, i.end, i.score, x.score), on= c("seqnames", "start<=end", "end>=start")]
+    # Fix bw2 regions that don't exist in bw
+    bw[is.na(x.start), c("x.start", "x.end", "x.score"):= .(i.start, i.end, i.score)]
+    # Compute start coordinates ("else"= bw bin matches several bw2 bins -> take bw2 coor except for the first)
+    bw[, start:= {
+      if(.N==1)
+        x.start else
+          c(x.start, i.start[-1])
+    }, .(seqnames, x.start, x.end)]
+    # Compute end coordinates ("else"= bw bin matches several bw2 bins -> take bw2 coor except for the last)
+    bw[, end:= {
+      if(.N==1)
+        x.end else
+          c(i.end[-(.N)], x.end)
+    }, .(seqnames, x.start, x.end)]
+    # sum scores
+    bw[, score:= rowSums(.SD), .SDcol= c("i.score", "x.score")]
+    bw <- bw[, .(seqnames, start, end, score)]
+    print(track)
+  }
+  # Apply function to score if specified
+  if(!is.null(scoreFUN))
+    bw[, score:= scoreFUN(score)]
+  # Format GRanges
+  .g <- GenomicRanges::GRanges(bw)
+  BS <- getBSgenome(genome)
+  GenomeInfoDb::seqlevels(.g) <- GenomeInfoDb::seqlevels(BS)
+  GenomeInfoDb::seqlengths(.g) <- GenomeInfoDb::seqlengths(BS)
+  # save
+  rtracklayer::export.bw(.g, 
+                         con= output)
+}
+
 #' bw Average tracks
 #'
 #' Plots average tracks for a set bw files around (potentially) several sets of peaks

@@ -10,11 +10,14 @@ vl_screenshot(
   highlight_bed = NULL,
   col = "black",
   highlight_col = "lightgrey",
+  bg_col = "white",
   space = 30,
   widths = c(100L, 20L),
   names = NULL,
-  max = NULL,
-  genome
+  min = 0,
+  max = as.numeric(NA),
+  genome,
+  add = F
 )
 }
 \arguments{
@@ -34,9 +37,13 @@ vl_screenshot(
 
 \item{names}{names for bw/bed files}
 
-\item{max}{Max value for bw tracks}
+\item{min}{Min value for tracks. default to 0! (Setting to NA will compute min internally)}
+
+\item{max}{Max value for tracks (will be internally reset to 1 for non-bw files)}
 
 \item{genome}{Genome used to plot transcripts. Available: "dm3", "dm6", "mm10"}
+
+\item{add}{Should only the tracks be added on top of existing plot? default= F}
 }
 \description{
 Simplified version. less options, faster

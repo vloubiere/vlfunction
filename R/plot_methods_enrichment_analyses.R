@@ -116,7 +116,7 @@ plot.vl_enr_cl <- function(obj,
   pl$balloon_size_legend <- "OR (log2)"
   pl$balloon_col_legend <- "padj (-log10)"
   pl[[1]] <- quote(vl_balloons_plot)
-  eval(pl)
+  eval(pl, envir = parent.frame())
   
   invisible(list(x= x,
                  color_var= color_var))

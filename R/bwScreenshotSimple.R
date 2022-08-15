@@ -7,9 +7,11 @@
 #' @param highlight_bed Regions to be highlighted
 #' @param col Track colors
 #' @param highlight_col Color used for highlighted region
-#' @param max Max value for bw tracks 
+#' @param min Min value for tracks. default to 0! (Setting to NA will compute min internally)
+#' @param max Max value for tracks (will be internally reset to 1 for non-bw files)
 #' @param names names for bw/bed files
 #' @param genome Genome used to plot transcripts. Available: "dm3", "dm6", "mm10"
+#' @param add Should only the tracks be added on top of existing plot? default= F
 #'
 #' @examples
 #' regions <- data.table(seqnames= "chr3R",
@@ -39,11 +41,14 @@ vl_screenshot <- function(bed,
                           highlight_bed= NULL,
                           col= "black",
                           highlight_col= "lightgrey",
+                          bg_col= "white",
                           space= 30,
                           widths= c(100L, 20L),
                           names= NULL,
-                          max= NULL,
-                          genome)
+                          min= 0,
+                          max= as.numeric(NA),
+                          genome,
+                          add= F)
 {
   if(!vl_isDTranges(bed))
     bed <- vl_importBed(bed)
@@ -62,7 +67,7 @@ vl_screenshot <- function(bed,
   #----------------------------------#
   # Compute object
   #----------------------------------#
-  # Binning
+  # Binning and bg color
   bins <- bed[, {
     coor <- round(seq(start, 
                       end, 
@@ -74,36 +79,33 @@ vl_screenshot <- function(bed,
     res[-1, start:= start+1]
   }, .(seqnames, 
        regionID= rleid(seqnames, start, end))]
+  bins[, bg:= bg_col]
+  if(!is.null(highlight_bed))
+    bins[vl_covBed(bins, highlight_bed)>0, bg:= highlight_col]
   # Init obj
   obj <- data.table(file= tracks,
                     name= names,
                     type= ifelse(grepl(".bw", tracks), "bw", "bed"),
-                    col= col)
+                    col= col,
+                    min= min,
+                    max= max)
   # Quantif signal
   obj <- obj[, {
     bins[, value:= as.numeric(switch(type,
                                      "bw"= vl_bw_coverage(bins, file),
                                      "bed"= vl_covBed(bins, file)>0))]
   }, (obj)]
-  # background col
-  obj[, bg:= "white"]
-  if(!is.null(highlight_bed))
-    obj[vl_covBed(obj, highlight_bed)>0, bg:= highlight_col]
-  # Compute max
-  if(is.null(max))
-    obj[type=="bw", max:= max(value, na.rm= T), name] else if(length(max) == uniqueN(obj[type=="bw"], "name"))
-      obj[type=="bw", max:= max[.GRP], name] else
-        stop("length max should match the length of bw tracks (bed tracks handled automatically!)")
+  # Compute min/max and scale signal
+  obj[type=="bw" & is.na(min), min:= min(value, na.rm= T), name]
+  obj[type=="bw" & is.na(max), max:= max(value, na.rm= T), name]
+  obj[type=="bed", min:= as.numeric(0)]
   obj[type=="bed", max:= as.numeric(1)]
   # Compute x,y pos and color
   obj[, x:= rowid(name)]
-  obj <- obj[, {
-    y <- seq(switch(type, 
-                    "bw"= widths[1], 
-                    "bed"= widths[2]))
-    .(y, 
-      Cc= as.character(ifelse(y>value/max*100, bg, col)))
-  }, .(seqnames, start, end, regionID, x, type, name, max, bg, col)]
+  bw <- rbindlist(lapply(seq(widths[1]), function(x) obj[type=="bw"]), idcol = "y")
+  bed <- rbindlist(lapply(seq(widths[2]), function(x) obj[type=="bed"]), idcol = "y")
+  obj <- rbind(bw, bed)
+  obj[, Cc:= as.character(ifelse(y>(value-min)/(max-min)*100, bg, col))]
   # Borders
   obj[y==1 & Cc==bg & type=="bw" & !is.na(end), Cc:= col] # Full line at the bottom of bw tracks
   obj[(y<=5 | y>=widths[2]-5) & Cc!=bg & type=="bed", Cc:= bg] # Bg lines around bed tracks
@@ -116,41 +118,49 @@ vl_screenshot <- function(bed,
   #----------------------------------#
   im <- dcast(obj, -y~x, value.var = "Cc")
   im <- as.matrix(im, 1)
-  plot.new()
-  plot.window(xlim= c(1, ncol(im)),
-              ylim= c(1, nrow(im)))
+  if(!add)
+  {
+    plot.new()
+    plot.window(xlim= c(1, ncol(im)),
+                ylim= c(1, nrow(im)))
+  }
   rasterImage(im, 
               xleft = 1, 
               xright = ncol(im),
               ybottom = 1, 
               ytop = nrow(im))
   # Labels
-  obj[, `:=`(lab.y= mean(y),
-             lab.cex= switch(type,
-                             "bw"= 1,
-                             "bed"= (widths[2]-5)/strheight("M", "user")),
-             max.y= max(y)-strheight(max, cex= 0.5),
-             max.val= formatC(max, format= "g")), .(name, type, max)]
-  obj[, {
-    text(0,
-         lab.y[1],
-         name[1],
-         pos= 2,
-         xpd= T,
-         cex= ifelse(lab.cex<1, lab.cex, 1)) #Adjust size of peak tracks
-    if(type=="bw")
+  if(!add)
+  {
+    labs <- obj[, .(lab.y= mean(y),
+                    lab.cex= switch(type,
+                                    "bw"= 1,
+                                    "bed"= (widths[2]-5)/strheight("M", "user")),
+                    max.y= max(y)-strheight(max, cex= 0.5),
+                    max.val= formatC(max, format= "g"),
+                    min.y= min(y)+strheight(min, cex= 0.5),
+                    min.val= formatC(min, format= "g")), .(name, type, max, min)]
+    labs[, {
       text(0,
-           max.y[1],
-           max.val[1],
+           lab.y[1],
+           name[1],
            pos= 2,
            xpd= T,
-           cex= 0.5)
-  }, .(name, type, lab.y, lab.cex, max.y, max.val)]
-  
+           cex= ifelse(lab.cex<1, lab.cex, 1)) #Adjust size of peak tracks
+      if(type=="bw")
+        text(0,
+             c(max.y, min.y),
+             c(max.val, min.val),
+             pos= 2,
+             xpd= T,
+             cex= 0.5)
+    }, (labs)]
+  }
+
   #--------------------------#
   # Transcripts
   #--------------------------#
-  if(!missing(genome))
+  if(!missing(genome) & !add)
   {
     annotation <- switch(genome, 
                          "dm3"= list(TxDb= TxDb.Dmelanogaster.UCSC.dm3.ensGene::TxDb.Dmelanogaster.UCSC.dm3.ensGene,
