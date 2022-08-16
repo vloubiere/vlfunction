@@ -104,12 +104,13 @@ vl_heatmap.matrix <- function(x,
   #------------------------####
   # Init informative result DT
   #------------------------####
-  rows <- data.table(name= rownames(x), 
-                     order= seq(nrow(x)),
+  rows <- data.table(name= rownames(x),
                      cl= row_clusters)
-  cols <- data.table(name= colnames(x), 
-                     order= seq(ncol(x)),
+  rows[, order:= order(row_clusters)]
+  cols <- data.table(name= colnames(x),
                      cl= col_clusters)
+  cols[, order:= order(col_clusters)]
+  
   rcl <- NULL
   rdend <- NULL
   ccl <- NULL
