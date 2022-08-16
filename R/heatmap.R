@@ -106,10 +106,10 @@ vl_heatmap.matrix <- function(x,
   #------------------------####
   rows <- data.table(name= rownames(x),
                      cl= row_clusters)
-  rows[, order:= order(row_clusters)]
+  rows[, order:= order(cl)]
   cols <- data.table(name= colnames(x),
                      cl= col_clusters)
-  cols[, order:= order(col_clusters)]
+  cols[, order:= order(cl)]
   
   rcl <- NULL
   rdend <- NULL
