@@ -12,8 +12,10 @@ vl_heatmap(x, ...)
   rownames.value = NULL, ...)
 
 \method{vl_heatmap}{matrix}(x, cluster_rows = T, row_clusters = 1,
+  row_clusters_col = grDevices::gray.colors(length(unique(row_clusters))),
   kmeans_k = NA, clustering_distance_rows = "euclidean",
   cutree_rows = 1, cluster_cols = T, col_clusters = 1,
+  col_clusters_col = grDevices::gray.colors(length(unique(col_clusters))),
   clustering_distance_cols = "euclidean", cutree_cols = 1,
   clustering_method = "complete", plot = T, auto_margins = T,
   breaks = seq(min(x, na.rm = T), max(x, na.rm = T), length.out =
@@ -24,7 +26,7 @@ vl_heatmap(x, ...)
   show_col_clusters = length(unique(cols$cl)) > 1,
   show_row_dendrogram = T, show_col_dendrogram = T, show_legend = T,
   display_numbers = F, display_numbers_matrix = x,
-  display_numbers_cex = 0.5)
+  display_numbers_cex = 1)
 }
 \arguments{
 \item{x}{Data to plot. Can be one of matrix, data.table, or formula.}
@@ -32,6 +34,8 @@ vl_heatmap(x, ...)
 \item{cluster_rows}{Should rows be clustered? Default= T}
 
 \item{row_clusters}{Vector of row clusters (overwritten by clustering, Default= 1)}
+
+\item{row_clusters_col}{Row clusters colors (default is to use grey palette)}
 
 \item{kmeans_k}{Number of row kmean clusters. If specified, takes over row clustering.}
 
@@ -42,6 +46,8 @@ vl_heatmap(x, ...)
 \item{cluster_cols}{Should columns be clustered? Default= T}
 
 \item{col_clusters}{Vector of col clusters (overwritten by clustering, Default= 1)}
+
+\item{col_clusters_col}{Col clusters colors (default is to use grey palette)}
 
 \item{clustering_distance_cols}{Method for clustering distance cols. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"}
 

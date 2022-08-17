@@ -5,11 +5,13 @@
 #' @param x Data to plot. Can be one of matrix, data.table, or formula.
 #' @param cluster_rows Should rows be clustered? Default= T
 #' @param row_clusters Vector of row clusters (overwritten by clustering, Default= 1)
+#' @param row_clusters_col Row clusters colors (default is to use grey palette)
 #' @param kmeans_k Number of row kmean clusters. If specified, takes over row clustering.
 #' @param clustering_distance_rows Method for clustering distance rows. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"
 #' @param cutree_rows Number of cuts for rows tree. Default= 1L
 #' @param cluster_cols Should columns be clustered? Default= T
 #' @param col_clusters Vector of col clusters (overwritten by clustering, Default= 1)
+#' @param col_clusters_col Col clusters colors (default is to use grey palette)
 #' @param clustering_distance_cols Method for clustering distance cols. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"
 #' @param cutree_cols  Number of cuts for cols tree. default= 1L
 #' @param clustering_method Clustering method to use. Must be one of "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median" or "centroid".
@@ -66,11 +68,13 @@ vl_heatmap.data.table <- function(x,
 vl_heatmap.matrix <- function(x,
                               cluster_rows= T,
                               row_clusters= 1,
+                              row_clusters_col= grDevices::gray.colors(length(unique(row_clusters))),
                               kmeans_k= NA,
                               clustering_distance_rows= "euclidean",
                               cutree_rows = 1,
                               cluster_cols = T,
                               col_clusters= 1,
+                              col_clusters_col= grDevices::gray.colors(length(unique(col_clusters))),
                               clustering_distance_cols = "euclidean",
                               cutree_cols = 1,
                               clustering_method = "complete",
@@ -148,7 +152,7 @@ vl_heatmap.matrix <- function(x,
     }
   }
   # Add cluster color and y pos
-  rows[(order), col:= grDevices::gray.colors(.NGRP)[cl], cl]
+  rows[, col:= row_clusters_col[cl]]
   rows[(order), y:= rev(.I)]
   
   #------------------------####
@@ -174,8 +178,8 @@ vl_heatmap.matrix <- function(x,
                             cdend <- data.table::as.data.table(dend$segments)
   }
   # Add cluster color and x pos
+  cols[, col:= col_clusters_col[cl]]
   cols[(order), x:= .I]
-  cols[(order), col:= grDevices::gray.colors(.NGRP)[cl], cl]
   
   #------------------------####
   # PLOT
