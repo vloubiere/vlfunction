@@ -6,13 +6,14 @@
 \alias{plot.vl_enr_cl}
 \title{Compute motif enrichment}
 \usage{
-vl_motif_cl_enrich(counts_matrix, cl_IDs, control_cl = unique(cl_IDs),
-  plot = T, padj_cutoff = 1e-05, log2OR_cutoff = 0,
+vl_motif_cl_enrich(counts_matrix, cl_IDs,
+  collapse_clusters = vl_Dmel_motifs_DB_full[, .(motif, motif_cluster)],
+  control_cl = unique(cl_IDs), plot = T, padj_cutoff = 1e-05,
   top_enrich = Inf, x_breaks, color_breaks, cex.balloons = 1,
   col = c("cornflowerblue", "lightgrey", "tomato"), main = NA,
   auto_margins = T)
 
-plot.vl_enr_cl(obj, x_breaks, padj_cutoff = 0.05, log2OR_cutoff = 0,
+\method{plot}{vl_enr_cl}(obj, x_breaks, padj_cutoff = 0.05,
   top_enrich = Inf, color_breaks, cex.balloons = 1,
   col = c("cornflowerblue", "lightgrey", "tomato"), main = NA,
   auto_margins = T)
@@ -20,15 +21,14 @@ plot.vl_enr_cl(obj, x_breaks, padj_cutoff = 0.05, log2OR_cutoff = 0,
 \arguments{
 \item{counts_matrix}{A matrix containing motif counts (rows= sequences, cols= motifs)}
 
-\item{cl_IDs}{vector of cluster IDs (used to split the data.table)}
+\item{cl_IDs}{vector of cluster IDs (used to split the data.table)
+#' @param collapse_clusters A data.table containing two columns: "motif" (matching colnames(counts)) and "motif_cluster" with clusters to use for collapsing. If set to null, no collapsing. Default= vl_Dmel_motifs_DB_full[, .(motif, motif_cluster)]}
 
 \item{control_cl}{IDs of clusters to be used as background. default to unique(cl_IDs), meaning all clusters are used except the one being tested}
 
 \item{plot}{Should the result be plot using balloons plot?}
 
-\item{padj_cutoff}{cutoff for ballons to be ploted}
-
-\item{log2OR_cutoff}{cutoff for ballons to be ploted}
+\item{padj_cutoff}{cutoff for ballons to be plotted}
 
 \item{top_enrich}{Select top enriched motifs/cluster}
 
@@ -48,9 +48,9 @@ Fisher test data.table.
 \description{
 Compute motif enrichment for the cluster in cl_columns, using all the lines as background
 }
-\section{Functions}{
+\section{Methods (by generic)}{
 \itemize{
-\item \code{plot.vl_enr_cl}: method to plot cluster enrichment objects (containing variable, log2OR and padj)
+\item \code{plot}: method to plot cluster enrichment objects (containing variable, log2OR and padj)
 }}
 
 \examples{

@@ -16,35 +16,29 @@ plot.vl_enr <- function(obj,
                         ...)
 {
   DT <- data.table::copy(obj)
-  DT[, `-log10(padj)`:= -log10(padj)]
-  # padj and min set counts cutoff
-  DT <- na.omit(DT[padj<=padj_cutoff])
   # Handle infinite
-  if(any(DT$log2OR==Inf))
-    if(any(DT$log2OR>0 & DT$log2OR<Inf))
-    {
-      warning("Inf log2OR values capped to max finite log2OR")
-      DT[log2OR==Inf, log2OR:= max(DT[is.finite(log2OR), log2OR])]
-    }else
-      stop("all(log2OR[log2OR>0]==Inf) -> could not be capped")
-  if(any(DT$log2OR==(-Inf)))
-    if(any(DT$log2OR<0 & DT$log2OR>(-Inf)))
-    {
-      warning("-Inf log2OR values capped to min finite log2OR")
-      DT[log2OR==(-Inf), log2OR:= min(DT[is.finite(log2OR), log2OR])]
-    }else
-      stop("all(log2OR[log2OR<0]==(-Inf)) -> could not be capped")
+  if(any(!is.finite(DT$log2OR)))
+  {
+    warning("Non finite log2OR values capped to max finite log2OR")
+    DT[log2OR==Inf, log2OR:= max(DT[is.finite(log2OR), log2OR])]
+    DT[log2OR==(-Inf), log2OR:= min(DT[is.finite(log2OR), log2OR])]
+  }
+  # padj cutoff
+  DT <- na.omit(DT[padj<=padj_cutoff])
   # select top_enrich
-  DT[, rank:= order(`-log10(padj)`, decreasing = T)]
-  DT <- DT[rank<=top_enrich]
-  # Ploting
-  breaks <- range(DT$`-log10(padj)`, na.rm= T)
+  setorderv(DT, "padj")
+  DT <- DT[seq(nrow(DT))<=top_enrich]
+  if(nrow(DT)==0)
+    stop("No enrichment found with current cutoffs!")
+  # Plot
+  breaks <- range(-log10(DT$padj), na.rm= T)
   Cc <- circlize::colorRamp2(breaks, col)
+  setorderv(DT, "log2OR")
   DT[, bar:= barplot(log2OR,
                      horiz= T,
                      names= variable,
                      border= NA,
-                     col= Cc(`-log10(padj)`),
+                     col= Cc(-log10(padj)),
                      las= 1,
                      xlab= xlab,
                      ...)]
@@ -61,7 +55,6 @@ plot.vl_enr <- function(obj,
 plot.vl_enr_cl <- function(obj,
                            x_breaks,
                            padj_cutoff= 0.05,
-                           log2OR_cutoff= 0,
                            top_enrich= Inf,
                            color_breaks,
                            cex.balloons= 1,
@@ -70,46 +63,31 @@ plot.vl_enr_cl <- function(obj,
                            auto_margins = T)
 {
   DT <- data.table::copy(obj)
-  if(log2OR_cutoff<0)
-    stop("log2OR_cutoff should be >= 0")
-  DT[, `-log10(padj)`:= -log10(padj)]
-  # Apply cutoffs
-  sel <- DT[padj <= padj_cutoff & log2OR > log2OR_cutoff, variable]
-  DT <- na.omit(DT[variable %in% sel & log2OR>0])
-  if(nrow(DT)==0)
-    stop("No enrichment found with provided padj cutoff!")
-  
-  #----------------------------------#
-  # Generate plot table
-  #----------------------------------#
   # Handle infinite
-  if(any(DT$log2OR==Inf))
-    if(any(DT$log2OR>0 & DT$log2OR<Inf))
-    {
-      warning("Inf log2OR values capped to max finite log2OR")
-      DT[log2OR==Inf, log2OR:= max(DT[is.finite(log2OR), log2OR])]
-    }else
-      stop("all(log2OR[log2OR>0]==Inf) -> could not be capped")
-  # Order and select top variable/cluster
-  setorderv(DT, 
-            c("cl", "-log10(padj)", "log2OR", "variable"), 
-            order = c(1, -1, -1, 1))
-  DT[, rank:= rowid(cl)]
-  DT <- DT[variable %in% DT[rank<=top_enrich, variable]]
-  # Remove values that were useful for earlier ordering but do not meet minimum criteria
-  DT <- DT[padj<0.05]
+  if(any(!is.finite(DT$log2OR)))
+  {
+    warning("Non finite log2OR values capped to max finite log2OR")
+    DT[log2OR==Inf, log2OR:= max(DT[is.finite(log2OR), log2OR])]
+    DT[log2OR==(-Inf), log2OR:= min(DT[is.finite(log2OR), log2OR])]
+  }
+  # Apply cutoffs
+  sel <- DT[padj <= padj_cutoff & log2OR > 0, variable] # Pass padj cutoff in at least one cluster
+  DT <- na.omit(DT[variable %in% sel & padj<0.05 & log2OR>0]) # Keep only significant instances
+  if(nrow(DT)==0)
+    stop("No enrichment found with current cutoffs!")
+  # select top_enrich
+  setorderv(DT, c("cl", "padj"))
+  DT <- DT[rowid(DT$cl)<=top_enrich]
+  # dcast before plotting
   DT[, variable:= factor(variable, levels= unique(DT$variable))]
-  
-  #-----------------------------#
-  # PLOT
-  #-----------------------------#
   x <- dcast(DT, variable~cl, value.var = "log2OR", drop= F)
   x <- as.matrix(x, 1)
-  color_var <- dcast(DT, variable~cl, value.var = "-log10(padj)", drop= F)
+  color_var <- dcast(DT, variable~cl, value.var = "padj", drop= F)
   color_var <- as.matrix(color_var, 1)
-  
+  color_var <- -log10(color_var)
+  # Plot
   pl <- match.call()
-  pl$obj <- pl$padj_cutoff <- pl$log2OR_cutoff <- pl$top_enrich <- NULL
+  pl$obj <- pl$padj_cutoff <- pl$top_enrich <- NULL
   pl$x <- x
   pl$color_var <- color_var
   pl$cex.balloons <- cex.balloons

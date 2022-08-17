@@ -70,6 +70,7 @@ vl_motif_counts.character <- function(sequences= NULL,
 #'
 #' @param counts matrix of counts for the regions of interest
 #' @param control_counts matrix of counts for control regions
+#' @param collapse_clusters A data.table containing two columns: "motif" (matching colnames(counts)) and "motif_cluster" with clusters to use for collapsing. If set to null, no collapsing. Default= vl_Dmel_motifs_DB_full[, .(motif, motif_cluster)]
 #' @param plot Plot result?
 #' @param padj_cutoff cutoff for plotting
 #' @param top_enrich Show only n top enriched motifs
@@ -86,6 +87,7 @@ vl_motif_counts.character <- function(sequences= NULL,
 #' @export
 vl_motif_enrich <- function(counts,
                             control_counts,
+                            collapse_clusters= vl_Dmel_motifs_DB_full[, .(motif, motif_cluster)],
                             plot= T,
                             padj_cutoff= 0.05,
                             top_enrich= Inf)
@@ -104,26 +106,36 @@ vl_motif_enrich <- function(counts,
   # Test enrichment
   res <- obj[, {
     # Contingency table 
-    x <- factor(.id=="set", levels = c(T, F))
-    y <- factor(value>0, levels = c(T, F))
-    tab <- table(x, y)
+    set <- factor(.id=="set", levels = c(T, F))
+    motif <- factor(value>0, levels = c(T, F))
+    tab <- table(set, motif)
     # Check contingency table -> Fisher
     res <- fisher.test(tab)
     .(OR= res$estimate,
       pval= res$p.value,
-      set_hit= sum(.id=="set" & value>0),
-      set_total= sum(.id=="set"),
-      ctl_hit= sum(.id=="control" & value>0),
-      ctl_total= sum(.id=="control"))
+      set_hit= tab[1,1],
+      set_total= sum(tab[1,]),
+      ctl_hit= tab[2,1],
+      ctl_total= sum(tab[2,]))
   }, variable]
   
   # padj...
   res[, padj:= p.adjust(pval, method = "fdr"), pval]
   res[, log2OR:= log2(OR)]
   res$OR <- NULL
+  
+  # Collapsing
+  if(!is.null(collapse_clusters))
+  {
+    if(!all(res$variable %in% collapse_clusters$motif))
+      message("Some motifs could not be matched with collapsed_clusters")
+    res[collapse_clusters, variable:= i.motif_cluster, on= "variable==motif"]
+    res <- res[, .SD[which.min(padj)], variable]
+  }
+  
+  # Order and save
   setcolorder(res,
               c("variable", "log2OR", "pval", "padj"))
-  setorderv(res, "log2OR")
   setattr(res, "class", c("vl_enr", "data.table", "data.frame"))
   
   if(plot)
@@ -140,10 +152,10 @@ vl_motif_enrich <- function(counts,
 #'
 #' @param counts_matrix A matrix containing motif counts (rows= sequences, cols= motifs)
 #' @param cl_IDs vector of cluster IDs (used to split the data.table)
+#' #' @param collapse_clusters A data.table containing two columns: "motif" (matching colnames(counts)) and "motif_cluster" with clusters to use for collapsing. If set to null, no collapsing. Default= vl_Dmel_motifs_DB_full[, .(motif, motif_cluster)]
 #' @param control_cl IDs of clusters to be used as background. default to unique(cl_IDs), meaning all clusters are used except the one being tested
 #' @param plot Should the result be plot using balloons plot?
-#' @param padj_cutoff cutoff for ballons to be ploted
-#' @param log2OR_cutoff cutoff for ballons to be ploted
+#' @param padj_cutoff cutoff for ballons to be plotted
 #' @param top_enrich Select top enriched motifs/cluster
 #' @param x_breaks Breaks used for ballon's sizes
 #' @param color_breaks Color breaks used for coloring
@@ -184,10 +196,10 @@ vl_motif_enrich <- function(counts,
 #' @export
 vl_motif_cl_enrich <- function(counts_matrix, 
                                cl_IDs,
+                               collapse_clusters= vl_Dmel_motifs_DB_full[, .(motif, motif_cluster)],
                                control_cl= unique(cl_IDs),
                                plot= T,
                                padj_cutoff= 1e-5,
-                               log2OR_cutoff= 0,
                                top_enrich= Inf,
                                x_breaks,
                                color_breaks,
@@ -208,6 +220,7 @@ vl_motif_cl_enrich <- function(counts_matrix,
   {
     vl_motif_enrich(counts = counts_matrix[cl_IDs==cl],
                     control_counts = counts_matrix[cl_IDs!=cl & cl_IDs %in% control_cl],
+                    collapse_clusters= collapse_clusters,
                     plot= F)
   })
   names(res) <- levels(cl_IDs)
