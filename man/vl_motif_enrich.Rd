@@ -55,5 +55,5 @@ ctls_regions <- vl_control_regions_BSgenome(bed= vl_SUHW_top_peaks, "dm3")
 ctl <- vl_motif_counts(ctls_regions, "dm3")
 pl <- vl_motif_enrich(suhw, ctl, plot= F)
 par(mar= c(4,8,4,6))
-plot(pl, top_enrich= 10)
+plot(pl, padj_cutoff= 1e-3)
 }

@@ -15,7 +15,7 @@
 #' ctl <- vl_motif_counts(ctls_regions, "dm3")
 #' pl <- vl_motif_enrich(suhw, ctl, plot= F)
 #' par(mar= c(4,8,4,6))
-#' plot(pl, top_enrich= 10)
+#' plot(pl, padj_cutoff= 1e-3)
 #' @return Matrix of motif counts
 #' @export
 vl_motif_counts <- function(sequences, ...) UseMethod("vl_motif_counts")
@@ -59,9 +59,9 @@ vl_motif_counts.character <- function(sequences= NULL,
                                             p.cutoff= p.cutoff,
                                             bg= "even",
                                             out= "scores")@assays@data[[what]])
-  colnames(res) <- sub$uniqName_noSpecialChar
+  colnames(res) <- sub$motif
   rownames(res) <- names(sequences)
-  return(res)  
+  return(res)
 }
 
 #' Motif enrichment analysis
@@ -81,7 +81,7 @@ vl_motif_counts.character <- function(sequences= NULL,
 #' ctl <- vl_motif_counts(ctls_regions, "dm3")
 #' pl <- vl_motif_enrich(suhw, ctl, plot= F)
 #' par(mar= c(4,8,4,6))
-#' plot(pl, top_enrich= 10)
+#' plot(pl, padj_cutoff= 1e-3)
 #' @return Returns a table of enrichment which can be plot using ?plot.vl_GO_enr
 #' @export
 vl_motif_enrich <- function(counts,
@@ -167,7 +167,7 @@ vl_motif_enrich <- function(counts,
 #' par(las= 1)
 #' plot(enr, padj_cutoff= 1e-5)
 #' 
-#' # Compute enrichment of SUHW & STARR-Seq over random regions
+#' Compute enrichment of SUHW & STARR-Seq over random regions
 #' counts <- vl_motif_counts(rbind(top_SUHW,
 #'                                 top_STARR, 
 #'                                 rdm, fill= T), "dm3")
@@ -179,7 +179,7 @@ vl_motif_enrich <- function(counts,
 #'                           control_cl = "rdm",
 #'                           plot=F)
 #' par(las= 1)
-#' plot(enr, padj_cutoff= 1e-20, top_enrich= 10)
+#' plot(enr, padj_cutoff= 1e-20, top_enrich= 20)
 #' @return Fisher test data.table.
 #' @export
 vl_motif_cl_enrich <- function(counts_matrix, 

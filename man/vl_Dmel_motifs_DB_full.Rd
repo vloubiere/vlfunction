@@ -6,13 +6,15 @@
 \title{Dmel motifs data base}
 \format{An object containing 13899 motifs and related metadata
 \describe{
-  \item{motif}{motif IDs consitent with Bernardo's ones.}
-  \item{motif_name}{Curated Dmel symbols. sep= "/"}
+  \item{motif}{Unique motif names}
+  \item{motif_name}{Motif ID from TF_clusters_PWMs.RData}
   \item{FBgn}{Curated FBgn symbols. sep= "/"}
-  \item{collection}{Motif collection.}
-  \item{Motif_cluster_name}{Cluster names with the respective motif types.}
-  \item{Pwms_log_odds}{PWM expressed as log odds}
-  \item{Pwms_perc}{PWM expressed as percentage}
+  \item{motif_cluster}{Motif cluster from Bernardo Almeida}
+  \item{collection}
+  \item{collection_version}
+  \item{species}{PWM expressed as log odds}
+  \item{pwms_log_odds}{list of PWM matrices}
+  \item{pwms_perc}{list of PWM matrices}
 }}
 \source{
 {"/groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/TF_clusters_PWMs.RData"}
@@ -22,5 +24,20 @@ Can be used with the ?vl_motif_counts() function to count motifs
 }
 \description{
 Contains 13899 motifs usable for motif enrichments in Dmel
+}
+\examples{
+table was generated this way:
+load("/groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/TF_clusters_PWMs.RData")
+vl_Dmel_motifs_DB_full <- data.table(motif= make.unique(TF_clusters_PWMs$metadata$motif_description2),
+motif_ID= TF_clusters_PWMs$metadata$motif_name,
+FBgn= TF_clusters_PWMs$metadata$FBgn,
+motif_cluster= TF_clusters_PWMs$metadata$Motif_cluster_name,
+collection= TF_clusters_PWMs$metadata$X..motif_collection_name,
+collection_version= TF_clusters_PWMs$metadata$motif_collection_version,
+species= TF_clusters_PWMs$metadata$Species)
+vl_Dmel_motifs_DB_full$pwms_log_odds <- as.list(TF_clusters_PWMs$All_pwms_log_odds[match(vl_Dmel_motifs_DB_full$motif_ID, TFBSTools::name(TF_clusters_PWMs$All_pwms_log_odds))])
+vl_Dmel_motifs_DB_full$pwms_perc <- as.list(TF_clusters_PWMs$All_pwms_perc[match(vl_Dmel_motifs_DB_full$motif_ID, TFBSTools::name(TF_clusters_PWMs$All_pwms_perc))])
+save(vl_Dmel_motifs_DB_full, 
+file= "../../vlfunction/data/vl_Dmel_motifs_DB_full.RData")
 }
 \keyword{datasets}

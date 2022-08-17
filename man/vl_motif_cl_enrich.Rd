@@ -70,7 +70,7 @@ enr <- vl_motif_cl_enrich(counts,
 par(las= 1)
 plot(enr, padj_cutoff= 1e-5)
 
-# Compute enrichment of SUHW & STARR-Seq over random regions
+Compute enrichment of SUHW & STARR-Seq over random regions
 counts <- vl_motif_counts(rbind(top_SUHW,
                                 top_STARR, 
                                 rdm, fill= T), "dm3")
@@ -82,5 +82,5 @@ enr <- vl_motif_cl_enrich(counts,
                           control_cl = "rdm",
                           plot=F)
 par(las= 1)
-plot(enr, padj_cutoff= 1e-20, top_enrich= 10)
+plot(enr, padj_cutoff= 1e-20, top_enrich= 20)
 }
