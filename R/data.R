@@ -10,8 +10,8 @@
 #'   \item{motif_name}{Motif ID from TF_clusters_PWMs.RData}
 #'   \item{FBgn}{Curated FBgn symbols. sep= "/"}
 #'   \item{motif_cluster}{Motif cluster from Bernardo Almeida}
-#'   \item{collection}
-#'   \item{collection_version}
+#'   \item{collection}{}
+#'   \item{collection_version}{}
 #'   \item{species}{PWM expressed as log odds}
 #'   \item{pwms_log_odds}{list of PWM matrices}
 #'   \item{pwms_perc}{list of PWM matrices}
@@ -19,7 +19,7 @@
 #' @examples
 #' table was generated this way:
 #' load("/groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/TF_clusters_PWMs.RData")
-#' vl_Dmel_motifs_DB_full <- data.table(motif= make.unique(TF_clusters_PWMs$metadata$motif_description2),
+#' vl_Dmel_motifs_DB_full <- data.table(motif= make.unique(unlist(tstrsplit(TF_clusters_PWMs$metadata$motif_name, "__", keep=2))),
 #' motif_ID= TF_clusters_PWMs$metadata$motif_name,
 #' FBgn= TF_clusters_PWMs$metadata$FBgn,
 #' motif_cluster= TF_clusters_PWMs$metadata$Motif_cluster_name,
