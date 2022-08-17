@@ -330,16 +330,12 @@ plot.vl_heatmap <- function(obj)
     axis(1,
          at= seq(ncol(x)),
          labels = colnames(x),
-         lwd= 0,
-         las= 2,
-         line= -0.5)
+         lwd= 0)
   if(show_rownames)
     axis(2,
          at= seq(nrow(x)),
          labels = rev(rownames(x)),
-         lwd= 0,
-         las= 2,
-         line= -0.5)
+         lwd= 0)
 
   # Plot legend
   if(show_legend)
