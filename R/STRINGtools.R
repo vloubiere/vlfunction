@@ -32,6 +32,8 @@ vl_STRING_interaction <- function(symbols,
                                   size= 10,
                                   cex.label= 1)
 {
+  if(any(size<0) | any(cex.label<0))
+    stop("size and cex.label should all be positive!")
   string_db <- switch(species,
                       "Dm" = STRINGdb::STRINGdb$new(version = "10", species = 7227, score_threshold = 0, input_directory = ""),
                       "Mm" = STRINGdb::STRINGdb$new(version = "10", species = 1090, score_threshold = 0, input_directory = ""))
