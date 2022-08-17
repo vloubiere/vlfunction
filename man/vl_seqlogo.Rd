@@ -4,14 +4,9 @@
 \alias{vl_seqlogo}
 \title{plot seqlogo rasterImage}
 \usage{
-vl_seqlogo(
-  pwm,
-  xleft = par("usr")[1],
-  ytop = par("usr")[4],
-  width = strwidth("M") * ncol(pwm),
-  height = strheight("M") * 4,
-  add = T
-)
+vl_seqlogo(pwm, xleft = par("usr")[1], ytop = par("usr")[4],
+  width = strwidth("M") * ncol(pwm), height = strheight("M") * 4,
+  add = T)
 }
 \arguments{
 \item{pwm}{pwm matrix}

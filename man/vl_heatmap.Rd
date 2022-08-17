@@ -8,38 +8,23 @@
 \usage{
 vl_heatmap(x, ...)
 
-\method{vl_heatmap}{data.table}(x, rownames = NULL, rownames.value = NULL, ...)
+\method{vl_heatmap}{data.table}(x, rownames = NULL,
+  rownames.value = NULL, ...)
 
-\method{vl_heatmap}{matrix}(
-  x,
-  cluster_rows = T,
-  row_clusters = 1,
-  kmeans_k = NA,
-  clustering_distance_rows = "euclidean",
-  cutree_rows = 1,
-  cluster_cols = T,
-  col_clusters = 1,
-  clustering_distance_cols = "euclidean",
-  cutree_cols = 1,
-  clustering_method = "complete",
-  plot = T,
-  auto_margins = T,
-  breaks = seq(min(x, na.rm = T), max(x, na.rm = T), length.out = length(col)),
-  col = c("cornflowerblue", "white", "red"),
-  na_col = "lightgrey",
-  main = NA,
-  legend_title = NA,
-  show_rownames = T,
-  show_colnames = T,
-  show_row_clusters = T,
-  show_col_clusters = T,
-  show_row_dendrogram = T,
-  show_col_dendrogram = T,
-  show_legend = T,
-  display_numbers = F,
-  display_numbers_FUN = function(x) round(x, 2),
-  display_numbers_cex = 0.5
-)
+\method{vl_heatmap}{matrix}(x, cluster_rows = T, row_clusters = 1,
+  kmeans_k = NA, clustering_distance_rows = "euclidean",
+  cutree_rows = 1, cluster_cols = T, col_clusters = 1,
+  clustering_distance_cols = "euclidean", cutree_cols = 1,
+  clustering_method = "complete", plot = T, auto_margins = T,
+  breaks = seq(min(x, na.rm = T), max(x, na.rm = T), length.out =
+  length(col)), col = c("cornflowerblue", "white", "red"),
+  na_col = "lightgrey", main = NA, legend_title = NA,
+  show_rownames = T, show_colnames = T,
+  show_row_clusters = length(unique(rows$cl)) > 1,
+  show_col_clusters = length(unique(cols$cl)) > 1,
+  show_row_dendrogram = T, show_col_dendrogram = T, show_legend = T,
+  display_numbers = F, display_numbers_matrix = x,
+  display_numbers_cex = 0.5)
 }
 \arguments{
 \item{x}{Data to plot. Can be one of matrix, data.table, or formula.}
@@ -94,7 +79,7 @@ vl_heatmap(x, ...)
 
 \item{display_numbers}{Display numbers on heatmap? Default= F}
 
-\item{display_numbers_FUN}{Function to apply before displaying numbers on heatmap.}
+\item{display_numbers_matrix}{Matrix of numbers to be displayed. useful for fine tuning. Default= x}
 
 \item{display_numbers_cex}{cex display numbers}
 }

@@ -28,7 +28,7 @@
 #' @param show_col_dendrogram Plot col dendrogram?
 #' @param show_legend Should the legend be plotted?
 #' @param display_numbers Display numbers on heatmap? Default= F
-#' @param display_numbers_FUN Function to apply before displaying numbers on heatmap.
+#' @param display_numbers_matrix Matrix of numbers to be displayed. useful for fine tuning. Default= x
 #' @param display_numbers_cex cex display numbers 
 #' @examples
 #' # Create test matrix
@@ -89,8 +89,8 @@ vl_heatmap.matrix <- function(x,
                               show_col_dendrogram= T,
                               show_legend= T,
                               display_numbers= F,
-                              display_numbers_FUN= function(x) round(x, 2),
-                              display_numbers_cex= 0.5)
+                              display_numbers_matrix= x,
+                              display_numbers_cex= 1)
 {
   if(is.null(rownames(x)))
     rownames(x) <- seq(nrow(x))
@@ -235,11 +235,13 @@ plot.vl_heatmap <- function(obj)
   
   # Plot numbers
   if(display_numbers)
-    text(c(col(x)),
-         rev(c(row(x))),
-         display_numbers_FUN(c(x)),
-         cex= display_numbers_cex,
-         offset= 0)
+    if(identical(dim(x), dim(display_numbers_matrix)))
+      text(c(col(x)),
+           rev(c(row(x))),
+           c(display_numbers_matrix),
+           cex= display_numbers_cex,
+           offset= 0) else
+             stop("dim(x) and dim(display_numbers_matrix) should be identical!")
 
   #----------------------------------#
   # Margins legends
