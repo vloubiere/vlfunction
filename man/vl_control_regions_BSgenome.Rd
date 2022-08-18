@@ -17,3 +17,6 @@ data.table containing control regions
 \description{
 Generate regions with similar dispersion and widths ditrib than provided bed file
 }
+\examples{
+vl_control_regions_BSgenome(vl_SUHW_top_peaks, "dm3")
+}

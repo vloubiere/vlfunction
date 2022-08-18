@@ -20,3 +20,6 @@ data.table containing randomly sampled regions
 \description{
 Sample random regions from BSgenome
 }
+\examples{
+vl_control_regions_BSgenome("dm3", 100, 1)
+}

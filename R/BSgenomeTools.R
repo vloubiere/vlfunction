@@ -35,6 +35,8 @@ vl_binBSgenome <- function(genome,
 #' @param genome BSgneome object to use. ex: "dm3", "dm6"
 #' @param bed Bed file used to produce similar control
 #' @return data.table containing control regions
+#' @examples 
+#' vl_control_regions_BSgenome(vl_SUHW_top_peaks, "dm3")
 #' @export
 vl_control_regions_BSgenome <- function(bed, genome)
 {
@@ -43,15 +45,13 @@ vl_control_regions_BSgenome <- function(bed, genome)
   # Format
   regions <- data.table::copy(bed)
   regions[, width:= end-start+1]
-  dat <- data.table::as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))))
-  sample <- dat[regions, .(start= width, width= i.width), .EACHI, on= "seqnames"]
+  BS <- data.table::as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))))
+  regions[BS, seqlength:= i.width, on= "seqnames"]
   # Random sampling
-  sample[, start:= sample(start, .N), .(seqnames, start)]
+  regions[, start:= sample(seqlength-width, .N), .(seqlength, width)]
+  regions[, end:= start+width-1]
   # Make sure stays within genome range
-  sample[, start:= start-width+1]
-  sample[start<1, start:= 1]
-  sample[, end:= start+width-1]
-  return(sample[,.(seqnames, start, end)])
+  return(regions)
 }
 
 #' random region 
@@ -62,6 +62,8 @@ vl_control_regions_BSgenome <- function(bed, genome)
 #' @param width Widths of regions to sample (length should either be 1 or equal n)
 #' @param restrict_seqnames If specified, only the provided seqnames will be used
 #' @return data.table containing randomly sampled regions
+#' @examples
+#' vl_control_regions_BSgenome("dm3", 100, 1)
 #' @export
 vl_random_regions_BSgenome <- function(genome,
                                        n,
@@ -69,19 +71,13 @@ vl_random_regions_BSgenome <- function(genome,
                                        restrict_seqnames= NULL)
 {
   # Format
-  dat <- data.table::as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))))
-  if(!is.null(restrict_seqnames))
-    dat <- dat[seqnames %in% restrict_seqnames]
+  regions <- data.table::as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))))
+  setnames(regions, "width", "seqlength")
+  regions <- regions[sample(nrow(regions), n, replace = T, prob = regions$width)]
+  regions[, width:= width]
   # Random sampling
-  dat <- dat[sample(x = seq(nrow(dat)), 
-                    size = n, 
-                    prob = dat$end-dat$start+1, replace= T)]
-  dat$width <- width
-  sample <- dat[, .(seqnames, start= end-width, width)]
-  sample[, start:= sample(start, .N), .(seqnames, start)]
+  regions[, start:= sample(seqlength-width, .N), .(seqlength, width)]
+  regions[, end:= start+width-1]
   # Make sure stays within genome range
-  sample[, start:= start-width+1]
-  sample[start<1, start:= 1]
-  sample[, end:= start+width-1]
-  return(sample[,.(seqnames, start, end)])
+  return(regions)
 }
