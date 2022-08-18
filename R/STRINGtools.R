@@ -57,10 +57,10 @@ vl_STRING_interaction <- function(symbols,
   # Keep only V and E interacting within subgroup
   V <- V[name %in% E[, c(from, to)]]
   E <- E[from %in% V$name & to %in% V$name]
-  setorderv(E, "width", -1)
   
   # igraph
-  obj <- list(V= V, E= E)
+  obj <- list(V= V, 
+              E= E)
   class(obj) <- c("vl_STRING", "list")
   
   # PLOT
@@ -83,6 +83,7 @@ plot.vl_STRING <- function(obj,
   
   # Checks and cutoffs
   E <- E[width>=score_cutoff]
+  setorderv(E, "width", -1)
   E <- E[seq(nrow(E))<=top_N]
   E[, width:= width/999*3]
   

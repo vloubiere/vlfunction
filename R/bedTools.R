@@ -177,6 +177,8 @@ vl_resizeBed <- function(bed,
                          ignore.strand= F,
                          genome)
 {
+  if(!ignore.strand && !"strand" %in% names(bed))
+    message("ignore.strand=F but no strand column is detected -> ignored!")
   if(!vl_isDTranges(bed))
     bed <- vl_importBed(bed)
   regions <- data.table::copy(bed)

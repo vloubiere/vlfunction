@@ -1,3 +1,54 @@
+#' Merge several bigwig files into 1
+#' 
+#' Convenience function to merge directly into r
+#'
+#' @param bw A character vector containing the path of bw files to be merged
+#' @param output Output bw file path
+#' @param genome BSgenome. "dm3", "dm6", "mm10"
+#' @param scoreFUN A function to be applied to the score column before return
+#' @export
+vl_bw_merge <- function(tracks, output, genome, scoreFUN= NULL)
+{
+  bw <- as.data.table(rtracklayer::import(tracks[1]))
+  print(tracks[1])
+  
+  for(track in tracks[-1])
+  {
+    # Import bw2 and merge with bw
+    .c <- as.data.table(rtracklayer::import(track))
+    bw <- bw[.c, .(seqnames, x.start, x.end, i.start, i.end, i.score, x.score), on= c("seqnames", "start<=end", "end>=start")]
+    # Fix bw2 regions that don't exist in bw
+    bw[is.na(x.start), c("x.start", "x.end", "x.score"):= .(i.start, i.end, i.score)]
+    # Compute start coordinates ("else"= bw bin matches several bw2 bins -> take bw2 coor except for the first)
+    bw[, start:= {
+      if(.N==1)
+        x.start else
+          c(x.start, i.start[-1])
+    }, .(seqnames, x.start, x.end)]
+    # Compute end coordinates ("else"= bw bin matches several bw2 bins -> take bw2 coor except for the last)
+    bw[, end:= {
+      if(.N==1)
+        x.end else
+          c(i.end[-(.N)], x.end)
+    }, .(seqnames, x.start, x.end)]
+    # sum scores
+    bw[, score:= rowSums(.SD), .SDcol= c("i.score", "x.score")]
+    bw <- bw[, .(seqnames, start, end, score)]
+    print(track)
+  }
+  # Apply function to score if specified
+  if(!is.null(scoreFUN))
+    bw[, score:= scoreFUN(score)]
+  # Format GRanges
+  .g <- GenomicRanges::GRanges(bw)
+  BS <- getBSgenome(genome)
+  GenomeInfoDb::seqlevels(.g) <- GenomeInfoDb::seqlevels(BS)
+  GenomeInfoDb::seqlengths(.g) <- GenomeInfoDb::seqlengths(BS)
+  # save
+  rtracklayer::export.bw(.g, 
+                         con= output)
+}
+
 #' bw coverage
 #'
 #' Quantify bw file at a set of intervals. returns mean value/region
@@ -77,16 +128,19 @@ vl_bw_coverage_bins <- function(bed,
   # Hard copy bed
   if(!vl_isDTranges(bed))
     bed <- vl_importBed(bed)
+  regions <- data.table::copy(bed)
   # Checks
-  if(!"strand" %in% names(bed))
-    bed[, strand:= factor("*")]
+  if(!"strand" %in% names(regions) && stranded)
+    message("stranded= TRUE but no strand column provided -> ignored")
+  if(!"strand" %in% names(regions))
+    regions[, strand:= factor("*")]
   if(!identical(unique(tracks), tracks))
     stop("tracks should be unique")
   if(!identical(unique(names), names))
     stop("names should be unique")
   
   # Binning
-  bins <- data.table(bed, set_IDs)
+  bins <- data.table(regions, set_IDs)
   bins[, region_ID:= .I]
   bins[, center:= rowMeans(.SD), .SDcols= c("start", "end")]
   bins <- vl_resizeBed(bins, "center", upstream, downstream)
@@ -98,10 +152,8 @@ vl_bw_coverage_bins <- function(bed,
   }, .(seqnames,
        region_ID,
        set_IDs,
-       strand, 
-       center)]
+       strand)]
   bins[, bin.x:= rowid(region_ID)]
-  bins[, center:= between(center, start, end, incbounds = T)]
   if(stranded)
     bins[as.character(strand)=="-", bin.x:= nbins-bin.x+1]
   
@@ -109,67 +161,14 @@ vl_bw_coverage_bins <- function(bed,
   # Quantif tracks
   #--------------------------#
   obj <- parallel::mclapply(tracks, function(x) {
-    data.table(bins[, .(file= x, 
-                        set_IDs, 
+    data.table(bins[, .(set_IDs, 
                         region_ID, 
-                        bin.x,
-                        center)], 
+                        bin.x)], 
                score= vl_bw_coverage(bins, x))
   }, mc.preschedule = T)
-  names(obj) <- names
+  names(obj) <- make.unique(names)
   obj <- rbindlist(obj, idcol= "name")
   return(obj)
-}
-
-#' Merge several bigwig files into 1
-#' 
-#' Convenience function to merge directly into r
-#'
-#' @param bw A character vector containing the path of bw files to be merged
-#' @param output Output bw file path
-#' @param genome BSgenome. "dm3", "dm6", "mm10"
-#' @param scoreFUN A function to be applied to the score column before return
-#' @export
-vl_bw_merge <- function(tracks, output, genome, scoreFUN= NULL)
-{
-  bw <- as.data.table(rtracklayer::import(tracks[1]))
-  print(tracks[1])
-  
-  for(track in tracks[-1])
-  {
-    # Import bw2 and merge with bw
-    .c <- as.data.table(rtracklayer::import(track))
-    bw <- bw[.c, .(seqnames, x.start, x.end, i.start, i.end, i.score, x.score), on= c("seqnames", "start<=end", "end>=start")]
-    # Fix bw2 regions that don't exist in bw
-    bw[is.na(x.start), c("x.start", "x.end", "x.score"):= .(i.start, i.end, i.score)]
-    # Compute start coordinates ("else"= bw bin matches several bw2 bins -> take bw2 coor except for the first)
-    bw[, start:= {
-      if(.N==1)
-        x.start else
-          c(x.start, i.start[-1])
-    }, .(seqnames, x.start, x.end)]
-    # Compute end coordinates ("else"= bw bin matches several bw2 bins -> take bw2 coor except for the last)
-    bw[, end:= {
-      if(.N==1)
-        x.end else
-          c(i.end[-(.N)], x.end)
-    }, .(seqnames, x.start, x.end)]
-    # sum scores
-    bw[, score:= rowSums(.SD), .SDcol= c("i.score", "x.score")]
-    bw <- bw[, .(seqnames, start, end, score)]
-    print(track)
-  }
-  # Apply function to score if specified
-  if(!is.null(scoreFUN))
-    bw[, score:= scoreFUN(score)]
-  # Format GRanges
-  .g <- GenomicRanges::GRanges(bw)
-  BS <- getBSgenome(genome)
-  GenomeInfoDb::seqlevels(.g) <- GenomeInfoDb::seqlevels(BS)
-  GenomeInfoDb::seqlengths(.g) <- GenomeInfoDb::seqlengths(BS)
-  # save
-  rtracklayer::export.bw(.g, 
-                         con= output)
 }
 
 #' bw Average tracks
@@ -223,11 +222,14 @@ vl_bw_average_track <- function(bed,
                              nbins= nbins, 
                              names= names)
   obj[, col:= colorRampPalette(col)(.NGRP)[.GRP], keyby= .(name, set_IDs)]
-  setattr(obj, "class", c("vl_bw_average_track", "data.table", "data.frame"))
+  setattr(obj, 
+          "class", 
+          c("vl_bw_average_track", "data.table", "data.frame"))
   if(plot)
     plot.vl_bw_average_track(obj,
                              xlab= xlab,
-                             xaxis= c(upstream, center_label, downstream),
+                             xlab.at= c(upstream, downstream),
+                             center_label= center_label,
                              ylab= ylab,
                              ylim= ylim,
                              legend= legend,
@@ -239,7 +241,8 @@ vl_bw_average_track <- function(bed,
 #' @export
 plot.vl_bw_average_track <- function(obj,
                                      xlab= "genomic distance",
-                                     xaxis= c("Upstream", "Center", "Downstream"),
+                                     xlab.at,
+                                     center_label= "Center",
                                      ylab= "Enrichment",
                                      ylim,
                                      legend= T,
@@ -247,17 +250,18 @@ plot.vl_bw_average_track <- function(obj,
 {
   pl <- obj[, .(mean= mean(score, na.rm= T), 
                 se= sd(score, na.rm= T)/sqrt(.N)), .(name, col, set_IDs, bin.x)]
+  xlim <- range(pl$bin.x)
+  if(missing(ylim))
+    ylim <- range(c(pl[, mean-se], pl[, mean+se]))
   plot(NA, 
-       xlim= range(pl$bin.x),
-       ylim= if(missing(ylim)) range(c(pl[, mean-se], pl[, mean+se])) else ylim,
+       xlim= xlim,
+       ylim= ylim,
        ylab= ylab,
        xlab= xlab,
        xaxt= "n")
   axis(1, 
-       c(1, 
-         obj[(center), .N, bin.x][order(N, decreasing = T)][1, bin.x], 
-         max(obj$bin.x)),
-       labels= xaxis)
+       at = cumsum(c(0, xlab.at)/sum(xlab.at))*diff(xlim)+1,
+       labels = c(upstream, center_label, downstream))
   pl[, {
     polygon(c(bin.x, rev(bin.x)), 
             c(mean+se, rev(mean-se)),
@@ -311,7 +315,7 @@ vl_bw_heatmap <- function(bed,
                           upstream= 5000,
                           downstream= 5000,
                           stranded= F,
-                          nbins= 100, 
+                          nbins= 101L, 
                           names= gsub(".bw$", "", basename(tracks)),
                           plot= T,
                           col= c("blue", "yellow"),
@@ -328,7 +332,9 @@ vl_bw_heatmap <- function(bed,
                              stranded= stranded,
                              nbins= nbins, 
                              names= names)
-  setattr(obj, "class", c("vl_bw_heatmap", "data.table", "data.frame"))
+  setattr(obj, 
+          "class", 
+          c("vl_bw_heatmap", "data.table", "data.frame"))
   if(plot)
     plot.vl_bw_heatmap(obj,
                        col= col,
