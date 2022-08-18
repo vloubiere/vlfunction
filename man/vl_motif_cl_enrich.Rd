@@ -7,22 +7,22 @@
 \title{Compute motif enrichment}
 \usage{
 vl_motif_cl_enrich(counts_matrix, cl_IDs,
-  collapse_clusters = vl_Dmel_motifs_DB_full[, .(motif, motif_cluster)],
+  collapse_clusters = colnames(counts_matrix),
   control_cl = unique(cl_IDs), plot = T, padj_cutoff = 1e-05,
   top_enrich = Inf, x_breaks, color_breaks, cex.balloons = 1,
   col = c("cornflowerblue", "lightgrey", "tomato"), main = NA,
   auto_margins = T)
 
-\method{plot}{vl_enr_cl}(obj, x_breaks, padj_cutoff = 0.05,
-  top_enrich = Inf, color_breaks, cex.balloons = 1,
-  col = c("cornflowerblue", "lightgrey", "tomato"), main = NA,
-  auto_margins = T)
+plot.vl_enr_cl(obj, x_breaks, padj_cutoff = 0.05, top_enrich = Inf,
+  color_breaks, cex.balloons = 1, col = c("cornflowerblue",
+  "lightgrey", "tomato"), main = NA, auto_margins = T)
 }
 \arguments{
 \item{counts_matrix}{A matrix containing motif counts (rows= sequences, cols= motifs)}
 
-\item{cl_IDs}{vector of cluster IDs (used to split the data.table)
-#' @param collapse_clusters A data.table containing two columns: "motif" (matching colnames(counts)) and "motif_cluster" with clusters to use for collapsing. If set to null, no collapsing. Default= vl_Dmel_motifs_DB_full[, .(motif, motif_cluster)]}
+\item{cl_IDs}{vector of cluster IDs (used to split the data.table)}
+
+\item{collapse_clusters}{A vector of clusters of lenght ncol(counts_matrix) used to collapse motifs (only the most enriched motif/cluster will be returned). Default= colnames(counts_matrix), meaning no collapsing}
 
 \item{control_cl}{IDs of clusters to be used as background. default to unique(cl_IDs), meaning all clusters are used except the one being tested}
 
@@ -48,9 +48,9 @@ Fisher test data.table.
 \description{
 Compute motif enrichment for the cluster in cl_columns, using all the lines as background
 }
-\section{Methods (by generic)}{
+\section{Functions}{
 \itemize{
-\item \code{plot}: method to plot cluster enrichment objects (containing variable, log2OR and padj)
+\item \code{plot.vl_enr_cl}: method to plot cluster enrichment objects (containing variable, log2OR and padj)
 }}
 
 \examples{

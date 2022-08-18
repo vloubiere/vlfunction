@@ -13,7 +13,7 @@ vl_bw_average_track(bed, tracks, set_IDs = 1, upstream = 5000,
   "#4F6A6F", "#D26429", "#C57DA5", "#999999"), legend = T,
   legend.cex = 1)
 
-\method{plot}{vl_bw_average_track}(obj, xlab = "genomic distance",
+plot.vl_bw_average_track(obj, xlab = "genomic distance",
   xaxis = c("Upstream", "Center", "Downstream"), ylab = "Enrichment",
   ylim, legend = T, legend.cex = 1)
 }
@@ -51,9 +51,9 @@ vl_bw_average_track(bed, tracks, set_IDs = 1, upstream = 5000,
 \description{
 Plots average tracks for a set bw files around (potentially) several sets of peaks
 }
-\section{Methods (by generic)}{
+\section{Functions}{
 \itemize{
-\item \code{plot}: Method to plot average tracks
+\item \code{plot.vl_bw_average_track}: Method to plot average tracks
 }}
 
 \examples{

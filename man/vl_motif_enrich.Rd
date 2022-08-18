@@ -7,10 +7,10 @@
 \title{Motif enrichment analysis}
 \usage{
 vl_motif_enrich(counts, control_counts,
-  collapse_clusters = vl_Dmel_motifs_DB_full[, .(motif, motif_cluster)],
-  plot = T, padj_cutoff = 0.05, top_enrich = Inf)
+  collapse_clusters = colnames(counts), plot = T, padj_cutoff = 0.05,
+  top_enrich = Inf)
 
-\method{plot}{vl_enr}(obj, padj_cutoff = 0.05, top_enrich = Inf,
+plot.vl_enr(obj, padj_cutoff = 0.05, top_enrich = Inf,
   xlab = "Odd Ratio (log2)", col = c("blue", "red"), ...)
 }
 \arguments{
@@ -18,7 +18,7 @@ vl_motif_enrich(counts, control_counts,
 
 \item{control_counts}{matrix of counts for control regions}
 
-\item{collapse_clusters}{A data.table containing two columns: "motif" (matching colnames(counts)) and "motif_cluster" with clusters to use for collapsing. If set to null, no collapsing. Default= vl_Dmel_motifs_DB_full[, .(motif, motif_cluster)]}
+\item{collapse_clusters}{A vector of clusters of lenght ncol(counts) used to collapse motifs (only the most enriched motif/cluster will be returned). Default= colnames(counts), meaning no collapsing}
 
 \item{plot}{Plot result?}
 
@@ -46,9 +46,9 @@ Returns a table of enrichment which can be plot using ?plot.vl_GO_enr
 \description{
 Compute motif enrichment between a set of regions and control regions
 }
-\section{Methods (by generic)}{
+\section{Functions}{
 \itemize{
-\item \code{plot}: method to plot enrichment objects (containing variable, log2OR and padj)
+\item \code{plot.vl_enr}: method to plot enrichment objects (containing variable, log2OR and padj)
 }}
 
 \examples{
