@@ -261,7 +261,7 @@ plot.vl_bw_average_track <- function(obj,
        xaxt= "n")
   axis(1, 
        at = cumsum(c(0, xlab.at)/sum(xlab.at))*diff(xlim)+1,
-       labels = c(xlab.at[1], center_label, xlab.at[1]))
+       labels = c(xlab.at[1], center_label, xlab.at[2]))
   pl[, {
     polygon(c(bin.x, rev(bin.x)), 
             c(mean+se, rev(mean-se)),
