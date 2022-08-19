@@ -158,7 +158,6 @@ vl_motif_enrich <- function(counts,
 #' @param color_breaks Color breaks used for coloring
 #' @param col Vector of colors used for coloring
 #' @param main Title. Default= NA
-#' @param auto_margins Use auto margins? Default= T
 #' @examples 
 #' # Sets of peaks
 #' top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
@@ -202,8 +201,7 @@ vl_motif_cl_enrich <- function(counts_matrix,
                                color_breaks,
                                cex.balloons= 1,
                                col= c("cornflowerblue", "lightgrey", "tomato"),
-                               main= NA,
-                               auto_margins = T)
+                               main= NA)
 {
   if(!is.numeric(unlist(counts_matrix)))
     stop("counts_matrix should only contain numeric values")

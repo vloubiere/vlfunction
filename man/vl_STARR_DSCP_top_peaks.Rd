@@ -4,9 +4,7 @@
 \name{vl_STARR_DSCP_top_peaks}
 \alias{vl_STARR_DSCP_top_peaks}
 \title{STARR-Seq top peaks}
-\format{
-Narrowpeaks file containing top STARR-Seq peaks (DSCP) on dm3
-}
+\format{Narrowpeaks file containing top STARR-Seq peaks (DSCP) on dm3}
 \usage{
 see ?vl_motif_enrich()
 }

@@ -6,33 +6,15 @@
 \alias{plot.vl_enr_cl}
 \title{Compute motif enrichment}
 \usage{
-vl_motif_cl_enrich(
-  counts_matrix,
-  cl_IDs,
+vl_motif_cl_enrich(counts_matrix, cl_IDs,
   collapse_clusters = colnames(counts_matrix),
-  control_cl = unique(cl_IDs),
-  plot = T,
-  padj_cutoff = 1e-05,
-  top_enrich = Inf,
-  x_breaks,
-  color_breaks,
-  cex.balloons = 1,
-  col = c("cornflowerblue", "lightgrey", "tomato"),
-  main = NA,
-  auto_margins = T
-)
+  control_cl = unique(cl_IDs), plot = T, padj_cutoff = 1e-05,
+  top_enrich = Inf, x_breaks, color_breaks, cex.balloons = 1,
+  col = c("cornflowerblue", "lightgrey", "tomato"), main = NA)
 
-plot.vl_enr_cl(
-  obj,
-  x_breaks,
-  padj_cutoff = 0.05,
-  top_enrich = Inf,
-  color_breaks,
-  cex.balloons = 1,
-  col = c("cornflowerblue", "lightgrey", "tomato"),
-  main = NA,
-  auto_margins = T
-)
+plot.vl_enr_cl(obj, x_breaks, padj_cutoff = 0.05, top_enrich = Inf,
+  color_breaks, cex.balloons = 1, col = c("cornflowerblue",
+  "lightgrey", "tomato"), main = NA)
 }
 \arguments{
 \item{counts_matrix}{A matrix containing motif counts (rows= sequences, cols= motifs)}
@@ -56,8 +38,6 @@ plot.vl_enr_cl(
 \item{col}{Vector of colors used for coloring}
 
 \item{main}{Title. Default= NA}
-
-\item{auto_margins}{Use auto margins? Default= T}
 }
 \value{
 Fisher test data.table.

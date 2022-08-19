@@ -4,15 +4,8 @@
 \alias{vl_GO_enrich}
 \title{GO analysis}
 \usage{
-vl_GO_enrich(
-  geneIDs,
-  geneUniverse_IDs = NULL,
-  species,
-  plot = T,
-  padj_cutoff = 0.05,
-  top_enrich = Inf,
-  auto_margins = T
-)
+vl_GO_enrich(geneIDs, geneUniverse_IDs = NULL, species, plot = T,
+  padj_cutoff = 0.05, top_enrich = Inf)
 }
 \arguments{
 \item{geneIDs}{A vector (barplot) of a list (clusters) of gene IDs}
@@ -36,5 +29,5 @@ Hox <- vl_genes_set[GO=="HOX_genes", FBgn]
 par(mar= c(4,20,2,6))
 vl_GO_enrich(RpL, species= "Dm")
 vl_GO_enrich(Hox, species= "Dm")
-vl_GO_enrich(list(RpL, Hox), species= "Dm", auto_margins = F, cex.balloons = 0.3, padj_cutoff= 1e-5, top_enrich = 20)
+vl_GO_enrich(list(RpL, Hox), species= "Dm", cex.balloons = 0.3, padj_cutoff= 1e-5, top_enrich = 20)
 }

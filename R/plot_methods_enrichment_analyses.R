@@ -59,8 +59,7 @@ plot.vl_enr_cl <- function(obj,
                            color_breaks,
                            cex.balloons= 1,
                            col= c("cornflowerblue", "lightgrey", "tomato"),
-                           main= NA,
-                           auto_margins = T)
+                           main= NA)
 {
   DT <- data.table::copy(obj)
   # Handle infinite

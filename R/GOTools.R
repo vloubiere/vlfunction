@@ -14,15 +14,14 @@
 #' par(mar= c(4,20,2,6))
 #' vl_GO_enrich(RpL, species= "Dm")
 #' vl_GO_enrich(Hox, species= "Dm")
-#' vl_GO_enrich(list(RpL, Hox), species= "Dm", auto_margins = F, cex.balloons = 0.3, padj_cutoff= 1e-5, top_enrich = 20)
+#' vl_GO_enrich(list(RpL, Hox), species= "Dm", cex.balloons = 0.3, padj_cutoff= 1e-5, top_enrich = 20)
 #' @export
 vl_GO_enrich <- function(geneIDs,
                          geneUniverse_IDs= NULL,
                          species,
                          plot= T,
                          padj_cutoff= 0.05,
-                         top_enrich= Inf,
-                         auto_margins = T)
+                         top_enrich= Inf)
 {
   db <- switch(species,
                "Dm"= org.Dm.eg.db::org.Dm.eg.db,
@@ -111,8 +110,7 @@ vl_GO_enrich <- function(geneIDs,
     if(plot)
       plot(res,
            padj_cutoff= padj_cutoff,
-           top_enrich= top_enrich,
-           auto_margins= auto_margins)
+           top_enrich= top_enrich)
   }else{
     setattr(res, "class", c("vl_enr", "data.table", "data.frame"))
     if(plot)

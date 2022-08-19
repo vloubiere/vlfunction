@@ -4,16 +4,8 @@
 \alias{vl_bw_coverage_bins}
 \title{Bins bed file and compute bw signal}
 \usage{
-vl_bw_coverage_bins(
-  bed,
-  tracks,
-  set_IDs,
-  upstream,
-  downstream,
-  stranded,
-  nbins,
-  names
-)
+vl_bw_coverage_bins(bed, tracks, set_IDs, upstream, downstream, stranded,
+  nbins, names)
 }
 \arguments{
 \item{bed}{Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}

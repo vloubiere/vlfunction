@@ -6,11 +6,10 @@
 #' @param color_var Matrix specifyiung color of the balloons.
 #' @param color_breaks Color breaks used for coloring
 #' @param col Vector of colors used for coloring
-#' @param cex.balloons Expansion factor for balloons
+#' @param cex.balloons Expansion factor for balloons. By default, computes optimal values for balloons to not overlap.
 #' @param main Title. Default= NA
 #' @param balloon_size_legend Title size legend
 #' @param balloon_col_legend Title color legend
-#' @param auto_margins Use auto margins? Default= T
 #' @examples
 #' x <- matrix(-3:5, ncol= 3)
 #' cols <- matrix(-3:5, ncol= 3)
@@ -29,7 +28,7 @@ vl_balloons_plot.matrix <- function(x,
                                     x_breaks,
                                     color_breaks,
                                     col= c("cornflowerblue", "white", "tomato"),
-                                    cex.balloons= 1,
+                                    cex.balloons= NA,
                                     main= NA, 
                                     balloon_size_legend= NA,
                                     balloon_col_legend= NA,
@@ -51,27 +50,11 @@ vl_balloons_plot.matrix <- function(x,
   Cc <- circlize::colorRamp2(color_breaks, col)
   color_var[!is.na(color_var)] <- Cc(color_var[!is.na(color_var)])
   color_var[is.na(color_var)] <- "lightgrey"
-      
-  # Margins
-  adj <- (par("cin")[1]*0.75/2*max(abs(x), na.rm=T)*cex.balloons*par("cex")) # Size of biggest balloon in inches
-  if(auto_margins)
-  {
-    bot <- 0.5+max(strwidth(colnames(x), "inches"))
-    left <- 0.5+max(strwidth(rownames(x), "inches", cex = par("cex.axis")/par("cex")))
-    top <- 0.5+strheight(main, units = "inches", cex = par("cex.axis")/par("cex"))
-    leg.width <- strwidth(c(balloon_size_legend, balloon_col_legend), "in")
-    right <- 0.5+max(c(leg.width, 0.5))
-    right <- right+adj
-    par(mai= c(bot, left, top, right),
-        xaxs= "i",
-        yaxs= "i",
-        mgp= c(3, grconvertX(adj, "in", "line"), 0))
-  }
-  
+
   # Init plot
   plot.new()
-  plot.window(xlim = c(1, ncol(x)),
-              ylim = c(1, nrow(x)))
+  plot.window(xlim = c(0.5, ncol(x)+0.5),
+              ylim = c(0.5, nrow(x)+0.5))
   # Lines
   segments(1:ncol(x),
            1,
@@ -82,11 +65,17 @@ vl_balloons_plot.matrix <- function(x,
            ncol(x),
            1:nrow(x))
   # Balloons
+  if(is.na(cex.balloons))
+  {
+    device.h <- grconvertY(diff(par("usr")[c(3,4)]), "user", "inch")
+    sum.dots.h <- par("cin")[2]/2*max(abs(x), na.rm=T)*(nrow(x)+1)
+    cex.balloons <- device.h/sum.dots.h
+  }
   points(rep(1:ncol(x), each= nrow(x)),
          rep(1:nrow(x), ncol(x)),
          bg= color_var,
          pch= ifelse(x>=0, 21, 22),
-         cex= abs(x)*cex.balloons+0.1,
+         cex= abs(x)*cex.balloons,
          xpd= T)
   # Axes
   axis(side= 1, 

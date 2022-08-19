@@ -7,18 +7,10 @@
 \usage{
 vl_balloons_plot(x, ...)
 
-\method{vl_balloons_plot}{matrix}(
-  x,
-  color_var,
-  x_breaks,
-  color_breaks,
-  col = c("cornflowerblue", "white", "tomato"),
-  cex.balloons = 1,
-  main = NA,
-  balloon_size_legend = NA,
-  balloon_col_legend = NA,
-  auto_margins = T
-)
+\method{vl_balloons_plot}{matrix}(x, color_var, x_breaks, color_breaks,
+  col = c("cornflowerblue", "white", "tomato"), cex.balloons = NA,
+  main = NA, balloon_size_legend = NA, balloon_col_legend = NA,
+  auto_margins = T)
 }
 \arguments{
 \item{x}{Matrix specifyiung size of the balloons.}
@@ -29,15 +21,13 @@ vl_balloons_plot(x, ...)
 
 \item{col}{Vector of colors used for coloring}
 
-\item{cex.balloons}{Expansion factor for balloons}
+\item{cex.balloons}{Expansion factor for balloons. By default, computes optimal values for balloons to not overlap.}
 
 \item{main}{Title. Default= NA}
 
 \item{balloon_size_legend}{Title size legend}
 
 \item{balloon_col_legend}{Title color legend}
-
-\item{auto_margins}{Use auto margins? Default= T}
 }
 \value{
 Balloon plot
