@@ -71,7 +71,7 @@ plot.vl_enr_cl <- function(obj,
     DT[log2OR==(-Inf), log2OR:= min(DT[is.finite(log2OR), log2OR])]
   }
   # Apply cutoffs
-  DT <- DT[padj <= padj_cutoff & log2OR > 0, variable]
+  DT <- DT[padj <= padj_cutoff & log2OR > 0]
   if(nrow(DT)==0)
     stop("No enrichment found with current cutoffs!")
   # select top_enrich
