@@ -6,7 +6,7 @@
 #' @param color_var Matrix specifyiung color of the balloons.
 #' @param color_breaks Color breaks used for coloring
 #' @param col Vector of colors used for coloring
-#' @param cex.balloons Expansion factor for balloons. By default, computes optimal values for balloons to not overlap.
+#' @param cex.balloons Expansion factor for balloons. default= 1.
 #' @param main Title. Default= NA
 #' @param balloon_size_legend Title size legend
 #' @param balloon_col_legend Title color legend
@@ -28,7 +28,7 @@ vl_balloons_plot.matrix <- function(x,
                                     x_breaks,
                                     color_breaks,
                                     col= c("cornflowerblue", "white", "tomato"),
-                                    cex.balloons= NA,
+                                    cex.balloons= 1,
                                     main= NA, 
                                     balloon_size_legend= NA,
                                     balloon_col_legend= NA,
@@ -53,8 +53,9 @@ vl_balloons_plot.matrix <- function(x,
 
   # Init plot
   plot.new()
-  plot.window(xlim = c(0.5, ncol(x)+0.5),
-              ylim = c(0.5, nrow(x)+0.5))
+  plot.window(xlim = c(1, ncol(x)),
+              ylim = c(1, nrow(x)),
+              xaxs= "r")
   # Lines
   segments(1:ncol(x),
            1,
@@ -65,12 +66,6 @@ vl_balloons_plot.matrix <- function(x,
            ncol(x),
            1:nrow(x))
   # Balloons
-  if(is.na(cex.balloons))
-  {
-    device.h <- grconvertY(diff(par("usr")[c(3,4)]), "user", "inch")
-    sum.dots.h <- par("cin")[2]/2*max(abs(x), na.rm=T)*(nrow(x)+1)
-    cex.balloons <- device.h/sum.dots.h
-  }
   points(rep(1:ncol(x), each= nrow(x)),
          rep(1:nrow(x), ncol(x)),
          bg= color_var,

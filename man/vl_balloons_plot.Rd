@@ -8,7 +8,7 @@
 vl_balloons_plot(x, ...)
 
 \method{vl_balloons_plot}{matrix}(x, color_var, x_breaks, color_breaks,
-  col = c("cornflowerblue", "white", "tomato"), cex.balloons = NA,
+  col = c("cornflowerblue", "white", "tomato"), cex.balloons = 1,
   main = NA, balloon_size_legend = NA, balloon_col_legend = NA,
   auto_margins = T)
 }
@@ -21,7 +21,7 @@ vl_balloons_plot(x, ...)
 
 \item{col}{Vector of colors used for coloring}
 
-\item{cex.balloons}{Expansion factor for balloons. By default, computes optimal values for balloons to not overlap.}
+\item{cex.balloons}{Expansion factor for balloons. default= 1.}
 
 \item{main}{Title. Default= NA}
 
