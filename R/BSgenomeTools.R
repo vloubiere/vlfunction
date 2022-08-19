@@ -45,7 +45,7 @@ vl_control_regions_BSgenome <- function(bed, genome)
   # Format
   regions <- data.table::copy(bed)
   regions[, width:= end-start+1]
-  BS <- data.table::as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))))
+  BS <- data.table::as.data.table(GenomicRanges::GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))))
   regions[BS, seqlength:= i.width, on= "seqnames"]
   # Random sampling
   regions[, start:= sample(seqlength-width, .N), .(seqlength, width)]
@@ -71,7 +71,7 @@ vl_random_regions_BSgenome <- function(genome,
                                        restrict_seqnames= NULL)
 {
   # Format
-  regions <- data.table::as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))))
+  regions <- data.table::as.data.table(GenomicRanges::GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))))
   setnames(regions, "width", "seqlength")
   regions <- regions[sample(nrow(regions), n, replace = T, prob = regions$width)]
   regions[, width:= width]

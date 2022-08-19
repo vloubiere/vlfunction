@@ -71,8 +71,7 @@ plot.vl_enr_cl <- function(obj,
     DT[log2OR==(-Inf), log2OR:= min(DT[is.finite(log2OR), log2OR])]
   }
   # Apply cutoffs
-  sel <- DT[padj <= padj_cutoff & log2OR > 0, variable] # Pass padj cutoff in at least one cluster
-  DT <- na.omit(DT[variable %in% sel & padj<0.05 & log2OR>0]) # Keep only significant instances
+  DT <- DT[padj <= padj_cutoff & log2OR > 0, variable]
   if(nrow(DT)==0)
     stop("No enrichment found with current cutoffs!")
   # select top_enrich
