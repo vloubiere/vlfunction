@@ -75,7 +75,8 @@ plot.vl_enr_cl <- function(obj,
     stop("No enrichment found with current cutoffs!")
   # select top_enrich
   setorderv(DT, c("cl", "padj"))
-  DT <- DT[rowid(DT$cl)<=top_enrich]
+  sel <- DT[rowid(DT$cl)<=top_enrich, variable]
+  sel <- DT[variable %in% sel]
   # dcast before plotting
   DT[, variable:= factor(variable, levels= unique(DT$variable))]
   x <- dcast(DT, variable~cl, value.var = "log2OR", drop= F)
