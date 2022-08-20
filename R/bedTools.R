@@ -136,18 +136,18 @@ vl_closestBed <- function(a,
   # Main function
   res <- b[a, {
     # Measure distance
-    .c <- data.table(.SD, 
-                     dist= fcase(x.start>i.end, x.start-i.end,
-                                 x.end<i.start, x.start-i.end,
-                                 default= 0L))# default means a & b overlap!
-    # Order dist and apply dist & n cutoffs
-    .c <- .c[abs(dist)>=min_dist]
-    .c <- .c[data.table::first(order(abs(dist)), n)]
-    setnames(.c, 
-             c("start", "end"), 
-             c("start.b", "end.b"))
-    # Return a coordinates + closest b coor
-    data.table(start= i.start, end= i.end, .c)
+    dist <- fcase(x.start>i.end, x.start-i.end,
+                  x.end<i.start, x.start-i.end,
+                  default= 0L)# default means a & b overlap!
+    # Dist cutoff
+    sel <- abs(dist)>=min_dist
+    # n cutoff
+    sel <- data.table::first(order(abs(dist[sel])), n)
+    # Return
+    data.table(start= i.start, 
+               end= i.end, 
+               .SD[sel],
+               dist= dist[sel])
   }, .EACHI, on= "seqnames"]
   # Export
   return(res)
