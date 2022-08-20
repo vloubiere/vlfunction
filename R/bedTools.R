@@ -107,7 +107,7 @@ vl_exportBed.data.table <- function(bed, filename)
 #'
 #' @param a Granges or data.table FOR which closest features have to be found.
 #' @param b Granges or data.table FROM which closest features have to be found. If set to NULL (default), then a is matched to itself.
-#' @param n Number of closest features to be reported. Default to Inf
+#' @param n Number of closest features to be reported. Default to 1
 #' @param min_dist Min distance for closest feature 
 #' @examples 
 #' a <- data.table(seqnames= "chr2L", start= sample(10000, 1000))
@@ -123,7 +123,7 @@ vl_exportBed.data.table <- function(bed, filename)
 #' @export
 vl_closestBed <- function(a, 
                           b= NULL,
-                          n= Inf,
+                          n= 1,
                           min_dist= 0)
 {
   if(!vl_isDTranges(a))
@@ -133,23 +133,21 @@ vl_closestBed <- function(a,
       b <- vl_importBed(b)
   a <- data.table::copy(a)
   b <- data.table::copy(b)
-  if(nrow(a)*nrow(b)*n>10e6)
-    warning("nrow(a)*nrow(b)*n > 10e6 -> consider using lower n cutoff")
   # Main function
   res <- b[a, {
     # Measure distance
-    .c <- data.table(seqnames, 
-                     .SD, 
-                     dist= fcase(x.start>i.end, x.start-i.end,
-                                 x.end<i.start, i.end-x.start,
-                                 default= 0L))# default means a & b overlap!
-    # Order dist and apply dist & n cutoffs
-    .c <- .c[order(abs(dist))][abs(dist)>=min_dist, I:= .I][I<=n, !"I"]
-    setnames(.c, 
-             c("seqnames", "start", "end"), 
-             function(x) paste0(x, ".b"))
-    # Return a coordinates + closest b coor
-    data.table(start= i.start, end= i.end, .c)
+    dist <- fcase(x.start>i.end, x.start-i.end,
+                  x.end<i.start, x.start-i.end,
+                  default= 0L)# default means a & b overlap!
+    # Dist cutoff
+    sel <- abs(dist)>=min_dist
+    # n cutoff
+    sel <- data.table::first(order(abs(dist[sel])), n)
+    # Return
+    data.table(start= i.start, 
+               end= i.end, 
+               .SD[sel],
+               dist= dist[sel])
   }, .EACHI, on= "seqnames"]
   # Export
   return(res)
