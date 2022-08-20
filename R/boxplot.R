@@ -27,7 +27,6 @@
 #' @param las style of axis label. see ?par()
 #' @param plot Should the boxlplot be ploted? default to TRUE
 #' @param add Should the boxlplot be added to existing plot? default to FALSE
-#' @param ... Extra parameters passed to boxplot, such as las, lwd... 
 #' @examples
 #' # Create test matrix
 #' set.seed(1234)
@@ -101,8 +100,7 @@ vl_boxplot.default <- function(x,
                                yaxt= "o",
                                las= par("las"),
                                plot= T,
-                               add= F,
-                               ...)
+                               add= F)
 {
   if(!missing(compute_pval) && !is.list(compute_pval))
     stop("compute_pval should be a list of vectors of length two containing pairwise x indexes to be compared")
@@ -220,8 +218,7 @@ vl_boxplot.default <- function(x,
             horizontal= horizontal,
             axes= axes,
             xaxt= "n",
-            yaxt= "n",
-            ...)
+            yaxt= "n")
     if(xaxt!="n")
       if(horizontal)
         axis(1, 

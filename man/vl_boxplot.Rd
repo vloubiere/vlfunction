@@ -42,14 +42,11 @@ vl_boxplot(x, ...)
   yaxt = "o",
   las = par("las"),
   plot = T,
-  add = F,
-  ...
+  add = F
 )
 }
 \arguments{
 \item{x}{list of variables to be plotted}
-
-\item{...}{Extra parameters passed to boxplot, such as las, lwd...}
 
 \item{compute_pval}{list of vectors of length two containing pairwise x indexes to be compared}
 
