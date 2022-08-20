@@ -103,7 +103,9 @@ vl_motif_enrich <- function(counts,
   obj <- rbindlist(list(set= as.data.table(counts),
                         control= as.data.table(control_counts)),
                    idcol = T)
-  obj <- melt(obj, id.vars = ".id")
+  obj <- melt(obj, 
+              id.vars = ".id",
+              variable.name= "motif_ID")
   
   # Test enrichment
   res <- obj[, {
@@ -119,7 +121,7 @@ vl_motif_enrich <- function(counts,
       set_total= sum(tab[1,]),
       ctl_hit= tab[2,1],
       ctl_total= sum(tab[2,]))
-  }, variable]
+  }, motif_ID]
   
   # padj...
   res[, padj:= p.adjust(pval, method = "fdr"), pval]
@@ -127,7 +129,7 @@ vl_motif_enrich <- function(counts,
   res$OR <- NULL
   
   # Collapsing
-  res[, variable:= collapse_clusters[match(variable, colnames(counts))], variable]
+  res[, variable:= collapse_clusters[match(motif_ID, colnames(counts))], motif_ID]
   res <- res[, .SD[which.min(padj)], variable]
   
   # Order and save

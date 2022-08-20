@@ -82,7 +82,8 @@ vl_balloons_plot.matrix <- function(x,
        labels = rownames(x),
        lwd= NA)
   # Legends
-  left <- par("usr")[2]+(grconvertX(adj, "in", "user")-grconvertX(0, "in", "user"))
+  left <- strwidth("M")*0.75/2*max(abs(x), na.rm= T)*cex.balloons # max balloon radius
+  left <- grconvertX(1, "npc", "user")+left # add to right plot limit
   vl_heatkey(color_breaks, 
              left= left,
              col, 

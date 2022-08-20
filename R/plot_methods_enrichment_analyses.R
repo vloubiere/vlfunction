@@ -19,7 +19,7 @@ plot.vl_enr <- function(obj,
   # Handle infinite
   if(any(!is.finite(DT$log2OR)))
   {
-    warning("Non finite log2OR values capped to max finite log2OR")
+    message("Non finite log2OR values capped to max finite log2OR")
     DT[log2OR==Inf, log2OR:= max(DT[is.finite(log2OR), log2OR])]
     DT[log2OR==(-Inf), log2OR:= min(DT[is.finite(log2OR), log2OR])]
   }
@@ -65,7 +65,7 @@ plot.vl_enr_cl <- function(obj,
   # Handle infinite
   if(any(!is.finite(DT$log2OR)))
   {
-    warning("Non finite log2OR values capped to max finite log2OR")
+    message("Non finite log2OR values capped to max finite log2OR")
     DT[log2OR==Inf, log2OR:= max(DT[is.finite(log2OR), log2OR])]
     DT[log2OR==(-Inf), log2OR:= min(DT[is.finite(log2OR), log2OR])]
   }
@@ -76,9 +76,9 @@ plot.vl_enr_cl <- function(obj,
   # select top_enrich
   setorderv(DT, c("cl", "padj"))
   sel <- DT[rowid(DT$cl)<=top_enrich, variable]
-  sel <- DT[variable %in% sel]
+  DT <- DT[variable %in% sel]
   # dcast before plotting
-  DT[, variable:= factor(variable, levels= unique(DT$variable))]
+  DT[, variable:= factor(variable, levels= unique(variable))]
   x <- dcast(DT, variable~cl, value.var = "log2OR", drop= F)
   x <- as.matrix(x, 1)
   color_var <- dcast(DT, variable~cl, value.var = "padj", drop= F)
