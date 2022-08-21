@@ -3,14 +3,41 @@
 #' Imports bed as data.table and check formats
 #'
 #' @param bed Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
+#' @param specialFormat "narrowPeak", "broadPeak"
 #' @return Imported bed
 #' @export
-vl_importBed <- function(bed) UseMethod("vl_importBed")
+vl_importBed <- function(bed, specialFormat) UseMethod("vl_importBed")
 
 #' @describeIn vl_importBed for bed paths
 #' @export
-vl_importBed.character <- function(bed)
-  return(rtracklayer::import(bed, format= "BED"))
+vl_importBed.character <- function(bed, specialFormat)
+{
+  # Import function
+  .f <- list(quote(rtracklayer::import))
+  .f$format <- "BED"
+  if(!missing(specialFormat) && specialFormat=="narrowPeak")
+  {
+    .f$extraCols <- c(signalValue = "numeric", 
+                      pValue = "numeric",
+                      qValue = "numeric", 
+                      peak = "integer")
+  }
+  if(!missing(specialFormat) && specialFormat=="broadPeak")
+  {
+    .f$extraCols <- c(signalValue = "numeric", 
+                      pValue = "numeric",
+                      qValue = "numeric")
+  }
+  # Import
+  bed <- lapply(bed, function(x) {
+    .f$con <- x
+    x <- eval(as.call(.f))
+    return(as.data.table(x))
+  })
+  bed <- data.table::rbindlist(bed)
+  return(bed)
+}
+  
 
 #' @describeIn vl_importBed for GRanges
 #' @export
