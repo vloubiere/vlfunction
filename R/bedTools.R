@@ -10,12 +10,12 @@ vl_importBed <- function(bed) UseMethod("vl_importBed")
 #' @describeIn vl_importBed for bed paths
 #' @export
 vl_importBed.character <- function(bed)
-  rtracklayer::import(bed, format= "BED")
+  return(rtracklayer::import(bed, format= "BED"))
 
 #' @describeIn vl_importBed for GRanges
 #' @export
 vl_importBed.GRanges <- function(bed)
-  data.table::as.data.table(bed)
+  return(data.table::as.data.table(bed))
 
 #' Check if data.table file contains all bed canonical fields
 #' @export
