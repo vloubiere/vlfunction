@@ -24,10 +24,9 @@ vl_motif_counts <- function(sequences, ...) UseMethod("vl_motif_counts")
 #' @export
 vl_motif_counts.data.table <- function(bed, genome, ...)
 {
-  if(!vl_isDTranges(bed))
-    bed <- vl_importBed(bed)
+  bed <- vl_importBed(bed)
   sequences <- BSgenome::getSeq(BSgenome::getBSgenome(genome), bed$seqnames, bed$start, bed$end, as.character= T)
-  names(sequences) <- paste0(bed$seqnames, ":", bed$start, "-", bed$end, ":", if("strand" %in% names(bed)) bed$ranges else "*")
+  names(sequences) <- paste0(bed$seqnames, ":", bed$start, "-", bed$end, ":", bed$ranges)
   
   pl <- match.call()
   pl$bed <- pl$genome <- NULL

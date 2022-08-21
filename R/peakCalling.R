@@ -21,8 +21,8 @@ vl_bw_coverage_integer <- function(bed,
                                    bw,
                                    read_length= 50)
 {
-  var <- data.table::copy(bed)
-  var$score <- vl_bw_coverage(bed, 
+  var <- vl_importBed::copy(bed)
+  var$score <- vl_bw_coverage(var, 
                               bw, 
                               na_value = 0)
   
@@ -70,9 +70,7 @@ vl_bw_enrich <- function(regions,
     stop("ChIP_bw and Input_bw should be bw files")
   
   # Hard copy regions
-  if(!vl_isDTranges(regions))
-    regions <- vl_importBed(regions)
-  regions <- copy(regions)
+  regions <- vl_importBed(regions)
   
   # bw coverage
   count_wrap <- function(bw)
@@ -129,18 +127,15 @@ vl_enrichBed <- function(regions,
                          Input_bed)
 {
   # Hard copy regions
-  if(!vl_isDTranges(regions))
-    regions <- vl_importBed(regions)
+  regions <- vl_importBed(regions)
   regions <- copy(regions)
   # ChIP coverage
-  if(!vl_isDTranges(ChIP_bed))
-    ChIP_bed <- vl_importBed(ChIP_bed)
+  ChIP_bed <- vl_importBed(ChIP_bed)
   regions[, ChIP_counts:= vl_covBed(regions, ChIP_bed)]
   total <- unique(ChIP_bed[, .N, seqnames])
   regions[total, ChIP_total_counts:= i.N, on= "seqnames"]
   # Input coverage
-  if(!vl_isDTranges(Input_bed))
-    Input_bed <- vl_importBed(Input_bed)
+  Input_bed <- vl_importBed(Input_bed)
   regions[, Input_counts:= vl_covBed(regions, Input_bed)]
   total <- unique(Input_bed[, .N, seqnames])
   regions[total, Input_total_counts:= i.N, on= "seqnames"]
@@ -211,8 +206,7 @@ vl_peakCalling <- function(ChIP,
     bins[vl_bw_totalReads(ChIP, read_length), ChIP_total_counts:= i.total_counts, on= "seqnames"]
     bins[, ChIP_counts:= round(ChIP_counts/sum(ChIP_counts)*ChIP_total_counts), seqnames]
   }else{
-    if(!vl_isDTranges(ChIP))
-      ChIP <- vl_importBed(ChIP)
+    ChIP <- vl_importBed(ChIP)
     bins[, ChIP_counts:= vl_covBed(bins, ChIP)]
     bins <- merge(bins,
                   unique(ChIP[, .(ChIP_total_counts= .N), seqnames]))

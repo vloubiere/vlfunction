@@ -82,9 +82,7 @@ vl_bw_coverage <- function(bed,
     stop("bw file does not exist! EXIT")
   
   # Format
-  if(!vl_isDTranges(bed))
-    bed <- vl_importBed(bed)
-  .b <- data.table::copy(bed[, .(seqnames, start, end, .I)])
+  .b <- vl_importBed(bed)[, .(seqnames, start, end, .I)]
 
   # Import bw
   sel <- rtracklayer::BigWigSelection(GenomicRanges::GRanges(na.omit(.b)), "score")
@@ -126,14 +124,10 @@ vl_bw_coverage_bins <- function(bed,
                                 names)
 {
   # Hard copy bed
-  if(!vl_isDTranges(bed))
-    bed <- vl_importBed(bed)
-  regions <- data.table::copy(bed)
+  regions <- vl_importBed(bed)
   # Checks
-  if(!"strand" %in% names(regions) && stranded)
+  if(stranded && !"strand" %in% names(bed))
     message("stranded= TRUE but no strand column provided -> ignored")
-  if(!"strand" %in% names(regions))
-    regions[, strand:= factor("*")]
   if(!identical(unique(tracks), tracks))
     stop("tracks should be unique")
   if(!identical(unique(names), names))

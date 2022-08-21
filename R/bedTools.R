@@ -1,31 +1,3 @@
-#' Check if data.table file contains all bed canonical fields
-#' If it does, make sure that class of bed columns is correct
-#'
-#' @param x Object to be tested
-#' @return boolean
-#' @export
-vl_isDTranges <- function(x)
-{
-  if(is.data.table(x) && all(c("seqnames", "start", "end") %in% names(x)))
-  {
-    if(!is.factor(x$seqnames))
-      x[, seqnames:= factor(seqnames, 
-                            levels= sort(unique(as.character(seqnames))))]
-    if(!is.integer(x$start))
-      x[, start:= as.integer(start)]
-    if(!is.integer(x$end))
-      x[, end:= as.integer(end)]
-    if("name" %in% names(x) && !is.factor(x$name))
-      x[, name:= factor(name)]
-    if("score" %in% names(x) && !is.numeric(x$score))
-      x[, score:= as.numeric(score)]
-    if("strand" %in% names(x) && !is.factor(x$strand))
-      x[, strand:= factor(strand, levels = c("+", "-", "*"))]
-    return(T)
-  }else
-    return(F)
-}
-
 #' Import bed file
 #'
 #' Imports bed as data.table and check formats
@@ -38,68 +10,27 @@ vl_importBed <- function(bed) UseMethod("vl_importBed")
 #' @describeIn vl_importBed for bed paths
 #' @export
 vl_importBed.character <- function(bed)
-{
-  bed <- lapply(bed, function(x) fread(x, fill = T))
-  bed <- data.table::rbindlist(bed)
-  if(!vl_isDTranges(bed))
-  {
-    bedcols <- c("seqnames", "start", "end", "name", "score", "strand")
-    if(ncol(bed)<6)
-      bedcols <- bedcols[1:ncol(bed)]
-    setnames(bed, names(bed)[seq(bedcols)], bedcols)
-    vl_isDTranges(bed)
-  }
-  return(bed)
-}
+  rtracklayer::import(bed, format= "BED")
 
 #' @describeIn vl_importBed for GRanges
 #' @export
 vl_importBed.GRanges <- function(bed)
+  data.table::as.data.table(bed)
+
+#' Check if data.table file contains all bed canonical fields
+#' @export
+vl_importBed.data.table <- function(bed)
 {
-  bed <- data.table::as.data.table(bed)
-  vl_isDTranges(bed)
+  bed <- data.table::copy(bed)
+  bed[, seqnames:= factor(seqnames, 
+                          levels= sort(unique(as.character(seqnames))))]
+  bed[, start:= as.integer(start)]
+  bed[, end:= as.integer(end)]
+  if(!"strand" %in% names(bed))
+    bed[, strand:= factor("*", levels = c("+", "-", "*"))] else
+      bed[, strand:= factor(strand, levels = c("+", "-", "*"))]
   return(bed)
 }
-
-#' Export bed file
-#' @param bed Either a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
-#' @export
-vl_exportBed <- function(bed, ...) UseMethod("vl_exportBed")
-
-#' @describeIn vl_exportBed for GRanges
-#' @export
-vl_exportBed.GRanges <- function(bed, filename)
-{
-  fwrite(data.table::as.data.table(bed), 
-         filename,
-         sep= "\t", 
-         col.names = F,
-         quote= F,
-         scipen = 20)
-} 
-
-#' @describeIn vl_exportBed for data.table
-#' @export
-vl_exportBed.data.table <- function(bed, filename)
-{
-  if(!vl_isDTranges(bed))
-    stop("Could not find seqnames, start and end columns")
-  cols <- c("seqnames", "start", "end", "name", "score", "strand")
-  if(!"name" %in% names(bed))
-    bed$name <- "."
-  if(!"score" %in% names(bed))
-    bed$score <- 0
-  if(!"strand" %in% names(bed))
-    bed$strand <- "."
-  cols <- cols[cols %in% names(bed)]
-  setcolorder(bed, cols)
-  fwrite(bed, 
-         filename,
-         sep= "\t", 
-         col.names = F,
-         quote= F,
-         scipen = 20)
-} 
 
 #' Find closestBed regions
 #'
@@ -126,13 +57,10 @@ vl_closestBed <- function(a,
                           n= 1,
                           min_dist= 0)
 {
-  if(!vl_isDTranges(a))
-    a <- vl_importBed(a)
+  a <- vl_importBed(a)
   if(is.null(b))
-    b <- a else if(!vl_isDTranges(b))
+    b <- a else
       b <- vl_importBed(b)
-  a <- data.table::copy(a)
-  b <- data.table::copy(b)
   # Main function
   res <- b[a, {
     # Measure distance
@@ -175,14 +103,11 @@ vl_resizeBed <- function(bed,
                          ignore.strand= F,
                          genome)
 {
-  if(!ignore.strand && !"strand" %in% names(bed))
-    message("ignore.strand=F but no strand column is detected -> ignored!")
-  if(!vl_isDTranges(bed))
-    bed <- vl_importBed(bed)
-  regions <- data.table::copy(bed)
-  
   if(!center %in% c("center", "start", "end"))
     stop("center should be one of center, start or end")
+  if(!ignore.strand && !"strand" %in% names(bed))
+    message("ignore.strand=F but no strand column is detected -> ignored!")
+  regions <- vl_importBed(bed)
   
   # Check strand
   if(!ignore.strand & !("strand" %in% names(regions)))
@@ -237,9 +162,7 @@ vl_collapseBed <- function(bed,
                            return_idx_only= F)
 {
   # Hard copy of bed file
-  if(!vl_isDTranges(bed))
-    bed <- vl_importBed(bed)
-  DT <- copy(bed)
+  DT <- vl_importBed(bed)
   setkeyv(DT, c("seqnames", "start", "end"))
   
   # Compute contig idx
@@ -264,11 +187,9 @@ vl_covBed <- function(bins,
                       bed)
 {
   # Import reads
-  if(!vl_isDTranges(bed))
-    bed <- vl_importBed(bed)
-  if(!vl_isDTranges(bins))
-    bins <- vl_importBed(bins)
+  bed <- vl_importBed(bed)
+  bins <- vl_importBed(bins)
+  # Count
   counts <- bed[bins, .N, .EACHI, on= c("seqnames", "start<=end", "end>=start")]$N
-  
   return(counts)
 }

@@ -18,7 +18,6 @@
 #' start= c(2166691, 12049006),
 #' end= c(2949651, 12932873),
 #' name= c("ANTP-C", "BX-C"))
-#' vl_isDTranges(regions)
 #' 
 #' bw <-c("../available_data_dm3/db/bw/GSE41440_H3K27ac_rep1_uniq.bw",
 #' "../available_data_dm3/db/bw/GSE41440_H3K27me3_rep1_uniq.bw")
@@ -26,7 +25,6 @@
 #' highlight_regions <- data.table(seqnames= "chr3R",
 #' start= 12586652,
 #' end= 12630183)
-#' vl_isDTranges(highlight_regions)
 #' 
 #' peaks <- "db/peaks/ATAC_peaks.txt"
 #' 
@@ -50,8 +48,7 @@ vl_screenshot <- function(bed,
                           genome,
                           add= F)
 {
-  if(!vl_isDTranges(bed))
-    bed <- vl_importBed(bed)
+  bed <- vl_importBed(bed)
   if(!identical(bed, unique(bed)))
     stop("Non-unique regions in bed!")
   if(is.null(names))

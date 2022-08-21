@@ -40,8 +40,7 @@ vl_binBSgenome <- function(genome,
 #' @export
 vl_control_regions_BSgenome <- function(bed, genome)
 {
-  if(!vl_isDTranges(bed))
-    bed <- vl_importBed(bed)
+  bed <- vl_importBed(bed)
   # Format
   regions <- data.table::copy(bed)
   regions[, width:= end-start+1]
