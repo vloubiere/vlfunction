@@ -18,7 +18,8 @@ vl_plot_pval_text <- function(x,
                               pval, 
                               stars_only= F,
                               pos= 3,
-                              srt= 0)
+                              srt= 0,
+                              offset= 0)
 {
   if(length(y)==1 & length(x)>1)
     y <- rep(y, length(x))
@@ -35,15 +36,15 @@ vl_plot_pval_text <- function(x,
          y = y[ns_val], 
          labels= bquote(paste(.(value[ns_val]), ""^N.S)), 
          cex= 0.6,
-         offset= -0.1,
-         pos= 3,
+         offset= offset-0.1,
+         pos= pos,
          srt= srt)
   if(!all(ns_val))
   text(x = x[!ns_val], 
        y = y[!ns_val], 
        labels= paste0(value[!ns_val], star[!ns_val]),
-       offset= -0.2,
-       pos= 3,
+       offset= offset-0.2,
+       pos= pos,
        srt= srt)
 }
 
