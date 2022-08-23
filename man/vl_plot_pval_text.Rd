@@ -4,7 +4,8 @@
 \alias{vl_plot_pval_text}
 \title{Plot pval}
 \usage{
-vl_plot_pval_text(x, y, pval, stars_only = F, pos = 3, srt = 0)
+vl_plot_pval_text(x, y, pval, stars_only = F, pos = 3, offset = 0,
+  ...)
 }
 \arguments{
 \item{x}{X position for plotting}
@@ -16,6 +17,8 @@ vl_plot_pval_text(x, y, pval, stars_only = F, pos = 3, srt = 0)
 \item{stars_only}{If set to TRU, then only plots */N.S. Default= FALSE}
 
 \item{pos}{pos argument (label position). see ?text()}
+
+\item{...}{Extra arguments passed to test function}
 
 \item{srt}{srt argument (rotation). see ?text()}
 }

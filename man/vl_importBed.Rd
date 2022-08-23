@@ -6,14 +6,16 @@
 \alias{vl_importBed.GRanges}
 \title{Import bed file}
 \usage{
-vl_importBed(bed)
+vl_importBed(bed, specialFormat)
 
-\method{vl_importBed}{character}(bed)
+\method{vl_importBed}{character}(bed, specialFormat)
 
 \method{vl_importBed}{GRanges}(bed)
 }
 \arguments{
 \item{bed}{Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
+
+\item{specialFormat}{"narrowPeak", "broadPeak"}
 }
 \value{
 Imported bed

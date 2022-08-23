@@ -8,6 +8,7 @@
 #' @param stars_only If set to TRU, then only plots */N.S. Default= FALSE
 #' @param pos pos argument (label position). see ?text()
 #' @param srt srt argument (rotation). see ?text()
+#' @param ... Extra arguments passed to test function
 #' @examples 
 #' pval <- c(1e-10, 1e-5, 1e-3, 1e-2, 1e-1, 1)
 #' plot(NA, xlim= c(0,7), ylim= c(-1,1))
@@ -18,8 +19,8 @@ vl_plot_pval_text <- function(x,
                               pval, 
                               stars_only= F,
                               pos= 3,
-                              srt= 0,
-                              offset= 0)
+                              offset= 0,
+                              ...)
 {
   if(length(y)==1 & length(x)>1)
     y <- rep(y, length(x))
@@ -38,14 +39,14 @@ vl_plot_pval_text <- function(x,
          cex= 0.6,
          offset= offset-0.1,
          pos= pos,
-         srt= srt)
+         ...)
   if(!all(ns_val))
   text(x = x[!ns_val], 
        y = y[!ns_val], 
        labels= paste0(value[!ns_val], star[!ns_val]),
        offset= offset-0.2,
        pos= pos,
-       srt= srt)
+       ...)
 }
 
 #' plot seqlogo rasterImage
