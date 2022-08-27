@@ -1,56 +1,167 @@
 #' @title Boxplot
-#' @description Just a wrapper around boxplot that makes it nicer and allows to add violins and wilcox pvals
-#' 
+#' @description Just a wrapper around boxplot that makes it nicer and allows to add wilcox pvals
 #' @param x list of variables to be plotted
 #' @param compute_pval list of vectors of length two containing pairwise x indexes to be compared
-#' @param outline Should outliers be plotted?
-#' @param xlim xlim
-#' @param ylim ylim
-#' @param xlab x label
-#' @param ylab y label
-#' @param names box names (x axis)
-#' @param boxcol Box colors (recycled)
-#' @param boxwex Boxes expansion factor. default to 0.4, 0.25 if violin= T
-#' @param box.lty Line type used for boxplots, default= 1
-#' @param staplewex Staples expansion factor. default= NA
-#' @param violin Should violins be plotted?
-#' @param violcol Violin colors (recycled) 
-#' @param violwex violins expansion factor. default to 0.4
-#' @param wilcox.alternative When compute_pval is specified, alternative of the wilcox.test. default= "two.sided"
 #' @param pval_offset offset for pval plotting. Defaults to 0.04 (fraction of ylim)
-#' @param horizontal Whould the plot be made horizontal?
-#' @param main main title
-#' @param tilt.names Should boxes names be tilted (works only if horizontal= T)
-#' @param axes Should the box around the plot be drawn? Default= F
-#' @param xaxt Should the x axis be plotted or not ("n") ? default= "o"
-#' @param yaxt Should the y axis be plotted or not ("n") ? default= "o"
-#' @param las style of axis label. see ?par()
-#' @param plot Should the boxlplot be ploted? default to TRUE
-#' @param add Should the boxlplot be added to existing plot? default to FALSE
 #' @examples
-#' # Create test matrix
 #' set.seed(1234)
-#' test = matrix(rnorm(200), 20, 10)
-#' test[1:10, seq(1, 10, 2)] = test[1:10, seq(1, 10, 2)] + 3
-#' test[11:20, seq(2, 10, 2)] = test[11:20, seq(2, 10, 2)] + 2
-#' test[15:20, seq(2, 10, 2)] = test[15:20, seq(2, 10, 2)] + 4
-#' colnames(test) = paste("Test", 1:10, sep = "")
-#' rownames(test) = paste("Gene", 1:20, sep = "")
-#' vl_boxplot(test, compute_pval= list(c(1,2), c(1,4), c(1,5), c(5,6), c(1,10), c(9,10)), outline= F, violcol= c("red", "yellow"), boxcol= c("green", "purple"))
+#' vl_boxplot(formula= len~supp*dose, data=ToothGrowth, notch=TRUE,
+#' col= c("gold","darkgreen"),
+#' main="Tooth Growth", xlab="Suppliment and Dose",
+#' compute_pval= list(c(1,2), c(5,6), c(1,6)))
 #' @export
 vl_boxplot <- function(x, ...) UseMethod("vl_boxplot")
 
+#' @describeIn vl_boxplot default method
+#' @export
+vl_boxplot.default <- function(x, ..., 
+                               compute_pval= NULL, pval_offset= 0.08,
+                               range = 1.5, width = NULL, varwidth = FALSE,
+                               notch = FALSE, outline = FALSE, names, plot = TRUE,
+                               border = par("fg"), col = NULL, log = "",
+                               pars = list(boxwex = 0.8, staplewex = 0.5, outwex = 0.5),
+                               horizontal = FALSE, add = FALSE, at = NULL,
+                               frame= FALSE, whisklty = 1)
+  {
+    args <- list(x, ...)
+    namedargs <-
+      if(!is.null(attributes(args)$names)) attributes(args)$names != ""
+    else rep_len(FALSE, length(args))
+    ## pars <- c(args[namedargs], pars)
+    groups <- if(is.list(x)) x else args[!namedargs]
+    if(0L == (n <- length(groups)))
+      stop("invalid first argument")
+    if(length(class(groups)))
+      groups <- unclass(groups)
+    if(!missing(names))
+      attr(groups, "names") <- names
+    else {
+      if(is.null(attr(groups, "names")))
+        attr(groups, "names") <- 1L:n
+      names <- attr(groups, "names")
+    }
+    cls <- sapply(groups, function(x) class(x)[1L])
+    cl <- if(all(cls == cls[1L])) cls[1L] else NULL
+    #<<<<<<<<<<<<<<<<<<<< vl chunck 1 copy groups for pval
+    groups.copy <- groups
+    #<<<<<<<<<<<<<<<<<<<< vl chunck 1
+    for(i in 1L:n)
+      groups[i] <- list(boxplot.stats(unclass(groups[[i]]), range)) # do.conf=notch)
+    stats <- matrix(0, nrow = 5L, ncol = n)
+    conf  <- matrix(0, nrow = 2L, ncol = n)
+    ng <- out <- group <- numeric(0L)
+    ct <- 1
+    for(i in groups) {
+      stats[,ct] <- i$stats
+      conf [,ct] <- i$conf
+      ng <- c(ng, i$n)
+      if((lo <- length(i$out))) {
+        out	  <- c(out,i$out)
+        group <- c(group, rep.int(ct, lo))
+      }
+      ct <- ct+1
+    }
+    if(length(cl) && cl != "numeric") oldClass(stats) <- cl
+    z <- list(stats = stats, n = ng, conf = conf, out = out, group = group,
+              names = names)
+    #<<<<<<<<<<<<<<<<<<<< vl chunck 2 pval object
+    if(!is.null(compute_pval)) 
+    {
+      if(!is.list(compute_pval) | !all(lengths(compute_pval)==2))
+        stop("compute_pval list of vectors of length two containing pairwise x indexes to be compared")
+      # Make pairs object
+      dat <- data.table::data.table(dat= groups.copy,
+                                    x= if(is.null(at)) seq(groups.copy) else at) # Retrieve at positions
+      if(outline)
+      {
+        dat[, max:= sapply(dat, max, na.rm= T)]
+        ymin <- min(unlist(dat))
+      }else{
+        dat[, max:= z$stats[5,]]
+        ymin <- min(z$stats[1,])
+      }
+      dat[, max:= as.numeric(max)] # Needed to not lose y precision later
+      pval <- cbind(dat[sapply(compute_pval, min), !"max"], # Order comparison pairs! (x0<=x1)
+                    dat[sapply(compute_pval, max), !"max"])
+      data.table::setnames(pval, c("dat0", "x0", "dat1", "x1"))
+      # Compute wilcox pval
+      pval[, wilcox:= mapply(function(x, y) wilcox.test(unlist(x), unlist(y))$p.value, x= dat0, y= dat1)]
+      # Compute x pos text
+      pval[, x:= rowMeans(.SD), .SDcols= c("x0", "x1")]
+      # Compute y pos
+      adj <- pval_offset*(max(dat$max)-ymin)
+      pval[, y:= max(dat[.BY, max, on= c("x>=x0", "x<=x1")]), .(x0, x1)] # Max depending on overlapping boxes
+      data.table::setorderv(pval, c("y", "x0", "x1"))
+      pval[, idx:= .I] # Index to check previous bars
+      for(i in seq(nrow(pval)))
+      {
+        .c <- sort(pval[pval[i], y, on= c("x0<=x1", "x1>=x0", "idx<=idx")]) # y pos overlapping lines
+        .c <- .c[diff(c(.c, Inf))>2*adj  & .c>=pval[i,y]] # y values with enough space
+        pval[i, y:= data.table::first(.c)+adj] # Smaller y value + adj
+      }
+      # Horizontal plot
+      pval[, y0:= y] # Convenient if horizontal= T
+      pval[, y1:= y] # Convenient if horizontal= T
+      pos <- ifelse(horizontal, 4, 3)
+      offset <- ifelse(horizontal, 0.3, 0)
+      z <- c(z,
+             list(ylim= c(ymin, max(c(dat$max, pval$y0+adj)))), #ylim
+             list(pval= pval))
+    }
+    #>>>>>>>>>>>>>>>>>>>> vl chunck 2
+    if(plot) {
+      if(is.null(pars$boxfill) && is.null(args$boxfill)) pars$boxfill <- col
+      #<<<<<<<<<<<<<<<<<<<< vl chunck 3 extract args and adjust ylim before ploting
+      args <- c(list(z, notch = notch, width = width, varwidth = varwidth,
+                     log = log, border = border, pars = pars,
+                     outline = outline, horizontal = horizontal, add = add,
+                     at = at), args[namedargs])
+      if(!hasArg(ylim) && "ylim" %in% names(z))
+        args <- c(args, list(ylim= z$ylim))
+      do.call("bxp", args)
+      #>>>>>>>>>>>>>>>>>>>> vl chunck 3
+      #<<<<<<<<<<<<<<<<<<<< vl chunck 4 plot pval
+      if("pval" %in% names(z))
+      {
+        # Return if horizontal
+        if(horizontal)
+          setnames(pval, 
+                   c("x", "y", "x0", "x1", "y0", "y1"), 
+                   c("y", "x", "y0", "y1", "x0", "x1"))
+        pval[, {
+          segments(x0, y0, x1, y1)
+          vl_plot_pval_text(x,
+                            y,
+                            wilcox,
+                            stars_only = T,
+                            pos= pos,
+                            offset= offset)
+        }]
+      }
+      #>>>>>>>>>>>>>>>>>>>> vl chunck 4
+      invisible(z)
+    }
+    else z
+  }
 #' @describeIn vl_boxplot method for matrices
 #' @export
-vl_boxplot.matrix <- function(x, ...)
+vl_boxplot.matrix <- function(x, use.cols = TRUE, ...)
 {
-  x <- lapply(seq(ncol(x)), function(i) x[,i])
-  vl_boxplot.default(x, ...)
+  ## Purpose: Boxplot for each column or row [use.cols= TRUE / FALSE] of a matrix
+  ## -------------------------------------------------------------------------
+  ## Arguments: x: a numeric matrix; use.cols: logical, columns (T) or rows (F)
+  ## <FIXME split.matrix>
+  groups <- if(use.cols) {
+    split(c(x), rep.int(1L:ncol(x), rep.int(nrow(x), ncol(x))))
+  } else split(c(x), seq(nrow(x)))
+  ## Make use of col/row names if present
+  if (length(nam <- dimnames(x)[[1+use.cols]])) names(groups) <- nam
+  invisible(vl_boxplot(groups, ...))
 }
 
 #' @describeIn vl_boxplot method for formula
 #' @export
-vl_boxplot.formula <- function(formula, data = NULL, ...)
+vl_boxplot.formula <- function(formula, data = NULL, ..., subset, na.action = NULL)
 {
   if(missing(formula) || (length(formula) != 3L))
     stop("'formula' missing or incorrect")
@@ -58,229 +169,10 @@ vl_boxplot.formula <- function(formula, data = NULL, ...)
   if(is.matrix(eval(m$data, parent.frame())))
     m$data <- as.data.frame(data)
   m$... <- NULL
+  m$na.action <- na.action # force use of default for this method
   ## need stats:: for non-standard evaluation
   m[[1L]] <- quote(stats::model.frame)
   mf <- eval(m, parent.frame())
   response <- attr(attr(mf, "terms"), "response")
-  vl_boxplot.default(split(mf[[response]], mf[-response]), ...)
-}
-
-#' @describeIn vl_boxplot method for data.table
-#' @export
-vl_boxplot.data.table <- function(x, ...)
-{
-  x <- as.list(x)
-  vl_boxplot.default(x, ...)
-}
-
-#' @describeIn vl_boxplot default method
-#' @export
-vl_boxplot.default <- function(x,
-                               compute_pval,
-                               outline= F,
-                               xlim, 
-                               ylim,
-                               main= NA,
-                               xlab= NA,
-                               ylab= NA,
-                               names= NULL,
-                               boxcol= "white",
-                               boxwex= ifelse(violin, 0.25, 0.4),
-                               box.lty= 1,
-                               staplewex= NA,
-                               violin= F,
-                               violcol= "white",
-                               violwex= 0.4,
-                               wilcox.alternative= "two.sided",
-                               pval_offset= 0.04,
-                               horizontal= F,
-                               tilt.names= F,
-                               axes= F,
-                               xaxt= "o",
-                               yaxt= "o",
-                               las= par("las"),
-                               plot= T,
-                               add= F)
-{
-  if(!missing(compute_pval) && !is.list(compute_pval))
-    stop("compute_pval should be a list of vectors of length two containing pairwise x indexes to be compared")
-
-  # Format data list
-  if(!is.list(x))
-    x <- list(x)
-  if(is.character(names))
-    names(x) <- names
-  if(is.null(names(x)))
-    names(x) <- seq(x)
-  
-  # Compute box stats and lims
-  box <- sapply(x, 
-                boxplot.stats,
-                do.out= outline | violin)
-  xrange <- c(0.5, length(x)+0.5)
-  yrange <- range(box[c("out", "stats"),], na.rm= T)
-  
-  # Compute violins
-  if(violin)
-  {
-    violcols <- c(matrix(violcol, ncol= 1, nrow= length(x)))
-    viols <- lapply(seq(x), function(i) {
-      var <- x[[i]]
-      if(length(var)>2)
-      {
-        dens <- density(var,
-                        from= min(var, na.rm= T),
-                        to= max(var, na.rm= T), 
-                        na.rm= T)
-        xp <- dens$y/max(dens$y)*violwex
-        xp <- c(i+xp, i-rev(xp))
-        yp <- c(dens$x, rev(dens$x))
-        list(x= xp, 
-             y= yp,
-             col= violcols[i])
-      }else
-        list()
-    })
-    viols <- rbindlist(viols[lengths(viols)>0],
-                       idcol = T)
-    viols <- viols[, .(x= .(x),
-                       y= .(y)), .(.id, col)]
-    # Adjust max
-    if(min(unlist(viols$y))<yrange[1])
-      yrange[1] <- min(unlist(viols$y))
-    if(max(unlist(viols$y))>yrange[2])
-      yrange[2] <- min(unlist(viols$y))
-  }
-  
-  # Compute pvals
-  if(!missing(compute_pval))
-  {
-    if(missing(ylim)) # plotting adjust
-      adj <- diff(yrange)*pval_offset else
-        adj <- diff(ylim)*pval_offset
-    pval <- matrix(sapply(compute_pval, sort), ncol= 2, byrow = T)
-    pval <- as.data.table(pval)
-    setnames(pval, c("x0", "x1"))
-    pval[, c("var1", "var2"):= .(x[x0], x[x1])]
-    pval <- pval[lengths(var1)>0 & lengths(var2)>0]
-    # Compute pvals
-    if(nrow(pval)>0)
-    {
-      pval[, pval:= wilcox.test(unlist(var1),
-                                unlist(var2),
-                                alternative= wilcox.alternative)$p.value, .(x0, x1)]
-      pval[, max:= max(unlist(box[c("out", "stats"), x0:x1]), na.rm= T), .(x0, x1)]
-      setorderv(pval, c("x0", "x1", "max"))
-      # Compute contig idx and adjust y
-      pval[, idx:= cumsum(x0>data.table::shift(x1, fill= max(x1)))]
-      setorderv(pval, c("idx", "max"))
-      pval[, y:= max+cumsum(c(0, diff(max))<adj)*adj, idx]
-      pval[, x:= rowMeans(.SD), .SDcols= c("x0", "x1")]
-      # Adjust max
-      if(max(pval$y+adj)>yrange[2])
-        yrange[2] <- max(pval$y+adj)
-    }
-  }
-
-  #------------------------#
-  # Plot
-  #------------------------#
-  if(missing(xlim))
-    xlim <- xrange
-  if(missing(ylim))
-    ylim <- yrange
-  if(plot)
-  {
-    if(!add)
-    {
-      plot.new()
-      plot.window(xlim= if(horizontal) ylim else xlim,
-                  ylim= if(horizontal) xlim else ylim)
-    }
-    title(main= main, 
-          xlab= xlab, 
-          ylab= ylab)
-    if(violin && nrow(viols)>0)
-      viols[, {
-        polygon(if(horizontal) unlist(y) else unlist(x), 
-                if(horizontal) unlist(x) else unlist(y), 
-                col= col[1])
-      }, .(.id, col)]
-    boxplot(x,
-            pch= NA,
-            outline= F,
-            add= T,
-            staplewex= staplewex, 
-            lty= box.lty, 
-            boxwex= boxwex,
-            col= boxcol,
-            names= NA,
-            horizontal= horizontal,
-            axes= axes,
-            xaxt= "n",
-            yaxt= "n")
-    if(xaxt!="n")
-      if(horizontal)
-        axis(1, 
-             lwd= ifelse(axes, 0, 1),
-             lwd.ticks= 1,
-             las= las) else
-               axis(1,
-                    at= seq(x),
-                    labels= if(tilt.names) rep(NA, length(x)) else names(x),
-                    lwd= ifelse(axes, 0, 1),
-                    lwd.ticks= 1,
-                    las= las)
-    if(yaxt!="n")
-      if(horizontal)
-        axis(2,
-             at= seq(x),
-             labels= names(x),
-             lwd= ifelse(axes, 0, 1),
-             lwd.ticks= 1,
-             las= las) else
-               axis(2, 
-                    lwd= ifelse(axes, 0, 1),
-                    lwd.ticks= 1,
-                    las= las)
-    if(tilt.names && xaxt!="n" && !horizontal)
-      text(seq(x),
-           par("usr")[3]-(grconvertY(par("mgp")[2], "line", "user")-grconvertY(0, "line", "user")),
-           names(x),
-           srt= 45,
-           offset= -0.35,
-           pos= 2,
-           xpd= T,
-           cex= par("cex.axis"))
-    if(outline)
-    {
-      points(if(horizontal) unlist(box["out",]) else jitter(rep(seq(x), lengths(box["out",]))),
-             if(horizontal) jitter(rep(seq(x), lengths(box["out",]))) else unlist(box["out",]),
-             pch= 16,
-             col= adjustcolor("grey", 0.5))
-    }
-    
-    if(!missing(compute_pval) && nrow(pval)>0)
-      pval[, {
-        segments(if(horizontal) y else x0, 
-                 if(horizontal) x0 else y, 
-                 if(horizontal) y else x1,
-                 if(horizontal) x1 else y)
-        vl_plot_pval_text(if(horizontal) y else x, 
-                          if(horizontal) x else y, 
-                          pval, 
-                          stars_only = T,
-                          pos= ifelse(horizontal, 4, 3),
-                          srt= ifelse(horizontal, 270, 0))
-      }]
-  }
-  
-  obj <- list(stats= as.data.table(box["stats",]),
-              xlim= if(horizontal) ylim else xlim,
-              ylim= if(horizontal) xlim else ylim)
-  if(violin && nrow(viols)>0)
-    obj <- c(obj, list(violins= viols))
-  if(!missing(compute_pval) && nrow(pval)>0)
-    obj <- c(obj, list(pval= pval))
-  invisible(obj)
+  vl_boxplot(split(mf[[response]], mf[-response]), ...)
 }

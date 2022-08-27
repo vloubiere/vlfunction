@@ -2,103 +2,48 @@
 % Please edit documentation in R/boxplot.R
 \name{vl_boxplot}
 \alias{vl_boxplot}
+\alias{vl_boxplot.default}
 \alias{vl_boxplot.matrix}
 \alias{vl_boxplot.formula}
-\alias{vl_boxplot.data.table}
-\alias{vl_boxplot.default}
 \title{Boxplot}
 \usage{
 vl_boxplot(x, ...)
 
-\method{vl_boxplot}{matrix}(x, ...)
+\method{vl_boxplot}{default}(x, ..., compute_pval = NULL,
+  pval_offset = 0.08, range = 1.5, width = NULL, varwidth = FALSE,
+  notch = FALSE, outline = FALSE, names, plot = TRUE,
+  border = par("fg"), col = NULL, log = "", pars = list(boxwex =
+  0.8, staplewex = 0.5, outwex = 0.5), horizontal = FALSE, add = FALSE,
+  at = NULL, frame = FALSE, whisklty = 1)
 
-\method{vl_boxplot}{formula}(formula, data = NULL, ...)
+\method{vl_boxplot}{matrix}(x, use.cols = TRUE, ...)
 
-\method{vl_boxplot}{data.table}(x, ...)
-
-\method{vl_boxplot}{default}(x, compute_pval, outline = F, xlim, ylim,
-  main = NA, xlab = NA, ylab = NA, names = NULL,
-  boxcol = "white", boxwex = ifelse(violin, 0.25, 0.4), box.lty = 1,
-  staplewex = NA, violin = F, violcol = "white", violwex = 0.4,
-  wilcox.alternative = "two.sided", pval_offset = 0.04,
-  horizontal = F, tilt.names = F, axes = F, xaxt = "o",
-  yaxt = "o", las = par("las"), plot = T, add = F)
+\method{vl_boxplot}{formula}(formula, data = NULL, ..., subset,
+  na.action = NULL)
 }
 \arguments{
 \item{x}{list of variables to be plotted}
 
 \item{compute_pval}{list of vectors of length two containing pairwise x indexes to be compared}
 
-\item{outline}{Should outliers be plotted?}
-
-\item{xlim}{xlim}
-
-\item{ylim}{ylim}
-
-\item{main}{main title}
-
-\item{xlab}{x label}
-
-\item{ylab}{y label}
-
-\item{names}{box names (x axis)}
-
-\item{boxcol}{Box colors (recycled)}
-
-\item{boxwex}{Boxes expansion factor. default to 0.4, 0.25 if violin= T}
-
-\item{box.lty}{Line type used for boxplots, default= 1}
-
-\item{staplewex}{Staples expansion factor. default= NA}
-
-\item{violin}{Should violins be plotted?}
-
-\item{violcol}{Violin colors (recycled)}
-
-\item{violwex}{violins expansion factor. default to 0.4}
-
-\item{wilcox.alternative}{When compute_pval is specified, alternative of the wilcox.test. default= "two.sided"}
-
 \item{pval_offset}{offset for pval plotting. Defaults to 0.04 (fraction of ylim)}
-
-\item{horizontal}{Whould the plot be made horizontal?}
-
-\item{tilt.names}{Should boxes names be tilted (works only if horizontal= T)}
-
-\item{axes}{Should the box around the plot be drawn? Default= F}
-
-\item{xaxt}{Should the x axis be plotted or not ("n") ? default= "o"}
-
-\item{yaxt}{Should the y axis be plotted or not ("n") ? default= "o"}
-
-\item{las}{style of axis label. see ?par()}
-
-\item{plot}{Should the boxlplot be ploted? default to TRUE}
-
-\item{add}{Should the boxlplot be added to existing plot? default to FALSE}
 }
 \description{
-Just a wrapper around boxplot that makes it nicer and allows to add violins and wilcox pvals
+Just a wrapper around boxplot that makes it nicer and allows to add wilcox pvals
 }
 \section{Methods (by class)}{
 \itemize{
+\item \code{default}: default method
+
 \item \code{matrix}: method for matrices
 
 \item \code{formula}: method for formula
-
-\item \code{data.table}: method for data.table
-
-\item \code{default}: default method
 }}
 
 \examples{
-# Create test matrix
 set.seed(1234)
-test = matrix(rnorm(200), 20, 10)
-test[1:10, seq(1, 10, 2)] = test[1:10, seq(1, 10, 2)] + 3
-test[11:20, seq(2, 10, 2)] = test[11:20, seq(2, 10, 2)] + 2
-test[15:20, seq(2, 10, 2)] = test[15:20, seq(2, 10, 2)] + 4
-colnames(test) = paste("Test", 1:10, sep = "")
-rownames(test) = paste("Gene", 1:20, sep = "")
-vl_boxplot(test, compute_pval= list(c(1,2), c(1,4), c(1,5), c(5,6), c(1,10), c(9,10)), outline= F, violcol= c("red", "yellow"), boxcol= c("green", "purple"))
+vl_boxplot(formula= len~supp*dose, data=ToothGrowth, notch=TRUE,
+col= c("gold","darkgreen"),
+main="Tooth Growth", xlab="Suppliment and Dose",
+compute_pval= list(c(1,2), c(5,6), c(1,6)))
 }
