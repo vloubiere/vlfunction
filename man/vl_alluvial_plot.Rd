@@ -5,12 +5,15 @@
 \title{bw Average tracks}
 \usage{
 vl_alluvial_plot(dat,
-  col = vl_palette_many_categ(length(unique(unlist(dat)))), ...)
+  col = vl_palette_many_categ(length(unique(unlist(dat)))),
+  alpha.f = 0.5, ...)
 }
 \arguments{
-\item{dat}{Data.table containing the variables to plot}
+\item{dat}{Data.table or matrix containing 1 column/condition}
 
 \item{col}{Colors to use for bars. Wrapped with colorRampPalette}
+
+\item{alpha.f}{Alpha value for transition colors}
 
 \item{...}{Extra parameters to be passed to barplot}
 }
@@ -24,6 +27,5 @@ Plots average tracks for a set bw files around (potentially) several sets of pea
 test <- data.table(c("A", "A", "A", "A", "A", "B", "B", "B", "C", "C", "C"),
 c("A", "A", "A", "B", "B", "B", "B", "C", "C", "C", "C"),
 c("A", "A", "B", "B", "B", "B", "B", "B", "B", "C", "C"))
-vl_alluvial_plot(test,
-class_levels = c("C", "B", "A"))
+vl_alluvial_plot(test)
 }
