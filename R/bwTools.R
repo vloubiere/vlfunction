@@ -72,7 +72,7 @@ vl_bw_merge <- function(tracks, output, genome, scoreFUN= NULL)
 #' cov2 <- binned_average_function(GRanges(bins), "../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw")
 #' identical(cov1, cov2)
 #' @export
-vl_bw_coverage <- function(bed, 
+vl_bw_coverage <- function(bed,
                            bw,
                            na_value= 0)
 {

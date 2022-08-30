@@ -19,7 +19,6 @@ vl_SRR_url <- function(SRR)
   return(url)
 }
 
-
 #' get SRA metadata 
 #'
 #' Donwload SRA metadata info from GSE

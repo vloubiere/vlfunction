@@ -6,9 +6,10 @@
 \alias{vl_importBed.GRanges}
 \title{Import bed file}
 \usage{
-vl_importBed(bed, specialFormat)
+vl_importBed(bed, ...)
 
-\method{vl_importBed}{character}(bed, specialFormat)
+\method{vl_importBed}{character}(bed, cols = c("seqnames", "start",
+  "end", "name", "score", "strand"), extraCols = NULL)
 
 \method{vl_importBed}{GRanges}(bed)
 }

@@ -12,9 +12,9 @@ vl_motif_cl_enrich(counts_matrix, cl_IDs,
   top_enrich = Inf, x_breaks, color_breaks, cex.balloons = 1,
   col = c("cornflowerblue", "lightgrey", "tomato"), main = NA)
 
-\method{plot}{vl_enr_cl}(obj, x_breaks, padj_cutoff = 0.05,
-  top_enrich = Inf, color_breaks, cex.balloons = 1,
-  col = c("cornflowerblue", "lightgrey", "tomato"), main = NA)
+plot.vl_enr_cl(obj, x_breaks, padj_cutoff = 0.05, top_enrich = Inf,
+  color_breaks, cex.balloons = 1, col = c("cornflowerblue",
+  "lightgrey", "tomato"), main = NA)
 }
 \arguments{
 \item{counts_matrix}{A matrix containing motif counts (rows= sequences, cols= motifs)}
@@ -45,9 +45,9 @@ Fisher test data.table.
 \description{
 Compute motif enrichment for the cluster in cl_columns, using all the lines as background
 }
-\section{Methods (by generic)}{
+\section{Functions}{
 \itemize{
-\item \code{plot}: method to plot cluster enrichment objects (containing variable, log2OR and padj)
+\item \code{plot.vl_enr_cl}: method to plot cluster enrichment objects (containing variable, log2OR and padj)
 }}
 
 \examples{

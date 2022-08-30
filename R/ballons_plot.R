@@ -69,7 +69,7 @@ vl_balloons_plot.matrix <- function(x,
   points(rep(1:ncol(x), each= nrow(x)),
          rep(1:nrow(x), ncol(x)),
          bg= color_var,
-         pch= ifelse(x>=0, 21, 22),
+         pch= ifelse(x>=0, 19, 15),
          cex= abs(x)*cex.balloons,
          xpd= T)
   # Axes
