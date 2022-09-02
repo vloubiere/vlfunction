@@ -4,7 +4,8 @@
 \alias{vl_random_regions_BSgenome}
 \title{random region}
 \usage{
-vl_random_regions_BSgenome(genome, n, width = 1, restrict_seqnames = NULL)
+vl_random_regions_BSgenome(genome, n, width = 1,
+  restrict_seqnames = NULL)
 }
 \arguments{
 \item{n}{Number of regions to sample}

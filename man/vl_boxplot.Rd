@@ -9,39 +9,29 @@
 \usage{
 vl_boxplot(x, ...)
 
-\method{vl_boxplot}{default}(
-  x,
-  ...,
-  compute_pval = NULL,
-  pval_offset = 0.08,
-  range = 1.5,
-  width = NULL,
-  varwidth = FALSE,
-  notch = FALSE,
-  outline = FALSE,
-  names,
-  plot = TRUE,
-  border = par("fg"),
-  col = NULL,
-  log = "",
-  pars = list(boxwex = 0.8, staplewex = 0.5, outwex = 0.5),
-  horizontal = FALSE,
-  add = FALSE,
-  at = NULL,
-  frame = FALSE,
-  whisklty = 1
-)
+\method{vl_boxplot}{default}(x, ..., compute_pval = NULL,
+  pval_offset = 0.08, tilt.names = F, range = 1.5, width = NULL,
+  varwidth = FALSE, notch = FALSE, outline = FALSE, names,
+  plot = TRUE, border = par("fg"), col = NULL, log = "",
+  pars = list(boxwex = 0.4, staplewex = NA, outwex = NA),
+  horizontal = FALSE, add = FALSE, at = NULL, frame = F,
+  whisklty = 1)
 
 \method{vl_boxplot}{matrix}(x, use.cols = TRUE, ...)
 
-\method{vl_boxplot}{formula}(formula, data = NULL, ..., subset, na.action = NULL)
+\method{vl_boxplot}{formula}(formula, data = NULL, ..., subset,
+  na.action = NULL)
 }
 \arguments{
 \item{x}{list of variables to be plotted}
 
+\item{...}{Extra parameters for boxplot()}
+
 \item{compute_pval}{list of vectors of length two containing pairwise x indexes to be compared}
 
 \item{pval_offset}{offset for pval plotting. Defaults to 0.04 (fraction of ylim)}
+
+\item{tilt.names}{Should names be tilted (ignored if horizontal= TRUE)}
 }
 \description{
 Just a wrapper around boxplot that makes it nicer and allows to add wilcox pvals
