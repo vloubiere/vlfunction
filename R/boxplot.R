@@ -19,7 +19,7 @@ vl_boxplot.default <- function(x, ...,
                                range = 1.5, width = NULL, varwidth = FALSE,
                                notch = FALSE, outline = FALSE, names, plot = TRUE,
                                border = par("fg"), col = NULL, log = "",
-                               pars = list(boxwex = 0.8, staplewex = 0.5, outwex = 0.5),
+                               pars = list(boxwex = 0.4, staplewex = 0, outwex = 0),
                                horizontal = FALSE, add = FALSE, at = NULL,
                                frame= FALSE, whisklty = 1)
   {
@@ -115,7 +115,8 @@ vl_boxplot.default <- function(x, ...,
       args <- c(list(z, notch = notch, width = width, varwidth = varwidth,
                      log = log, border = border, pars = pars,
                      outline = outline, horizontal = horizontal, add = add,
-                     at = at), args[namedargs])
+                     at = at), args[namedargs], 
+                frame= frame, whisklty = whisklty)
       if(!hasArg(ylim) && "ylim" %in% names(z))
         args <- c(args, list(ylim= z$ylim))
       do.call("bxp", args)
