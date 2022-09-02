@@ -11,7 +11,7 @@
 #' @return data.table containing bin coordinates
 #' @export
 vl_binBSgenome <- function(genome,
-                           bins_width= 50,
+                           bins_width= 50L,
                            steps_width= bins_width,
                            restrict_seqnames= NULL)
 {
@@ -22,7 +22,7 @@ vl_binBSgenome <- function(genome,
   bins <- lapply(split(dat$width, dat$seqnames), function(x) {
     coor <- seq(1, x, steps_width)
     data.table(start= coor,
-               end= c(coor[-1]-1, x))[end>start]
+               end= c(coor[-1]-1, x))[end>=start]
   })
   bins <- rbindlist(bins, idcol = "seqnames")
   if(!is.null(restrict_seqnames))

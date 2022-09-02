@@ -73,6 +73,7 @@ vl_bw_coverage <- function(bed,
   var <- data.table::as.data.table(rtracklayer::import.bw(bw, selection= sel))
   
   # Overlap
+  setkeyv(.b, c("seqnames", "start", "end"))
   res <- var[.b, .(seqnames, x.start, x.end, score, i.start, i.end, I), on= c("seqnames", "start<=end", "end>=start")]
   
   # Clip bw ranges to bin ramges
@@ -80,7 +81,7 @@ vl_bw_coverage <- function(bed,
   res[x.end>i.end, x.end:= i.end]
   
   # Compute score
-  res <- res[, sum(score*(x.end-x.start+1))/(i.end-i.start+1), .(seqnames, i.start, i.end, I)]$V1
+  res <- res[, sum(score*(x.end-x.start+1))/width, keyby= .(I, width= i.end-i.start+1)]$V1
   res[is.na(res)] <- na_value
   return(res)
 }

@@ -5,8 +5,16 @@
 \alias{plot.vl_STRING}
 \title{get STRING intrations DT}
 \usage{
-vl_STRING_interaction(symbols, species, plot = T, score_cutoff = 400,
-  top_N = Inf, col = "tomato", size = 10, cex.label = 1)
+vl_STRING_interaction(
+  symbols,
+  species,
+  plot = T,
+  score_cutoff = 400,
+  top_N = Inf,
+  col = "tomato",
+  size = 10,
+  cex.label = 1
+)
 
 plot.vl_STRING(obj, score_cutoff = 400, top_N = Inf)
 }
