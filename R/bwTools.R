@@ -3,42 +3,26 @@
 #' Convenience function to merge directly into r
 #'
 #' @param bw A character vector containing the path of bw files to be merged
-#' @param output Output bw file path
 #' @param genome BSgenome. "dm3", "dm6", "mm10"
+#' @param bins_width Bin size. default= 25L
+#' @param output Output bw file path
 #' @param scoreFUN A function to be applied to the score column before return
 #' @export
-vl_bw_merge <- function(tracks, output, genome, scoreFUN= NULL)
+vl_bw_merge <- function(tracks, genome, bins_width= 25L, output, scoreFUN= NULL)
 {
-  bw <- as.data.table(rtracklayer::import(tracks[1]))
-  print(tracks[1])
-  
-  for(track in tracks[-1])
+  bw <- vl_binBSgenome(genome, bins_width = bins_width)
+  bw[, score:= as.numeric(0)]
+  # Compute value
+  for(track in tracks)
   {
-    # Import bw2 and merge with bw
-    .c <- as.data.table(rtracklayer::import(track))
-    bw <- bw[.c, .(seqnames, x.start, x.end, i.start, i.end, i.score, x.score), on= c("seqnames", "start<=end", "end>=start")]
-    # Fix bw2 regions that don't exist in bw
-    bw[is.na(x.start), c("x.start", "x.end", "x.score"):= .(i.start, i.end, i.score)]
-    # Compute start coordinates ("else"= bw bin matches several bw2 bins -> take bw2 coor except for the first)
-    bw[, start:= {
-      if(.N==1)
-        x.start else
-          c(x.start, i.start[-1])
-    }, .(seqnames, x.start, x.end)]
-    # Compute end coordinates ("else"= bw bin matches several bw2 bins -> take bw2 coor except for the last)
-    bw[, end:= {
-      if(.N==1)
-        x.end else
-          c(i.end[-(.N)], x.end)
-    }, .(seqnames, x.start, x.end)]
-    # sum scores
-    bw[, score:= rowSums(.SD), .SDcol= c("i.score", "x.score")]
-    bw <- bw[, .(seqnames, start, end, score)]
+    bw[, score:= score+vl_bw_coverage(bw, track)]
     print(track)
   }
   # Apply function to score if specified
   if(!is.null(scoreFUN))
     bw[, score:= scoreFUN(score)]
+  # Collapse score rle
+  bw <- bw[, .(start= start[1], end= end[.N]), .(seqnames, data.table::rleid(score), score)]
   # Format GRanges
   .g <- GenomicRanges::GRanges(bw)
   BS <- getBSgenome(genome)

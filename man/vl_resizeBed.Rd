@@ -4,8 +4,14 @@
 \alias{vl_resizeBed}
 \title{Resize bed}
 \usage{
-vl_resizeBed(bed, center = "center", upstream = 500,
-  downstream = 500, ignore.strand = F, genome)
+vl_resizeBed(
+  bed,
+  center = "center",
+  upstream = 500,
+  downstream = 500,
+  ignore.strand = F,
+  genome
+)
 }
 \arguments{
 \item{bed}{Bed file to resize. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}

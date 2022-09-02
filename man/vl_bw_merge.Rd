@@ -4,12 +4,14 @@
 \alias{vl_bw_merge}
 \title{Merge several bigwig files into 1}
 \usage{
-vl_bw_merge(tracks, output, genome, scoreFUN = NULL)
+vl_bw_merge(tracks, genome, bins_width = 25L, output, scoreFUN = NULL)
 }
 \arguments{
-\item{output}{Output bw file path}
-
 \item{genome}{BSgenome. "dm3", "dm6", "mm10"}
+
+\item{bins_width}{Bin size. default= 25L}
+
+\item{output}{Output bw file path}
 
 \item{scoreFUN}{A function to be applied to the score column before return}
 

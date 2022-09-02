@@ -18,12 +18,15 @@ vl_binBSgenome <- function(genome,
   if(steps_width>bins_width)
     warning("steps_width>bins_width, meaning bins will not be contiguous")
   dat <- data.table::as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))))
+  dat <- dat[, .(seqnames, width)]
+  bins <- lapply(split(dat$width, dat$seqnames), function(x) {
+    coor <- seq(1, x, steps_width)
+    data.table(start= coor,
+               end= c(coor[-1]-1, x))[end>start]
+  })
+  bins <- rbindlist(bins, idcol = "seqnames")
   if(!is.null(restrict_seqnames))
     dat <- dat[seqnames %in% restrict_seqnames]
-  bins <- dat[, .(start= seq(1, end, steps_width)), .(seqnames, end, width)]
-  bins[, end:= start+bins_width-1]
-  bins[end>width, end:= width]
-  bins <- bins[end-start>0, .(seqnames, start, end)]
   setkeyv(bins, c("seqnames", "start", "end"))
   return(bins)
 }

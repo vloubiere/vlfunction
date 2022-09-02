@@ -24,14 +24,14 @@ vl_importBed.character <- function(bed,
         c(cols, "signalValue", "pValue", "qValue") else c(cols, extraCols)
   }
   setnames(bed, cols[1:ncol(bed)])
-  if(extraCols %in% c("narrowPeak", "broadPeak"))
+  if(!is.null(extraCols) && extraCols %in% c("narrowPeak", "broadPeak"))
   {
     bed[, signalValue:= as.numeric(signalValue)]
     bed[, pValue:= as.numeric(pValue)]
     bed[, qValue:= as.numeric(qValue)]
+    if(extraCols=="narrowPeak")
+      bed[, peak:= as.integer(peak)]
   }
-  if(extraCols=="narrowPeak")
-    bed[, peak:= as.integer(peak)]
   vl_importBed(bed)
 }
 
