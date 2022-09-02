@@ -4,9 +4,7 @@
 \name{vl_SUHW_top_peaks}
 \alias{vl_SUHW_top_peaks}
 \title{SUHW top peaks}
-\format{
-Narrowpeaks file containing top SUHW peaks on dm3 chanonical chromosomes
-}
+\format{Narrowpeaks file containing top SUHW peaks on dm3 chanonical chromosomes}
 \usage{
 see ?vl_motif_enrich()
 }

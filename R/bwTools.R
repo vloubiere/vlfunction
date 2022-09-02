@@ -44,16 +44,21 @@ vl_bw_merge <- function(tracks, genome, bins_width= 25L, output, scoreFUN= NULL)
 #' @param na_value Value to use for NAs. default to 0
 #' @examples 
 #' bins <- vl_binBSgenome("dm3", restrict_seqnames = "chr3R")
+#' t1 <- Sys.time()
 #' cov1 <- vl_bw_coverage(bins, "../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw")
+#' t1-Sys.time()
 #' 
 #' # Compare to GRanges method
 #' binned_average_function <- function(gr, file_bw_path){
 #' file_bw <- import.bw(file_bw_path, as="RleList")
 #' seqlevels(gr) <- names(file_bw)
+#' t1 <- Sys.time()
 #' bins1 <- binnedAverage(gr,file_bw, "average_score")
 #' return(bins1$average_score)
 #' }
+#' t1 <- Sys.time()
 #' cov2 <- binned_average_function(GRanges(bins), "../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw")
+#' t1-Sys.time()
 #' identical(cov1, cov2)
 #' @export
 vl_bw_coverage <- function(bed,
@@ -67,13 +72,12 @@ vl_bw_coverage <- function(bed,
   
   # Format
   .b <- vl_importBed(bed)[, .(seqnames, start, end, .I)]
-
+  
   # Import bw
   sel <- rtracklayer::BigWigSelection(GenomicRanges::GRanges(na.omit(.b)), "score")
   var <- data.table::as.data.table(rtracklayer::import.bw(bw, selection= sel))
   
   # Overlap
-  setkeyv(.b, c("seqnames", "start", "end"))
   res <- var[.b, .(seqnames, x.start, x.end, score, i.start, i.end, I), on= c("seqnames", "start<=end", "end>=start")]
   
   # Clip bw ranges to bin ramges
@@ -81,7 +85,7 @@ vl_bw_coverage <- function(bed,
   res[x.end>i.end, x.end:= i.end]
   
   # Compute score
-  res <- res[, sum(score*(x.end-x.start+1))/width, keyby= .(I, width= i.end-i.start+1)]$V1
+  res <- res[, sum(score*(x.end-x.start+1))/width, .(I, width= i.end-i.start+1)]$V1
   res[is.na(res)] <- na_value
   return(res)
 }

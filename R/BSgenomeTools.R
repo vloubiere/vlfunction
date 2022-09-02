@@ -26,7 +26,7 @@ vl_binBSgenome <- function(genome,
   })
   bins <- rbindlist(bins, idcol = "seqnames")
   if(!is.null(restrict_seqnames))
-    dat <- dat[seqnames %in% restrict_seqnames]
+    bins <- bins[seqnames %in% restrict_seqnames]
   setkeyv(bins, c("seqnames", "start", "end"))
   return(bins)
 }
