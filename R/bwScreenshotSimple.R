@@ -1,7 +1,7 @@
 #' Simplified version. less options, faster
 #'
 #' @param bed Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
-#' @param tracks bw of bed (peaks)
+#' @param tracks bw or bed (peaks) files.
 #' @param space space between regions. Default is 30 px
 #' @param widths Length 2 integer vector specifying the width of bw and bed tracks, respectively. Default= c(100L, 20L)
 #' @param highlight_bed Regions to be highlighted
@@ -67,6 +67,11 @@ vl_screenshot <- function(bed,
     stop("Please provide unique names")
   if(!is.integer(widths) | any(widths<10))
     stop("widths should be integers >= 10")
+  is_bw <- grepl(".bw", tracks)
+  if(length(max)>1 && length(max)!=sum(is_bw))
+    stop("max should either be length 1 or match the number of bw tracks")
+  if(length(min)>1 && length(max)!=sum(is_bw))
+    stop("min should either be length 1 or match the number of bw tracks")
   
   #----------------------------------#
   # Compute object
@@ -89,10 +94,11 @@ vl_screenshot <- function(bed,
   # Init obj
   obj <- data.table(file= tracks,
                     name= names,
-                    type= ifelse(grepl(".bw", tracks), "bw", "bed"),
+                    type= ifelse(is_bw, "bw", "bed"),
                     col= col,
-                    min= min,
-                    max= max)
+                    min= min)
+  obj[type=="bw", max:= max]
+  obj[type!="bw", max:= 1]
   # Quantif signal
   obj <- obj[, {
     bins[, value:= as.numeric(switch(type,
@@ -109,12 +115,12 @@ vl_screenshot <- function(bed,
   bw_obj <- rbindlist(lapply(seq(widths[1]), function(x) obj[type=="bw"]), idcol = "y")
   bed_obj <- rbindlist(lapply(seq(widths[2]), function(x) obj[type=="bed"]), idcol = "y")
   obj <- rbind(bw_obj, bed_obj)
-  obj[, Cc:= {
-    if(type=="bw" && density=="density")
-      colorRampPalette(density_col)(101)[round((value-min)/(max-min)*100)+1] else
-        as.character(ifelse(y>(value-min)/(max-min)*100, bg, col))
-    
-  }, type]
+  obj[, Cc:= as.character(ifelse(y>(value-min)/(max-min)*100, bg, col))]
+  if(density=="density")
+    obj[type=="bw", Cc:= {
+      idx <- round((value-min)/(max-min)*100)+1
+      colorRampPalette(density_col)(101)[ifelse(idx>101, 101, idx)]}]
+  obj[is.na(start), Cc:= bg]
   # Borders
   obj[y==1 & Cc==bg & type=="bw" & !is.na(end), Cc:= col] # Full line at the bottom of bw tracks
   obj[(y<=5 | y>=widths[2]-5) & Cc!=bg & type=="bed", Cc:= bg] # Bg lines around bed tracks
@@ -171,7 +177,6 @@ vl_screenshot <- function(bed,
   #----------------------------------#
   if(!missing(genome) & !add)
     vl_screenshot_transcripts(obj= obj, genome= genome)
-    
 }
 
 #' @export
