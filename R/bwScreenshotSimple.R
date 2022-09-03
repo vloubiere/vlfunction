@@ -7,6 +7,11 @@
 #' @param highlight_bed Regions to be highlighted
 #' @param col Track colors
 #' @param highlight_col Color used for highlighted region
+#' @param bg_col Color used for background. default= "white"
+#' @param density Type of track to plot. either "track" (default) or "density"
+#' @param density_col Color palette used for density bw. default= viridis::viridis(10)
+#' @param space= 30,
+#' @param widths= c(100L, 20L),
 #' @param min Min value for tracks. default to 0! (Setting to NA will compute min internally)
 #' @param max Max value for tracks (will be internally reset to 1 for non-bw files)
 #' @param names names for bw/bed files
@@ -40,6 +45,8 @@ vl_screenshot <- function(bed,
                           col= "black",
                           highlight_col= "lightgrey",
                           bg_col= "white",
+                          density= "track",
+                          density_col= viridis::viridis(10),
                           space= 30,
                           widths= c(100L, 20L),
                           names= NULL,
@@ -99,10 +106,15 @@ vl_screenshot <- function(bed,
   obj[type=="bed", max:= as.numeric(1)]
   # Compute x,y pos and color
   obj[, x:= rowid(name)]
-  bw <- rbindlist(lapply(seq(widths[1]), function(x) obj[type=="bw"]), idcol = "y")
-  bed <- rbindlist(lapply(seq(widths[2]), function(x) obj[type=="bed"]), idcol = "y")
-  obj <- rbind(bw, bed)
-  obj[, Cc:= as.character(ifelse(y>(value-min)/(max-min)*100, bg, col))]
+  bw_obj <- rbindlist(lapply(seq(widths[1]), function(x) obj[type=="bw"]), idcol = "y")
+  bed_obj <- rbindlist(lapply(seq(widths[2]), function(x) obj[type=="bed"]), idcol = "y")
+  obj <- rbind(bw_obj, bed_obj)
+  obj[, Cc:= {
+    if(type=="bw" && density=="density")
+      colorRampPalette(density_col)(101)[round((value-min)/(max-min)*100)+1] else
+        as.character(ifelse(y>(value-min)/(max-min)*100, bg, col))
+    
+  }, type]
   # Borders
   obj[y==1 & Cc==bg & type=="bw" & !is.na(end), Cc:= col] # Full line at the bottom of bw tracks
   obj[(y<=5 | y>=widths[2]-5) & Cc!=bg & type=="bed", Cc:= bg] # Bg lines around bed tracks
@@ -153,98 +165,102 @@ vl_screenshot <- function(bed,
              cex= 0.5)
     }, (labs)]
   }
-
-  #--------------------------#
+  
+  #----------------------------------#
   # Transcripts
-  #--------------------------#
+  #----------------------------------#
   if(!missing(genome) & !add)
-  {
-    annotation <- switch(genome, 
-                         "dm3"= list(TxDb= TxDb.Dmelanogaster.UCSC.dm3.ensGene::TxDb.Dmelanogaster.UCSC.dm3.ensGene,
-                                     org= org.Dm.eg.db::org.Dm.eg.db,
-                                     Keytype= "FLYBASE"),
-                         "dm6"= list(TxDb= TxDb.Dmelanogaster.UCSC.dm6.ensGene::TxDb.Dmelanogaster.UCSC.dm6.ensGene,
-                                     org= org.Dm.eg.db::org.Dm.eg.db,
-                                     Keytype= "FLYBASE"),
-                         "mm10"= list(TxDb= TxDb.Mmusculus.UCSC.mm10.knownGene::TxDb.Mmusculus.UCSC.mm10.knownGene,
-                                      org= org.Mm.eg.db::org.Mm.eg.db,
-                                      Keytype= "ENTREZID"))
-    # Extract overlapping transcripts
-    transcripts <- as.data.table(GenomicFeatures::transcripts(annotation$TxDb, c("TXNAME", "GENEID")))
-    transcripts <- transcripts[, .(GENEID= unlist(GENEID)), setdiff(names(transcripts), "GENEID")]
-    if(nrow(transcripts)>0)
-    {
-      # Add symbols
-      transcripts[, symbol:= GENEID]
-      symbols <- try(AnnotationDbi::mapIds(annotation$org,
-                                           key= unique(as.character(transcripts$GENEID)),
-                                           column= "SYMBOL",
-                                           keytype= annotation$Keytype,
-                                           multiVals= "first"), silent = T)
-      if(class(symbols)=="character")
-        transcripts[GENEID %in% names(na.omit(symbols)), symbol:= symbols[data.table::chmatch(GENEID, names(symbols))]]
-      # Add exons
-      exons <- as.data.table(GenomicFeatures::exons(annotation$TxDb, 
-                                                    filter= list("tx_name"= transcripts$TXNAME), 
-                                                    columns= "TXNAME"))
-      exons <- exons[, .(TXNAME= unlist(TXNAME)), setdiff(names(exons), "TXNAME")]
-      transcripts <- rbind(transcripts[, type:= "transcript"],
-                           exons[, type:= "exon"], fill= T)
-      # Ovelrap with plotting regions
-      overlap <- obj[!is.na(end), .(start= first(start), 
-                                    end= last(end), 
-                                    x0= first(x), 
-                                    x1= last(x)), .(regionID, seqnames)]
-      # Compute plotting positions
-      pl <- transcripts[overlap, {
-        .c <- data.table(x.start,
-                         x.end,
-                         i.start,
-                         i.end,
-                         x0,
-                         x1,
-                         type,
-                         TXNAME,
-                         symbol,
-                         strand)
-        # Clip borders
-        .c[x.start<i.start, x.start:= i.start]
-        .c[x.end>i.end, x.end:= i.end]
-        # Compute x plotting positions
-        .c[, seg.x0:= (x.start-i.start)/(i.end-i.start)*(x1-x0+1)+x0]
-        .c[, seg.x1:= (x.end-i.start)/(i.end-i.start)*(x1-x0+1)+x0]
-        # Adjust y position depending on overlaps
-        .c <- .c[order(seg.x0-seg.x1, seg.x0)]
-        .c[type=="transcript", idx:= .I]
-        .c$y <- .c[.c, .N, .EACHI, on= c("idx<idx", "seg.x0<=seg.x1", "seg.x1>=seg.x0")]$N
-        .c[, y:= y[type=="transcript"], TXNAME]
-        .c[, y:= par("usr")[3]-strheight("M", cex= 1.8)*y]
-      }, .EACHI, on= c("seqnames", "start<=end", "end>=start")]
-      # Colors and lwd
-      pl[, c("col", "lwd"):= 
-           .(switch(as.character(strand), 
-                    "-"= "cornflowerblue", 
-                    "+"= "tomato", "grey"),
-             switch(as.character(type), 
-                    "transcript"= 1, 
-                    "exon"= 3, 1)), .(strand, type)]
-      # Plot
-      segments(pl$seg.x0,
-               pl$y,
-               pl$seg.x1,
-               pl$y,
-               col= pl$col,
-               xpd=T,
-               lwd= pl$lwd,
-               lend= 2)
-      pl <- pl[seg.x1-seg.x0>50 & type=="transcript"]
-      text(rowMeans(pl[, .(seg.x0, seg.x1)]),
-           pl$y,
-           pl$symbol,
-           xpd=T,
-           pos= 3,
-           offset= 0.2,
-           cex= 0.8)
-    }
-  }
+    vl_screenshot_transcripts(obj= obj, genome= genome)
+    
 }
+
+#' @export
+vl_screenshot_transcripts <- function(obj, genome)
+{
+  annotation <- switch(genome, 
+                       "dm3"= list(TxDb= TxDb.Dmelanogaster.UCSC.dm3.ensGene::TxDb.Dmelanogaster.UCSC.dm3.ensGene,
+                                   org= org.Dm.eg.db::org.Dm.eg.db,
+                                   Keytype= "FLYBASE"),
+                       "dm6"= list(TxDb= TxDb.Dmelanogaster.UCSC.dm6.ensGene::TxDb.Dmelanogaster.UCSC.dm6.ensGene,
+                                   org= org.Dm.eg.db::org.Dm.eg.db,
+                                   Keytype= "FLYBASE"),
+                       "mm10"= list(TxDb= TxDb.Mmusculus.UCSC.mm10.knownGene::TxDb.Mmusculus.UCSC.mm10.knownGene,
+                                    org= org.Mm.eg.db::org.Mm.eg.db,
+                                    Keytype= "ENTREZID"))
+  # Extract overlapping transcripts
+  transcripts <- as.data.table(GenomicFeatures::transcripts(annotation$TxDb, c("TXNAME", "GENEID")))
+  transcripts <- transcripts[, .(GENEID= unlist(GENEID)), setdiff(names(transcripts), "GENEID")]
+  
+  # Add symbols
+  transcripts[, symbol:= GENEID]
+  symbols <- try(AnnotationDbi::mapIds(annotation$org,
+                                       key= unique(as.character(transcripts$GENEID)),
+                                       column= "SYMBOL",
+                                       keytype= annotation$Keytype,
+                                       multiVals= "first"), silent = T)
+  if(class(symbols)=="character")
+    transcripts[GENEID %in% names(na.omit(symbols)), symbol:= symbols[data.table::chmatch(GENEID, names(symbols))]]
+  # Add exons
+  exons <- as.data.table(GenomicFeatures::exons(annotation$TxDb, 
+                                                filter= list("tx_name"= transcripts$TXNAME), 
+                                                columns= "TXNAME"))
+  exons <- exons[, .(TXNAME= unlist(TXNAME)), setdiff(names(exons), "TXNAME")]
+  transcripts <- rbind(transcripts[, type:= "transcript"],
+                       exons[, type:= "exon"], fill= T)
+  # Ovelrap with plotting regions
+  overlap <- obj[!is.na(end), .(start= first(start), 
+                                end= last(end), 
+                                x0= first(x), 
+                                x1= last(x)), .(regionID, seqnames)]
+  # Compute plotting positions
+  pl <- transcripts[overlap, {
+    .c <- data.table(x.start,
+                     x.end,
+                     i.start,
+                     i.end,
+                     x0,
+                     x1,
+                     type,
+                     TXNAME,
+                     symbol,
+                     strand)
+    # Clip borders
+    .c[x.start<i.start, x.start:= i.start]
+    .c[x.end>i.end, x.end:= i.end]
+    # Compute x plotting positions
+    .c[, seg.x0:= (x.start-i.start)/(i.end-i.start)*(x1-x0+1)+x0]
+    .c[, seg.x1:= (x.end-i.start)/(i.end-i.start)*(x1-x0+1)+x0]
+    # Adjust y position depending on overlaps
+    .c <- .c[order(seg.x0-seg.x1, seg.x0)]
+    .c[type=="transcript", idx:= .I]
+    .c$y <- .c[.c, .N, .EACHI, on= c("idx<idx", "seg.x0<=seg.x1", "seg.x1>=seg.x0")]$N
+    .c[, y:= y[type=="transcript"], TXNAME]
+    .c[, y:= par("usr")[3]-strheight("M", cex= 1.8)*y]
+  }, .EACHI, on= c("seqnames", "start<=end", "end>=start")]
+  # Colors and lwd
+  pl[, c("col", "lwd"):= 
+       .(switch(as.character(strand), 
+                "-"= "cornflowerblue", 
+                "+"= "tomato", "grey"),
+         switch(as.character(type), 
+                "transcript"= 1, 
+                "exon"= 3, 1)), .(strand, type)]
+  # Plot
+  segments(pl$seg.x0,
+           pl$y,
+           pl$seg.x1,
+           pl$y,
+           col= pl$col,
+           xpd=T,
+           lwd= pl$lwd,
+           lend= 2)
+  pl <- pl[seg.x1-seg.x0>50 & type=="transcript"]
+  text(rowMeans(pl[, .(seg.x0, seg.x1)]),
+       pl$y,
+       pl$symbol,
+       xpd=T,
+       pos= 3,
+       offset= 0.2,
+       cex= 0.8)
+}
+  

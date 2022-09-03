@@ -5,9 +5,10 @@
 \title{Simplified version. less options, faster}
 \usage{
 vl_screenshot(bed, tracks, highlight_bed = NULL, col = "black",
-  highlight_col = "lightgrey", bg_col = "white", space = 30,
-  widths = c(100L, 20L), names = NULL, min = 0,
-  max = as.numeric(NA), genome, add = F)
+  highlight_col = "lightgrey", bg_col = "white", density = "track",
+  density_col = viridis::viridis(10), space = 30, widths = c(100L,
+  20L), names = NULL, min = 0, max = as.numeric(NA), genome,
+  add = F)
 }
 \arguments{
 \item{bed}{Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
@@ -19,6 +20,12 @@ vl_screenshot(bed, tracks, highlight_bed = NULL, col = "black",
 \item{col}{Track colors}
 
 \item{highlight_col}{Color used for highlighted region}
+
+\item{bg_col}{Color used for background. default= "white"}
+
+\item{density}{Type of track to plot. either "track" (default) or "density"}
+
+\item{density_col}{Color palette used for density bw. default= viridis::viridis(10)}
 
 \item{space}{space between regions. Default is 30 px}
 
@@ -33,6 +40,10 @@ vl_screenshot(bed, tracks, highlight_bed = NULL, col = "black",
 \item{genome}{Genome used to plot transcripts. Available: "dm3", "dm6", "mm10"}
 
 \item{add}{Should only the tracks be added on top of existing plot? default= F}
+
+\item{space=}{30,}
+
+\item{widths=}{c(100L, 20L),}
 }
 \description{
 Simplified version. less options, faster
