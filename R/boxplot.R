@@ -24,18 +24,10 @@ vl_boxplot.default <-
            border = par("fg"), col = NULL, log = "",
            pars = list(boxwex = 0.4, staplewex = NA, outwex = NA),
            horizontal = FALSE, add = FALSE, at = NULL,
-           frame= F, whisklty = 1)
+           frame= F, whisklty = 1, ylim= NULL)
   {
-    # Call
-    pl <- substitute(boxplot(x, ..., range = range, width = width, varwidth = varwidth,
-                             notch = notch, outline = outline, names= names, plot = FALSE,
-                             border = border, col = col, log = log,
-                             pars = pars,
-                             horizontal = horizontal, add = add, at = at,
-                             frame= F, whisklty = 1))
-    
     # Boxplot stats
-    box <- eval(pl, parent.frame())
+    box <- boxplot(x, ..., plot=F)
     
     # Compute pval
     if(!is.null(compute_pval))
@@ -64,19 +56,24 @@ vl_boxplot.default <-
                                   outline= outline,
                                   at= at,
                                   horizontal= horizontal)
-      pl$ylim <- pval$ylim
+      ylim <- pval$ylim
     }
     
     # Plot boxplot
-    pl$plot <- plot
-    if(tilt.names && !horizontal)
-      pl$names <- NA
-    eval(pl, parent.frame())
+    boxplot(x, ..., range = range, width = width, varwidth = varwidth,
+            notch = notch, outline = outline, 
+            names= if(tilt.names && !horizontal) NA else names, 
+            plot = plot, border = border, col = col, log = log,
+            pars = pars, horizontal = horizontal, add = add, at = at,
+            frame= F, whisklty = 1, ylim= ylim)
+
     # Plot pval
-    vl_plot_bxp_pval(pval = pval$pval, 
-                     horizontal = pval$horizontal, 
-                     pos = pval$pos,
-                     offset = pval$offset)
+    if(!is.null(compute_pval) && nrow(pval$pval)>0)
+      vl_plot_bxp_pval(pval = pval$pval, 
+                       horizontal = horizontal, 
+                       pos = pval$pos,
+                       offset = pval$offset)
+    
     # Plot tilted names
     if(tilt.names && !horizontal)
       text(if(is.null(at)) seq(box$names) else at,
@@ -89,7 +86,9 @@ vl_boxplot.default <-
            cex= par("cex")*par("cex.axis"))
     
     # Return
-    invisible(c(box, pval))
+    if(is.null(compute_pval))
+      invisible(box) else
+        invisible(c(box, pval))
   }
 
 #' @describeIn vl_boxplot method for matrices
@@ -170,7 +169,6 @@ vl_compute_bxp_pval <- function(groups, box, compute_pval, pval_offset, outline,
   offset <- ifelse(horizontal, 0.3, 0)
   return(list(pval= pval,
               ylim= c(ymin, max(c(dat$max, pval$y0+adj))),
-              horizontal= horizontal,
               pos= pos,
               offset= offset))
 }

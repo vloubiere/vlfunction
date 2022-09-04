@@ -56,7 +56,11 @@ vl_importBed.default <- function(bed)
   if("score" %in% names(bed))
     bed[, score:= as.numeric(score)]
   if("strand" %in% names(bed))
-    bed[, strand:= factor(ifelse(strand %in% c("+", "-"), strand, "*"), c("+", "-", "*"))]
+  {
+    bed[, strand:= as.character(strand)]
+    bed[, strand:= ifelse(strand %in% c("+", "-"), strand, "*")]
+  }
+    
   return(bed)
 }
 
@@ -132,14 +136,15 @@ vl_resizeBed <- function(bed,
   if(!center %in% c("center", "start", "end"))
     stop("center should be one of center, start or end")
   if(!ignore.strand & !("strand" %in% names(regions)))
-    regions[, strand:= factor("*")]
+    regions[, strand:= "*"]
   if(!ignore.strand && any(!regions$strand %in% c("+", "-")))
-    message("ignore.strand=F but strand column absent of contains * ---")
+    message("ignore.strand=F but strand column absent or contains * ---")
     
   # define start
-  regions[, start:= fcase(center=="center", .(round(rowMeans(SJ(start, end)))),
-                          center=="start", .(ifelse(strand=="-", end, start)),
-                          center=="end", .(ifelse(strand=="-", start, end)))]
+  if(center=="center")
+    regions[, start:= round(rowMeans(.SD)), .SDcols= c("start", "end")] else if(center=="start")
+      regions[, start:= ifelse(strand=="-", end, start)] else if(center=="end")
+        regions[, start:= ifelse(strand=="-", start, end)]
   # Ext
   regions[, c("start", "end"):= .(start-ifelse(strand=="-", downstream, upstream),
                                   start+ifelse(strand=="-", upstream, downstream))]

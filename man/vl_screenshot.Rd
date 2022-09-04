@@ -13,7 +13,7 @@ vl_screenshot(bed, tracks, highlight_bed = NULL, col = "black",
 \arguments{
 \item{bed}{Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 
-\item{tracks}{bw of bed (peaks)}
+\item{tracks}{bw or bed (peaks) files.}
 
 \item{highlight_bed}{Regions to be highlighted}
 
