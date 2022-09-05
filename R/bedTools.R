@@ -102,6 +102,7 @@ vl_closestBed <- function(a,
       .(.GRP, I= .I[sel], dist= dist[sel])
     }, .EACHI, on= "seqnames"]
     idx <- na.omit(idx)
+    idx[I==0, I:= NA]
     
     # Return
     setnames(b, paste0(names(b), ".b"))
@@ -185,17 +186,20 @@ vl_collapseBed <- function(bed,
 {
   # Hard copy of bed file
   DT <- vl_importBed(bed)
-  setkeyv(DT, c("seqnames", "start", "end"))
+  DT[, init_ord:= .I] 
+  setorderv(DT, c("seqnames", "start", "end"))
   
   # Compute contig idx
-  DT[, idx:= cumsum(start>data.table::shift(end, fill= max(end))+mingap), seqnames]
-  DT[, idx:= .GRP, .(seqnames, idx)]
-  
+  DT[, ord:= .I] 
+  DT[, ext_end:= end+mingap] 
+  idx <- DT$ord
+  DT[DT, {idx[.GRP] <<- min(idx[.I])}, .EACHI, on= c("seqnames", "ext_end>=start", "ord<=ord")]
+  DT[, idx:= data.table::rleid(idx)]
+
   # Collapse
   if(!return_idx_only)
-    DT <- DT[, .(start= min(start), end= max(end)), .(seqnames, idx)]
-
-  return(DT)
+    return(DT[, .(start= min(start), end= max(end)), .(seqnames, idx)]) else
+      return(DT[order(init_ord), idx])
 }
 
 #' Find closestBed regions
