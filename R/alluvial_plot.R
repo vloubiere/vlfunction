@@ -16,6 +16,8 @@
 vl_alluvial_plot <- function(dat,
                              col= vl_palette_many_categ(length(unique(unlist(dat)))),
                              alpha.f= 0.5,
+                             space= 1,
+                             width= 0.5,
                              ...)
 {
   # Make object
@@ -26,8 +28,9 @@ vl_alluvial_plot <- function(dat,
   mat <- as.matrix(dcast(DT, value~variable, fun.aggregate = length), 1)
   pl <- barplot(mat,
                 col= col,
-                width = 0.5, 
-                space= 1)
+                space= space,
+                width= width,
+                ...)
   for(i in 1:(ncol(dat)-1))
   {
     pols <- dat[, i:(i+1), with= F]
@@ -37,7 +40,7 @@ vl_alluvial_plot <- function(dat,
     setorderv(pols, c("V2", "V1"))
     pols[, c("y3", "y4"):= as.list(rev(range(.I))), .(V2, V1)]
     pols[, col:= adjustcolor(col[.GRP], alpha.f = alpha.f), V2]
-    pols[, polygon(c(i, i, i+0.5, i+0.5), 
+    pols[, polygon(c(pl[i]+width/2, pl[i]+width/2, pl[i+1]-width/2, pl[i+1]-width/2), 
                    c(y1-1, y2, y3, y4-1),
                    col= col[1]), .(y1, y2, y3, y4, col)]
   }
