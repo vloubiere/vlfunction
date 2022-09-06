@@ -66,33 +66,33 @@ vl_heatmap.data.table <- function(x,
 #' @describeIn vl_heatmap Default function using matrix as an input
 #' @export
 vl_heatmap.matrix <- function(x,
-                              cluster_rows= T,
+                              cluster_rows= TRUE,
                               row_clusters= 1,
-                              row_clusters_col= grDevices::gray.colors(length(unique(row_clusters))),
+                              row_clusters_col= NULL,
                               kmeans_k= NA,
                               clustering_distance_rows= "euclidean",
                               cutree_rows = 1,
-                              cluster_cols = T,
+                              cluster_cols = TRUE,
                               col_clusters= 1,
-                              col_clusters_col= grDevices::gray.colors(length(unique(col_clusters))),
+                              col_clusters_col= NULL,
                               clustering_distance_cols = "euclidean",
                               cutree_cols = 1,
                               clustering_method = "complete",
-                              plot= T,
-                              auto_margins= T,
-                              breaks= seq(min(x, na.rm= T), max(x, na.rm= T), length.out= length(col)),
+                              plot= TRUE,
+                              auto_margins= FALSE,
+                              breaks= seq(min(x, na.rm= T), max(x, na.rm= TRUE), length.out= length(col)),
                               col= c("cornflowerblue", "white", "red"),
                               na_col= "lightgrey",
                               main= NA,
                               legend_title= NA,
-                              show_rownames= T,
-                              show_colnames= T,
+                              show_rownames= TRUE,
+                              show_colnames= TRUE,
                               show_row_clusters= length(unique(rows$cl))>1,
                               show_col_clusters= length(unique(cols$cl))>1,
-                              show_row_dendrogram= T,
-                              show_col_dendrogram= T,
-                              show_legend= T,
-                              display_numbers= F,
+                              show_row_dendrogram= TRUE,
+                              show_col_dendrogram= TRUE,
+                              show_legend= TRUE,
+                              display_numbers= FALSE,
                               display_numbers_matrix= x,
                               display_numbers_cex= 1)
 {
@@ -104,6 +104,15 @@ vl_heatmap.matrix <- function(x,
     row_clusters <- factor(row_clusters)
   if(is.character(col_clusters))
     col_clusters <- factor(col_clusters)
+  if(is.null(row_clusters_col))
+    if(cluster_rows)
+      row_clusters_col <- grDevices::gray.colors(cutree_rows) else
+        row_clusters_col <- grDevices::gray.colors(length(unique(row_clusters)))
+  if(is.null(col_clusters_col))
+    if(cluster_cols)
+      col_clusters_col <- grDevices::gray.colors(cutree_cols) else
+        col_clusters_col <- grDevices::gray.colors(length(unique(col_clusters)))
+        
   
   #------------------------####
   # Init informative result DT
@@ -123,7 +132,7 @@ vl_heatmap.matrix <- function(x,
   #------------------------####
   # Clustering rows
   #------------------------####
-  if(cluster_rows)
+  if(cluster_rows && nrow(x)>1)
   {
     set.seed(3453)
     if(is.na(kmeans_k))
@@ -158,7 +167,7 @@ vl_heatmap.matrix <- function(x,
   #------------------------####
   # Clustering cols
   #------------------------####
-  if(cluster_cols)
+  if(cluster_cols && ncol(x)>1)
   {
     set.seed(3453)
     if(clustering_distance_cols %in% c("pearson", "spearman"))
@@ -214,8 +223,8 @@ plot.vl_heatmap <- function(obj)
   # Heatmap
   #----------------------------------#
   # Order matrix
-  x <- x[(rows$order),]
-  x <- x[,(cols$order)]
+  x <- x[(rows$order), , drop=F]
+  x <- x[, (cols$order), drop=F]
     
   # Palette
   Cc <- circlize::colorRamp2(breaks, 
