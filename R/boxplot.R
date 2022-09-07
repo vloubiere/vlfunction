@@ -27,7 +27,7 @@ vl_boxplot.default <-
            frame= F, whisklty = 1, ylim= NULL)
   {
     # Boxplot stats
-    box <- boxplot(x, ..., plot=F)
+    box <- boxplot(x, ..., names= names, plot = F)
     
     # Compute pval
     if(!is.null(compute_pval))
