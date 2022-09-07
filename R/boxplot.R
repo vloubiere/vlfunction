@@ -62,7 +62,7 @@ vl_boxplot.default <-
     # Plot boxplot
     boxplot(x, ..., range = range, width = width, varwidth = varwidth,
             notch = notch, outline = outline, 
-            names= if(tilt.names && !horizontal) NA else names, 
+            names= if(tilt.names && !horizontal) NA else NULL,
             plot = plot, border = border, col = col, log = log,
             pars = pars, horizontal = horizontal, add = add, at = at,
             frame= F, whisklty = 1, ylim= ylim)
