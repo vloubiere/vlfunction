@@ -62,7 +62,7 @@ vl_boxplot.default <-
     # Plot boxplot
     boxplot(x, ..., range = range, width = width, varwidth = varwidth,
             notch = notch, outline = outline, 
-            names= if(tilt.names && !horizontal) NA else NULL,
+            names= if(tilt.names && !horizontal) NA else box$names, 
             plot = plot, border = border, col = col, log = log,
             pars = pars, horizontal = horizontal, add = add, at = at,
             frame= F, whisklty = 1, ylim= ylim)
@@ -73,11 +73,11 @@ vl_boxplot.default <-
                        horizontal = horizontal, 
                        pos = pval$pos,
                        offset = pval$offset)
-    
+
     # Plot tilted names
     if(tilt.names && !horizontal)
       text(if(is.null(at)) seq(box$names) else at,
-           rep(par("usr")[3], length(box$names))-par("lheight"),
+           rep(par("usr")[3], length(box$names))-par("mgp")[2]*diff(grconvertY(c(0,1), "line", "user")),
            box$names,
            srt= 45,
            offset= -0.35,

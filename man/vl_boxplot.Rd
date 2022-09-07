@@ -15,7 +15,7 @@ vl_boxplot(x, ...)
   plot = TRUE, border = par("fg"), col = NULL, log = "",
   pars = list(boxwex = 0.4, staplewex = NA, outwex = NA),
   horizontal = FALSE, add = FALSE, at = NULL, frame = F,
-  whisklty = 1)
+  whisklty = 1, ylim = NULL)
 
 \method{vl_boxplot}{matrix}(x, use.cols = TRUE, ...)
 
