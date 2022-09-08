@@ -55,7 +55,8 @@ vl_balloons_plot.matrix <- function(x,
   plot.new()
   plot.window(xlim = c(1, ncol(x)),
               ylim = c(1, nrow(x)),
-              xaxs= "r")
+              xaxs= "i",
+              yaxs= "i")
   # Lines
   segments(1:ncol(x),
            1,

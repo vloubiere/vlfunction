@@ -60,30 +60,33 @@ vl_boxplot.default <-
     }
     
     # Plot boxplot
-    boxplot(x, ..., range = range, width = width, varwidth = varwidth,
-            notch = notch, outline = outline, 
-            names= if(tilt.names && !horizontal) NA else names, 
-            plot = plot, border = border, col = col, log = log,
-            pars = pars, horizontal = horizontal, add = add, at = at,
-            frame= F, whisklty = 1, ylim= ylim)
-
-    # Plot pval
-    if(!is.null(compute_pval) && nrow(pval$pval)>0)
-      vl_plot_bxp_pval(pval = pval$pval, 
-                       horizontal = horizontal, 
-                       pos = pval$pos,
-                       offset = pval$offset)
-    
-    # Plot tilted names
-    if(tilt.names && !horizontal)
-      text(if(is.null(at)) seq(box$names) else at,
-           rep(par("usr")[3], length(box$names))-par("lheight"),
-           box$names,
-           srt= 45,
-           offset= -0.35,
-           pos= 2,
-           xpd= T,
-           cex= par("cex")*par("cex.axis"))
+    if(plot)
+    {
+      boxplot(x, ..., range = range, width = width, varwidth = varwidth,
+              notch = notch, outline = outline, 
+              names= if(tilt.names && !horizontal) NA else names, 
+              plot = plot, border = border, col = col, log = log,
+              pars = pars, horizontal = horizontal, add = add, at = at,
+              frame= F, whisklty = 1, ylim= ylim)
+      
+      # Plot pval
+      if(!is.null(compute_pval) && nrow(pval$pval)>0)
+        vl_plot_bxp_pval(pval = pval$pval, 
+                         horizontal = horizontal, 
+                         pos = pval$pos,
+                         offset = pval$offset)
+      
+      # Plot tilted names
+      if(tilt.names && !horizontal)
+        text(if(is.null(at)) seq(box$names) else at,
+             rep(par("usr")[3], length(box$names))-par("lheight"),
+             box$names,
+             srt= 45,
+             offset= -0.35,
+             pos= 2,
+             xpd= T,
+             cex= par("cex")*par("cex.axis"))
+    }
     
     # Return
     if(is.null(compute_pval))

@@ -4,9 +4,14 @@
 \alias{vl_alluvial_plot}
 \title{bw Average tracks}
 \usage{
-vl_alluvial_plot(dat,
+vl_alluvial_plot(
+  dat,
   col = vl_palette_many_categ(length(unique(unlist(dat)))),
-  alpha.f = 0.5, ...)
+  alpha.f = 0.5,
+  space = 1,
+  width = 0.5,
+  ...
+)
 }
 \arguments{
 \item{dat}{Data.table or matrix containing 1 column/condition}
