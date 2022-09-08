@@ -111,7 +111,7 @@ vl_closestBed <- function(a,
                       dist= idx$dist)
     if(all(c("strand", "strand.b") %in% names(res)))
     {
-      res[strand=="+" & start>end.b, dist:= -dist]
+      res[strand!="-" & start>end.b, dist:= -dist] # Meaning + or *
       res[strand=="-" & end<start.b, dist:= -dist]
     }
     return(res)
