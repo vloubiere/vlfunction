@@ -21,7 +21,7 @@ vl_motif_cl_enrich(
   main = NA
 )
 
-\method{plot}{vl_enr_cl}(
+plot.vl_enr_cl(
   obj,
   x_breaks,
   padj_cutoff = 0.05,
@@ -61,9 +61,9 @@ Fisher test data.table.
 \description{
 Compute motif enrichment for the cluster in cl_columns, using all the lines as background
 }
-\section{Methods (by generic)}{
+\section{Functions}{
 \itemize{
-\item \code{plot}: method to plot cluster enrichment objects (containing variable, log2OR and padj)
+\item \code{plot.vl_enr_cl}: method to plot cluster enrichment objects (containing variable, log2OR and padj)
 }}
 
 \examples{

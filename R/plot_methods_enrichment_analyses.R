@@ -25,11 +25,11 @@ plot.vl_enr <- function(obj,
   }
   # padj cutoff
   DT <- na.omit(DT[padj<=padj_cutoff])
+  if(nrow(DT)==0)
+    stop("No enrichment found with current cutoffs!")
   # select top_enrich
   setorderv(DT, "padj")
   DT <- DT[seq(nrow(DT))<=top_enrich]
-  if(nrow(DT)==0)
-    stop("No enrichment found with current cutoffs!")
   # Plot
   breaks <- range(-log10(DT$padj), na.rm= T)
   Cc <- circlize::colorRamp2(breaks, col)

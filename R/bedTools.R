@@ -106,9 +106,15 @@ vl_closestBed <- function(a,
     
     # Return
     setnames(b, paste0(names(b), ".b"))
-    data.table(a[idx$GRP],
-               b[idx$I],
-               dist= idx$dist)
+    res <- data.table(a[idx$GRP],
+                      b[idx$I],
+                      dist= idx$dist)
+    if(all(c("strand", "strand.b") %in% names(res)))
+    {
+      res[strand=="+" & start>end.b, dist:= -dist]
+      res[strand=="-" & end<start.b, dist:= -dist]
+    }
+    return(res)
 }
 
 #' Resize bed

@@ -31,7 +31,8 @@ vl_boxplot(x, ...)
   at = NULL,
   frame = F,
   whisklty = 1,
-  ylim = NULL
+  ylim = NULL,
+  xaxt = "s"
 )
 
 \method{vl_boxplot}{matrix}(x, use.cols = TRUE, ...)

@@ -24,7 +24,7 @@ vl_boxplot.default <-
            border = par("fg"), col = NULL, log = "",
            pars = list(boxwex = 0.4, staplewex = NA, outwex = NA),
            horizontal = FALSE, add = FALSE, at = NULL,
-           frame= F, whisklty = 1, ylim= NULL)
+           frame= F, whisklty = 1, ylim= NULL, xaxt= "s")
   {
     # Boxplot stats
     box <- boxplot(x, ..., names= names, plot = F)
@@ -68,7 +68,7 @@ vl_boxplot.default <-
               names= if(tilt.names && !horizontal) NA else box$names, 
               plot = plot, border = border, col = col, log = log,
               pars = pars, horizontal = horizontal, add = add, at = at,
-              frame= F, whisklty = 1, ylim= ylim)
+              frame= F, whisklty = 1, ylim= ylim, xaxt= xaxt)
       
       # Plot pval
       if(!is.null(compute_pval) && nrow(pval$pval)>0)
@@ -78,9 +78,9 @@ vl_boxplot.default <-
                          offset = pval$offset)
       
       # Plot tilted names
-      if(tilt.names && !horizontal)
+      if(tilt.names && !horizontal && xaxt!="n")
         text(if(is.null(at)) seq(box$names) else at,
-             rep(par("usr")[3], length(box$names))-par("lheight"),
+             rep(par("usr")[3], length(box$names))-diff(grconvertY(c(0,1), "line", "user"))*par("mgp")[2],
              box$names,
              srt= 45,
              offset= -0.35,
