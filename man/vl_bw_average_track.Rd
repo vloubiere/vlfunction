@@ -22,18 +22,20 @@ vl_bw_average_track(
   col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A", "#4F6A6F", "#D26429",
     "#C57DA5", "#999999"),
   legend = T,
-  legend.cex = 1
+  legend.cex = 1,
+  col.adj = c(0.5, 1)
 )
 
 plot.vl_bw_average_track(
   obj,
   xlab = "genomic distance",
-  xlab.at,
+  xlab.at = c(obj$upstream[1], obj$downstream[1]),
   center_label = "Center",
   ylab = "Enrichment",
   ylim,
   legend = T,
-  legend.cex = 1
+  legend.cex = 1,
+  col.adj = c(0.5, 1)
 )
 }
 \arguments{
@@ -66,6 +68,8 @@ plot.vl_bw_average_track(
 \item{legend}{Should the legeng be plotted? default to T}
 
 \item{legend.cex}{Legend cex. defaults to 1}
+
+\item{col.adj}{Opacity of polygons and lines. default= c(0.5,1)}
 }
 \description{
 Plots average tracks for a set bw files around (potentially) several sets of peaks

@@ -49,6 +49,8 @@ vl_boxplot(x, ...)
 \item{pval_offset}{offset for pval plotting. Defaults to 0.04 (fraction of ylim)}
 
 \item{tilt.names}{Should names be tilted (ignored if horizontal= TRUE)}
+
+\item{names}{Namex to plot under boxplot. If function specified, applied to names before plotting}
 }
 \description{
 Just a wrapper around boxplot that makes it nicer and allows to add wilcox pvals

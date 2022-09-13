@@ -4,6 +4,7 @@
 #' @param compute_pval list of vectors of length two containing pairwise x indexes to be compared
 #' @param pval_offset offset for pval plotting. Defaults to 0.04 (fraction of ylim)
 #' @param tilt.names Should names be tilted (ignored if horizontal= TRUE)
+#' @param names Namex to plot under boxplot. If function specified, applied to names before plotting
 #' @param ... Extra parameters for boxplot()
 #' @examples
 #' set.seed(1234)
@@ -27,7 +28,12 @@ vl_boxplot.default <-
            frame= F, whisklty = 1, ylim= NULL, xaxt= "s")
   {
     # Boxplot stats
-    box <- boxplot(x, ..., names= names, plot = F)
+    if(!missing(names) && is.function(names))
+    {
+      box <- boxplot(x, ..., plot = F)
+      box$names <- names(box$names)
+    }else
+      box <- boxplot(x, ..., names= names, plot = F)
     
     # Compute pval
     if(!is.null(compute_pval))

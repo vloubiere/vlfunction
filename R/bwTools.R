@@ -151,6 +151,7 @@ vl_bw_coverage_bins <- function(bed,
   }, mc.preschedule = T)
   names(obj) <- make.unique(names)
   obj <- rbindlist(obj, idcol= "name")
+  obj[, c("upstream", "downstream"):= .(upstream, downstream)]
   return(obj)
 }
 
@@ -173,6 +174,7 @@ vl_bw_coverage_bins <- function(bed,
 #' @param col Color to be used for plotting. 
 #' @param legend Should the legeng be plotted? default to T
 #' @param legend.cex Legend cex. defaults to 1
+#' @param col.adj Opacity of polygons and lines. default= c(0.5,1)
 #' @examples 
 #' bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
 #' sets <- c(rep("suhw", 100), rep("STARR", 1000))
@@ -194,7 +196,8 @@ vl_bw_average_track <- function(bed,
                                 ylim,
                                 col= c("#E69F00","#68B1CB","#15A390","#96C954","#77AB7A","#4F6A6F","#D26429","#C57DA5","#999999"),
                                 legend= T,
-                                legend.cex= 1)
+                                legend.cex= 1,
+                                col.adj= c(0.5, 1))
 {
   obj <- vl_bw_coverage_bins(bed= bed,
                              tracks= tracks,
@@ -216,7 +219,8 @@ vl_bw_average_track <- function(bed,
                              ylab= ylab,
                              ylim= ylim,
                              legend= legend,
-                             legend.cex= legend.cex)
+                             legend.cex= legend.cex,
+                             col.adj= col.adj)
   invisible(obj)
 }
 
@@ -224,12 +228,13 @@ vl_bw_average_track <- function(bed,
 #' @export
 plot.vl_bw_average_track <- function(obj,
                                      xlab= "genomic distance",
-                                     xlab.at,
+                                     xlab.at= c(obj$upstream[1], obj$downstream[1]),
                                      center_label= "Center",
                                      ylab= "Enrichment",
                                      ylim,
                                      legend= T,
-                                     legend.cex= 1)
+                                     legend.cex= 1,
+                                     col.adj= c(0.5, 1))
 {
   pl <- obj[, .(mean= mean(score, na.rm= T), 
                 se= sd(score, na.rm= T)/sqrt(.N)), .(name, col, set_IDs, bin.x)]
@@ -249,8 +254,10 @@ plot.vl_bw_average_track <- function(obj,
     polygon(c(bin.x, rev(bin.x)), 
             c(mean+se, rev(mean-se)),
             border= NA,
-            col= adjustcolor(col[1], 0.5))
-    lines(bin.x, mean, col= col[1])
+            col= adjustcolor(col, col.adj[1]))
+    lines(bin.x, 
+          mean, 
+          col= adjustcolor(col, col.adj[2]))
   }, .(name, set_IDs, col)]
   # Legend
   if(legend)
