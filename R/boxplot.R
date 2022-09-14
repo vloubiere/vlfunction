@@ -145,7 +145,7 @@ vl_compute_bxp_pval <- function(groups, box, compute_pval, pval_offset, outline,
   # Make pairs object
   dat <- data.table::data.table(dat= groups,
                                 x= if(is.null(at)) seq(groups) else at) # Retrieve at positionsbrowser()
-  dat[, dat:= sapply(dat, na.omit)]
+  dat[, dat:= lapply(dat, na.omit)]
   if(outline)
   {
     dat[, max:= sapply(dat, max, na.rm= T)]
