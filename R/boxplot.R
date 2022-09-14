@@ -140,9 +140,12 @@ vl_compute_bxp_pval <- function(groups, box, compute_pval, pval_offset, outline,
 {
   if(!is.list(compute_pval) | !all(lengths(compute_pval)==2))
     stop("compute_pval list of vectors of length two containing pairwise x indexes to be compared")
+  if(any(unlist(compute_pval)>length(groups)))
+    stop("Some indexes provided in compute_pval are bigger than the number of groups in current boxplot")
   # Make pairs object
   dat <- data.table::data.table(dat= groups,
                                 x= if(is.null(at)) seq(groups) else at) # Retrieve at positionsbrowser()
+  dat[, dat:= sapply(dat, na.omit)]
   if(outline)
   {
     dat[, max:= sapply(dat, max, na.rm= T)]
