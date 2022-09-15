@@ -210,7 +210,7 @@ vl_motif_cl_enrich <- function(counts_matrix,
     counts_matrix <- as.data.table(counts_matrix)
   if(!is.factor(cl_IDs))
     cl_IDs <- factor(cl_IDs)
-  
+
   # Compute enrichment
   res <- lapply(levels(cl_IDs), function(cl) 
   {
@@ -221,6 +221,7 @@ vl_motif_cl_enrich <- function(counts_matrix,
   })
   names(res) <- levels(cl_IDs)
   res <- rbindlist(res, idcol = "cl")
+  res[, cl:= factor(cl, unique(cl))]
   class(res) <- c("vl_enr_cl", "data.table", "data.frame")
   
   # plot

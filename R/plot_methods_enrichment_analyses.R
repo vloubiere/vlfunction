@@ -79,6 +79,7 @@ plot.vl_enr_cl <- function(obj,
   DT <- DT[variable %in% sel]
   # dcast before plotting
   DT[, variable:= factor(variable, levels= unique(variable))]
+  DT[, cl:= droplevels(cl)]
   x <- dcast(DT, variable~cl, value.var = "log2OR", drop= F)
   x <- as.matrix(x, 1)
   color_var <- dcast(DT, variable~cl, value.var = "padj", drop= F)
