@@ -53,11 +53,12 @@ vl_plot_pval_text <- function(x,
 #'
 #' plot seqlogo from pwm matrix
 #'
-#' @param pwm pwm matrix
-#' @param xleft left plot limit. Default= 0
-#' @param ybottom bottom plot limit. Default= 0
-#' @param xright right plot limit. Default= 1
-#' @param ytop top plot limit. Default= 1
+#' @param pwm List of pwm matrices
+#' @param x x positions
+#' @param y positions (centered)
+#' @param pos eith 2 (left) of 4 (right)
+#' @param cex.width width expansion factor applied before plotting motifs
+#' @param cex.height height expansion factor applied before plotting motifs
 #' @param add Should the pwm be plot on the top of opened device? Default= T
 #' @examples
 #' pwm <- matrix(c(0.33,0.21,0.33,0.13,0.1,0.42,0.38,0.1,0.26,0.26,0.27,0.21,0,0.03,0.19,0.78,0.1,0.05,0.1,0.75,0.24,0.05,0.18,0.53,0.8,0.04,0,0.16,0.13,0.16,0.02,0.69,0.04,0.05,0.7,0.21,0.24,0.09,0.57,0.1,0.02,0.8,0.15,0.03,0.22,0.28,0.31,0.19,0.35,0.26,0.26,0.13,0.19,0.33,0.26,0.22), nrow= 4)
@@ -65,33 +66,84 @@ vl_plot_pval_text <- function(x,
 #' vl_seqlogo(pwm)
 #' @export
 vl_seqlogo <- function(pwm, 
-                       xleft= par("usr")[1], 
-                       ytop= par("usr")[4], 
-                       width= strwidth("M")*ncol(pwm), 
-                       height= strheight("M")*4, 
+                       x,
+                       y,
+                       pos= 2,
+                       cex.width= 1,
+                       cex.height= 1,
                        add= T)
 {
-  if(!is.matrix(pwm))
-  {
-    stop("!is.matrix(pwm)")
-  }
-  require(fields)
-  require(seqLogo)
   require(png)
-  require(colorspace)
+  if(!pos %in% c(2,4))
+    stop("Unsupported pos value. Use either 2 (left) or 4 (right)")
+
+  # Make object and index
+  obj <- data.table(pwm, x, y)
+  obj[, idx:= .I]
   
-  tmp <- base::tempfile(fileext = ".png")
-  grDevices::png(tmp, type="cairo", width = 1000, height = 1000, units = "px")
-  seqLogo::seqLogo(pwm, xaxis = F, yaxis = F)
-  dev.off()
-  im <- png::readPNG(tmp)
-  res <- matrix(NA, nrow = nrow(im[,,1]), ncol = ncol(im[,,1]))
-  res[im[,,1]==1 & im[,,2]==0 & im[,,3]==0] <- "firebrick1"
-  res[im[,,1]==1 & im[,,2]>0.1 & im[,,2]<0.9 & im[,,3]==0] <- "goldenrod1"
-  res[im[,,1]==0 & im[,,2]==1 & im[,,3]==0] <- "forestgreen"
-  res[im[,,1]==0 & im[,,2]==0 & im[,,3]==1] <- "dodgerblue2"
-  if(!add) plot.new()
-  rasterImage(res[70:930,70:930], xleft= xleft, ybottom= ytop-height, xright= xleft+width, ytop= ytop, xpd= T)
+  # For each base, compute xleft, xright, ytop, ybottom
+  pl <- obj[, {
+    # Import PWM and melt
+    .c <- as.data.table(pwm[[1]], keep.rownames= "base")
+    .c <- melt(.c, id.vars = "base")
+    # Compute motif content per column and normalize importance
+    .c[, content:= sum(value*log2(value/c(0.25, 0.25, 0.25, 0.25)), na.rm= T), variable]
+    .c[, norm:= value*(content/max(content))]
+    # xleft depends on the pos (2 or 4)
+    if(pos==2)
+    {
+      setorderv(.c, "variable", -1)
+      .c[, xleft:= x-(.GRP*strwidth("M", cex= cex.width)), variable]
+    }else if(pos==4)
+    {
+      setorderv(.c, "variable")
+      .c[, xleft:= x+((.GRP-1)*strwidth("M", cex= cex.width)), variable]
+    }
+    # xrigth only depends on xleft and cex
+    .c[, xright:= xleft+strwidth("M", cex= cex.width), variable]
+    # Rank from lowest to biggest importance -> inscreasing ytop/ybottom pos
+    setorderv(.c, "value")
+    .c[, c("ytop", "ybottom"):= {
+      .h <- strheight("M", cex= cex.height)
+      heights <- cumsum(norm*.h)
+      ytop <- (y-.h/2)+heights
+      ybottom <- (y-.h/2)+data.table::shift(heights, fill= 0)
+      .(ytop, ybottom)
+    }, variable]
+    .c
+  }, .(idx, y)]
+  
+  # Plotting object
+  pl <- pl[(ytop-ybottom)>(strheight("M", cex= cex.height)/50)]
+  letters <- png::readPNG("../../vlfunction/data/DNA_letters.png")[,,1]
+  # Plot
+  for(letter in c("A", "T", "C", "G"))
+  {
+    im <- if(letter=="A")
+      letters[1:125,] else if(letter=="T")
+        letters[126:250,] else if(letter=="C")
+          letters[251:375,] else if(letter=="G")
+            letters[376:500,]
+    im[im==0] <- if(letter=="A")
+      "forestgreen" else if(letter=="T")
+        "firebrick1" else if(letter=="C")
+          "dodgerblue2" else if(letter=="G")
+            "goldenrod1"
+    im[im==1] <- NA
+    pl[base==letter, {
+      rasterImage(im, 
+                  xleft= xleft[1], 
+                  ybottom= ybottom[1], 
+                  xright= xright[1], 
+                  ytop= ytop[1], 
+                  xpd= T)
+    }, .(xleft, xright, ytop, ybottom)]
+  }
+  # Return object containing limits of each motif
+  invisible(pl[, .(xleft= min(xleft), 
+                   ybottom= min(ybottom),
+                   xright= max(xright), 
+                   ytop= min(ytop)), .(idx)])
 }
 
 #' figure label

@@ -5,38 +5,18 @@
 \alias{plot.vl_bw_average_track}
 \title{bw Average tracks}
 \usage{
-vl_bw_average_track(
-  bed,
-  tracks,
-  set_IDs = 1,
-  upstream = 5000,
-  downstream = 5000,
-  stranded = F,
-  nbins = 101L,
-  names = gsub(".bw$", "", basename(tracks)),
-  center_label = "Center",
-  plot = T,
-  xlab = "genomic distance",
-  ylab = "Enrichment",
-  ylim,
-  col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A", "#4F6A6F", "#D26429",
-    "#C57DA5", "#999999"),
-  legend = T,
-  legend.cex = 1,
-  col.adj = c(0.5, 1)
-)
+vl_bw_average_track(bed, tracks, set_IDs = 1, upstream = 5000,
+  downstream = 5000, stranded = F, nbins = 101L,
+  names = gsub(".bw$", "", basename(tracks)), center_label = "Center",
+  plot = T, xlab = "genomic distance", ylab = "Enrichment", ylim,
+  col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A",
+  "#4F6A6F", "#D26429", "#C57DA5", "#999999"), legend = T,
+  legend.cex = 1, col.adj = c(0.5, 1))
 
-plot.vl_bw_average_track(
-  obj,
-  xlab = "genomic distance",
+plot.vl_bw_average_track(obj, xlab = "genomic distance",
   xlab.at = c(obj$upstream[1], obj$downstream[1]),
-  center_label = "Center",
-  ylab = "Enrichment",
-  ylim,
-  legend = T,
-  legend.cex = 1,
-  col.adj = c(0.5, 1)
-)
+  center_label = "Center", ylab = "Enrichment", ylim, legend = T,
+  legend.cex = 1, col.adj = c(0.5, 1))
 }
 \arguments{
 \item{bed}{Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}

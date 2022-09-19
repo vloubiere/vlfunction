@@ -4,6 +4,9 @@
 #' @param top_enrich Top enrichments to plot (based on padj)
 #' @param xlab Default to "Odd Ratio (log2)"
 #' @param col Color scale
+#' @param plot_motifs Should PWMs be ploted?
+#' @param names names for bars
+#' @param width bar width (barplot parameter)
 #' @param ... Extra args to be passed to barplot
 #'
 #' @describeIn vl_motif_enrich method to plot enrichment objects (containing variable, log2OR and padj)
@@ -13,6 +16,9 @@ plot.vl_enr <- function(obj,
                         top_enrich= Inf,
                         xlab= "Odd Ratio (log2)",
                         col= c("blue", "red"),
+                        plot_motifs= F,
+                        names,
+                        width= 1,
                         ...)
 {
   DT <- data.table::copy(obj)
@@ -30,20 +36,38 @@ plot.vl_enr <- function(obj,
   # select top_enrich
   setorderv(DT, "padj")
   DT <- DT[seq(nrow(DT))<=top_enrich]
-  # Plot
+  # barplot
   breaks <- range(-log10(DT$padj), na.rm= T)
   Cc <- circlize::colorRamp2(breaks, col)
   setorderv(DT, "log2OR")
   DT[, bar:= barplot(log2OR,
                      horiz= T,
-                     names= variable,
+                     names= NA,
                      border= NA,
                      col= Cc(-log10(padj)),
                      las= 1,
+                     width= width,
                      xlab= xlab,
                      ...)]
+  # axes/legend
+  if(missing(names))
+    names <- DT$variable
+  # Plot motifs
+  if(plot_motifs)
+  {
+    mats <- vl_Dmel_motifs_DB_full$pwms_perc[match(DT$motif_ID, vl_Dmel_motifs_DB_full$motif)]
+    mats <- lapply(mats, TFBSTools::as.matrix)
+    coor <- vl_seqlogo(pwm = mats, x = par("usr")[1]-strwidth("M")/2, y = DT$bar, cex.width = 2)
+    text(coor$xleft, DT$bar, names, pos= 2, xpd= T)
+    coor[, segments(xleft, ybottom, xright, ybottom, xpd= T, lwd= 0.5)]
+  }else
+    axis(2, 
+         DT$bar, 
+         las= 2,
+         labels = names,
+         tick = 0)
   vl_heatkey(breaks = breaks,
-             top = last(DT$bar),
+             top = DT[.N, bar],
              left = par("usr")[2]+strwidth("M"),
              col = col,
              main = "FDR (-log10)")

@@ -89,7 +89,8 @@ vl_motif_enrich <- function(counts,
                             collapse_clusters= colnames(counts),
                             plot= T,
                             padj_cutoff= 0.05,
-                            top_enrich= Inf)
+                            top_enrich= Inf, 
+                            plot_motifs= F)
 {
   if(!is.numeric(unlist(counts)))
     stop("counts_matrix should only contain numeric values")
@@ -139,7 +140,8 @@ vl_motif_enrich <- function(counts,
   if(plot)
     plot(res,
          padj_cutoff= padj_cutoff,
-         top_enrich= top_enrich)
+         top_enrich= top_enrich,
+         plot_motifs= plot_motifs)
   
   invisible(res)
 }
