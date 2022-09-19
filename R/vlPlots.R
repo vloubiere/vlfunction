@@ -49,6 +49,92 @@ vl_plot_pval_text <- function(x,
        ...)
 }
 
+#' plot seqlogo letter
+#'
+#' See function vl_seqlogo
+#'
+#' @param letter "A", "T", "C" or "G"
+#' @param xleft xleft position
+#' @param ytop ytop position
+vl_plotLetter <- function(letter, xleft, ytop, width, height)
+{
+  if(letter=="T")
+  {
+    x <- c(0, 10, 10, 6, 6, 4, 4, 0) * 0.1
+    y <- c(10, 10, 8.5, 8.5, 0, 0, 8.5, 8.5) * 0.1
+    col <- "red"
+  }else if(letter=="A")
+  {
+    x <- c(0, 4, 6, 2, 0, 4, 6, 10, 8, 4, 3.2, 6.8, 6.4, 3.6, 3.2) * 0.1
+    y <- c(0, 10, 10, 0, 0, 10, 10, 0, 0, 10, 3, 3, 4, 4, 3) * 0.1
+    col <- "forestgreen"
+  }else if(letter=="C")
+  {
+    angle1 <- seq(0.3 + pi / 2, pi, length = 100)
+    angle2 <- seq(pi, 1.5 * pi, length = 100)
+    x.l1 <- 0.5 + 0.5 * sin(angle1)
+    y.l1 <- 0.5 + 0.5 * cos(angle1)
+    x.l2 <- 0.5 + 0.5 * sin(angle2)
+    y.l2 <- 0.5 + 0.5 * cos(angle2)
+    x.l <- c(x.l1, x.l2)
+    y.l <- c(y.l1, y.l2)
+    x <- c(x.l, rev(x.l))
+    y <- c(y.l, 1 - rev(y.l))
+    x.i1 <- 0.5 + 0.35 * sin(angle1)
+    y.i1 <- 0.5 + 0.35 * cos(angle1)
+    x.i1 <- x.i1[y.i1 <= max(y.l1)]
+    y.i1 <- y.i1[y.i1 <= max(y.l1)]
+    y.i1[1] <- max(y.l1)
+    x.i2 <- 0.5 + 0.35 * sin(angle2)
+    y.i2 <- 0.5 + 0.35 * cos(angle2)
+    x.i <- c(x.i1, x.i2)
+    y.i <- c(y.i1, y.i2)
+    x1 <- c(x.i, rev(x.i))
+    y1 <- c(y.i, 1 - rev(y.i))
+    x <- c(x, rev(x1))
+    y <- c(y, rev(y1))
+    col <- "dodgerblue2"
+  }else if(letter=="G")
+  {
+    angle1 <- seq(0.3 + pi / 2, pi, length = 100)
+    angle2 <- seq(pi, 1.5 * pi, length = 100)
+    x.l1 <- 0.5 + 0.5 * sin(angle1)
+    y.l1 <- 0.5 + 0.5 * cos(angle1)
+    x.l2 <- 0.5 + 0.5 * sin(angle2)
+    y.l2 <- 0.5 + 0.5 * cos(angle2)
+    x.l <- c(x.l1, x.l2)
+    y.l <- c(y.l1, y.l2)
+    x <- c(x.l, rev(x.l))
+    y <- c(y.l, 1 - rev(y.l))
+    x.i1 <- 0.5 + 0.35 * sin(angle1)
+    y.i1 <- 0.5 + 0.35 * cos(angle1)
+    x.i1 <- x.i1[y.i1 <= max(y.l1)]
+    y.i1 <- y.i1[y.i1 <= max(y.l1)]
+    y.i1[1] <- max(y.l1)
+    x.i2 <- 0.5 + 0.35 * sin(angle2)
+    y.i2 <- 0.5 + 0.35 * cos(angle2)
+    x.i <- c(x.i1, x.i2)
+    y.i <- c(y.i1, y.i2)
+    x1 <- c(x.i, rev(x.i))
+    y1 <- c(y.i, 1 - rev(y.i))
+    x <- c(x, rev(x1))
+    y <- c(y, rev(y1))
+    h1 <- max(y.l1)
+    r1 <- max(x.l1)
+    h1 <- 0.4
+    x.add <- c(r1, 0.5, 0.5, r1 - 0.2, r1 - 0.2, r1, r1)
+    y.add <- c(h1, h1, h1 - 0.1, h1 - 0.1, 0, 0, h1)
+    x <- c(rev(x), x.add)
+    y <- c(rev(y), y.add)
+    col <- "goldenrod1"
+  }
+  polygon(xleft+x*width, 
+          ytop-(1-y)*height, 
+          col= col,
+          border= NA,
+          xpd= T)
+}
+
 #' plot seqlogo rasterImage
 #'
 #' plot seqlogo from pwm matrix
@@ -73,77 +159,58 @@ vl_seqlogo <- function(pwm,
                        cex.height= 1,
                        add= T)
 {
-  require(png)
   if(!pos %in% c(2,4))
     stop("Unsupported pos value. Use either 2 (left) or 4 (right)")
+  if(is.matrix(pwm))
+    pwm <- list(pwm)
 
   # Make object and index
-  obj <- data.table(pwm, x, y)
+  obj <- data.table(pwm, x, y, cex.width, cex.height)
   obj[, idx:= .I]
+  
+  # Width only depends on cex
+  obj[, width:= strwidth("M", cex= cex.width), cex.width]
   
   # For each base, compute xleft, xright, ytop, ybottom
   pl <- obj[, {
     # Import PWM and melt
     .c <- as.data.table(pwm[[1]], keep.rownames= "base")
     .c <- melt(.c, id.vars = "base")
-    # Compute motif content per column and normalize importance
-    .c[, content:= sum(value*log2(value/c(0.25, 0.25, 0.25, 0.25)), na.rm= T), variable]
-    .c[, norm:= value*(content/max(content))]
     # xleft depends on the pos (2 or 4)
     if(pos==2)
     {
       setorderv(.c, "variable", -1)
-      .c[, xleft:= x-(.GRP*strwidth("M", cex= cex.width)), variable]
+      .c[, xleft:= x-(.GRP*width), variable]
     }else if(pos==4)
     {
       setorderv(.c, "variable")
-      .c[, xleft:= x+((.GRP-1)*strwidth("M", cex= cex.width)), variable]
+      .c[, xleft:= x+((.GRP-1)*width), variable]
     }
-    # xrigth only depends on xleft and cex
-    .c[, xright:= xleft+strwidth("M", cex= cex.width), variable]
-    # Rank from lowest to biggest importance -> inscreasing ytop/ybottom pos
+    # Compute motif content per column and normalize importance
+    .c[, content:= sum(value*log2(value/c(0.25, 0.25, 0.25, 0.25)), na.rm= T), variable]
+    .c[, norm:= value*(content/max(content))]
+    # Rank from lowest to biggest importance -> inscreasing ytop pos
     setorderv(.c, "value")
-    .c[, c("ytop", "ybottom"):= {
-      .h <- strheight("M", cex= cex.height)
+    .h <- strheight("M", cex= cex.height)
+    .c[, c("height", "ytop"):= {
       heights <- cumsum(norm*.h)
-      ytop <- (y-.h/2)+heights
-      ybottom <- (y-.h/2)+data.table::shift(heights, fill= 0)
-      .(ytop, ybottom)
+      .(heights, (y-.h/2)+heights)
     }, variable]
-    .c
-  }, .(idx, y)]
+  }, .(idx, y, width)]
   
-  # Plotting object
-  pl <- pl[(ytop-ybottom)>(strheight("M", cex= cex.height)/50)]
-  letters <- png::readPNG("../../vlfunction/data/DNA_letters.png")[,,1]
   # Plot
-  for(letter in c("A", "T", "C", "G"))
-  {
-    im <- if(letter=="A")
-      letters[1:125,] else if(letter=="T")
-        letters[126:250,] else if(letter=="C")
-          letters[251:375,] else if(letter=="G")
-            letters[376:500,]
-    im[im==0] <- if(letter=="A")
-      "forestgreen" else if(letter=="T")
-        "firebrick1" else if(letter=="C")
-          "dodgerblue2" else if(letter=="G")
-            "goldenrod1"
-    im[im==1] <- NA
-    pl[base==letter, {
-      rasterImage(im, 
-                  xleft= xleft[1], 
-                  ybottom= ybottom[1], 
-                  xright= xright[1], 
-                  ytop= ytop[1], 
-                  xpd= T)
-    }, .(xleft, xright, ytop, ybottom)]
-  }
+  pl <- pl[height>0]
+  pl[, vl_plotLetter(base[1], 
+                     xleft[1], 
+                     ytop[1], 
+                     width[1], 
+                     height[1]), .(base, xleft, ytop, width, height)]
+  
   # Return object containing limits of each motif
   invisible(pl[, .(xleft= min(xleft), 
-                   ybottom= min(ybottom),
-                   xright= max(xright), 
-                   ytop= min(ytop)), .(idx)])
+                   ybottom= min(ytop-height),
+                   xright= max(xleft+width), 
+                   ytop= max(ytop)), .(idx)])
 }
 
 #' figure label

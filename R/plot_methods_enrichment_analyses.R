@@ -7,6 +7,8 @@
 #' @param plot_motifs Should PWMs be ploted?
 #' @param names names for bars
 #' @param width bar width (barplot parameter)
+#' @param cex.width expansion factor for motif widths
+#' @param cex.height expansion factor for motif heights
 #' @param ... Extra args to be passed to barplot
 #'
 #' @describeIn vl_motif_enrich method to plot enrichment objects (containing variable, log2OR and padj)
@@ -19,6 +21,8 @@ plot.vl_enr <- function(obj,
                         plot_motifs= F,
                         names,
                         width= 1,
+                        cex.width= 1,
+                        cex.height= 1,
                         ...)
 {
   DT <- data.table::copy(obj)
@@ -52,26 +56,42 @@ plot.vl_enr <- function(obj,
   # axes/legend
   if(missing(names))
     names <- DT$variable
-  # Plot motifs
-  if(plot_motifs)
-  {
-    mats <- vl_Dmel_motifs_DB_full$pwms_perc[match(DT$motif_ID, vl_Dmel_motifs_DB_full$motif)]
-    mats <- lapply(mats, TFBSTools::as.matrix)
-    coor <- vl_seqlogo(pwm = mats, x = par("usr")[1]-strwidth("M")/2, y = DT$bar, cex.width = 2)
-    text(coor$xleft, DT$bar, names, pos= 2, xpd= T)
-    coor[, segments(xleft, ybottom, xright, ybottom, xpd= T, lwd= 0.5)]
-  }else
-    axis(2, 
-         DT$bar, 
-         las= 2,
-         labels = names,
-         tick = 0)
+  # Plot heatkey
   vl_heatkey(breaks = breaks,
              top = DT[.N, bar],
              left = par("usr")[2]+strwidth("M"),
              col = col,
              main = "FDR (-log10)")
   invisible(DT)
+  # Plot motifs and axis
+  if(plot_motifs)
+  {
+    width <- max(strwidth(names, cex= par("cex")))
+    text(par("usr")[1]-width/2, 
+         DT$bar, 
+         names, 
+         offset= 0,
+         xpd= T)
+    mats <- vl_Dmel_motifs_DB_full$pwms_perc[match(DT$motif_ID, vl_Dmel_motifs_DB_full$motif)]
+    mats <- lapply(mats, TFBSTools::as.matrix)
+    coor <- vl_seqlogo(pwm = mats, 
+                       x = par("usr")[1]-width-strwidth("M")/2, 
+                       y = DT$bar, 
+                       cex.width = cex.width,
+                       cex.height = cex.height)
+    
+    coor[, segments(xleft, 
+                    ybottom, 
+                    xright, 
+                    ybottom, 
+                    xpd= T, 
+                    lwd= 0.5)]
+  }else
+    axis(2, 
+         DT$bar, 
+         las= 2,
+         labels = names,
+         tick = 0)
 }
 
 #' @describeIn vl_motif_cl_enrich method to plot cluster enrichment objects (containing variable, log2OR and padj)

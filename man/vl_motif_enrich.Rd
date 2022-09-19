@@ -12,7 +12,7 @@ vl_motif_enrich(counts, control_counts,
 
 plot.vl_enr(obj, padj_cutoff = 0.05, top_enrich = Inf,
   xlab = "Odd Ratio (log2)", col = c("blue", "red"), plot_motifs = F,
-  names, width = 1, ...)
+  names, width = 1, cex.width = 1, cex.height = 1, ...)
 }
 \arguments{
 \item{counts}{matrix of counts for the regions of interest}
@@ -38,6 +38,10 @@ plot.vl_enr(obj, padj_cutoff = 0.05, top_enrich = Inf,
 \item{names}{names for bars}
 
 \item{width}{bar width (barplot parameter)}
+
+\item{cex.width}{expansion factor for motif widths}
+
+\item{cex.height}{expansion factor for motif heights}
 
 \item{...}{Extra args to be passed to barplot}
 
