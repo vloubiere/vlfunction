@@ -8,11 +8,10 @@
 \usage{
 vl_motif_enrich(counts, control_counts,
   collapse_clusters = colnames(counts), plot = T, padj_cutoff = 0.05,
-  top_enrich = Inf, plot_motifs = F)
+  top_enrich = Inf, add_motifs = F, cex.width = 1, cex.height = 1)
 
 plot.vl_enr(obj, padj_cutoff = 0.05, top_enrich = Inf,
-  xlab = "Odd Ratio (log2)", col = c("blue", "red"), plot_motifs = F,
-  names, width = 1, cex.width = 1, cex.height = 1, ...)
+  xlab = "Odd Ratio (log2)", col = c("blue", "red"), ...)
 }
 \arguments{
 \item{counts}{matrix of counts for the regions of interest}
@@ -27,21 +26,17 @@ plot.vl_enr(obj, padj_cutoff = 0.05, top_enrich = Inf,
 
 \item{top_enrich}{Show only n top enriched motifs}
 
-\item{plot_motifs}{Should PWMs be ploted?}
+\item{add_motifs}{Show only n top enriched motifs}
+
+\item{cex.width}{expansion factor for motif widths}
+
+\item{cex.height}{expansion factor for motif heights}
 
 \item{obj}{An object of class vl_enr}
 
 \item{xlab}{Default to "Odd Ratio (log2)"}
 
 \item{col}{Color scale}
-
-\item{names}{names for bars}
-
-\item{width}{bar width (barplot parameter)}
-
-\item{cex.width}{expansion factor for motif widths}
-
-\item{cex.height}{expansion factor for motif heights}
 
 \item{...}{Extra args to be passed to barplot}
 
@@ -67,7 +62,8 @@ Compute motif enrichment between a set of regions and control regions
 suhw <- vl_motif_counts(vl_SUHW_top_peaks, "dm3")
 ctls_regions <- vl_control_regions_BSgenome(bed= vl_SUHW_top_peaks, "dm3")
 ctl <- vl_motif_counts(ctls_regions, "dm3")
-pl <- vl_motif_enrich(suhw, ctl, plot= F)
-par(mar= c(4,8,4,6))
-plot(pl, padj_cutoff= 1e-3)
+par(mar= c(4,15,4,6))
+pl <- vl_motif_enrich(suhw, ctl, add_motifs= T, padj_cutoff= 1e-3)
+DT <- plot(pl, padj_cutoff= 1e-3)
+vl_add_motifs(pl)
 }

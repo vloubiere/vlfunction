@@ -11,7 +11,7 @@ vl_balloons_plot(x, ...)
   col = c("#440154FF", "#472D7BFF", "#3B528BFF", "#2C728EFF",
   "#21908CFF", "#27AD81FF", "#5DC863FF", "#AADC32FF", "#FDE725FF"),
   cex.balloons = 1, main = NA, balloon_size_legend = NA,
-  balloon_col_legend = NA, auto_margins = T)
+  balloon_col_legend = NA)
 }
 \arguments{
 \item{x}{Matrix specifyiung size of the balloons.}

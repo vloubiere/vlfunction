@@ -4,11 +4,6 @@
 #' @param top_enrich Top enrichments to plot (based on padj)
 #' @param xlab Default to "Odd Ratio (log2)"
 #' @param col Color scale
-#' @param plot_motifs Should PWMs be ploted?
-#' @param names names for bars
-#' @param width bar width (barplot parameter)
-#' @param cex.width expansion factor for motif widths
-#' @param cex.height expansion factor for motif heights
 #' @param ... Extra args to be passed to barplot
 #'
 #' @describeIn vl_motif_enrich method to plot enrichment objects (containing variable, log2OR and padj)
@@ -18,11 +13,6 @@ plot.vl_enr <- function(obj,
                         top_enrich= Inf,
                         xlab= "Odd Ratio (log2)",
                         col= c("blue", "red"),
-                        plot_motifs= F,
-                        names,
-                        width= 1,
-                        cex.width= 1,
-                        cex.height= 1,
                         ...)
 {
   DT <- data.table::copy(obj)
@@ -40,61 +30,30 @@ plot.vl_enr <- function(obj,
   # select top_enrich
   setorderv(DT, "padj")
   DT <- DT[seq(nrow(DT))<=top_enrich]
-  # barplot
+  # Plot
   breaks <- range(-log10(DT$padj), na.rm= T)
   Cc <- circlize::colorRamp2(breaks, col)
   setorderv(DT, "log2OR")
-  DT[, bar:= barplot(log2OR,
-                     horiz= T,
-                     names= NA,
-                     border= NA,
-                     col= Cc(-log10(padj)),
-                     las= 1,
-                     width= width,
-                     xlab= xlab,
-                     ...)]
-  # axes/legend
-  if(missing(names))
-    names <- DT$variable
+  # Barplot
+  DT[, y:= barplot(log2OR,
+                   horiz= T,
+                   names= variable,
+                   border= NA,
+                   col= Cc(-log10(padj)),
+                   las= 1,
+                   xlab= xlab,
+                   ...)]
   # Plot heatkey
   vl_heatkey(breaks = breaks,
-             top = DT[.N, bar],
+             top = DT[.N, y],
              left = par("usr")[2]+strwidth("M"),
              col = col,
              main = "FDR (-log10)")
+  
+  # Return
   invisible(DT)
-  # Plot motifs and axis
-  if(plot_motifs)
-  {
-    width <- max(strwidth(names, cex= par("cex")))
-    text(par("usr")[1]-width/2, 
-         DT$bar, 
-         names, 
-         offset= 0,
-         xpd= T)
-    mats <- vl_Dmel_motifs_DB_full$pwms_perc[match(DT$motif_ID, vl_Dmel_motifs_DB_full$motif)]
-    mats <- lapply(mats, TFBSTools::as.matrix)
-    coor <- vl_seqlogo(pwm = mats, 
-                       x = par("usr")[1]-width-strwidth("M")/2, 
-                       y = DT$bar, 
-                       cex.width = cex.width,
-                       cex.height = cex.height)
-    
-    coor[, segments(xleft, 
-                    ybottom, 
-                    xright, 
-                    ybottom, 
-                    xpd= T, 
-                    lwd= 0.5)]
-  }else
-    axis(2, 
-         DT$bar, 
-         las= 2,
-         labels = names,
-         tick = 0)
 }
 
-#' @describeIn vl_motif_cl_enrich method to plot cluster enrichment objects (containing variable, log2OR and padj)
 #' @export
 plot.vl_enr_cl <- function(obj,
                            x_breaks,
@@ -129,17 +88,20 @@ plot.vl_enr_cl <- function(obj,
   color_var <- dcast(DT, variable~cl, value.var = "padj", drop= F)
   color_var <- as.matrix(color_var, 1)
   color_var <- -log10(color_var)
+  # Add y coordinates to DT
+  DT[, y:= .NGRP-(.GRP-1), variable]
   # Plot
-  pl <- match.call()
-  pl$obj <- pl$padj_cutoff <- pl$top_enrich <- NULL
-  pl$x <- x
-  pl$color_var <- color_var
-  pl$cex.balloons <- cex.balloons
-  pl$balloon_size_legend <- "OR (log2)"
-  pl$balloon_col_legend <- "padj (-log10)"
-  pl[[1]] <- quote(vl_balloons_plot)
-  eval(pl, envir = parent.frame())
+  vl_balloons_plot(x= x,
+                   color_var= color_var,
+                   x_breaks= x_breaks,
+                   col= col,
+                   cex.balloons= cex.balloons,
+                   main= main,
+                   balloon_size_legend= "OR (log2)",
+                   balloon_col_legend= "padj (-log10)")
   
-  invisible(list(x= x,
+  # Return
+  invisible(list(DT= DT,
+                 x= x,
                  color_var= color_var))
 }

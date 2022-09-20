@@ -31,8 +31,7 @@ vl_balloons_plot.matrix <- function(x,
                                     cex.balloons= 1,
                                     main= NA, 
                                     balloon_size_legend= NA,
-                                    balloon_col_legend= NA,
-                                    auto_margins= T)
+                                    balloon_col_legend= NA)
 {
   # Checks
   if(missing(x_breaks))
