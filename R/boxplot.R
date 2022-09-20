@@ -30,10 +30,10 @@ vl_boxplot.default <-
     # Boxplot stats
     if(!missing(names) && is.function(names))
     {
-      box <- boxplot(x, ..., plot = F)
+      box <- boxplot(x, plot = F)
       box$names <- names(box$names)
     }else
-      box <- boxplot(x, ..., names= names, plot = F)
+      box <- boxplot(x, names= names, plot = F)
     
     # Compute pval
     if(!is.null(compute_pval))
@@ -48,13 +48,7 @@ vl_boxplot.default <-
         stop("invalid first argument")
       if(length(class(groups)))
         groups <- unclass(groups)
-      if(!missing(names))
-        attr(groups, "names") <- names
-      else {
-        if(is.null(attr(groups, "names")))
-          attr(groups, "names") <- 1L:n
-        names <- attr(groups, "names")
-      }
+      attr(groups, "names") <- box$names
       pval <- vl_compute_bxp_pval(groups= groups,
                                   box= box,
                                   compute_pval= compute_pval, 
@@ -86,13 +80,13 @@ vl_boxplot.default <-
       # Plot tilted names
       if(tilt.names && !horizontal && xaxt!="n")
         text(if(is.null(at)) seq(box$names) else at,
-             rep(par("usr")[3], length(box$names))-diff(grconvertY(c(0,1), "line", "user"))*par("mgp")[2],
+             rep(par("usr")[3], length(box$names))-diff(grconvertY(c(0, par("mgp")[2]), "line", "user")),
              box$names,
              srt= 45,
-             offset= -0.35,
+             offset= -0.2,
              pos= 2,
              xpd= T,
-             cex= par("cex")*par("cex.axis"))
+             cex= par("cex.axis"))
     }
     
     # Return
