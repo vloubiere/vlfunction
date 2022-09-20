@@ -4,7 +4,7 @@
 \alias{vl_add_motifs}
 \title{Add motifs to enrichment plots}
 \usage{
-vl_add_motifs(DT, cex.width = 1, cex.height = 1)
+vl_add_motifs(DT, cex.width = 1, cex.height = 1, lwd = 0.1)
 }
 \arguments{
 \item{DT}{DT object output from vl_motif_enrich or vl_motif_cl_enrich}

@@ -271,7 +271,7 @@ vl_motif_cl_enrich <- function(counts_matrix,
 #' @param cex.width expansion factor for motif widths
 #' @param cex.height expansion factor for motif heights
 #' @export
-vl_add_motifs <- function(DT, cex.width= 1, cex.height= 1)
+vl_add_motifs <- function(DT, cex.width= 1, cex.height= 1, lwd= 0.1)
 {
   mats <- vl_Dmel_motifs_DB_full$pwms_perc[match(DT$motif_ID, vl_Dmel_motifs_DB_full$motif)]
   mats <- lapply(mats, TFBSTools::as.matrix)
@@ -287,7 +287,8 @@ vl_add_motifs <- function(DT, cex.width= 1, cex.height= 1)
                   xright, 
                   ybottom, 
                   xpd= T, 
-                  lwd= 0.5)]
+                  col= "grey60",
+                  lwd= lwd*par("lwd"))]
 }
 
 #' plot seqlogo
