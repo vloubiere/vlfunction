@@ -5,7 +5,7 @@
 \title{plot seqlogo}
 \usage{
 vl_seqlogo(pwm, x, y, pos = 2, cex.width = 1, cex.height = 1,
-  add = T)
+  add = T, min_content = 0)
 }
 \arguments{
 \item{pwm}{List of pwm matrices}

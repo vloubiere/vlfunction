@@ -275,13 +275,13 @@ vl_add_motifs <- function(DT, cex.width= 1, cex.height= 1)
 {
   mats <- vl_Dmel_motifs_DB_full$pwms_perc[match(DT$motif_ID, vl_Dmel_motifs_DB_full$motif)]
   mats <- lapply(mats, TFBSTools::as.matrix)
-  ax.width <- par("usr")[1]-diff(grconvertX(c(0,par("mgp")[2]+0.5), "lines", "user"))
-  ax.width <- ax.width-max(strwidth(DT$variable, cex= par("cex")))
+  ax.width <- max(strwidth(DT$variable, cex= par("cex.axis")))+diff(grconvertX(c(0, par("mgp")[2]+0.5), "lines", "user"))
   coor <- vl_seqlogo(pwm = mats, 
-                     x = ax.width, 
+                     x = par("usr")[1]-ax.width, 
                      y = DT$y, 
                      cex.width = cex.width,
-                     cex.height = cex.height)
+                     cex.height = cex.height,
+                     min_content= 0.05)
   coor[, segments(xleft, 
                   ybottom, 
                   xright, 
@@ -312,7 +312,8 @@ vl_seqlogo <- function(pwm,
                        pos= 2,
                        cex.width= 1,
                        cex.height= 1,
-                       add= T)
+                       add= T,
+                       min_content= 0)
 {
   if(!pos %in% c(2,4))
     stop("Unsupported pos value. Use either 2 (left) or 4 (right)")
@@ -331,30 +332,32 @@ vl_seqlogo <- function(pwm,
     # Import PWM and melt
     .c <- as.data.table(pwm[[1]], keep.rownames= "base")
     .c <- melt(.c, id.vars = "base")
-    # xleft depends on the pos (2 or 4)
-    if(pos==2)
-    {
-      setorderv(.c, "variable", -1)
-      .c[, xleft:= x-(.GRP*width), variable]
-    }else if(pos==4)
-    {
-      setorderv(.c, "variable")
-      .c[, xleft:= x+((.GRP-1)*width), variable]
-    }
     # Compute motif content per column and normalize importance
     .c[, content:= sum(value*log2(value/c(0.25, 0.25, 0.25, 0.25)), na.rm= T), variable]
     .c[, norm:= value*(content/max(content))]
+    # Remove flanks with little content (5% max)
+    setorderv(.c, "variable")
+    .c <- .c[min(which(norm>min_content)):max(which(norm>min_content))]
+    # xleft depends on the pos (2 or 4)
+    if(pos==4)
+    {
+      # Already correclty sorted earlier
+      .c[, xleft:= x+((.GRP-1)*width), variable]
+    }else if(pos==2)
+    {
+      setorderv(.c, "variable", -1)
+      .c[, xleft:= x-(.GRP*width), variable]
+    }
     # Rank from lowest to biggest importance -> inscreasing ytop pos
-    setorderv(.c, "value")
+    setorderv(.c, "norm")
     .h <- strheight("M", cex= cex.height)
     .c[, c("height", "ytop"):= {
-      heights <- cumsum(norm*.h)
-      .(heights, (y-.h/2)+heights)
+      heights <- norm*.h
+      .(heights, (y-.h/2)+cumsum(heights))
     }, variable]
   }, .(idx, y, width)]
-  
+
   # Plot
-  pl <- pl[height>0]
   pl[, vl_plotLetter(base[1], 
                      xleft[1], 
                      ytop[1], 
