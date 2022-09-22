@@ -4,17 +4,15 @@
 \alias{vl_plot_table}
 \title{Table plot}
 \usage{
-vl_plot_table(x, colnames_col = "white", row_col = "white")
+vl_plot_table(DT, wrap_text = 20)
 }
 \arguments{
-\item{x}{data.table}
+\item{DT}{data.table}
 
-\item{colnames_col}{Color for col.names row}
-
-\item{row_col}{Color for data rows}
+\item{wrap_text}{Number of characters after which text can be wrapped}
 }
 \value{
-Plots heatkey
+Plots table
 }
 \description{
 Plots a data.table as text
