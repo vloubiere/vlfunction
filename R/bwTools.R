@@ -136,9 +136,9 @@ vl_bw_coverage_bins <- function(bed,
        region_ID,
        set_IDs,
        strand)]
-  bins[, bin.x:= rowid(region_ID)]
+  bins[, bin.x:= seq(-upstream, downstream, length.out= nbins)[rowid(region_ID)]]
   if(stranded)
-    bins[as.character(strand)=="-", bin.x:= nbins-bin.x+1]
+    bins[as.character(strand)=="-", bin.x:= rev(bin.x), region_ID]
   
   #--------------------------#
   # Quantif tracks
@@ -151,7 +151,6 @@ vl_bw_coverage_bins <- function(bed,
   }, mc.preschedule = T)
   names(obj) <- make.unique(names)
   obj <- rbindlist(obj, idcol= "name")
-  obj[, c("upstream", "downstream"):= .(upstream, downstream)]
   return(obj)
 }
 
@@ -214,7 +213,7 @@ vl_bw_average_track <- function(bed,
   if(plot)
     plot.vl_bw_average_track(obj,
                              xlab= xlab,
-                             xlab.at= c(upstream, downstream),
+                             xlab.at= c(-upstream, 0, downstream),
                              center_label= center_label,
                              ylab= ylab,
                              ylim= ylim,
@@ -228,7 +227,7 @@ vl_bw_average_track <- function(bed,
 #' @export
 plot.vl_bw_average_track <- function(obj,
                                      xlab= "genomic distance",
-                                     xlab.at= c(obj$upstream[1], obj$downstream[1]),
+                                     xlab.at= c(min(obj$bin.x), 0, max(obj$bin.x)),
                                      center_label= "Center",
                                      ylab= "Enrichment",
                                      ylim,
@@ -238,18 +237,17 @@ plot.vl_bw_average_track <- function(obj,
 {
   pl <- obj[, .(mean= mean(score, na.rm= T), 
                 se= sd(score, na.rm= T)/sqrt(.N)), .(name, col, set_IDs, bin.x)]
-  xlim <- range(pl$bin.x)
   if(missing(ylim))
     ylim <- range(c(pl[, mean-se], pl[, mean+se]))
   plot(NA, 
-       xlim= xlim,
+       xlim= range(pl$bin.x),
        ylim= ylim,
        ylab= ylab,
        xlab= xlab,
        xaxt= "n")
   axis(1, 
-       at = cumsum(c(0, xlab.at)/sum(xlab.at))*diff(xlim)+1,
-       labels = c(xlab.at[1], center_label, xlab.at[2]))
+       at = xlab.at,
+       labels = c(xlab.at[1], center_label, xlab.at[3]))
   pl[, {
     polygon(c(bin.x, rev(bin.x)), 
             c(mean+se, rev(mean-se)),
@@ -267,11 +265,12 @@ plot.vl_bw_average_track <- function(obj,
       leg[, labels:= paste0(name, " @ ", set_IDs)] else if(length(unique(leg$set_IDs))>1)
         leg[, labels:= set_IDs] else if(length(unique(leg$name))>1)
           leg[, labels:= name]
-    legend("topleft",
-           legend= leg$labels,
-           fill= leg$col,
-           bty= "n",
-           cex= legend.cex)
+    if("labels" %in% names(leg))
+      legend("topleft",
+             legend= leg$labels,
+             fill= leg$col,
+             bty= "n",
+             cex= legend.cex)
   }
 }
 
