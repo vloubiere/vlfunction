@@ -19,7 +19,7 @@ vl_importBed(bed, ...)
 \arguments{
 \item{bed}{Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 
-\item{specialFormat}{"auto", "narrowPeak", "broadPeak". Auto tries to guess based on extension}
+\item{extraCols}{Colnames for extra, non-canonical bed columns. "auto" tries to guess whether narrowPeak/broadPeak formats are used}
 }
 \value{
 Imported bed

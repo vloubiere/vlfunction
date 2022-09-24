@@ -3,7 +3,7 @@
 #' Imports bed as data.table and check formats
 #'
 #' @param bed Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
-#' @param specialFormat "auto", "narrowPeak", "broadPeak". Auto tries to guess based on extension
+#' @param extraCols Colnames for extra, non-canonical bed columns. "auto" tries to guess whether narrowPeak/broadPeak formats are used
 #' @return Imported bed
 #' @export
 vl_importBed <- function(bed, ...) UseMethod("vl_importBed")
@@ -11,32 +11,22 @@ vl_importBed <- function(bed, ...) UseMethod("vl_importBed")
 #' @describeIn vl_importBed for bed paths
 #' @export
 vl_importBed.character <- function(bed, 
-                                   cols= c("seqnames", "start", "end", "name", "score", "strand"), 
+                                   cols= c("seqnames", "start", "end", "name", "score", "strand"),
                                    extraCols= "auto")
 {
   # Guess format if auto
   if(extraCols=="auto")
-    extraCols <- fcase(grepl(".narrowPeak$", bed[1]), "narrowPeak",
-                       grepl(".broadPeak$", bed[1]), "broadPeak",
-                       default = NULL)
+    extraCols <- if(grepl(".narrowPeak$", bed[1]))
+      c("signalValue", "pValue", "qValue", "peak") else if(grepl(".broadPeak$", bed[1]))
+        c("signalValue", "pValue", "qValue") else
+          NULL
+  # Columns
+  if(!is.null(extraCols))
+    cols <- c(cols, extraCols)
   # Fread
   bed <- rbindlist(lapply(bed, fread))
   # Name columns
-  if(!is.null(extraCols))
-  {
-    cols <- if(extraCols=="narrowPeak") 
-      c(cols, "signalValue", "pValue", "qValue", "peak") else if(extraCols=="broadPeak") 
-        c(cols, "signalValue", "pValue", "qValue") else c(cols, extraCols)
-  }
   setnames(bed, cols[1:ncol(bed)])
-  if(!is.null(extraCols) && extraCols %in% c("narrowPeak", "broadPeak"))
-  {
-    bed[, signalValue:= as.numeric(signalValue)]
-    bed[, pValue:= as.numeric(pValue)]
-    bed[, qValue:= as.numeric(qValue)]
-    if(extraCols=="narrowPeak")
-      bed[, peak:= as.integer(peak)]
-  }
   vl_importBed(bed)
 }
 
