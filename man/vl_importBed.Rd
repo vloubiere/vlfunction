@@ -11,7 +11,7 @@ vl_importBed(bed, ...)
 \method{vl_importBed}{character}(
   bed,
   cols = c("seqnames", "start", "end", "name", "score", "strand"),
-  extraCols = NULL
+  extraCols = "auto"
 )
 
 \method{vl_importBed}{GRanges}(bed)
@@ -19,7 +19,7 @@ vl_importBed(bed, ...)
 \arguments{
 \item{bed}{Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 
-\item{specialFormat}{"narrowPeak", "broadPeak"}
+\item{specialFormat}{"auto", "narrowPeak", "broadPeak". Auto tries to guess based on extension}
 }
 \value{
 Imported bed

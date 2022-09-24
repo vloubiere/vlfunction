@@ -3,7 +3,7 @@
 #' Imports bed as data.table and check formats
 #'
 #' @param bed Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
-#' @param specialFormat "narrowPeak", "broadPeak"
+#' @param specialFormat "auto", "narrowPeak", "broadPeak". Auto tries to guess based on extension
 #' @return Imported bed
 #' @export
 vl_importBed <- function(bed, ...) UseMethod("vl_importBed")
@@ -12,10 +12,13 @@ vl_importBed <- function(bed, ...) UseMethod("vl_importBed")
 #' @export
 vl_importBed.character <- function(bed, 
                                    cols= c("seqnames", "start", "end", "name", "score", "strand"), 
-                                   extraCols= fcase(grepl(".bed$", bed), NULL,
-                                                    grepl(".narrowPeak$", bed), "narrowPeak",
-                                                    grepl(".broadPeak$", bed), "broadPeak"))
+                                   extraCols= "auto")
 {
+  # Guess format if auto
+  if(extraCols=="auto")
+    extraCols <- fcase(grepl(".narrowPeak$", bed[1]), "narrowPeak",
+                       grepl(".broadPeak$", bed[1]), "broadPeak",
+                       default = NULL)
   # Fread
   bed <- rbindlist(lapply(bed, fread))
   # Name columns
