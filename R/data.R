@@ -22,6 +22,7 @@
 #' vl_Dmel_motifs_DB_full <- data.table(motif= make.unique(as.character(TF_clusters_PWMs$metadata$Motif_cluster_name), sep= "__"),
 #' motif_ID= TF_clusters_PWMs$metadata$motif_name,
 #' FBgn= TF_clusters_PWMs$metadata$FBgn,
+#' Dmel= TF_clusters_PWMs$metadata$Dmel,
 #' motif_cluster= TF_clusters_PWMs$metadata$Motif_cluster_name,
 #' collection= TF_clusters_PWMs$metadata$X..motif_collection_name,
 #' collection_version= TF_clusters_PWMs$metadata$motif_collection_version,

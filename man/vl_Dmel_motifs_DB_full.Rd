@@ -4,8 +4,7 @@
 \name{vl_Dmel_motifs_DB_full}
 \alias{vl_Dmel_motifs_DB_full}
 \title{Dmel motifs data base}
-\format{
-An object containing 13899 motifs and related metadata
+\format{An object containing 13899 motifs and related metadata
 \describe{
   \item{motif}{Unique motif names without special characters}
   \item{motif_name}{Motif ID from TF_clusters_PWMs.RData}
@@ -16,8 +15,7 @@ An object containing 13899 motifs and related metadata
   \item{species}{PWM expressed as log odds}
   \item{pwms_log_odds}{list of PWM matrices}
   \item{pwms_perc}{list of PWM matrices}
-}
-}
+}}
 \source{
 {"/groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/TF_clusters_PWMs.RData"}
 }
@@ -33,6 +31,7 @@ load("/groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAer
 vl_Dmel_motifs_DB_full <- data.table(motif= make.unique(as.character(TF_clusters_PWMs$metadata$Motif_cluster_name), sep= "__"),
 motif_ID= TF_clusters_PWMs$metadata$motif_name,
 FBgn= TF_clusters_PWMs$metadata$FBgn,
+Dmel= TF_clusters_PWMs$metadata$Dmel,
 motif_cluster= TF_clusters_PWMs$metadata$Motif_cluster_name,
 collection= TF_clusters_PWMs$metadata$X..motif_collection_name,
 collection_version= TF_clusters_PWMs$metadata$motif_collection_version,
