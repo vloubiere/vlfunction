@@ -60,6 +60,7 @@ vl_GO_enrich <- function(geneIDs,
     geneIDs <- list(set= geneIDs)
   DT <- rbindlist(lapply(geneIDs, function(x) SJ(ID= x)), idcol = "cl")
   DT <- unique(DT)
+  DT[, cl:= factor(cl)]
   setkeyv(set, "ID")
   setkeyv(uni, "GO")
   res <- DT[, {

@@ -61,7 +61,7 @@ plot.vl_enr_cl <- function(obj,
                            top_enrich= Inf,
                            color_breaks,
                            cex.balloons= 1,
-                           col= c("cornflowerblue", "lightgrey", "tomato"),
+                           col= c("blue", "red"),
                            main= NA)
 {
   DT <- data.table::copy(obj)
