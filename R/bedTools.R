@@ -12,9 +12,9 @@ vl_importBed <- function(bed, ...) UseMethod("vl_importBed")
 #' @export
 vl_importBed.character <- function(bed, 
                                    cols= c("seqnames", "start", "end", "name", "score", "strand"), 
-                                   extraCols= fcase(grepl(bed, ".bed$"), NULL,
-                                                    grepl(bed, ".narrowPeak$"), "narrowPeak",
-                                                    grepl(bed, ".broadPeak$"), "broadPeak"))
+                                   extraCols= fcase(grepl(".bed$", bed), NULL,
+                                                    grepl(".narrowPeak$", bed), "narrowPeak",
+                                                    grepl(".broadPeak$", bed), "broadPeak"))
 {
   # Fread
   bed <- rbindlist(lapply(bed, fread))
