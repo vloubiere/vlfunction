@@ -4,7 +4,8 @@
 \name{vl_Dmel_motifs_DB_full}
 \alias{vl_Dmel_motifs_DB_full}
 \title{Dmel motifs data base}
-\format{An object containing 13899 motifs and related metadata
+\format{
+An object containing 13899 motifs and related metadata
 \describe{
   \item{motif}{Unique motif names without special characters}
   \item{motif_name}{Motif ID from TF_clusters_PWMs.RData}
@@ -15,7 +16,8 @@
   \item{species}{PWM expressed as log odds}
   \item{pwms_log_odds}{list of PWM matrices}
   \item{pwms_perc}{list of PWM matrices}
-}}
+}
+}
 \source{
 {"/groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/TF_clusters_PWMs.RData"}
 }

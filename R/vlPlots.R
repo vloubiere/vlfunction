@@ -239,10 +239,10 @@ vl_plot_table <- function(DT, wrap_text= 20)
   frame[, width:= max(strwidth(value))+strwidth("M")*2, variable]
   frame[, height:= max(strheight(value)+strheight("M")), row]
   xleft <- unique(frame[, .(variable, width)])
-  xleft[, xleft:=  0.5-(sum(width)/2)+cumsum(shift(width, fill = 0))]
+  xleft[, xleft:=  0.5-(sum(width)/2)+cumsum(data.table::shift(width, fill = 0))]
   frame[xleft, xleft:= xleft, on= "variable"]
   top <- unique(frame[, .(row, height)])
-  top[, top:= 0.5+(sum(height)/2)-cumsum(shift(height, fill = 0))]
+  top[, top:= 0.5+(sum(height)/2)-cumsum(data.table::shift(height, fill = 0))]
   frame[top, top:= top, on= "row"]
   frame[, col:= rep_len(c("grey70", "grey90"), .N), xleft]
   frame[row==1, col:= "grey50"]

@@ -4,11 +4,23 @@
 \alias{vl_screenshot}
 \title{Simplified version. less options, faster}
 \usage{
-vl_screenshot(bed, tracks, highlight_bed = NULL, col = "black",
-  highlight_col = "lightgrey", bg_col = "white", density = "track",
-  density_col = viridis::viridis(10), space = 30, widths = c(100L,
-  20L), names = NULL, min = 0, max = as.numeric(NA), genome,
-  add = F)
+vl_screenshot(
+  bed,
+  tracks,
+  highlight_bed = NULL,
+  col = "black",
+  highlight_col = "lightgrey",
+  bg_col = "white",
+  density = "track",
+  density_col = viridis::viridis(10),
+  space = 30,
+  widths = c(100L, 20L),
+  names = NULL,
+  min = 0,
+  max = as.numeric(NA),
+  genome,
+  add = F
+)
 }
 \arguments{
 \item{bed}{Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
