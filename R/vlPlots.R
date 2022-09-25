@@ -248,6 +248,6 @@ vl_plot_table <- function(DT, wrap_text= 20)
   frame[row==1, col:= "grey50"]
   
   frame[, rect(xleft, top-height, xleft+width, top, xpd= T, col= col, border= "white")]
-  frame[, text(xleft+width/2, top-height/2, value)]
+  frame[, text(xleft+width/2, top-height/2, value, xpd= T)]
   invisible(frame)
 }

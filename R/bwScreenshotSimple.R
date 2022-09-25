@@ -259,13 +259,14 @@ vl_screenshot_transcripts <- function(obj, genome)
            xpd=T,
            lwd= pl$lwd,
            lend= 2)
-  pl <- pl[seg.x1-seg.x0>50 & type=="transcript"]
-  text(rowMeans(pl[, .(seg.x0, seg.x1)]),
-       pl$y,
-       pl$symbol,
-       xpd=T,
-       pos= 3,
-       offset= 0.2,
-       cex= 0.8)
+  pl <- pl[seg.x1-seg.x0>strwidth(symbol, cex= 0.8) & type=="transcript"]
+  if(nrow(pl)>0)
+    text(rowMeans(pl[, .(seg.x0, seg.x1)]),
+         pl$y,
+         pl$symbol,
+         xpd=T,
+         pos= 3,
+         offset= 0.2,
+         cex= 0.8)
 }
   

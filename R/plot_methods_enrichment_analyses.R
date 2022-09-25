@@ -36,6 +36,8 @@ plot.vl_enr <- function(obj,
     DT <- DT[seq(nrow(DT))<=top_enrich]
     # Plot
     breaks <- range(-log10(DT$padj), na.rm= T)
+    if(length(unique(breaks))==1)
+      breaks <- breaks+c(-0.5,0.5)
     Cc <- circlize::colorRamp2(breaks, col)
     setorderv(DT, "log2OR")
     # Barplot
