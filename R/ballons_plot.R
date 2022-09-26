@@ -60,11 +60,13 @@ vl_balloons_plot.matrix <- function(x,
   segments(1:ncol(x),
            1,
            1:ncol(x),
-           nrow(x))
+           nrow(x),
+           xpd=T)
   segments(1,
            1:nrow(x),
            ncol(x),
-           1:nrow(x))
+           1:nrow(x),
+           xpd=T)
   # Balloons
   points(rep(1:ncol(x), each= nrow(x)),
          rep(1:nrow(x), ncol(x)),

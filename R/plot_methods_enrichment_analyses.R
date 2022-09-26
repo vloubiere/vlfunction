@@ -61,10 +61,9 @@ plot.vl_enr <- function(obj,
                left = par("usr")[2]+strwidth("M"),
                col = col,
                main = "FDR (-log10)")
+    # Return
+    invisible(DT)
   }
-
-  # Return
-  invisible(DT)
 }
 
 #' @export
@@ -111,8 +110,6 @@ plot.vl_enr_cl <- function(obj,
     color_var <- dcast(DT, variable~cl, value.var = "padj", drop= F)
     color_var <- as.matrix(color_var, 1)
     color_var <- -log10(color_var)
-    # Add y coordinates to DT
-    DT[, y:= .NGRP-(.GRP-1), variable]
     # Plot
     vl_balloons_plot(x= x,
                      color_var= color_var,
@@ -122,11 +119,10 @@ plot.vl_enr_cl <- function(obj,
                      main= main,
                      balloon_size_legend= "OR (log2)",
                      balloon_col_legend= "padj (-log10)")
+    # Add y coordinates to DT and return
+    DT[, y:= match(variable, rev(rownames(x)))]
+    invisible(list(DT= DT,
+                   x= x,
+                   color_var= color_var))
   }
-    
-  
-  # Return
-  invisible(list(DT= DT,
-                 x= x,
-                 color_var= color_var))
 }

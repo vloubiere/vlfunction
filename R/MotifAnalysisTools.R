@@ -273,8 +273,12 @@ vl_motif_cl_enrich <- function(counts_matrix,
 #' @export
 vl_add_motifs <- function(DT, cex.width= 1, cex.height= 1, lwd= 0.1)
 {
+  # Select best motif for each row
+  DT <- DT[, .SD[which.min(padj)], y]
+  # Extract PWMs
   mats <- vl_Dmel_motifs_DB_full$pwms_perc[match(DT$motif_ID, vl_Dmel_motifs_DB_full$motif)]
   mats <- lapply(mats, TFBSTools::as.matrix)
+  # Compute plotting coordinates
   ax.width <- max(strwidth(DT$variable, cex= par("cex.axis")))+diff(grconvertX(c(0, par("mgp")[2]+0.5), "lines", "user"))
   coor <- vl_seqlogo(pwm = mats, 
                      x = par("usr")[1]-ax.width, 
@@ -282,6 +286,7 @@ vl_add_motifs <- function(DT, cex.width= 1, cex.height= 1, lwd= 0.1)
                      cex.width = cex.width,
                      cex.height = cex.height,
                      min_content= 0.05)
+  # Plot
   coor[, segments(xleft, 
                   ybottom, 
                   xright, 
@@ -289,6 +294,7 @@ vl_add_motifs <- function(DT, cex.width= 1, cex.height= 1, lwd= 0.1)
                   xpd= T, 
                   col= "grey60",
                   lwd= lwd*par("lwd"))]
+  invisible(coor)
 }
 
 #' plot seqlogo
