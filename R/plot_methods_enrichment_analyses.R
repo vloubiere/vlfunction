@@ -19,9 +19,15 @@ plot.vl_enr <- function(obj,
   # Handle infinite
   if(any(!is.finite(DT$log2OR)))
   {
-    message("Non finite log2OR values capped to max finite log2OR")
-    DT[log2OR==Inf, log2OR:= max(c(1, DT[is.finite(log2OR), log2OR]))]
-    DT[log2OR==(-Inf), log2OR:= min(c(-1, DT[is.finite(log2OR), log2OR]))]
+    if(any(DT$log2OR==Inf))
+      if(any(is.finite(DT[log2OR>0, log2OR])))
+        DT[log2OR==Inf, log2OR:= max(DT[log2OR>0 & is.finite(log2OR), log2OR])] else
+          stop("Inf OR and no finite pos OR to use for capping. Use other visualization!")
+    if(any(DT$log2OR==(-Inf)))
+      if(any(is.finite(DT[log2OR<0, log2OR])))
+        DT[log2OR==(-Inf), log2OR:= min(DT[log2OR<0 & is.finite(log2OR), log2OR])] else
+          stop("-Inf OR and no finite neg OR to use for capping. Use other visualization!")
+    warning("Non finite log2OR values capped to max finite log2OR")
   }
   # padj cutoff
   DT <- na.omit(DT[padj<=padj_cutoff])
@@ -75,9 +81,15 @@ plot.vl_enr_cl <- function(obj,
   # Handle infinite
   if(any(!is.finite(DT$log2OR)))
   {
-    message("Non finite log2OR values capped to max finite log2OR")
-    DT[log2OR==Inf, log2OR:= max(c(1, DT[is.finite(log2OR), log2OR]))]
-    DT[log2OR==(-Inf), log2OR:= min(c(-1, DT[is.finite(log2OR), log2OR]))]
+    if(any(DT$log2OR==Inf))
+      if(any(is.finite(DT[log2OR>0, log2OR])))
+        DT[log2OR==Inf, log2OR:= max(DT[log2OR>0 & is.finite(log2OR), log2OR])] else
+          stop("Inf OR and no finite pos OR to use for capping. Use other visualization!")
+    if(any(DT$log2OR==(-Inf)))
+      if(any(is.finite(DT[log2OR<0, log2OR])))
+        DT[log2OR==(-Inf), log2OR:= min(DT[log2OR<0 & is.finite(log2OR), log2OR])] else
+          stop("-Inf OR and no finite neg OR to use for capping. Use other visualization!")
+    warning("Non finite log2OR values capped to max finite log2OR")
   }
   # Apply cutoffs
   DT <- DT[padj <= padj_cutoff & log2OR > 0]

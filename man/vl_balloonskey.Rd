@@ -4,15 +4,8 @@
 \alias{vl_balloonskey}
 \title{Heatkey plot}
 \usage{
-vl_balloonskey(
-  sizes,
-  labels,
-  left = par("usr")[2],
-  top = par("usr")[4],
-  ticks.cex = 0.6,
-  main.cex = 1,
-  main = NA
-)
+vl_balloonskey(sizes, labels, left = par("usr")[2],
+  top = par("usr")[4], ticks.cex = 0.6, main.cex = 1, main = NA)
 }
 \arguments{
 \item{sizes}{Balloons sizes (cex)}
