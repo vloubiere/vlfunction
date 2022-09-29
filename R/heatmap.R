@@ -100,16 +100,16 @@ vl_heatmap.matrix <- function(x,
     rownames(x) <- seq(nrow(x))
   if(is.null(colnames(x)))
     colnames(x) <- seq(ncol(x))
-  if(is.character(row_clusters))
+  if(!is.factor(row_clusters))
     row_clusters <- factor(row_clusters)
-  if(is.character(col_clusters))
+  if(!is.factor(col_clusters))
     col_clusters <- factor(col_clusters)
   if(is.null(row_clusters_col))
-    if(cluster_rows)
+    if(cluster_rows && length(levels(row_clusters))==1)
       row_clusters_col <- grDevices::gray.colors(cutree_rows) else
         row_clusters_col <- grDevices::gray.colors(length(unique(row_clusters)))
   if(is.null(col_clusters_col))
-    if(cluster_cols)
+    if(cluster_cols && length(levels(col_clusters))==1)
       col_clusters_col <- grDevices::gray.colors(cutree_cols) else
         col_clusters_col <- grDevices::gray.colors(length(unique(col_clusters)))
         
@@ -132,7 +132,7 @@ vl_heatmap.matrix <- function(x,
   #------------------------####
   # Clustering rows
   #------------------------####
-  if(cluster_rows && nrow(x)>1)
+  if(cluster_rows && nrow(x)>1 && length(levels(row_clusters))==1)
   {
     set.seed(3453)
     if(is.na(kmeans_k))
@@ -167,7 +167,7 @@ vl_heatmap.matrix <- function(x,
   #------------------------####
   # Clustering cols
   #------------------------####
-  if(cluster_cols && ncol(x)>1)
+  if(cluster_cols && ncol(x)>1 && length(levels(col_clusters))==1)
   {
     set.seed(3453)
     if(clustering_distance_cols %in% c("pearson", "spearman"))

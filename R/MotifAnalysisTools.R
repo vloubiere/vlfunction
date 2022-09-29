@@ -73,6 +73,7 @@ vl_motif_counts.character <- function(sequences= NULL,
 #' @param plot Plot result?
 #' @param padj_cutoff cutoff for plotting
 #' @param top_enrich Show only n top enriched motifs
+#' @param breaks Color breaks to be used. Defaults to range of filtered padj.
 #' @param add_motifs Show only n top enriched motifs
 #' @param cex.width expansion factor for motif widths
 #' @param cex.height expansion factor for motif heights
@@ -94,6 +95,7 @@ vl_motif_enrich <- function(counts,
                             plot= T,
                             padj_cutoff= 0.05,
                             top_enrich= Inf, 
+                            breaks= NULL,
                             add_motifs= F,
                             cex.width= 1,
                             cex.height= 1)
@@ -147,7 +149,8 @@ vl_motif_enrich <- function(counts,
   {
     DT <- plot(res,
                padj_cutoff= padj_cutoff,
-               top_enrich= top_enrich)
+               top_enrich= top_enrich,
+               breaks= breaks)
     if(add_motifs)
       vl_add_motifs(DT,
                     cex.width= cex.width, 

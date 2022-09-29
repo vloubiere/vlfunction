@@ -8,6 +8,7 @@
 #' @param plot Plot result?
 #' @param padj_cutoff cutoff for plotting
 #' @param top_enrich Show only n top enriched motifs
+#' @param breaks Color breaks to be used. Defaults to range of filtered padj.
 #' @examples
 #' RpL <- vl_genes_set[GO=="RpL_genes", FBgn]
 #' Hox <- vl_genes_set[GO=="HOX_genes", FBgn]
@@ -21,7 +22,8 @@ vl_GO_enrich <- function(geneIDs,
                          species,
                          plot= T,
                          padj_cutoff= 0.05,
-                         top_enrich= Inf)
+                         top_enrich= Inf,
+                         breaks= NULL)
 {
   db <- switch(species,
                "Dm"= org.Dm.eg.db::org.Dm.eg.db,

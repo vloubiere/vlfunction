@@ -4,6 +4,7 @@
 #' @param top_enrich Top enrichments to plot (based on padj)
 #' @param xlab Default to "Odd Ratio (log2)"
 #' @param col Color scale
+#' @param breaks Color breaks to be used. Defaults to range of filtered padj.
 #' @param ... Extra args to be passed to barplot
 #'
 #' @describeIn vl_motif_enrich method to plot enrichment objects (containing variable, log2OR and padj)
@@ -13,6 +14,7 @@ plot.vl_enr <- function(obj,
                         top_enrich= Inf,
                         xlab= "Odd Ratio (log2)",
                         col= c("blue", "red"),
+                        breaks= NULL,
                         ...)
 {
   DT <- data.table::copy(obj)
@@ -41,9 +43,12 @@ plot.vl_enr <- function(obj,
     setorderv(DT, "padj")
     DT <- DT[seq(nrow(DT))<=top_enrich]
     # Plot
-    breaks <- range(-log10(DT$padj), na.rm= T)
-    if(length(unique(breaks))==1)
-      breaks <- breaks+c(-0.5,0.5)
+    if(is.null(breaks))
+    {
+      breaks <- range(-log10(DT$padj), na.rm= T)
+      if(length(unique(breaks))==1)
+        breaks <- breaks+c(-0.5,0.5)
+    }
     Cc <- circlize::colorRamp2(breaks, col)
     setorderv(DT, "log2OR")
     # Barplot
