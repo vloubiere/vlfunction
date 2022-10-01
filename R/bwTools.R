@@ -149,8 +149,8 @@ vl_bw_coverage_bins <- function(bed,
                         bin.x)], 
                score= vl_bw_coverage(bins, x))
   }, mc.preschedule = T)
-  names(obj) <- make.unique(names)
   obj <- rbindlist(obj, idcol= "name")
+  obj[, name:= names[name]]
   return(obj)
 }
 
@@ -159,19 +159,19 @@ vl_bw_coverage_bins <- function(bed,
 #' Plots average tracks for a set bw files around (potentially) several sets of peaks
 #'
 #' @param bed Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
+#' @param names Track names to plot, further used for ordering. By default, bw basenames will be used (as factors).
+#' @param set_IDs Set IDs specifying the groups as subsets of the bed file. Used for ordering.
 #' @param tracks Vector of bw files to plot. Use full paths to avoid pbs.
-#' @param set_IDs Set IDs specifying the groups as subsets of the bed file
 #' @param upstream Upstream  extension of bed regions (centered on center)
 #' @param downstream Downstream  extension of bed regions (centered on center)
 #' @param stranded Should the average track be stranded?
 #' @param nbins Number of bins spanning the extended regions. Default= 101L
-#' @param names Track names to plot. If specified, must be the same length as bw vector. By default, bw basenames will be used.
 #' @param plot Should the average track be ploted? default= T
 #' @param xlab X label. default= "genomic distance"
 #' @param ylab Y labels. default= "Enrichment"
 #' @param ylim ylim for plotting. default= range(data)
-#' @param col Color to be used for plotting. 
-#' @param legend Should the legeng be plotted? default to T
+#' @param col Color to be used for plotting. Dataset is ordered using keyby= .(names, set_IDs) before assigning colors
+#' @param legend Should the legend be plotted? default to T
 #' @param legend.cex Legend cex. defaults to 1
 #' @param col.adj Opacity of polygons and lines. default= c(0.5,1)
 #' @examples 
@@ -181,13 +181,13 @@ vl_bw_coverage_bins <- function(bed,
 #' vl_bw_average_track(bed, tracks, plot= T, upstream = 1000, downstream = 1000, set_IDs = sets)
 #' @export
 vl_bw_average_track <- function(bed,
+                                names,
+                                set_IDs,
                                 tracks,
-                                set_IDs= 1,
                                 upstream= 5000,
                                 downstream= 5000,
                                 stranded= F,
                                 nbins= 101L, 
-                                names= gsub(".bw$", "", basename(tracks)),
                                 center_label= "Center",
                                 plot= T,
                                 xlab= "genomic distance",
@@ -198,6 +198,14 @@ vl_bw_average_track <- function(bed,
                                 legend.cex= 1,
                                 col.adj= c(0.5, 1))
 {
+  # By default, preserve order bw tracks as specified in input
+  if(missing(names))
+  {
+    names <- gsub(".bw$", "", basename(tracks))
+    names <- factor(names, levels= unique(names))
+  }
+  if(missing(set_IDs))
+    set_IDs <- 1
   obj <- vl_bw_coverage_bins(bed= bed,
                              tracks= tracks,
                              set_IDs= set_IDs,

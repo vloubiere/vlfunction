@@ -4,8 +4,15 @@
 \alias{vl_GO_enrich}
 \title{GO analysis}
 \usage{
-vl_GO_enrich(geneIDs, geneUniverse_IDs = NULL, species, plot = T,
-  padj_cutoff = 0.05, top_enrich = Inf)
+vl_GO_enrich(
+  geneIDs,
+  geneUniverse_IDs = NULL,
+  species,
+  plot = T,
+  padj_cutoff = 0.05,
+  top_enrich = Inf,
+  breaks = NULL
+)
 }
 \arguments{
 \item{geneIDs}{A vector (barplot) of a list (clusters) of gene IDs}
@@ -19,6 +26,8 @@ vl_GO_enrich(geneIDs, geneUniverse_IDs = NULL, species, plot = T,
 \item{padj_cutoff}{cutoff for plotting}
 
 \item{top_enrich}{Show only n top enriched motifs}
+
+\item{breaks}{Color breaks to be used. Defaults to range of filtered padj.}
 }
 \description{
 This function compute GO enrichment in a group of genes

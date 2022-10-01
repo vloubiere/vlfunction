@@ -5,25 +5,47 @@
 \alias{plot.vl_bw_average_track}
 \title{bw Average tracks}
 \usage{
-vl_bw_average_track(bed, tracks, set_IDs = 1, upstream = 5000,
-  downstream = 5000, stranded = F, nbins = 101L,
-  names = gsub(".bw$", "", basename(tracks)), center_label = "Center",
-  plot = T, xlab = "genomic distance", ylab = "Enrichment", ylim,
-  col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A",
-  "#4F6A6F", "#D26429", "#C57DA5", "#999999"), legend = T,
-  legend.cex = 1, col.adj = c(0.5, 1))
+vl_bw_average_track(
+  bed,
+  names,
+  set_IDs,
+  tracks,
+  upstream = 5000,
+  downstream = 5000,
+  stranded = F,
+  nbins = 101L,
+  center_label = "Center",
+  plot = T,
+  xlab = "genomic distance",
+  ylab = "Enrichment",
+  ylim,
+  col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A", "#4F6A6F", "#D26429",
+    "#C57DA5", "#999999"),
+  legend = T,
+  legend.cex = 1,
+  col.adj = c(0.5, 1)
+)
 
-plot.vl_bw_average_track(obj, xlab = "genomic distance",
+\method{plot}{vl_bw_average_track}(
+  obj,
+  xlab = "genomic distance",
   xlab.at = c(min(obj$bin.x), 0, max(obj$bin.x)),
-  center_label = "Center", ylab = "Enrichment", ylim, legend = T,
-  legend.cex = 1, col.adj = c(0.5, 1))
+  center_label = "Center",
+  ylab = "Enrichment",
+  ylim,
+  legend = T,
+  legend.cex = 1,
+  col.adj = c(0.5, 1)
+)
 }
 \arguments{
 \item{bed}{Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 
-\item{tracks}{Vector of bw files to plot. Use full paths to avoid pbs.}
+\item{names}{Track names to plot, further used for ordering. By default, bw basenames will be used (as factors).}
 
-\item{set_IDs}{Set IDs specifying the groups as subsets of the bed file}
+\item{set_IDs}{Set IDs specifying the groups as subsets of the bed file. Used for ordering.}
+
+\item{tracks}{Vector of bw files to plot. Use full paths to avoid pbs.}
 
 \item{upstream}{Upstream  extension of bed regions (centered on center)}
 
@@ -33,8 +55,6 @@ plot.vl_bw_average_track(obj, xlab = "genomic distance",
 
 \item{nbins}{Number of bins spanning the extended regions. Default= 101L}
 
-\item{names}{Track names to plot. If specified, must be the same length as bw vector. By default, bw basenames will be used.}
-
 \item{plot}{Should the average track be ploted? default= T}
 
 \item{xlab}{X label. default= "genomic distance"}
@@ -43,9 +63,9 @@ plot.vl_bw_average_track(obj, xlab = "genomic distance",
 
 \item{ylim}{ylim for plotting. default= range(data)}
 
-\item{col}{Color to be used for plotting.}
+\item{col}{Color to be used for plotting. Dataset is ordered using keyby= .(names, set_IDs) before assigning colors}
 
-\item{legend}{Should the legeng be plotted? default to T}
+\item{legend}{Should the legend be plotted? default to T}
 
 \item{legend.cex}{Legend cex. defaults to 1}
 
@@ -54,9 +74,9 @@ plot.vl_bw_average_track(obj, xlab = "genomic distance",
 \description{
 Plots average tracks for a set bw files around (potentially) several sets of peaks
 }
-\section{Functions}{
+\section{Methods (by generic)}{
 \itemize{
-\item \code{plot.vl_bw_average_track}: Method to plot average tracks
+\item \code{plot}: Method to plot average tracks
 }}
 
 \examples{

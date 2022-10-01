@@ -467,3 +467,118 @@ vl_plotLetter <- function(letter, xleft, ytop, width, height)
           xpd= T)
 }
 
+#' Find motif positions
+#'
+#' Compute motif positions
+#'
+#' @param sequences Named character vector of sequences to analyse. If provided takes over bed argument (in the case where both are specified)
+#' @param bed Either a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns
+#' @param genome Genome to be used for coordinates ("dm6, "dm3")
+#' @param p.cutoff Pval cutoff used for motif detection
+#' @param sel List of motifs to compute. see vl_Dmel_motifs_DB_full$motif
+#' @param xleft Left position for plotting
+#' @param ybottom Bottom position for plotting
+#' @param width Plot width
+#' @param height Plot height
+#' @param col Color (1 per motif)
+#' @examples
+#' plot.new()
+#' vl_seqMotifs(data.table(seqnames="chr3R", start= 16948622, end= 16948870), 
+#' genome= "dm6", 
+#' sel= c("pho", "Trl/1"), 
+#' xleft=0, 
+#' ybottom=c(0.25,0.5), 
+#' width=1, 
+#' height= 0.1, 
+#' col= c("goldenrod1", "tomato"))
+#' @return An object of class "vl_seqMotifs" that can be used for plotting -> plot(obj)
+#' @export
+vl_seqMotifs <- function(sequences, ...) UseMethod("vl_seqMotifs")
+
+#' @describeIn vl_seqMotifs Compute motifs position within
+#' @export
+vl_seqMotifs.data.table <- function(bed, genome, ...)
+{
+  bed <- vl_importBed(bed)
+  sequences <- BSgenome::getSeq(BSgenome::getBSgenome(genome), bed$seqnames, bed$start, bed$end, as.character= T)
+  names(sequences) <- paste0(bed$seqnames, ":", bed$start, "-", bed$end, ":", bed$ranges)
+  
+  pl <- match.call()
+  pl$bed <- pl$genome <- NULL
+  pl$sequences <- sequences
+  pl[[1]] <- quote(vl_seqMotifs.character)
+  eval(pl)
+}
+
+#' @describeIn vl_seqMotifs Identify motifs in sequences
+#' @export
+vl_seqMotifs.character <- function(sequences,
+                                   p.cutoff= 5e-4,
+                                   sel= vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn), motif],
+                                   xleft, 
+                                   ybottom, 
+                                   width, 
+                                   height, 
+                                   col= rainbow(length(sel)),
+                                   col_alpha= 0.3,
+                                   plot= T)
+{
+  sub <- vl_Dmel_motifs_DB_full[motif %in% sel]
+  mot <- do.call(TFBSTools::PWMatrixList, 
+                 sub$pwms_log_odds)
+  pos <- motifmatchr::matchMotifs(mot,
+                                  sequences,
+                                  p.cutoff= p.cutoff,
+                                  bg= "even",
+                                  out= "positions")
+  names(pos) <- sub$motif
+  pos <- lapply(pos, function(x)
+  {
+    names(x) <- seq(length(sequences))
+    lapply(x, function(y) as.data.table(y))
+  })
+  pos <- rbindlist(unlist(pos, recursive = F), idcol = "motif")
+  pos$width <- NULL
+  pos[, c("motif", "idx"):= tstrsplit(motif, "[.]")]
+  pos[, idx:= as.numeric(idx)]
+  pos[, length:= nchar(sequences)[idx]]
+  setattr(pos, "class", c("vl_seqMotifs", "data.table", "data.frame"))
+  
+  # Plot
+  if(plot)
+    plot(obj= pos, 
+         xleft= xleft,
+         ybottom= ybottom,
+         width= width,
+         height= height,
+         col= adjustcolor(col, col_alpha))
+  
+  invisible(pos)
+}
+
+#' @describeIn vl_seqMotifs Identify motifs in sequences
+#' @export
+plot.vl_seqMotifs <- function(obj, xleft, ybottom, width, height, col)
+{
+  obj[, xleft:= rep(xleft, length.out= max(idx))[idx]]
+  obj[, ybottom:= rep(ybottom, length.out= max(idx))[idx]]
+  obj[, width:= rep(width, length.out= max(idx))[idx]]
+  obj[, height:= rep(height, length.out= max(idx))[idx]]
+  obj[, col:= col[.GRP], motif]
+  obj[, {
+    rect(xleft+start/length*width,
+         ybottom,
+         xleft+end/length*width,
+         ybottom+height, 
+         col= col,
+         border= NA)
+  }]
+  obj[, {
+    rect(xleft[1], 
+         ybottom[1], 
+         xleft[1]+width[1], 
+         ybottom[1]+height[1], 
+         border= "grey20")
+  }, .(xleft, ybottom, width, height)]
+}
+

@@ -8,24 +8,40 @@
 \usage{
 vl_heatmap(x, ...)
 
-\method{vl_heatmap}{data.table}(x, rownames = NULL,
-  rownames.value = NULL, ...)
+\method{vl_heatmap}{data.table}(x, rownames = NULL, rownames.value = NULL, ...)
 
-\method{vl_heatmap}{matrix}(x, cluster_rows = TRUE, row_clusters = 1,
-  row_clusters_col = NULL, kmeans_k = NA,
-  clustering_distance_rows = "euclidean", cutree_rows = 1,
-  cluster_cols = TRUE, col_clusters = 1, col_clusters_col = NULL,
-  clustering_distance_cols = "euclidean", cutree_cols = 1,
-  clustering_method = "complete", plot = TRUE, auto_margins = FALSE,
-  breaks = seq(min(x, na.rm = T), max(x, na.rm = TRUE), length.out =
-  length(col)), col = c("cornflowerblue", "white", "red"),
-  na_col = "lightgrey", main = NA, legend_title = NA,
-  show_rownames = TRUE, show_colnames = TRUE,
+\method{vl_heatmap}{matrix}(
+  x,
+  cluster_rows = TRUE,
+  row_clusters = 1,
+  row_clusters_col = NULL,
+  kmeans_k = NA,
+  clustering_distance_rows = "euclidean",
+  cutree_rows = 1,
+  cluster_cols = TRUE,
+  col_clusters = 1,
+  col_clusters_col = NULL,
+  clustering_distance_cols = "euclidean",
+  cutree_cols = 1,
+  clustering_method = "complete",
+  plot = TRUE,
+  auto_margins = FALSE,
+  breaks = seq(min(x, na.rm = T), max(x, na.rm = TRUE), length.out = length(col)),
+  col = c("cornflowerblue", "white", "red"),
+  na_col = "lightgrey",
+  main = NA,
+  legend_title = NA,
+  show_rownames = TRUE,
+  show_colnames = TRUE,
   show_row_clusters = length(unique(rows$cl)) > 1,
   show_col_clusters = length(unique(cols$cl)) > 1,
-  show_row_dendrogram = TRUE, show_col_dendrogram = TRUE,
-  show_legend = TRUE, display_numbers = FALSE,
-  display_numbers_matrix = x, display_numbers_cex = 1)
+  show_row_dendrogram = TRUE,
+  show_col_dendrogram = TRUE,
+  show_legend = TRUE,
+  display_numbers = FALSE,
+  display_numbers_matrix = x,
+  display_numbers_cex = 1
+)
 }
 \arguments{
 \item{x}{Data to plot. Can be one of matrix, data.table, or formula.}
