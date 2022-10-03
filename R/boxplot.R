@@ -85,7 +85,7 @@ vl_boxplot.default <-
              srt= 45,
              offset= -0.2,
              pos= 2,
-             xpd= T,
+             xpd= NA,
              cex= par("cex.axis"))
     }
     
