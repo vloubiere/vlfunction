@@ -13,9 +13,10 @@ vl_boxplot(x, ...)
   pval_offset = 0.08, tilt.names = F, range = 1.5, width = NULL,
   varwidth = FALSE, notch = FALSE, outline = FALSE, names,
   plot = TRUE, border = par("fg"), col = NULL, log = "",
-  pars = list(boxwex = 0.4, staplewex = NA, outwex = NA),
-  horizontal = FALSE, add = FALSE, at = NULL, frame = F,
-  whisklty = 1, ylim = NULL, xaxt = "s")
+  pars = list(boxwex = ifelse(violin, 0.2, 0.4), staplewex = NA, outwex =
+  NA), horizontal = FALSE, add = FALSE, at = NULL, frame = F,
+  whisklty = ifelse(violin, 2, 1), ylim = NULL, xaxt = "s",
+  violin = T, viocol = NULL, viowex = 0.4)
 
 \method{vl_boxplot}{matrix}(x, use.cols = TRUE, ...)
 
@@ -33,7 +34,13 @@ vl_boxplot(x, ...)
 
 \item{tilt.names}{Should names be tilted (ignored if horizontal= TRUE)}
 
-\item{names}{Namex to plot under boxplot. If function specified, applied to names before plotting}
+\item{names}{Names to plot under boxplot. If function specified, applied to names before plotting}
+
+\item{violin}{Should violins be added?}
+
+\item{viocol}{Violin colors}
+
+\item{viowex}{Expansion factor for violins}
 }
 \description{
 Just a wrapper around boxplot that makes it nicer and allows to add wilcox pvals

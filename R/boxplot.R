@@ -3,8 +3,11 @@
 #' @param x list of variables to be plotted
 #' @param compute_pval list of vectors of length two containing pairwise x indexes to be compared
 #' @param pval_offset offset for pval plotting. Defaults to 0.04 (fraction of ylim)
+#' @param names Names to plot under boxplot. If function specified, applied to names before plotting
 #' @param tilt.names Should names be tilted (ignored if horizontal= TRUE)
-#' @param names Namex to plot under boxplot. If function specified, applied to names before plotting
+#' @param violin Should violins be added?
+#' @param viocol Violin colors
+#' @param viowex Expansion factor for violins
 #' @param ... Extra parameters for boxplot()
 #' @examples
 #' set.seed(1234)
