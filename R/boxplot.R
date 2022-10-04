@@ -23,9 +23,10 @@ vl_boxplot.default <-
            range = 1.5, width = NULL, varwidth = FALSE,
            notch = FALSE, outline = FALSE, names, plot = TRUE,
            border = par("fg"), col = NULL, log = "",
-           pars = list(boxwex = 0.4, staplewex = NA, outwex = NA),
+           pars = list(boxwex = ifelse(violin, .2, .4), staplewex = NA, outwex = NA),
            horizontal = FALSE, add = FALSE, at = NULL,
-           frame= F, whisklty = 1, ylim= NULL, xaxt= "s")
+           frame= F, whisklty = ifelse(violin, 2, 1), ylim= NULL, xaxt= "s",
+           violin= T, viocol = NULL, viowex= 0.4)
   {
     # Boxplot stats
     if(!missing(names) && is.function(names))
@@ -35,8 +36,8 @@ vl_boxplot.default <-
     }else
       box <- boxplot(x, names= names, plot = F)
     
-    # Compute pval
-    if(!is.null(compute_pval))
+    # Compute groups if relevant
+    if(!is.null(compute_pval) | violin)
     {
       args <- list(x, ...)
       namedargs <-
@@ -49,6 +50,11 @@ vl_boxplot.default <-
       if(length(class(groups)))
         groups <- unclass(groups)
       attr(groups, "names") <- box$names
+    }
+    
+    # Compute pval
+    if(!is.null(compute_pval))
+    {
       pval <- vl_compute_bxp_pval(groups= groups,
                                   box= box,
                                   compute_pval= compute_pval, 
@@ -64,12 +70,39 @@ vl_boxplot.default <-
     if(plot)
     {
       boxplot(x, ..., range = range, width = width, varwidth = varwidth,
-              notch = notch, outline = outline, 
-              names= if(tilt.names && !horizontal) NA else box$names, 
-              plot = plot, border = border, col = col, log = log,
+              notch = notch, outline = outline,
+              names= if(tilt.names && !horizontal) NA else box$names,
+              plot = plot, border = if(violin) NA else border, col = if(violin) NA else col, log = log,
               pars = pars, horizontal = horizontal, add = add, at = at,
-              frame= F, whisklty = 1, ylim= ylim, xaxt= xaxt)
-      
+              frame= frame, whisklty = if(violin) 0 else whisklty, ylim= ylim, xaxt= xaxt)
+      if(violin)
+      {
+        # Violins
+        xpos <- if(is.null(at)) seq(groups) else at
+        viocols <- rep(viocol, length.out= length(groups))
+        lapply(seq(groups), function(i) 
+        {
+          .d <- density(groups[[i]],
+                        from= box$stats[1,i],
+                        to= box$stats[5,i])
+          x <- .d$y
+          x <- x/max(x)*viowex/2
+          x <- xpos[i]-c(x, rev(-x))
+          y <- .d$x
+          y <- c(y, rev(y))
+          if(horizontal)
+            polygon(y, x, col= viocols[i]) else
+              polygon(x, y, col= viocols[i])
+        })
+        # Add boxes
+        boxplot(x, ..., range = range, width = width, varwidth = varwidth,
+                notch = notch, outline = outline,
+                names= if(tilt.names && !horizontal) NA else box$names,
+                plot = plot, border = border, col = col, log = log,
+                pars = pars, horizontal = horizontal, add = T, at = at,
+                frame= frame, whisklty = whisklty, ylim= ylim, xaxt= "n", yaxt= "n")
+      }
+        
       # Plot pval
       if(!is.null(compute_pval) && nrow(pval$pval)>0)
         vl_plot_bxp_pval(pval = pval$pval, 
