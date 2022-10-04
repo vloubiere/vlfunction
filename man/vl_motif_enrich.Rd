@@ -6,28 +6,14 @@
 \alias{plot.vl_enr}
 \title{Motif enrichment analysis}
 \usage{
-vl_motif_enrich(
-  counts,
-  control_counts,
-  collapse_clusters = colnames(counts),
-  plot = T,
-  padj_cutoff = 0.05,
-  top_enrich = Inf,
-  breaks = NULL,
-  add_motifs = F,
-  cex.width = 1,
-  cex.height = 1
-)
+vl_motif_enrich(counts, control_counts,
+  collapse_clusters = colnames(counts), plot = T, padj_cutoff = 0.05,
+  top_enrich = Inf, breaks = NULL, add_motifs = F, cex.width = 1,
+  cex.height = 1)
 
-\method{plot}{vl_enr}(
-  obj,
-  padj_cutoff = 0.05,
-  top_enrich = Inf,
-  xlab = "Odd Ratio (log2)",
-  col = c("blue", "red"),
-  breaks = NULL,
-  ...
-)
+\method{plot}{vl_enr}(obj, padj_cutoff = 0.05, top_enrich = Inf,
+  xlab = "Odd Ratio (log2)", col = c("blue", "red"), breaks = NULL,
+  ...)
 }
 \arguments{
 \item{counts}{matrix of counts for the regions of interest}
@@ -38,9 +24,9 @@ vl_motif_enrich(
 
 \item{plot}{Plot result?}
 
-\item{padj_cutoff}{padjust cutoff to be applied before plotting}
+\item{padj_cutoff}{cutoff for plotting}
 
-\item{top_enrich}{Top enrichments to plot (based on padj)}
+\item{top_enrich}{Show only n top enriched motifs}
 
 \item{breaks}{Color breaks to be used. Defaults to range of filtered padj.}
 
@@ -57,6 +43,12 @@ vl_motif_enrich(
 \item{col}{Color scale}
 
 \item{...}{Extra args to be passed to barplot}
+
+\item{padj_cutoff}{padjust cutoff to be applied before plotting}
+
+\item{top_enrich}{Top enrichments to plot (based on padj)}
+
+\item{breaks}{Color breaks to be used. Defaults to range of filtered padj.}
 }
 \value{
 DT of enrichment values

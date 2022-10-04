@@ -4,15 +4,8 @@
 \alias{vl_GO_enrich}
 \title{GO analysis}
 \usage{
-vl_GO_enrich(
-  geneIDs,
-  geneUniverse_IDs = NULL,
-  species,
-  plot = T,
-  padj_cutoff = 0.05,
-  top_enrich = Inf,
-  breaks = NULL
-)
+vl_GO_enrich(geneIDs, geneUniverse_IDs = NULL, species, plot = T,
+  padj_cutoff = 0.05, top_enrich = Inf, breaks = NULL)
 }
 \arguments{
 \item{geneIDs}{A vector (barplot) of a list (clusters) of gene IDs}
