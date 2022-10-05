@@ -524,65 +524,45 @@ vl_seqMotifs.character <- function(sequences,
                                    width, 
                                    height, 
                                    col= rainbow(length(sel)),
-                                   col_alpha= 0.3,
-                                   plot= T)
+                                   col_alpha= 0.3)
 {
-  sub <- vl_Dmel_motifs_DB_full[motif %in% sel]
-  mot <- do.call(TFBSTools::PWMatrixList, 
-                 sub$pwms_log_odds)
-  pos <- motifmatchr::matchMotifs(mot,
+  if(any(!sel %in% vl_Dmel_motifs_DB_full$motif))
+    stop("All sel should exist in vl_Dmel_motifs_DB_full$motif")
+  sub <- vl_Dmel_motifs_DB_full[match(unique(sel), motif)]
+  sub[, col:= col[.GRP], motif]
+  pos <- motifmatchr::matchMotifs(do.call(TFBSTools::PWMatrixList, 
+                                          sub$pwms_log_odds),
                                   sequences,
                                   p.cutoff= p.cutoff,
                                   bg= "even",
                                   out= "positions")
-  names(pos) <- sub$motif
   pos <- lapply(pos, function(x)
   {
     names(x) <- seq(length(sequences))
     lapply(x, function(y) as.data.table(y))
   })
-  pos <- rbindlist(unlist(pos, recursive = F), idcol = "motif")
-  pos$width <- NULL
-  pos[, c("motif", "idx"):= tstrsplit(motif, "[.]")]
-  pos[, idx:= as.numeric(idx)]
-  pos[, length:= nchar(sequences)[idx]]
-  setattr(pos, "class", c("vl_seqMotifs", "data.table", "data.frame"))
+  sub <- sub[, .(sequence= seq(length(sequences))), .(motif, col)]
+  sub[, length:= nchar(sequences)[.GRP], sequence]
+  sub[, xleft:= rep(xleft, length.out= .NGRP)[.GRP], sequence]
+  sub[, ybottom:= rep(ybottom, length.out= .NGRP)[.GRP], sequence]
+  sub[, width:= rep(width, length.out= .NGRP)[.GRP], sequence]
+  sub[, height:= rep(height, length.out= .NGRP)[.GRP], sequence]
   
   # Plot
-  if(plot)
-    plot(obj= pos, 
-         xleft= xleft,
-         ybottom= ybottom,
-         width= width,
-         height= height,
-         col= adjustcolor(col, col_alpha))
-  
-  invisible(pos)
+  pl <- sub[, unlist(pos, recursive = F)[[.GRP]][, !"width"], (sub)]
+  pl[, rect(xleft+start/length*width,
+            ybottom,
+            xleft+end/length*width,
+            ybottom+height,
+            col= col,
+            border= NA)]
+  rect(xleft, 
+       ybottom, 
+       xleft+width, 
+       ybottom+height, 
+       border= "grey20")
+    
+  invisible(sub)
 }
 
-#' @describeIn vl_seqMotifs Identify motifs in sequences
-#' @export
-plot.vl_seqMotifs <- function(obj, xleft, ybottom, width, height, col)
-{
-  obj[, xleft:= rep(xleft, length.out= max(idx))[idx]]
-  obj[, ybottom:= rep(ybottom, length.out= max(idx))[idx]]
-  obj[, width:= rep(width, length.out= max(idx))[idx]]
-  obj[, height:= rep(height, length.out= max(idx))[idx]]
-  obj[, col:= col[.GRP], motif]
-  obj[, {
-    rect(xleft+start/length*width,
-         ybottom,
-         xleft+end/length*width,
-         ybottom+height, 
-         col= col,
-         border= NA)
-  }]
-  obj[, {
-    rect(xleft[1], 
-         ybottom[1], 
-         xleft[1]+width[1], 
-         ybottom[1]+height[1], 
-         border= "grey20")
-  }, .(xleft, ybottom, width, height)]
-}
 

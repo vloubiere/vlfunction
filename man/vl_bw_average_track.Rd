@@ -26,7 +26,7 @@ vl_bw_average_track(
   col.adj = c(0.5, 1)
 )
 
-\method{plot}{vl_bw_average_track}(
+plot.vl_bw_average_track(
   obj,
   xlab = "genomic distance",
   xlab.at = c(min(obj$bin.x), 0, max(obj$bin.x)),
@@ -74,9 +74,9 @@ vl_bw_average_track(
 \description{
 Plots average tracks for a set bw files around (potentially) several sets of peaks
 }
-\section{Methods (by generic)}{
+\section{Functions}{
 \itemize{
-\item \code{plot}: Method to plot average tracks
+\item \code{plot.vl_bw_average_track}: Method to plot average tracks
 }}
 
 \examples{
