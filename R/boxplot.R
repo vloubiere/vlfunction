@@ -29,7 +29,7 @@ vl_boxplot.default <-
            pars = list(boxwex = ifelse(violin, .2, .4), staplewex = NA, outwex = NA),
            horizontal = FALSE, add = FALSE, at = NULL,
            frame= F, whisklty = ifelse(violin, 2, 1), ylim= NULL, xaxt= "s",
-           violin= T, viocol = NULL, viowex= 0.4)
+           violin= FALSE, viocol = NULL, viowex= 0.4)
   {
     # Boxplot stats
     if(!missing(names) && is.function(names))
