@@ -12,6 +12,7 @@ vl_motif_cl_enrich(
   plot = T,
   padj_cutoff = 1e-05,
   top_enrich = Inf,
+  order = "padj",
   x_breaks,
   color_breaks,
   cex.balloons = 1,
@@ -36,6 +37,8 @@ vl_motif_cl_enrich(
 \item{padj_cutoff}{cutoff for ballons to be plotted}
 
 \item{top_enrich}{Select top enriched motifs/cluster}
+
+\item{order}{Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"}
 
 \item{x_breaks}{Breaks used for ballon's sizes}
 

@@ -74,6 +74,7 @@ vl_motif_counts.character <- function(sequences= NULL,
 #' @param padj_cutoff cutoff for plotting
 #' @param top_enrich Show only n top enriched motifs
 #' @param breaks Color breaks to be used. Defaults to range of filtered padj.
+#' @param order Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"
 #' @param add_motifs Show only n top enriched motifs
 #' @param cex.width expansion factor for motif widths
 #' @param cex.height expansion factor for motif heights
@@ -95,6 +96,7 @@ vl_motif_enrich <- function(counts,
                             plot= T,
                             padj_cutoff= 0.05,
                             top_enrich= Inf, 
+                            order= "padj",
                             breaks= NULL,
                             add_motifs= F,
                             cex.width= 1,
@@ -170,6 +172,7 @@ vl_motif_enrich <- function(counts,
 #' @param plot Should the result be plot using balloons plot?
 #' @param padj_cutoff cutoff for ballons to be plotted
 #' @param top_enrich Select top enriched motifs/cluster
+#' @param order Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"
 #' @param x_breaks Breaks used for ballon's sizes
 #' @param color_breaks Color breaks used for coloring
 #' @param col Vector of colors used for coloring
@@ -217,6 +220,7 @@ vl_motif_cl_enrich <- function(counts_matrix,
                                plot= T,
                                padj_cutoff= 1e-5,
                                top_enrich= Inf,
+                               order= "padj",
                                x_breaks,
                                color_breaks,
                                cex.balloons= 1,

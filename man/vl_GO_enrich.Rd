@@ -11,6 +11,7 @@ vl_GO_enrich(
   plot = T,
   padj_cutoff = 0.05,
   top_enrich = Inf,
+  order = "padj",
   breaks = NULL
 )
 }
@@ -26,6 +27,8 @@ vl_GO_enrich(
 \item{padj_cutoff}{cutoff for plotting}
 
 \item{top_enrich}{Show only n top enriched motifs}
+
+\item{order}{Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"}
 
 \item{breaks}{Color breaks to be used. Defaults to range of filtered padj.}
 }

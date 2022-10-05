@@ -2,6 +2,7 @@
 #'
 #' @param padj_cutoff padjust cutoff to be applied before plotting
 #' @param top_enrich Top enrichments to plot (based on padj)
+#' @param order Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"
 #' @param xlab Default to "Odd Ratio (log2)"
 #' @param col Color scale
 #' @param breaks Color breaks to be used. Defaults to range of filtered padj.
@@ -12,11 +13,14 @@
 plot.vl_enr <- function(obj,
                         padj_cutoff= 0.05,
                         top_enrich= Inf,
+                        order= "padj",
                         xlab= "Odd Ratio (log2)",
                         col= c("blue", "red"),
                         breaks= NULL,
                         ...)
 {
+  if(!(order %in% c("padj", "log2OR")))
+    stop("Possible values for order are 'padj', 'log2OR'")
   DT <- data.table::copy(obj)
   # Handle infinite
   if(any(!is.finite(DT$log2OR)))
@@ -32,7 +36,7 @@ plot.vl_enr <- function(obj,
     warning("Non finite log2OR values capped to max finite log2OR")
   }
   # padj cutoff
-  DT <- na.omit(DT[padj<=padj_cutoff])
+  DT <- DT[padj<=padj_cutoff]
   if(nrow(DT)==0)
   {
     warning("No enrichment found with current cutoffs!")
@@ -40,7 +44,9 @@ plot.vl_enr <- function(obj,
   }else
   {
     # select top_enrich
-    setorderv(DT, "padj")
+    if(order=="padj")
+      setorderv(DT, "padj") else if(order=="log2OR")
+        DT <- DT[order(-abs(log2OR))]
     DT <- DT[seq(nrow(DT))<=top_enrich]
     # Plot
     if(is.null(breaks))
@@ -76,6 +82,7 @@ plot.vl_enr_cl <- function(obj,
                            x_breaks,
                            padj_cutoff= 0.05,
                            top_enrich= Inf,
+                           order= "padj",
                            color_breaks,
                            cex.balloons= 1,
                            col= c("blue", "red"),
@@ -104,7 +111,9 @@ plot.vl_enr_cl <- function(obj,
   }else
   {
     # select top_enrich
-    setorderv(DT, c("cl", "padj"))
+    if(order=="padj")
+      setorderv(DT, c("cl", "padj")) else if(order=="log2OR")
+        DT <- DT[order(cl, -abs(log2OR))]
     sel <- DT[rowid(DT$cl)<=top_enrich, variable]
     DT <- DT[variable %in% sel]
     # dcast before plotting

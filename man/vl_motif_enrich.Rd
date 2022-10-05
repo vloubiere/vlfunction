@@ -13,6 +13,7 @@ vl_motif_enrich(
   plot = T,
   padj_cutoff = 0.05,
   top_enrich = Inf,
+  order = "padj",
   breaks = NULL,
   add_motifs = F,
   cex.width = 1,
@@ -23,6 +24,7 @@ vl_motif_enrich(
   obj,
   padj_cutoff = 0.05,
   top_enrich = Inf,
+  order = "padj",
   xlab = "Odd Ratio (log2)",
   col = c("blue", "red"),
   breaks = NULL,
@@ -41,6 +43,8 @@ vl_motif_enrich(
 \item{padj_cutoff}{padjust cutoff to be applied before plotting}
 
 \item{top_enrich}{Top enrichments to plot (based on padj)}
+
+\item{order}{Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"}
 
 \item{breaks}{Color breaks to be used. Defaults to range of filtered padj.}
 
