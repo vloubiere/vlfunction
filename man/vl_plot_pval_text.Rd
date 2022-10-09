@@ -4,7 +4,8 @@
 \alias{vl_plot_pval_text}
 \title{Plot pval}
 \usage{
-vl_plot_pval_text(x, y, pval, stars_only = F, pos = 3, offset = 0, ...)
+vl_plot_pval_text(x, y, pval, stars_only = F, pos = 3, offset = 0,
+  ...)
 }
 \arguments{
 \item{x}{X position for plotting}

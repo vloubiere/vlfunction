@@ -10,17 +10,10 @@ vl_seqMotifs(sequences, ...)
 
 \method{vl_seqMotifs}{data.table}(bed, genome, ...)
 
-\method{vl_seqMotifs}{character}(
-  sequences,
-  p.cutoff = 5e-04,
-  sel = vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn), motif],
-  xleft,
-  ybottom,
-  width,
-  height,
-  col = rainbow(length(sel)),
-  col_alpha = 0.3
-)
+\method{vl_seqMotifs}{character}(sequences, p.cutoff = 5e-04,
+  sel = vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn),
+  motif], xleft, ybottom, width, height, col = rainbow(length(sel)),
+  col_alpha = 0.3)
 }
 \arguments{
 \item{sequences}{Named character vector of sequences to analyse. If provided takes over bed argument (in the case where both are specified)}

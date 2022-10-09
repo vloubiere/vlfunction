@@ -4,24 +4,12 @@
 \alias{vl_motif_cl_enrich}
 \title{Compute motif enrichment}
 \usage{
-vl_motif_cl_enrich(
-  counts_matrix,
-  cl_IDs,
+vl_motif_cl_enrich(counts_matrix, cl_IDs,
   collapse_clusters = colnames(counts_matrix),
-  control_cl = unique(cl_IDs),
-  plot = T,
-  padj_cutoff = 1e-05,
-  top_enrich = Inf,
-  order = "padj",
-  x_breaks,
-  color_breaks,
-  cex.balloons = 1,
-  col = c("cornflowerblue", "lightgrey", "tomato"),
-  main = NA,
-  add_motifs = F,
-  cex.width = 1,
-  cex.height = 1
-)
+  control_cl = unique(cl_IDs), plot = T, padj_cutoff = 1e-05,
+  top_enrich = Inf, order = "padj", x_breaks, color_breaks,
+  cex.balloons = 1, col = c("cornflowerblue", "lightgrey", "tomato"),
+  main = NA, add_motifs = F, cex.width = 1, cex.height = 1)
 }
 \arguments{
 \item{counts_matrix}{A matrix containing motif counts (rows= sequences, cols= motifs)}

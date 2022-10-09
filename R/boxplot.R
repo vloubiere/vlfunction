@@ -6,7 +6,7 @@
 #' @param names Names to plot under boxplot. If function specified, applied to names before plotting
 #' @param tilt.names Should names be tilted (ignored if horizontal= TRUE)
 #' @param violin Should violins be added?
-#' @param viocol Violin colors
+#' @param viocol Violin colors. Default to transparent
 #' @param viowex Expansion factor for violins
 #' @param ... Extra parameters for boxplot()
 #' @examples
@@ -29,15 +29,15 @@ vl_boxplot.default <-
            pars = list(boxwex = ifelse(violin, .2, .4), staplewex = NA, outwex = NA),
            horizontal = FALSE, add = FALSE, at = NULL,
            frame= F, whisklty = ifelse(violin, 2, 1), ylim= NULL, xaxt= "s",
-           violin= FALSE, viocol = NULL, viowex= 0.4)
+           violin= FALSE, viocol = "#FFFFFF00", viowex= 0.4)
   {
     # Boxplot stats
     if(!missing(names) && is.function(names))
     {
-      box <- boxplot(x, plot = F)
+      box <- boxplot(x, ..., plot = F)
       box$names <- names(box$names)
     }else
-      box <- boxplot(x, names= names, plot = F)
+      box <- boxplot(x, ..., names= names, plot = F)
     
     # Compute groups if relevant
     if(!is.null(compute_pval) | violin)

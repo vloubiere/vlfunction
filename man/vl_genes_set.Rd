@@ -4,9 +4,7 @@
 \name{vl_genes_set}
 \alias{vl_genes_set}
 \title{Set of genes}
-\format{
-FBgn, symbol and GO (RpL/HOX)
-}
+\format{FBgn, symbol and GO (RpL/HOX)}
 \usage{
 see ?vl_GO_enrich()
 }
