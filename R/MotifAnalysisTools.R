@@ -239,11 +239,13 @@ vl_motif_cl_enrich <- function(counts_matrix,
     counts_matrix <- as.data.table(counts_matrix)
   if(!is.factor(cl_IDs))
     cl_IDs <- factor(cl_IDs)
+  if(!is.null(control_cl) && any(!control_cl %in% levels(cl_IDs)))
+    stop("control_cl should match cl_IDs levels")
   
   # Compute enrichment in non-control clusters
-  cls <- levels(cl_IDs) 
-  if(!is.null(control_cl))
-    cls <- cls[!(cls %in% control_cl)]
+  if(is.null(control_cl))
+    cls <- control_cl <- levels(cl_IDs) else
+      cls <- levels(cl_IDs)[!(levels(cl_IDs) %in% control_cl)]
   res <- lapply(cls, function(cl) 
   {
     vl_motif_enrich(counts = counts_matrix[cl_IDs==cl],
