@@ -263,11 +263,7 @@ vl_plot_table <- function(DT, wrap_text= 20)
 #' @param xpd Default to NA
 #' @param cex Default to par("cex.axis")
 #' @param ... Extra arguments to be passed to text
-#'
-#' @return
 #' @export
-#'
-#' @examples
 vl_tilt_xaxis <- function(x, 
                           y= rep(par("usr")[3], length(labels))-diff(grconvertY(c(0, par("mgp")[2]), "line", "user")), 
                           labels, 

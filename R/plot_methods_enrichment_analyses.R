@@ -77,6 +77,7 @@ plot.vl_enr <- function(obj,
   }
 }
 
+#' @describeIn vl_motif_cl_enrich method to plot enrichment objects (containing variable, log2OR and padj)
 #' @export
 plot.vl_enr_cl <- function(obj,
                            x_breaks,
