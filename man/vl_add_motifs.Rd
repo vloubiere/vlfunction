@@ -16,3 +16,12 @@ vl_add_motifs(DT, cex.width = 1, cex.height = 1, lwd = 0.1)
 \description{
 Add motifs to enrichment plots
 }
+\examples{
+For vl_enr object
+pl <- plot(vl_enr)
+vl_add_motif(pl)
+
+For vl_enr_cl object
+pl <- plot(vl_enr)
+vl_add_motif(pl$DT)
+}

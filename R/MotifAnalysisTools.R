@@ -285,6 +285,14 @@ vl_motif_cl_enrich <- function(counts_matrix,
 #' @param DT DT object output from vl_motif_enrich or vl_motif_cl_enrich
 #' @param cex.width expansion factor for motif widths
 #' @param cex.height expansion factor for motif heights
+#' @examples 
+#' For vl_enr object
+#' pl <- plot(vl_enr)
+#' vl_add_motif(pl)
+#' 
+#' For vl_enr_cl object
+#' pl <- plot(vl_enr)
+#' vl_add_motif(pl$DT)
 #' @export
 vl_add_motifs <- function(DT, cex.width= 1, cex.height= 1, lwd= 0.1)
 {
