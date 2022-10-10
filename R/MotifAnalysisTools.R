@@ -130,7 +130,7 @@ vl_motif_enrich <- function(counts,
   }, motif_ID]
   
   # padj...
-  res[, padj:= p.adjust(pval, method = "fdr"), pval]
+  res[, padj:= p.adjust(pval, method = "fdr")]
   res[, log2OR:= log2(OR)]
   res$OR <- NULL
   
