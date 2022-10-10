@@ -35,16 +35,20 @@ vl_motif_counts.data.table <- function(bed, genome, ...)
 #' @export
 vl_motif_counts.character <- function(sequences= NULL,
                                       p.cutoff= 5e-4,
-                                      sel= vl_Dmel_motifs_DB_full[!is.na(vl_Dmel_motifs_DB_full$FBgn), motif],
+                                      sel= NULL,
                                       what= "motifCounts")
 {
   if(is.null(names(sequences)))
     names(sequences) <- seq(sequences)
   
-  # Select motifs
-  if(any(!sel %in% vl_Dmel_motifs_DB_full$motif))
-    stop("Some motif provided in 'sel' do not exist in vl_Dmel_motifs_DB_full$motif")
-  sub <- vl_Dmel_motifs_DB_full[motif %in% sel]
+  # Count motifs
+  sub <- if(!is.null(sel))
+  {
+    if(any(!sel %in% vl_Dmel_motifs_DB_full$motif))
+      stop("Some motif provided in 'sel' do not exist in vl_Dmel_motifs_DB_full$motif")
+    vl_Dmel_motifs_DB_full[motif %in% sel]
+  }else
+    vl_Dmel_motifs_DB_full
   mot <- do.call(TFBSTools::PWMatrixList, 
                  sub$pwms_log_odds)
   
@@ -65,7 +69,7 @@ vl_motif_counts.character <- function(sequences= NULL,
 #'
 #' @param counts matrix of counts for the regions of interest
 #' @param control_counts matrix of counts for control regions
-#' @param collapse_clusters A vector of clusters of lenght ncol(counts) used to collapse motifs (only the most enriched motif/cluster will be returned). Default= colnames(counts), meaning no collapsing
+#' @param collapse_clusters A vector of clusters of lenght ncol(counts) used to collapse motifs (only the most enriched motif/cluster will be returned). Default= NULL, meaning no collapsing
 #' @param plot Plot result?
 #' @param padj_cutoff cutoff for plotting
 #' @param top_enrich Show only n top enriched motifs
@@ -88,7 +92,7 @@ vl_motif_counts.character <- function(sequences= NULL,
 #' @export
 vl_motif_enrich <- function(counts,
                             control_counts,
-                            collapse_clusters= colnames(counts),
+                            collapse_clusters= NULL,
                             plot= T,
                             padj_cutoff= 0.05,
                             top_enrich= Inf, 
@@ -102,8 +106,8 @@ vl_motif_enrich <- function(counts,
     stop("counts_matrix should only contain numeric values")
   if(!is.numeric(unlist(control_counts)))
     stop("counts_matrix should only contain numeric values")
-  if(length(collapse_clusters) != ncol(counts))
-    stop("collapse_clusters shoulds match the lenght of ncol(counts)")
+  if(!is.null(collapse_clusters) && length(collapse_clusters) != ncol(counts))
+    stop("collapse_clusters should match ncol(counts)")
   
   # make obj
   obj <- rbindlist(list(set= as.data.table(counts),
@@ -135,12 +139,15 @@ vl_motif_enrich <- function(counts,
   res$OR <- NULL
   
   # Collapsing
-  res[, variable:= collapse_clusters[match(motif_ID, colnames(counts))], motif_ID]
-  res <- res[, .SD[which.min(padj)], variable]
+  if(is.null(collapse_clusters))
+    res[, variable:= motif_ID] else
+    {
+      res[, variable:= collapse_clusters[match(motif_ID, colnames(counts))], motif_ID]
+      res <- res[, .SD[which.min(padj)], variable]
+    }
   
   # Order and save
-  setcolorder(res,
-              c("variable", "log2OR", "pval", "padj"))
+  setcolorder(res, c("variable", "log2OR", "pval", "padj"))
   setattr(res, "class", c("vl_enr", "data.table", "data.frame"))
   
   if(plot)
@@ -163,8 +170,8 @@ vl_motif_enrich <- function(counts,
 #'
 #' @param counts_matrix A matrix containing motif counts (rows= sequences, cols= motifs)
 #' @param cl_IDs vector of cluster IDs (used to split the data.table)
-#' @param collapse_clusters A vector of clusters of lenght ncol(counts_matrix) used to collapse motifs (only the most enriched motif/cluster will be returned). Default= colnames(counts_matrix), meaning no collapsing
-#' @param control_cl IDs of clusters to be used as background. default to unique(cl_IDs), meaning all clusters are used except the one being tested
+#' @param collapse_clusters A vector of clusters of lenght ncol(counts_matrix) used to collapse motifs (only the most enriched motif/cluster will be returned). Default= NULL, meaning no collapsing
+#' @param control_cl IDs of clusters to be used as background. default to NULL, meaning all clusters are used except the one being tested
 #' @param plot Should the result be plot using balloons plot?
 #' @param padj_cutoff cutoff for ballons to be plotted
 #' @param top_enrich Select top enriched motifs/cluster
@@ -211,8 +218,8 @@ vl_motif_enrich <- function(counts,
 #' @export
 vl_motif_cl_enrich <- function(counts_matrix, 
                                cl_IDs,
-                               collapse_clusters= colnames(counts_matrix),
-                               control_cl= unique(cl_IDs),
+                               collapse_clusters= NULL,
+                               control_cl= NULL,
                                plot= T,
                                padj_cutoff= 1e-5,
                                top_enrich= Inf,
@@ -232,6 +239,8 @@ vl_motif_cl_enrich <- function(counts_matrix,
     counts_matrix <- as.data.table(counts_matrix)
   if(!is.factor(cl_IDs))
     cl_IDs <- factor(cl_IDs)
+  if(is.null(control_cl))
+    control_cl <- unique(cl_IDs)
   
   # Compute enrichment
   res <- lapply(levels(cl_IDs), function(cl) 

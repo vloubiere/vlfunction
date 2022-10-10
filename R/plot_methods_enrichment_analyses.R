@@ -87,8 +87,11 @@ plot.vl_enr_cl <- function(obj,
                            color_breaks,
                            cex.balloons= 1,
                            col= c("blue", "red"),
-                           main= NA)
+                           main= NA,
+                           plot_empty_clusters= T)
 {
+  if(!(order %in% c("padj", "log2OR")))
+    stop("Possible values for order are 'padj', 'log2OR'")
   DT <- data.table::copy(obj)
   # Handle infinite
   if(any(!is.finite(DT$log2OR)))
@@ -119,7 +122,8 @@ plot.vl_enr_cl <- function(obj,
     DT <- DT[variable %in% sel]
     # dcast before plotting
     DT[, variable:= factor(variable, levels= unique(variable))]
-    DT[, cl:= droplevels(cl)]
+    if(plot_empty_clusters)
+      DT[, cl:= droplevels(cl)]
     x <- dcast(DT, variable~cl, value.var = "log2OR", drop= F)
     x <- as.matrix(x, 1)
     color_var <- dcast(DT, variable~cl, value.var = "padj", drop= F)

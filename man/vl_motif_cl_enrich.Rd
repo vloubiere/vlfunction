@@ -6,25 +6,24 @@
 \alias{plot.vl_enr_cl}
 \title{Compute motif enrichment}
 \usage{
-vl_motif_cl_enrich(counts_matrix, cl_IDs,
-  collapse_clusters = colnames(counts_matrix),
-  control_cl = unique(cl_IDs), plot = T, padj_cutoff = 1e-05,
+vl_motif_cl_enrich(counts_matrix, cl_IDs, collapse_clusters = NULL,
+  control_cl = NULL, plot = T, padj_cutoff = 1e-05,
   top_enrich = Inf, order = "padj", x_breaks, color_breaks,
   cex.balloons = 1, col = c("cornflowerblue", "lightgrey", "tomato"),
   main = NA, add_motifs = F, cex.width = 1, cex.height = 1)
 
 plot.vl_enr_cl(obj, x_breaks, padj_cutoff = 0.05, top_enrich = Inf,
   order = "padj", color_breaks, cex.balloons = 1, col = c("blue",
-  "red"), main = NA)
+  "red"), main = NA, plot_empty_clusters = T)
 }
 \arguments{
 \item{counts_matrix}{A matrix containing motif counts (rows= sequences, cols= motifs)}
 
 \item{cl_IDs}{vector of cluster IDs (used to split the data.table)}
 
-\item{collapse_clusters}{A vector of clusters of lenght ncol(counts_matrix) used to collapse motifs (only the most enriched motif/cluster will be returned). Default= colnames(counts_matrix), meaning no collapsing}
+\item{collapse_clusters}{A vector of clusters of lenght ncol(counts_matrix) used to collapse motifs (only the most enriched motif/cluster will be returned). Default= NULL, meaning no collapsing}
 
-\item{control_cl}{IDs of clusters to be used as background. default to unique(cl_IDs), meaning all clusters are used except the one being tested}
+\item{control_cl}{IDs of clusters to be used as background. default to NULL, meaning all clusters are used except the one being tested}
 
 \item{plot}{Should the result be plot using balloons plot?}
 

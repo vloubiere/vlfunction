@@ -6,10 +6,9 @@
 \alias{plot.vl_enr}
 \title{Motif enrichment analysis}
 \usage{
-vl_motif_enrich(counts, control_counts,
-  collapse_clusters = colnames(counts), plot = T, padj_cutoff = 0.05,
-  top_enrich = Inf, order = "padj", breaks = NULL, add_motifs = F,
-  cex.width = 1, cex.height = 1)
+vl_motif_enrich(counts, control_counts, collapse_clusters = NULL,
+  plot = T, padj_cutoff = 0.05, top_enrich = Inf, order = "padj",
+  breaks = NULL, add_motifs = F, cex.width = 1, cex.height = 1)
 
 plot.vl_enr(obj, padj_cutoff = 0.05, top_enrich = Inf,
   order = "padj", xlab = "Odd Ratio (log2)", col = c("blue", "red"),
@@ -20,7 +19,7 @@ plot.vl_enr(obj, padj_cutoff = 0.05, top_enrich = Inf,
 
 \item{control_counts}{matrix of counts for control regions}
 
-\item{collapse_clusters}{A vector of clusters of lenght ncol(counts) used to collapse motifs (only the most enriched motif/cluster will be returned). Default= colnames(counts), meaning no collapsing}
+\item{collapse_clusters}{A vector of clusters of lenght ncol(counts) used to collapse motifs (only the most enriched motif/cluster will be returned). Default= NULL, meaning no collapsing}
 
 \item{plot}{Plot result?}
 
