@@ -26,7 +26,7 @@ vl_motif_counts.data.table <- function(bed, genome, ...)
 {
   bed <- vl_importBed(bed)
   sequences <- BSgenome::getSeq(BSgenome::getBSgenome(genome), bed$seqnames, bed$start, bed$end, as.character= T)
-  names(sequences) <- paste0(bed$seqnames, ":", bed$start, "-", bed$end, ":", bed$ranges)
+  names(sequences) <- paste0(bed$seqnames, ":", bed$start, "-", bed$end, ":", bed$strand)
   
   pl <- match.call()
   pl$bed <- pl$genome <- NULL
