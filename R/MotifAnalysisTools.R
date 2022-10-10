@@ -28,11 +28,7 @@ vl_motif_counts.data.table <- function(bed, genome, ...)
   sequences <- BSgenome::getSeq(BSgenome::getBSgenome(genome), bed$seqnames, bed$start, bed$end, as.character= T)
   names(sequences) <- paste0(bed$seqnames, ":", bed$start, "-", bed$end, ":", bed$strand)
   
-  pl <- match.call()
-  pl$bed <- pl$genome <- NULL
-  pl$sequences <- sequences
-  pl[[1]] <- quote(vl_motif_counts.character)
-  eval(pl)
+  vl_motif_counts.character(sequences, ...)
 }
 
 #' @describeIn vl_motif_counts Identify motifs in sequences
@@ -507,11 +503,7 @@ vl_seqMotifs.data.table <- function(bed, genome, ...)
   sequences <- BSgenome::getSeq(BSgenome::getBSgenome(genome), bed$seqnames, bed$start, bed$end, as.character= T)
   names(sequences) <- paste0(bed$seqnames, ":", bed$start, "-", bed$end, ":", bed$strand)
   
-  pl <- match.call()
-  pl$bed <- pl$genome <- NULL
-  pl$sequences <- sequences
-  pl[[1]] <- quote(vl_seqMotifs.character)
-  eval(pl)
+  vl_seqMotifs.character(sequences, ...)
 }
 
 #' @describeIn vl_seqMotifs Identify motifs in sequences
