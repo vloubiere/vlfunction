@@ -115,14 +115,14 @@ vl_boxplot.default <-
       
       # Plot tilted names
       if(tilt.names && !horizontal && xaxt!="n")
-        text(if(is.null(at)) seq(box$names) else at,
-             rep(par("usr")[3], length(box$names))-diff(grconvertY(c(0, par("mgp")[2]), "line", "user")),
-             box$names,
-             srt= 45,
-             offset= -0.2,
-             pos= 2,
-             xpd= NA,
-             cex= par("cex.axis"))
+        vl_tilt_xaxis(if(is.null(at)) seq(box$names) else at,
+                      rep(par("usr")[3], length(box$names))-diff(grconvertY(c(0, par("mgp")[2]), "line", "user")),
+                      box$names,
+                      srt= 45,
+                      offset= -0.2,
+                      pos= 2,
+                      xpd= NA,
+                      cex= par("cex.axis"))
     }
     
     # Return
