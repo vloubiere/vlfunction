@@ -239,20 +239,21 @@ vl_motif_cl_enrich <- function(counts_matrix,
     counts_matrix <- as.data.table(counts_matrix)
   if(!is.factor(cl_IDs))
     cl_IDs <- factor(cl_IDs)
-  if(is.null(control_cl))
-    control_cl <- unique(cl_IDs)
   
-  # Compute enrichment
-  res <- lapply(levels(cl_IDs), function(cl) 
+  # Compute enrichment in non-control clusters
+  cls <- levels(cl_IDs) 
+  if(!is.null(control_cl))
+    cls <- cls[!(cls %in% control_cl)]
+  res <- lapply(cls, function(cl) 
   {
     vl_motif_enrich(counts = counts_matrix[cl_IDs==cl],
                     control_counts = counts_matrix[cl_IDs!=cl & cl_IDs %in% control_cl],
                     collapse_clusters= collapse_clusters,
                     plot= F)
   })
-  names(res) <- levels(cl_IDs)
+  names(res) <- cls
   res <- rbindlist(res, idcol = "cl")
-  res[, cl:= factor(cl, unique(cl))]
+  res[, cl:= factor(cl, cls)]
   class(res) <- c("vl_enr_cl", "data.table", "data.frame")
 
   # plot

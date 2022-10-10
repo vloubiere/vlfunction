@@ -122,7 +122,7 @@ plot.vl_enr_cl <- function(obj,
     DT <- DT[variable %in% sel]
     # dcast before plotting
     DT[, variable:= factor(variable, levels= unique(variable))]
-    if(plot_empty_clusters)
+    if(!plot_empty_clusters)
       DT[, cl:= droplevels(cl)]
     x <- dcast(DT, variable~cl, value.var = "log2OR", drop= F)
     x <- as.matrix(x, 1)
