@@ -6,7 +6,7 @@
 \usage{
 vl_tilt_xaxis(x, y = rep(par("usr")[3], length(labels)) -
   diff(grconvertY(c(0, par("mgp")[2]), "line", "user")), labels,
-  srt = 45, offset = -0.2, pos = 2, xpd = NA,
+  srt = 45, offset = 0.25, pos = 2, xpd = NA,
   cex = par("cex.axis"), ...)
 }
 \arguments{
@@ -18,7 +18,7 @@ vl_tilt_xaxis(x, y = rep(par("usr")[3], length(labels)) -
 
 \item{srt}{Rotation. Default to 45}
 
-\item{offset}{offset from the axis. default= -0.2}
+\item{offset}{offset from the x pos. default= 0.25}
 
 \item{pos}{Position. defaults to 2}
 

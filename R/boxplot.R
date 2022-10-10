@@ -119,7 +119,7 @@ vl_boxplot.default <-
                       rep(par("usr")[3], length(box$names))-diff(grconvertY(c(0, par("mgp")[2]), "line", "user")),
                       box$names,
                       srt= 45,
-                      offset= -0.2,
+                      offset= 0.25,
                       pos= 2,
                       xpd= NA,
                       cex= par("cex.axis"))

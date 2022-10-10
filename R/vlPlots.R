@@ -258,7 +258,7 @@ vl_plot_table <- function(DT, wrap_text= 20)
 #' @param y Y position. Defaults to y axis position
 #' @param labels labels to be plotted
 #' @param srt Rotation. Default to 45
-#' @param offset offset from the x pos. default= -0.2
+#' @param offset offset from the x pos. default= 0.25
 #' @param pos Position. defaults to 2
 #' @param xpd Default to NA
 #' @param cex Default to par("cex.axis")
@@ -272,7 +272,7 @@ vl_tilt_xaxis <- function(x,
                           y= rep(par("usr")[3], length(labels))-diff(grconvertY(c(0, par("mgp")[2]), "line", "user")), 
                           labels, 
                           srt= 45, 
-                          offset= -0.2, 
+                          offset= 0.25, 
                           pos= 2, 
                           xpd= NA, 
                           cex= par("cex.axis"), 
