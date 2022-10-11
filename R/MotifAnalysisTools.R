@@ -234,7 +234,6 @@ vl_motif_cl_enrich <- function(counts_list,
   cmb <- cmb[cl!=ctl]
   if(!is.null(control_cl))
     cmb <- cmb[!(cl %in% control_cl) & (ctl %in% control_cl)]
-  browser()
   res <- cmb[, {
     vl_motif_enrich(counts = counts_list[[cl]],
                     control_counts = rbindlist(counts_list[ctl]),
