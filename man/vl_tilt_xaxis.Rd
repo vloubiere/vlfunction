@@ -4,10 +4,18 @@
 \alias{vl_tilt_xaxis}
 \title{Tilted x axis}
 \usage{
-vl_tilt_xaxis(x, y = rep(par("usr")[3], length(labels)) -
-  diff(grconvertY(c(0, par("mgp")[2]), "line", "user")), labels,
-  srt = 45, offset = 0.25, pos = 2, xpd = NA,
-  cex = par("cex.axis"), ...)
+vl_tilt_xaxis(
+  x,
+  y = rep(par("usr")[3], length(labels)) - diff(grconvertY(c(0, par("mgp")[2]), "line",
+    "user")),
+  labels,
+  srt = 45,
+  offset = 0.25,
+  pos = 2,
+  xpd = NA,
+  cex = par("cex.axis"),
+  ...
+)
 }
 \arguments{
 \item{x}{x position}

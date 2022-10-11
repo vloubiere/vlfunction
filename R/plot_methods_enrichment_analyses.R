@@ -22,17 +22,15 @@ plot.vl_enr <- function(obj,
   DT <- data.table::copy(obj)
   # Handle infinite
   if(any(!is.finite(DT$log2OR)))
-  {
-    if(any(DT$log2OR==Inf))
-      if(any(is.finite(DT[log2OR>0, log2OR])))
-        DT[log2OR==Inf, log2OR:= max(DT[log2OR>0 & is.finite(log2OR), log2OR])] else
-          stop("Inf OR and no finite pos OR to use for capping. Use other visualization!")
-    if(any(DT$log2OR==(-Inf)))
-      if(any(is.finite(DT[log2OR<0, log2OR])))
-        DT[log2OR==(-Inf), log2OR:= min(DT[log2OR<0 & is.finite(log2OR), log2OR])] else
-          stop("-Inf OR and no finite neg OR to use for capping. Use other visualization!")
     warning("Non finite log2OR values capped to max finite log2OR")
-  }
+  if(any(DT$log2OR==Inf))
+    if(any(is.finite(DT[log2OR>0, log2OR])))
+      DT[log2OR==Inf, log2OR:= max(DT[log2OR>0 & is.finite(log2OR), log2OR])] else
+        stop("Inf OR and no finite pos OR to use for capping. Use other visualization!")
+  if(any(DT$log2OR==(-Inf)))
+    if(any(is.finite(DT[log2OR<0, log2OR])))
+      DT[log2OR==(-Inf), log2OR:= min(DT[log2OR<0 & is.finite(log2OR), log2OR])] else
+        stop("-Inf OR and no finite neg OR to use for capping. Use other visualization!")
   # padj cutoff
   DT <- DT[padj<=padj_cutoff]
   if(nrow(DT)>0)
@@ -93,17 +91,15 @@ plot.vl_enr_cl <- function(obj,
   DT <- data.table::copy(obj)
   # Handle infinite
   if(any(!is.finite(DT$log2OR)))
-  {
-    if(any(DT$log2OR==Inf))
-      if(any(is.finite(DT[log2OR>0, log2OR])))
-        DT[log2OR==Inf, log2OR:= max(DT[log2OR>0 & is.finite(log2OR), log2OR])] else
-          stop("Inf OR and no finite pos OR to use for capping. Use other visualization!")
-    if(any(DT$log2OR==(-Inf)))
-      if(any(is.finite(DT[log2OR<0, log2OR])))
-        DT[log2OR==(-Inf), log2OR:= min(DT[log2OR<0 & is.finite(log2OR), log2OR])] else
-          stop("-Inf OR and no finite neg OR to use for capping. Use other visualization!")
     warning("Non finite log2OR values capped to max finite log2OR")
-  }
+  if(any(DT$log2OR==Inf))
+    if(any(is.finite(DT[log2OR>0, log2OR])))
+      DT[log2OR==Inf, log2OR:= max(DT[log2OR>0 & is.finite(log2OR), log2OR])] else
+        stop("Inf OR and no finite pos OR to use for capping. Use other visualization!")
+  if(any(DT$log2OR==(-Inf)))
+    if(any(is.finite(DT[log2OR<0, log2OR])))
+      DT[log2OR==(-Inf), log2OR:= min(DT[log2OR<0 & is.finite(log2OR), log2OR])] else
+        stop("-Inf OR and no finite neg OR to use for capping. Use other visualization!")
   # Apply cutoffs
   DT <- DT[padj <= padj_cutoff & log2OR > 0]
   if(nrow(DT)>0)
@@ -118,17 +114,20 @@ plot.vl_enr_cl <- function(obj,
         DT <- DT[variable %in% sel]
     }
     # Save ordering before dcast
+    setorderv(DT, c("cl", "padj"))
     DT[, variable:= factor(variable, levels= unique(variable))]
     if(!plot_empty_clusters)
       DT[, cl:= droplevels(cl)]
+    # Add y coordinates to DT and return
+    DT[, y:= as.numeric(variable)]
     # dcast 
     x <- dcast(DT, variable~cl, value.var = "log2OR", drop= F)
     x <- as.matrix(x, 1)
-    rownames(x) <- DT[rownames(x), name, on= "variable"]
+    rownames(x) <- DT[rownames(x), name, on= "variable", mult= "first"]
     color_var <- dcast(DT, variable~cl, value.var = "padj", drop= F)
     color_var <- as.matrix(color_var, 1)
     color_var <- -log10(color_var)
-    rownames(color_var) <- DT[rownames(color_var), name, on= "variable"]
+    rownames(color_var) <- DT[rownames(color_var), name, on= "variable", mult= "first"]
     # Plot
     vl_balloons_plot(x= x,
                      color_var= color_var,
@@ -138,9 +137,6 @@ plot.vl_enr_cl <- function(obj,
                      main= main,
                      balloon_size_legend= "OR (log2)",
                      balloon_col_legend= "padj (-log10)")
-    # Add y coordinates to DT and return
-    setorderv(DT, "variable", -1)
-    DT[, y:= .GRP, variable]
   }else
     warning("No enrichment found with current cutoffs!")
   

@@ -7,11 +7,19 @@
 \usage{
 vl_balloons_plot(x, ...)
 
-\method{vl_balloons_plot}{matrix}(x, color_var, x_breaks, color_breaks,
-  col = c("#440154FF", "#472D7BFF", "#3B528BFF", "#2C728EFF",
-  "#21908CFF", "#27AD81FF", "#5DC863FF", "#AADC32FF", "#FDE725FF"),
-  cex.balloons = 1, main = NA, balloon_size_legend = NA,
-  balloon_col_legend = NA, legend_left_pos)
+\method{vl_balloons_plot}{matrix}(
+  x,
+  color_var,
+  x_breaks,
+  color_breaks,
+  col = c("#440154FF", "#472D7BFF", "#3B528BFF", "#2C728EFF", "#21908CFF", "#27AD81FF",
+    "#5DC863FF", "#AADC32FF", "#FDE725FF"),
+  cex.balloons = 1,
+  main = NA,
+  balloon_size_legend = NA,
+  balloon_col_legend = NA,
+  legend_left_pos
+)
 }
 \arguments{
 \item{x}{Matrix specifyiung size of the balloons.}

@@ -227,10 +227,14 @@ vl_motif_cl_enrich <- function(counts_list,
     stop("control_cl should match names(counts_list)")
   
   # Compute enrichment in non-control clusters
-  cmb <- CJ(cl= names(counts_list), ctl= names(counts_list), unique = T)
+  cmb <- CJ(cl= names(counts_list), 
+            ctl= names(counts_list), 
+            unique = T, 
+            sorted = F)
   cmb <- cmb[cl!=ctl]
   if(!is.null(control_cl))
     cmb <- cmb[!(cl %in% control_cl) & (ctl %in% control_cl)]
+  browser()
   res <- cmb[, {
     vl_motif_enrich(counts = counts_list[[cl]],
                     control_counts = rbindlist(counts_list[ctl]),

@@ -4,10 +4,21 @@
 \alias{vl_GO_enrich}
 \title{GO analysis}
 \usage{
-vl_GO_enrich(geneIDs, geneUniverse_IDs = NULL, species, plot = F,
-  padj_cutoff = 1e-05, top_enrich = NA, order = "padj", x_breaks,
-  color_breaks, cex.balloons = 1, col = c("cornflowerblue",
-  "lightgrey", "tomato"), main = NA, plot_empty_clusters = T)
+vl_GO_enrich(
+  geneIDs,
+  geneUniverse_IDs = NULL,
+  species,
+  plot = F,
+  padj_cutoff = 1e-05,
+  top_enrich = NA,
+  order = "padj",
+  x_breaks,
+  color_breaks,
+  cex.balloons = 1,
+  col = c("blue", "red"),
+  main = NA,
+  plot_empty_clusters = T
+)
 }
 \arguments{
 \item{geneIDs}{A vector (barplot) of a list (clusters) of gene IDs}
@@ -42,8 +53,10 @@ This function compute GO enrichment in a group of genes
 \examples{
 RpL <- vl_genes_set[GO=="RpL_genes", FBgn]
 Hox <- vl_genes_set[GO=="HOX_genes", FBgn]
-par(mar= c(4,20,2,6))
-vl_GO_enrich(RpL, species= "Dm")
-vl_GO_enrich(Hox, species= "Dm")
-vl_GO_enrich(list(RpL, Hox), species= "Dm", cex.balloons = 0.3, padj_cutoff= 1e-5, top_enrich = 20)
+par(mar= c(4,20,2,6), las= 1)
+vl_GO_enrich(RpL, species= "Dm", plot= T)
+DT <- vl_GO_enrich(Hox, species= "Dm")
+plot(DT, padj_cutoff= 1e-10)
+DT <- vl_GO_enrich(list(RpL, Hox), species= "Dm", cex.balloons = 0.3, padj_cutoff= 1e-5, top_enrich = 20, plot= T)
+plot(DT, top_enrich= 5)
 }

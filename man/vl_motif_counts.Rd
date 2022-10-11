@@ -10,8 +10,7 @@ vl_motif_counts(sequences, ...)
 
 \method{vl_motif_counts}{data.table}(bed, genome, ...)
 
-\method{vl_motif_counts}{character}(sequences = NULL, p.cutoff = 5e-04,
-  sel, what = "motifCounts")
+\method{vl_motif_counts}{character}(sequences = NULL, p.cutoff = 5e-04, sel, what = "motifCounts")
 }
 \arguments{
 \item{sequences}{Named character vector of sequences to analyse. If provided takes over bed argument (in the case where both are specified)}
@@ -22,7 +21,7 @@ vl_motif_counts(sequences, ...)
 
 \item{p.cutoff}{Pval cutoff used for motif detection}
 
-\item{sel}{List of motifs to compute. see vl_Dmel_motifs_DB_full$motif}
+\item{sel}{Vector of motif_ID to compute. see vl_Dmel_motifs_DB_full$motif_ID}
 
 \item{what}{Waht value should be return. Either "motifMatches" (logical), "motifCounts" (numeric) or "motifScores" (numeric)}
 }
@@ -41,6 +40,12 @@ Counts motif occurences in a set of regions
 
 \examples{
 # Example run
+sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
+top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
+top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
+counts <- vl_motif_counts(top_SUHW, genome= "dm3", sel= sel)
+control_counts <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
+
 suhw <- vl_motif_counts(vl_SUHW_top_peaks, "dm3")
 ctls_regions <- vl_control_regions_BSgenome(bed= vl_SUHW_top_peaks, "dm3")
 ctl <- vl_motif_counts(ctls_regions, "dm3")

@@ -6,13 +6,31 @@
 \alias{plot.vl_enr}
 \title{Motif enrichment analysis}
 \usage{
-vl_motif_enrich(counts, control_counts, names = NULL, plot = F,
-  padj_cutoff = 0.05, top_enrich = NA, order = "padj",
-  breaks = NULL, col = c("blue", "red"), xlab = "Odd Ratio (log2)",
-  add_motifs = F, cex.width = 1, cex.height = 1)
+vl_motif_enrich(
+  counts,
+  control_counts,
+  names = NULL,
+  plot = F,
+  padj_cutoff = 0.05,
+  top_enrich = NA,
+  order = "padj",
+  breaks = NULL,
+  col = c("blue", "red"),
+  xlab = "Odd Ratio (log2)",
+  add_motifs = F,
+  cex.width = 1,
+  cex.height = 1
+)
 
-plot.vl_enr(obj, padj_cutoff = 0.05, top_enrich = NA, order = "padj",
-  xlab = "Odd Ratio (log2)", col = c("blue", "red"), breaks = NULL)
+\method{plot}{vl_enr}(
+  obj,
+  padj_cutoff = 0.05,
+  top_enrich = NA,
+  order = "padj",
+  xlab = "Odd Ratio (log2)",
+  col = c("blue", "red"),
+  breaks = NULL
+)
 }
 \arguments{
 \item{counts}{data.table containing counts for the regions of interest}
@@ -23,17 +41,17 @@ plot.vl_enr(obj, padj_cutoff = 0.05, top_enrich = NA, order = "padj",
 
 \item{plot}{Plot result?}
 
-\item{padj_cutoff}{cutoff for plotting. Default to FALSE}
+\item{padj_cutoff}{padjust cutoff to be applied before plotting}
 
-\item{top_enrich}{Show only n top enriched motifs}
+\item{top_enrich}{Top enrichments to plot (based on padj)}
 
 \item{order}{Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"}
 
 \item{breaks}{Color breaks to be used. Defaults to range of filtered padj.}
 
-\item{col}{Colors vector for bars}
+\item{col}{Color scale}
 
-\item{xlab}{x label}
+\item{xlab}{Default to "Odd Ratio (log2)"}
 
 \item{add_motifs}{Should motif pwms be plotted?}
 
@@ -42,18 +60,6 @@ plot.vl_enr(obj, padj_cutoff = 0.05, top_enrich = NA, order = "padj",
 \item{cex.height}{expansion factor for motif heights}
 
 \item{obj}{An object of class vl_enr}
-
-\item{padj_cutoff}{padjust cutoff to be applied before plotting}
-
-\item{top_enrich}{Top enrichments to plot (based on padj)}
-
-\item{order}{Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"}
-
-\item{xlab}{Default to "Odd Ratio (log2)"}
-
-\item{col}{Color scale}
-
-\item{breaks}{Color breaks to be used. Defaults to range of filtered padj.}
 }
 \value{
 DT of enrichment values
@@ -63,9 +69,9 @@ Returns a table of enrichment which can be plot using ?plot.vl_GO_enr
 \description{
 Compute motif enrichment between a set of regions and control regions
 }
-\section{Functions}{
+\section{Methods (by generic)}{
 \itemize{
-\item \code{plot.vl_enr}: method to plot enrichment objects (containing variable, log2OR and padj)
+\item \code{plot}: method to plot enrichment objects (containing variable, log2OR and padj)
 }}
 
 \examples{
@@ -77,6 +83,6 @@ counts <- vl_motif_counts(top_SUHW, genome= "dm3", sel= sel)
 control_counts <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
 par(mar= c(4,15,4,6))
 DT <- vl_motif_enrich(counts, control_counts, add_motifs= T, padj_cutoff= 1e-5, plot= T)
-DT <- plot(DT, padj_cutoff= 1e-5)
+DT <- plot(DT, padj_cutoff= 1e-7)
 vl_add_motifs(DT)
 }

@@ -46,6 +46,8 @@ vl_GO_enrich <- function(geneIDs,
     names(geneIDs) <- seq(geneIDs)
   if(anyDuplicated(names(geneIDs)))
     stop("names(geneIDs) should be unique!")
+  # Make unique
+  geneIDs <- lapply(geneIDs, unique)
   
   # Genome
   db <- switch(species,
@@ -89,9 +91,9 @@ vl_GO_enrich <- function(geneIDs,
   DT <- CJ(variable= unique(set$GO), 
            cl= factor(names(geneIDs), names(geneIDs)))
   # Overlaps set
-  setkeyv(set, c("ID", "GO"))
-  DT[, set_hit:= set[.(geneIDs[[cl]], variable), .N, nomatch= NULL], .(cl, variable)] # Genes from cluster found in GO
-  DT[, set_total:= length(geneIDs[[cl]]), cl] # Total cluster size
+  setkeyv(set, "GO")
+  DT[, set_hit:= sum(geneIDs[[cl]] %chin% set[.BY[2], ID]), .(cl, variable)] # Genes from cluster found in GO
+  DT[, set_total:= sum(geneIDs[[cl]] %chin% set$ID), cl] # Total genes in cluster (existing in GO database)
   # Overlaps universe
   setkeyv(uni, "GO")
   DT[, ctl_hit:= uni[.BY, .N], variable]# No cluster there= simpler!

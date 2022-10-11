@@ -6,15 +6,37 @@
 \alias{plot.vl_enr_cl}
 \title{Compute motif enrichment}
 \usage{
-vl_motif_cl_enrich(counts_list, control_cl = NULL, names = NULL,
-  plot = F, padj_cutoff = 1e-05, top_enrich = NA, order = "padj",
-  x_breaks, color_breaks, cex.balloons = 1, col = c("cornflowerblue",
-  "lightgrey", "tomato"), main = NA, plot_empty_clusters = T,
-  add_motifs = F, cex.width = 1, cex.height = 1)
+vl_motif_cl_enrich(
+  counts_list,
+  control_cl = NULL,
+  names = NULL,
+  plot = F,
+  padj_cutoff = 1e-05,
+  top_enrich = NA,
+  order = "padj",
+  x_breaks,
+  color_breaks,
+  cex.balloons = 1,
+  col = c("cornflowerblue", "lightgrey", "tomato"),
+  main = NA,
+  plot_empty_clusters = T,
+  add_motifs = F,
+  cex.width = 1,
+  cex.height = 1
+)
 
-plot.vl_enr_cl(obj, x_breaks, padj_cutoff = 0.05, top_enrich = NA,
-  order = "padj", color_breaks, cex.balloons = 1, col = c("blue",
-  "red"), main = NA, plot_empty_clusters = T)
+\method{plot}{vl_enr_cl}(
+  obj,
+  x_breaks,
+  padj_cutoff = 0.05,
+  top_enrich = NA,
+  order = "padj",
+  color_breaks,
+  cex.balloons = 1,
+  col = c("blue", "red"),
+  main = NA,
+  plot_empty_clusters = T
+)
 }
 \arguments{
 \item{counts_list}{List of data.table containing counts for the regions of interest and potentially control regions}
@@ -55,13 +77,13 @@ Fisher test data.table.
 \description{
 Compute motif enrichment for the cluster in cl_columns, using all the lines as background
 }
-\section{Functions}{
+\section{Methods (by generic)}{
 \itemize{
-\item \code{plot.vl_enr_cl}: method to plot enrichment objects (containing variable, log2OR and padj)
+\item \code{plot}: method to plot enrichment objects (containing variable, log2OR and padj)
 }}
 
 \examples{
-sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
+sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", variable]
 top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
 top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
 counts <- vl_motif_counts(top_SUHW, genome= "dm3", sel= sel)
