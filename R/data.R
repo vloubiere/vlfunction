@@ -6,7 +6,6 @@
 #' 
 #' @format An object containing 13899 motifs and related metadata
 #' \describe{
-#'   \item{motif}{Unique motif names without special characters}
 #'   \item{motif_name}{Motif ID from TF_clusters_PWMs.RData}
 #'   \item{FBgn}{Curated FBgn symbols. sep= "/"}
 #'   \item{motif_cluster}{Motif cluster from Bernardo Almeida}
@@ -19,8 +18,7 @@
 #' @examples
 #' table was generated this way:
 #' load("/groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/TF_clusters_PWMs.RData")
-#' vl_Dmel_motifs_DB_full <- data.table(motif= make.unique(as.character(TF_clusters_PWMs$metadata$Motif_cluster_name), sep= "__"),
-#' motif_ID= TF_clusters_PWMs$metadata$motif_name,
+#' vl_Dmel_motifs_DB_full <- data.table(motif_ID= TF_clusters_PWMs$metadata$motif_name,
 #' FBgn= TF_clusters_PWMs$metadata$FBgn,
 #' Dmel= TF_clusters_PWMs$metadata$Dmel,
 #' motif_cluster= TF_clusters_PWMs$metadata$Motif_cluster_name,
@@ -30,7 +28,7 @@
 #' vl_Dmel_motifs_DB_full$pwms_log_odds <- as.list(TF_clusters_PWMs$All_pwms_log_odds[match(vl_Dmel_motifs_DB_full$motif_ID, TFBSTools::name(TF_clusters_PWMs$All_pwms_log_odds))])
 #' vl_Dmel_motifs_DB_full$pwms_perc <- as.list(TF_clusters_PWMs$All_pwms_perc[match(vl_Dmel_motifs_DB_full$motif_ID, TFBSTools::name(TF_clusters_PWMs$All_pwms_perc))])
 #' save(vl_Dmel_motifs_DB_full, 
-#' file= "../../vlfunction/data/vl_Dmel_motifs_DB_full.RData")
+#' file= "/groups/stark/vloubiere/vlfunction/data/vl_Dmel_motifs_DB_full.RData")
 #' @source {"/groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/TF_clusters_PWMs.RData"}
 "vl_Dmel_motifs_DB_full"
 
@@ -72,7 +70,7 @@
 #'   \item{buffer}{Buffer to be used}
 #'   \item{temperature}{Temeprature for digest}
 #'   \item{cutsite}{cutsite pattern}
-#'   \item{consensus_F}{consensu motif}
+#'   \item{consensus_F}{consensus motif}
 #'   ...
 #' }
 #' @examples 

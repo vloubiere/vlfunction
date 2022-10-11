@@ -11,7 +11,7 @@ vl_balloons_plot(x, ...)
   col = c("#440154FF", "#472D7BFF", "#3B528BFF", "#2C728EFF",
   "#21908CFF", "#27AD81FF", "#5DC863FF", "#AADC32FF", "#FDE725FF"),
   cex.balloons = 1, main = NA, balloon_size_legend = NA,
-  balloon_col_legend = NA)
+  balloon_col_legend = NA, legend_left_pos)
 }
 \arguments{
 \item{x}{Matrix specifyiung size of the balloons.}
@@ -29,6 +29,8 @@ vl_balloons_plot(x, ...)
 \item{balloon_size_legend}{Title size legend}
 
 \item{balloon_col_legend}{Title color legend}
+
+\item{legend_left_pos}{If specified, overrides default legend left user coordinates}
 }
 \value{
 Balloon plot
@@ -44,6 +46,7 @@ Starting from two matrices (dot size and colors, respectively), generates a ball
 \examples{
 x <- matrix(-3:5, ncol= 3)
 cols <- matrix(-3:5, ncol= 3)
+par(mar= c(3,3,2,5), las= 1)
 vl_balloons_plot(x, cols, balloon_size_legend = "Size", balloon_col_legend = "Color")
 
 }

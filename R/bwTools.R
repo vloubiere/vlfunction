@@ -43,9 +43,10 @@ vl_bw_merge <- function(tracks, genome, bins_width= 25L, output, scoreFUN= NULL)
 #' @param bw Path to target bw file (character vector)
 #' @param na_value Value to use for NAs. default to 0
 #' @examples 
+#' track <- "/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw"
 #' bins <- vl_binBSgenome("dm3", restrict_seqnames = "chr3R")
 #' t1 <- Sys.time()
-#' cov1 <- vl_bw_coverage(bins, "../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw")
+#' cov1 <- vl_bw_coverage(bins, track)
 #' t1-Sys.time()
 #' 
 #' # Compare to GRanges method
@@ -57,7 +58,7 @@ vl_bw_merge <- function(tracks, genome, bins_width= 25L, output, scoreFUN= NULL)
 #' return(bins1$average_score)
 #' }
 #' t1 <- Sys.time()
-#' cov2 <- binned_average_function(GRanges(bins), "../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw")
+#' cov2 <- binned_average_function(GRanges(bins), track)
 #' t1-Sys.time()
 #' identical(cov1, cov2)
 #' @export
@@ -116,7 +117,10 @@ vl_bw_coverage_bins <- function(bed,
   regions <- vl_importBed(bed)
   # Checks
   if(stranded && !"strand" %in% names(bed))
-    message("stranded= TRUE but no strand column provided -> ignored")
+  {
+    message("stranded= TRUE but no strand was provided for 'bed' -> set to unstranded (*)")
+    bed[, strand:= "*"]
+  }
   if(!identical(unique(tracks), tracks))
     stop("tracks should be unique")
   if(!identical(unique(names), names))
@@ -138,15 +142,13 @@ vl_bw_coverage_bins <- function(bed,
        strand)]
   bins[, bin.x:= seq(-upstream, downstream, length.out= nbins)[rowid(region_ID)]]
   if(stranded)
-    bins[as.character(strand)=="-", bin.x:= rev(bin.x), region_ID]
+    bins[strand=="-", bin.x:= rev(bin.x), region_ID]
   
   #--------------------------#
   # Quantif tracks
   #--------------------------#
   obj <- parallel::mclapply(tracks, function(x) {
-    data.table(bins[, .(set_IDs, 
-                        region_ID, 
-                        bin.x)], 
+    data.table(bins[, .(set_IDs, region_ID, bin.x)], 
                score= vl_bw_coverage(bins, x))
   }, mc.preschedule = T)
   obj <- rbindlist(obj, idcol= "name")
@@ -240,6 +242,7 @@ plot.vl_bw_average_track <- function(obj,
                                      ylab= "Enrichment",
                                      ylim,
                                      legend= T,
+                                     legend_pos= "topleft",
                                      legend.cex= 1,
                                      col.adj= c(0.5, 1))
 {
@@ -274,7 +277,7 @@ plot.vl_bw_average_track <- function(obj,
         leg[, labels:= set_IDs] else if(length(unique(leg$name))>1)
           leg[, labels:= name]
     if("labels" %in% names(leg))
-      legend("topleft",
+      legend(legend_pos,
              legend= leg$labels,
              fill= leg$col,
              bty= "n",
@@ -301,9 +304,11 @@ plot.vl_bw_average_track <- function(obj,
 #' @param max_FUN Function to be used for clipping. default= function(x) quantile(x, 0.995, na.rm= T). Using max -> no clipping
 #' @examples 
 #' bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
-#' tracks <- c("../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", "../gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
+#' tracks <- c("/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", 
+#' "/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
 #' set_IDs <- c(rep("suhw", 100), rep("STARR", 1000))
 #' test <- vl_bw_heatmap(bed, tracks, set_IDs= set_IDs, plot= T, upstream = 1000, downstream = 1000, order_FUN = mean, order_cols = 2)
+#' plot(test, order_col= 2)
 #' plot(test)
 #' @export
 vl_bw_heatmap <- function(bed,
@@ -342,6 +347,7 @@ vl_bw_heatmap <- function(bed,
   invisible(obj)
 }
 
+#' @describeIn vl_bw_heatmap Method to plot bw heatmaps
 #' @export
 plot.vl_bw_heatmap <- function(obj, 
                                col= c("blue", "yellow"),

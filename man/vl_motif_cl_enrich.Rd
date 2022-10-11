@@ -6,30 +6,28 @@
 \alias{plot.vl_enr_cl}
 \title{Compute motif enrichment}
 \usage{
-vl_motif_cl_enrich(counts_matrix, cl_IDs, collapse_clusters = NULL,
-  control_cl = NULL, plot = T, padj_cutoff = 1e-05,
-  top_enrich = Inf, order = "padj", x_breaks, color_breaks,
-  cex.balloons = 1, col = c("cornflowerblue", "lightgrey", "tomato"),
-  main = NA, add_motifs = F, cex.width = 1, cex.height = 1)
+vl_motif_cl_enrich(counts_list, control_cl = NULL, names = NULL,
+  plot = F, padj_cutoff = 1e-05, top_enrich = NA, order = "padj",
+  x_breaks, color_breaks, cex.balloons = 1, col = c("cornflowerblue",
+  "lightgrey", "tomato"), main = NA, plot_empty_clusters = T,
+  add_motifs = F, cex.width = 1, cex.height = 1)
 
-plot.vl_enr_cl(obj, x_breaks, padj_cutoff = 0.05, top_enrich = Inf,
+plot.vl_enr_cl(obj, x_breaks, padj_cutoff = 0.05, top_enrich = NA,
   order = "padj", color_breaks, cex.balloons = 1, col = c("blue",
   "red"), main = NA, plot_empty_clusters = T)
 }
 \arguments{
-\item{counts_matrix}{A matrix containing motif counts (rows= sequences, cols= motifs)}
-
-\item{cl_IDs}{vector of cluster IDs (used to split the data.table)}
-
-\item{collapse_clusters}{A vector of clusters of lenght ncol(counts_matrix) used to collapse motifs (only the most enriched motif/cluster will be returned). Default= NULL, meaning no collapsing}
+\item{counts_list}{List of data.table containing counts for the regions of interest and potentially control regions}
 
 \item{control_cl}{IDs of clusters to be used as background. default to NULL, meaning all clusters are used except the one being tested}
 
-\item{plot}{Should the result be plot using balloons plot?}
+\item{names}{Convenient names to be used for plotting and so on... Default (NULL) returns vl_Dmel_motifs_DB_full$motif_cluster}
+
+\item{plot}{Should the result be plot using balloons plot? Default to FALSE}
 
 \item{padj_cutoff}{cutoff for ballons to be plotted}
 
-\item{top_enrich}{Select top enriched motifs/cluster}
+\item{top_enrich}{Select top enriched motifs/cluster. Default to NA (All)}
 
 \item{order}{Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"}
 
@@ -37,11 +35,15 @@ plot.vl_enr_cl(obj, x_breaks, padj_cutoff = 0.05, top_enrich = Inf,
 
 \item{color_breaks}{Color breaks used for coloring}
 
+\item{cex.balloons}{Expansion factor for balloons}
+
 \item{col}{Vector of colors used for coloring}
 
 \item{main}{Title. Default= NA}
 
-\item{add_motifs}{Show only n top enriched motifs}
+\item{plot_empty_clusters}{Should empty clusters be plotted? Default= TRUE}
+
+\item{add_motifs}{Should motif pwms be plotted?}
 
 \item{cex.width}{expansion factor for motif widths}
 
@@ -59,34 +61,15 @@ Compute motif enrichment for the cluster in cl_columns, using all the lines as b
 }}
 
 \examples{
-# Sets of peaks
+sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
 top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
 top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
-rdm <- vl_random_regions_BSgenome("dm3", 2000, width= 500)
+counts <- vl_motif_counts(top_SUHW, genome= "dm3", sel= sel)
+control_counts <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
+counts_list <- list(SUHW= counts, ATAC= control_counts)
+par(mar= c(3,20,2,5), las= 1)
+DT <- vl_motif_cl_enrich(counts_list, padj_cutoff = 1e-3, plot= T, add_motifs= T)
+DT <- plot(DT, padj_cutoff= 1e-5)
+vl_add_motifs(DT)
 
-# Compute enrichment SUHW vs STARR-Seq
-set <- rbind(top_SUHW,
-             top_STARR, fill= T)
-counts <- vl_motif_counts(set, "dm3")
-par(mar= c(4,20,4,4), las= 1)
-pl <- vl_motif_cl_enrich(counts, 
-                         cl_IDs = c(rep(1, nrow(top_SUHW)),
-                                    rep(2, nrow(top_STARR))),
-                         add_motifs= T)
-pl <- plot(enr, padj_cutoff= 1e-5)
-vl_add_motifs(pl$DT)
-
-Compute enrichment of SUHW & STARR-Seq over random regions
-counts <- vl_motif_counts(rbind(top_SUHW,
-                                top_STARR, 
-                                rdm, fill= T), "dm3")
-cl_IDs <- c(rep("suhw", nrow(top_SUHW)),
-            rep("STARR", nrow(top_STARR)),
-            rep("rdm", nrow(rdm)))
-enr <- vl_motif_cl_enrich(counts, 
-                          cl_IDs = cl_IDs,
-                          control_cl = "rdm",
-                          plot=F)
-par(las= 1)
-plot(enr, padj_cutoff= 1e-20, top_enrich= 20)
 }

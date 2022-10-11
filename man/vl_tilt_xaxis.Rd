@@ -2,7 +2,7 @@
 % Please edit documentation in R/vlPlots.R
 \name{vl_tilt_xaxis}
 \alias{vl_tilt_xaxis}
-\title{Title}
+\title{Tilted x axis}
 \usage{
 vl_tilt_xaxis(x, y = rep(par("usr")[3], length(labels)) -
   diff(grconvertY(c(0, par("mgp")[2]), "line", "user")), labels,
@@ -29,5 +29,5 @@ vl_tilt_xaxis(x, y = rep(par("usr")[3], length(labels)) -
 \item{...}{Extra arguments to be passed to text}
 }
 \description{
-Title
+Tilted x axis
 }

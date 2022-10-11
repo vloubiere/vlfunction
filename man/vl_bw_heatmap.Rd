@@ -2,6 +2,7 @@
 % Please edit documentation in R/bwTools.R
 \name{vl_bw_heatmap}
 \alias{vl_bw_heatmap}
+\alias{plot.vl_bw_heatmap}
 \title{bw Average heatmap}
 \usage{
 vl_bw_heatmap(bed, tracks, set_IDs = 1, upstream = 5000,
@@ -10,6 +11,10 @@ vl_bw_heatmap(bed, tracks, set_IDs = 1, upstream = 5000,
   col = c("blue", "yellow"), order_cols = 1, order_FUN = function(x)
   mean(x, na.rm = T), max_FUN = function(x) quantile(x, 0.995, na.rm =
   T), na_col = "lightgrey")
+
+plot.vl_bw_heatmap(obj, col = c("blue", "yellow"), order_cols = 1,
+  order_FUN = function(x) mean(x, na.rm = T), max_FUN = function(x)
+  quantile(x, 0.995, na.rm = T), na_col = "lightgrey")
 }
 \arguments{
 \item{bed}{Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
@@ -41,10 +46,17 @@ vl_bw_heatmap(bed, tracks, set_IDs = 1, upstream = 5000,
 \description{
 Plots average tracks for a set bw files around (potentially) several sets of peaks
 }
+\section{Functions}{
+\itemize{
+\item \code{plot.vl_bw_heatmap}: Method to plot bw heatmaps
+}}
+
 \examples{
 bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
-tracks <- c("../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", "../gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
+tracks <- c("/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", 
+"/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
 set_IDs <- c(rep("suhw", 100), rep("STARR", 1000))
 test <- vl_bw_heatmap(bed, tracks, set_IDs= set_IDs, plot= T, upstream = 1000, downstream = 1000, order_FUN = mean, order_cols = 2)
+plot(test, order_col= 2)
 plot(test)
 }

@@ -14,14 +14,14 @@ vl_revComp <- function(DNA_char, complement= T, reverse= T)
   .c <- strsplit(DNA_char, "")[[1]]
   if(!all(.c %in% c("A", "T", "C", "G")))
     stop("All characters should be one of A T C G")
-  res <- .c
-  if(complement)
+  res <- sapply(.c, function(x)
   {
-    res[.c=="A"] <- "T"
-    res[.c=="T"] <- "A"
-    res[.c=="C"] <- "G"
-    res[.c=="G"] <- "C" 
-  }
+    switch(x, 
+           "A"= "T",
+           "T"= "A",
+           "C"= "G",
+           "G"= "C") 
+  })
   if(reverse)
     res <- rev(res)
   return(paste0(res, collapse = ""))

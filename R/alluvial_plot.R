@@ -11,6 +11,11 @@
 #' c("A", "A", "A", "B", "B", "B", "B", "C", "C", "C", "C"),
 #' c("A", "A", "B", "B", "B", "B", "B", "B", "B", "C", "C"))
 #' vl_alluvial_plot(test)
+#' test2 <- data.table(rep(c("Up", "Unaffected", "Down"), each= 3), 
+#' rep(c("Up", "Unaffected", "Down"), 3), 
+#' rep(c("Up", "Unaffected", "Down"), 3), 
+#' rep(c("Up", "Unaffected", "Down"), each= 3))
+#' vl_alluvial_plot(test2)
 #' @return An object that can be used with the vl_average_bw_track_plot_only() function.
 #' @export
 vl_alluvial_plot <- function(dat,

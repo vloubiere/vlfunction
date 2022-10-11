@@ -28,4 +28,9 @@ test <- data.table(c("A", "A", "A", "A", "A", "B", "B", "B", "C", "C", "C"),
 c("A", "A", "A", "B", "B", "B", "B", "C", "C", "C", "C"),
 c("A", "A", "B", "B", "B", "B", "B", "B", "B", "C", "C"))
 vl_alluvial_plot(test)
+test2 <- data.table(rep(c("Up", "Unaffected", "Down"), each= 3), 
+rep(c("Up", "Unaffected", "Down"), 3), 
+rep(c("Up", "Unaffected", "Down"), 3), 
+rep(c("Up", "Unaffected", "Down"), each= 3))
+vl_alluvial_plot(test2)
 }

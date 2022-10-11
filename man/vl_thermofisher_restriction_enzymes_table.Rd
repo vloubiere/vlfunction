@@ -12,7 +12,7 @@
   \item{buffer}{Buffer to be used}
   \item{temperature}{Temeprature for digest}
   \item{cutsite}{cutsite pattern}
-  \item{consensus_F}{consensu motif}
+  \item{consensus_F}{consensus motif}
   ...
 }}
 \source{

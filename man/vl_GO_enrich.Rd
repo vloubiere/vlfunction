@@ -4,9 +4,10 @@
 \alias{vl_GO_enrich}
 \title{GO analysis}
 \usage{
-vl_GO_enrich(geneIDs, geneUniverse_IDs = NULL, species, plot = T,
-  padj_cutoff = 0.05, top_enrich = Inf, order = "padj",
-  breaks = NULL)
+vl_GO_enrich(geneIDs, geneUniverse_IDs = NULL, species, plot = F,
+  padj_cutoff = 1e-05, top_enrich = NA, order = "padj", x_breaks,
+  color_breaks, cex.balloons = 1, col = c("cornflowerblue",
+  "lightgrey", "tomato"), main = NA, plot_empty_clusters = T)
 }
 \arguments{
 \item{geneIDs}{A vector (barplot) of a list (clusters) of gene IDs}
@@ -23,7 +24,17 @@ vl_GO_enrich(geneIDs, geneUniverse_IDs = NULL, species, plot = T,
 
 \item{order}{Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"}
 
-\item{breaks}{Color breaks to be used. Defaults to range of filtered padj.}
+\item{x_breaks}{Breaks used for balloons sizes}
+
+\item{color_breaks}{Balloons color breaks}
+
+\item{cex.balloons}{Balloons size expansion factor}
+
+\item{col}{Color vector}
+
+\item{main}{Title}
+
+\item{plot_empty_clusters}{Should empty clusters be plotted? Default to TRUE}
 }
 \description{
 This function compute GO enrichment in a group of genes

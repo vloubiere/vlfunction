@@ -87,29 +87,34 @@ vl_closestBed <- function(a,
   if(is.null(b))
     b <- data.table::copy(a) else
       b <- vl_importBed(b)
-    
-    # Closest
-    idx <- b[a, {
-      dist <- fcase(x.start>i.end, as.integer(x.start-i.end),
-                    x.end<i.start, as.integer(i.start-x.end), 
-                    default= 0L)
-      sel <- between(dist, min_dist, unique(sort(dist[dist>=min_dist]))[n])
-      .(.GRP, I= .I[sel], dist= dist[sel])
-    }, .EACHI, on= "seqnames"]
-    idx <- na.omit(idx)
-    idx[I==0, I:= NA]
-    
-    # Return
-    setnames(b, paste0(names(b), ".b"))
-    res <- data.table(a[idx$GRP],
-                      b[idx$I],
-                      dist= idx$dist)
-    if(all(c("strand", "strand.b") %in% names(res)))
-    {
-      res[strand!="-" & start>end.b, dist:= -dist] # Meaning + or *
-      res[strand=="-" & end<start.b, dist:= -dist]
-    }
-    return(res)
+  
+  # Checks
+  if(!"strand" %in% names(a))
+  {
+    message("'a' strand set to unstranded (*)")
+    a[, strand:= "*"]
+  }
+      
+  # Closest
+  idx <- b[a, {
+    dist <- fcase(x.start>i.end, as.integer(x.start-i.end),
+                  x.end<i.start, as.integer(i.start-x.end), 
+                  default= 0L)
+    sel <- between(dist, min_dist, unique(sort(dist[dist>=min_dist]))[n])
+    .(.GRP, I= .I[sel], dist= dist[sel])
+  }, .EACHI, on= "seqnames"]
+  idx <- na.omit(idx)
+  idx[I==0, I:= NA]
+  
+  # Return
+  setnames(b, paste0(names(b), ".b"))
+  res <- data.table(a[idx$GRP],
+                    b[idx$I],
+                    dist= idx$dist)
+  res[strand!="-" & start>end.b, dist:= -dist] # Meaning + or *
+  res[strand=="-" & end<start.b, dist:= -dist]
+  
+  return(res)
 }
 
 #' Resize bed
@@ -134,21 +139,25 @@ vl_resizeBed <- function(bed,
                          ignore.strand= F,
                          genome)
 {
-  regions <- vl_importBed(bed)
+  # Checks
   if(!center %in% c("center", "start", "end"))
     stop("center should be one of center, start or end")
-  if(!ignore.strand & !("strand" %in% names(regions)))
-    regions[, strand:= "*"]
-  if(!ignore.strand && any(!regions$strand %in% c("+", "-")))
-    message("ignore.strand=F but strand column absent or contains * ---")
+  bed <- vl_importBed(bed)
+  if(!"strand" %in% names(bed))
+  {
+    message("'bed' strand set to unstranded (*)")
+    bed[, strand:= "*"]
+  }else if(!ignore.strand && any(!bed$strand %in% c("+", "-")))
+    message("ignore.strand=F but bed contains unstranded bed (*)")
     
   # define start
   if(center=="center")
-    regions[, start:= round(rowMeans(.SD)), .SDcols= c("start", "end")] else if(center=="start")
-      regions[, start:= ifelse(strand=="-", end, start)] else if(center=="end")
-        regions[, start:= ifelse(strand=="-", start, end)]
+    bed[, start:= round(rowMeans(.SD)), .SDcols= c("start", "end")] else if(center=="start")
+      bed[, start:= ifelse(strand=="-", end, start)] else if(center=="end")
+        bed[, start:= ifelse(strand=="-", start, end)]
+  
   # Ext
-  regions[, c("start", "end"):= .(start-ifelse(strand=="-", downstream, upstream),
+  bed[, c("start", "end"):= .(start-ifelse(strand=="-", downstream, upstream),
                                   start+ifelse(strand=="-", upstream, downstream))]
 
   # If genome is specified, resize accordingly
@@ -157,14 +166,14 @@ vl_resizeBed <- function(bed,
     chrSize <- GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))
     chrSize <- GenomicRanges::GRanges(chrSize)
     chrSize <- data.table::as.data.table(chrSize)
-    regions[start<1, start:= 1]
-    regions[end<1, end:= 1]
-    regions[chrSize, start:= ifelse(start>i.end, i.end, start), on= "seqnames"]
-    regions[chrSize, end:= ifelse(end>i.end, i.end, end), on= "seqnames"]
+    bed[start<1, start:= 1]
+    bed[end<1, end:= 1]
+    bed[chrSize, start:= ifelse(start>i.end, i.end, start), on= "seqnames"]
+    bed[chrSize, end:= ifelse(end>i.end, i.end, end), on= "seqnames"]
   }
   
   # return
-  return(regions)
+  return(bed)
 }
 
 #' Collapse ranges with a certain min dist

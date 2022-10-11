@@ -83,3 +83,30 @@ vl_random_regions_BSgenome <- function(genome,
   # Make sure stays within genome range
   return(regions)
 }
+
+#' Get genomic sequence
+#' 
+#' Returns the sequences of a DTranges
+#'
+#' @param bed Bed file for which regions have to be returned
+#' @param genome BSgenome ID ("dm3", "dm6"...)
+#' @return Character vector of sequences
+#' @examples
+#' vl_getSequence(vl_SUHW_top_peaks, "dm3")
+#' @export
+vl_getSequence <- function(bed, genome)
+{
+  bed <- vl_importBed(bed)
+  if(!"strand" %in% names(bed))
+  {
+    message("'bed' strand set to unstranded (*)")
+    bed[, strand:= "*"]
+  }
+  sequences <- BSgenome::getSeq(BSgenome::getBSgenome(genome), 
+                                names= bed$seqnames, 
+                                start= bed$start, 
+                                end= bed$end, 
+                                strand= bed$strand, 
+                                as.character= T)
+  return(sequences)
+}

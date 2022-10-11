@@ -8,44 +8,70 @@
 #' @param plot Plot result?
 #' @param padj_cutoff cutoff for plotting
 #' @param top_enrich Show only n top enriched motifs
+#' @param x_breaks Breaks used for balloons sizes
+#' @param color_breaks Balloons color breaks
+#' @param cex.balloons Balloons size expansion factor
+#' @param col Color vector
+#' @param main Title
+#' @param plot_empty_clusters Should empty clusters be plotted? Default to TRUE
 #' @param order Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"
-#' @param breaks Color breaks to be used. Defaults to range of filtered padj.
 #' @examples
 #' RpL <- vl_genes_set[GO=="RpL_genes", FBgn]
 #' Hox <- vl_genes_set[GO=="HOX_genes", FBgn]
-#' par(mar= c(4,20,2,6))
-#' vl_GO_enrich(RpL, species= "Dm")
-#' vl_GO_enrich(Hox, species= "Dm")
-#' vl_GO_enrich(list(RpL, Hox), species= "Dm", cex.balloons = 0.3, padj_cutoff= 1e-5, top_enrich = 20)
+#' par(mar= c(4,20,2,6), las= 1)
+#' vl_GO_enrich(RpL, species= "Dm", plot= T)
+#' DT <- vl_GO_enrich(Hox, species= "Dm")
+#' plot(DT, padj_cutoff= 1e-10)
+#' DT <- vl_GO_enrich(list(RpL, Hox), species= "Dm", cex.balloons = 0.3, padj_cutoff= 1e-5, top_enrich = 20, plot= T)
+#' plot(DT, top_enrich= 5)
 #' @export
 vl_GO_enrich <- function(geneIDs,
                          geneUniverse_IDs= NULL,
                          species,
-                         plot= T,
-                         padj_cutoff= 0.05,
-                         top_enrich= Inf,
+                         plot= F,
+                         padj_cutoff= 1e-5,
+                         top_enrich= NA,
                          order= "padj",
-                         breaks= NULL)
+                         x_breaks,
+                         color_breaks,
+                         cex.balloons= 1,
+                         col= c("blue", "red"),
+                         main= NA,
+                         plot_empty_clusters= T)
 {
+  # Checks
+  if(is.character(geneIDs))
+    geneIDs <- list(set= geneIDs)
+  if(is.null(names(geneIDs)))
+    names(geneIDs) <- seq(geneIDs)
+  if(anyDuplicated(names(geneIDs)))
+    stop("names(geneIDs) should be unique!")
+  
+  # Genome
   db <- switch(species,
                "Dm"= org.Dm.eg.db::org.Dm.eg.db,
                "Mm"= org.Mm.eg.db::org.Mm.eg.db)
   keyType <- switch(species, 
                     "Dm"= "FLYBASE",
                     "Mm"= "ENSEMBL")
-  ###############################
+  
+  #-----------------------------------#
   # Extract sets and universe GOs
-  ###############################
+  #-----------------------------------#
+  # Sets
   set <- AnnotationDbi::select(x= db,
-                              keys = unique(unlist(geneIDs)),
-                              keytype= keyType, 
-                              columns= "GOALL")
+                               keys = unique(unlist(geneIDs)),
+                               keytype= keyType, 
+                               columns= "GOALL")
   set <- data.table::as.data.table(set)
   setnames(set, 
            c(keyType, "GOALL"), 
            c("ID", "GO"))
   set <- unique(set[, .(ID, GO)]) # GOs IDs are reported for each evidence type
   set <- na.omit(set)
+  if(!is.null(geneUniverse_IDs) && any(!set$ID %in% geneUniverse_IDs))
+    stop("Some geneIDs are not included in the Universe!")
+  # Universe
   uni <- AnnotationDbi::select(x= db,
                                keys = unique(set$GO), # Only GOs from test set are relevant!
                                keytype= "GOALL", 
@@ -60,69 +86,67 @@ vl_GO_enrich <- function(geneIDs,
   ###############################
   # Format objects and Compute enrichments
   ###############################
-  if(is.character(geneIDs))
-    geneIDs <- list(set= geneIDs)
-  DT <- rbindlist(lapply(geneIDs, function(x) SJ(ID= x)), idcol = "cl")
-  DT <- unique(DT)
-  DT[, cl:= factor(cl)]
-  setkeyv(set, "ID")
+  DT <- CJ(variable= unique(set$GO), 
+           cl= factor(names(geneIDs), names(geneIDs)))
+  # Overlaps set
+  setkeyv(set, c("ID", "GO"))
+  DT[, set_hit:= set[.(geneIDs[[cl]], variable), .N, nomatch= NULL], .(cl, variable)] # Genes from cluster found in GO
+  DT[, set_total:= length(geneIDs[[cl]]), cl] # Total cluster size
+  # Overlaps universe
   setkeyv(uni, "GO")
-  res <- DT[, {
-    # Extract genes from current cl
-    genes <- ID
-    genes <- set[genes]
-    genes[, set:= T]
-    # Extract universe genes with matching GOs
-    bg <- unique(genes$GO)
-    bg <- uni[bg]
-    bg[, set:= F]
-    # rbind, dcast, melt to get counts/gene/GO
-    .c <- rbind(genes[, .(ID, GO, set)], 
-                bg[, .(ID, GO, set)])
-    .c <- dcast(.c, 
-                set+ID~GO, 
-                fun.aggregate = length)
-    .c <- melt(.c, id.vars = c("set", "ID"), variable.name = "GO")
-    # Fisher test
-    .c[, {
-      tab <- table(factor(set, c(T,F)),
-                   factor(value>0, c(T,F)))
-      fisher.test(tab, alternative = "greater")[c("estimate", "p.value")]
-    }, GO]
-  }, cl]
+  DT[, ctl_hit:= uni[.BY, .N], variable]# No cluster there= simpler!
+  DT[, ctl_total:= length(unique(uni$ID))]# Total universe
+  # Fisher test
+  DT[, c("OR", "pval"):= {
+    fisher.test(matrix(unlist(.BY), byrow= T, ncol= 2))[c("estimate", "p.value")]
+  }, .(set_hit, set_total, ctl_hit, ctl_total)]
+  
   ###############################
   # Add GO description and clean
   ###############################
   terms <- AnnotationDbi::select(GO.db::GO.db,
-                                 keys = as.character(unique(res$GO)),
+                                 keys = as.character(unique(DT$variable)),
                                  keytype= "GOID", 
                                  columns= "TERM")
   terms <- as.data.table(terms)
-  res[terms, variable:= i.TERM, on= "GO==GOID"]
-  res[, log2OR:= log2(estimate)]
-  res[, padj:= p.adjust(p.value, method = "fdr"), cl]
-  res$estimate <- NULL
-  res$p.value <- NULL
-  res <- na.omit(res)
-  setorderv(res, c("cl", "log2OR"))
+  DT[terms, name:= i.TERM, on= "variable==GOID"]
+  DT[, log2OR:= log2(OR)]
+  DT[, padj:= p.adjust(pval, method = "fdr"), cl]
+  DT$OR <- DT$pval <- NULL
+  DT <- na.omit(DT)
+  setorderv(DT, c("cl", "log2OR"))
 
   ###############################
   # Plot and export
   ###############################
-  if(length(unique(res$cl))>1)
+  if(length(levels(DT$cl))>1)
   {
-    setattr(res, "class", c("vl_enr_cl", "data.table", "data.frame"))
+    setattr(DT, "class", c("vl_enr_cl", "data.table", "data.frame"))
     if(plot)
-      plot(res,
-           padj_cutoff= padj_cutoff,
-           top_enrich= top_enrich)
+      DT <- plot.vl_enr_cl(obj= DT,
+                           padj_cutoff= padj_cutoff,
+                           top_enrich= top_enrich, 
+                           order= order,
+                           x_breaks= x_breaks,
+                           color_breaks= color_breaks,
+                           cex.balloons= cex.balloons,
+                           col= col,
+                           main= main, 
+                           plot_empty_clusters = plot_empty_clusters)
   }else{
-    setattr(res, "class", c("vl_enr", "data.table", "data.frame"))
+    setattr(DT, "class", c("vl_enr", "data.table", "data.frame"))
     if(plot)
-      plot(res,
-           padj_cutoff= padj_cutoff,
-           top_enrich= top_enrich)
+    {
+      plot.vl_enr(obj= DT,
+                  padj_cutoff= padj_cutoff,
+                  top_enrich= top_enrich,
+                  order= order,
+                  xlab = "Odd Ratio (log2)",
+                  col = col)
+      if(!is.na(main))
+        title(main= main)
+    }
   }
 
-  invisible(res)  
+  invisible(DT)  
 }

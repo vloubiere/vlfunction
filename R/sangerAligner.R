@@ -96,10 +96,6 @@ vl_sanger_align <- function(refseq,
   #-----------------------####
   # Plot figure
   #-----------------------####
-  if(identical(par("mar"), c(5.1, 4.1, 4.1, 2.1)))
-    par(xaxs= "i", 
-        yaxs= "i", 
-        mai= c(0.5, max(strwidth(colnames(mat), units = "inches"))+0.5, 2, 0.5))
   plot.new()
   rasterImage(t(mat), 0, 0, 1, 1, interpolate = F)
   abline(h= seq(0, 1, length.out= ncol(mat)+1))

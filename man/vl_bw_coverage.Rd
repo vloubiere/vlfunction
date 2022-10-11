@@ -20,9 +20,10 @@ Quantify bw file at a set of intervals. returns mean value/region
 Note that strand-specific overlap is not implemented! bw files do not contain strand info!?
 }
 \examples{
+track <- "/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw"
 bins <- vl_binBSgenome("dm3", restrict_seqnames = "chr3R")
 t1 <- Sys.time()
-cov1 <- vl_bw_coverage(bins, "../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw")
+cov1 <- vl_bw_coverage(bins, track)
 t1-Sys.time()
 
 # Compare to GRanges method
@@ -34,7 +35,7 @@ bins1 <- binnedAverage(gr,file_bw, "average_score")
 return(bins1$average_score)
 }
 t1 <- Sys.time()
-cov2 <- binned_average_function(GRanges(bins), "../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw")
+cov2 <- binned_average_function(GRanges(bins), track)
 t1-Sys.time()
 identical(cov1, cov2)
 }

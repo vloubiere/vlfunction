@@ -10,9 +10,11 @@
 #' @param main Title. Default= NA
 #' @param balloon_size_legend Title size legend
 #' @param balloon_col_legend Title color legend
+#' @param legend_left_pos If specified, overrides default legend left user coordinates
 #' @examples
 #' x <- matrix(-3:5, ncol= 3)
 #' cols <- matrix(-3:5, ncol= 3)
+#' par(mar= c(3,3,2,5), las= 1)
 #' vl_balloons_plot(x, cols, balloon_size_legend = "Size", balloon_col_legend = "Color")
 #' 
 #' @return Balloon plot
@@ -31,15 +33,26 @@ vl_balloons_plot.matrix <- function(x,
                                     cex.balloons= 1,
                                     main= NA, 
                                     balloon_size_legend= NA,
-                                    balloon_col_legend= NA)
+                                    balloon_col_legend= NA,
+                                    legend_left_pos)
 {
   # Checks
   if(missing(x_breaks))
-    x_breaks <- axisTicks(range(x, na.rm= T), log= F, nint = 4)
+  {
+    x_breaks <- range(x, na.rm= T)
+    if(length(unique(x_breaks))==1)
+      x_breaks <- x_breaks+c(-0.5, 0.5)
+    x_breaks <- axisTicks(x_breaks, log= F, nint = 4)
+  }
   if(missing(color_breaks))
-    color_breaks <- seq(min(color_var, na.rm= T),
-                        max(color_var, na.rm= T),
+  {
+    color_breaks <- range(color_var, na.rm= T)
+    if(length(unique(color_breaks))==1)
+      color_breaks <- color_breaks+c(-0.5, 0.5)
+    color_breaks <- seq(min(color_breaks, na.rm= T),
+                        max(color_breaks, na.rm= T),
                         length.out= length(col))
+  }
   
   # Revert matrices for plotting
   x <- x[nrow(x):1,,drop= F]
@@ -83,18 +96,22 @@ vl_balloons_plot.matrix <- function(x,
        at= seq(nrow(x)),
        labels = rownames(x),
        lwd= NA)
+  # Title
+  title(main= main)
   # Legends
-  left <- strwidth("M")*0.75/2*max(abs(x), na.rm= T)*cex.balloons # max balloon radius
-  left <- grconvertX(1, "npc", "user")+left # add to right plot limit
+  if(missing(legend_left_pos))
+  {
+    legend_left_pos <- strwidth("M")*0.75/2*max(abs(x), na.rm= T)*cex.balloons # max balloon radius
+    legend_left_pos <- grconvertX(1, "npc", "user")+legend_left_pos # add to right plot limit
+  }
   vl_heatkey(color_breaks, 
-             left= left,
+             left= legend_left_pos,
              col, 
              top= nrow(x)-strheight("M"),
              main= balloon_col_legend)
-  title(main= main)
   vl_balloonskey(sizes = x_breaks*cex.balloons,
                  labels = x_breaks,
-                 left= left,
+                 left= legend_left_pos,
                  top= nrow(x)-strheight("M")*10, 
                  main = balloon_size_legend)
 }
