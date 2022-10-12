@@ -84,13 +84,11 @@ plot.vl_enr_cl <- function(obj,
   if(!(order %in% c("padj", "log2OR")))
     stop("Possible values for order are 'padj', 'log2OR'")
   DT <- data.table::copy(obj)
-  # Handle infinite
+  # Handle infinite (negative are irrelevant with this plot)
   if(any(is.infinite(DT$log2OR)))
     warning("Attempt to cap infinite log2OR values max/min finite log2OR.\nIf plot fails, try another representation or cap manually")
   if(any(DT$log2OR==Inf) && nrow(DT[log2OR>0 & is.finite(log2OR)]))
     DT[log2OR==Inf, log2OR:= max(DT[log2OR>0 & is.finite(log2OR), log2OR])]
-  if(any(DT$log2OR==(-Inf)) && nrow(DT[log2OR<0 & is.finite(log2OR)]))
-    DT[log2OR==(-Inf), log2OR:= min(DT[log2OR<0 & is.finite(log2OR), log2OR])]
   # Apply cutoffs
   DT <- DT[padj <= padj_cutoff & log2OR > 0]
   if(nrow(DT))
@@ -100,9 +98,11 @@ plot.vl_enr_cl <- function(obj,
       setorderv(DT, c("cl", "padj")) else if(order=="log2OR")
         DT <- DT[order(cl, -abs(log2OR))]
     # select top_enrich
-    if(!is.na(top_enrich) && nrow(DT)>top_enrich)
-      DT[rowid(DT$cl)>top_enrich, variable:= NA]
-      DT <- DT[!is.na(variable)]
+    if(!is.na(top_enrich) && max(DT[, .N, cl]$N)>top_enrich)
+    {
+      sel <- DT[rowid(DT$cl)<=top_enrich, variable]
+      DT <- DT[variable %in% sel] 
+    }
     # Save ordering before dcast
     DT[, variable:= factor(variable, levels= unique(variable))]
     # Remove empty clusters
