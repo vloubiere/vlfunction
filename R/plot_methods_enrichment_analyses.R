@@ -47,8 +47,10 @@ plot.vl_enr <- function(obj,
       breaks <- seq(min(breaks), max(breaks), length.out= length(col))
     }
     Cc <- circlize::colorRamp2(breaks, col)
+    # If order= 'padj', reorder by Log2OR before plotting
+    if(order=="padj")
+      setorderv(DT, "log2OR")
     # Barplot
-    setorderv(DT, "log2OR")
     DT[, y:= barplot(log2OR,
                      horiz= T,
                      names.arg= name,
@@ -114,7 +116,6 @@ plot.vl_enr_cl <- function(obj,
     color_var <- dcast(DT, variable~cl, value.var = "padj", drop= F)
     color_var <- as.matrix(color_var, 1)
     color_var <- -log10(color_var)
-    rownames(color_var) <- DT[rownames(color_var), name, on= "variable", mult= "first"]
     # Plot
     vl_balloons_plot(x= x,
                      color_var= color_var,
