@@ -21,28 +21,23 @@ plot.vl_enr <- function(obj,
     stop("Possible values for order are 'padj', 'log2OR'")
   DT <- data.table::copy(obj)
   # Handle infinite
-  if(any(!is.finite(DT$log2OR)))
-    warning("Non finite log2OR values capped to max finite log2OR")
-  if(any(DT$log2OR==Inf))
-    if(any(is.finite(DT[log2OR>0, log2OR])))
-      DT[log2OR==Inf, log2OR:= max(DT[log2OR>0 & is.finite(log2OR), log2OR])] else
-        stop("Inf OR and no finite pos OR to use for capping. Use other visualization!")
-  if(any(DT$log2OR==(-Inf)))
-    if(any(is.finite(DT[log2OR<0, log2OR])))
-      DT[log2OR==(-Inf), log2OR:= min(DT[log2OR<0 & is.finite(log2OR), log2OR])] else
-        stop("-Inf OR and no finite neg OR to use for capping. Use other visualization!")
+  if(any(is.infinite(DT$log2OR)))
+    warning("Attempt to cap infinite log2OR values max/min finite log2OR.\nIf plot fails, try another representation or cap manually")
+  if(any(DT$log2OR==Inf) && nrow(DT[log2OR>0 & is.finite(log2OR)]))
+    DT[log2OR==Inf, log2OR:= max(DT[log2OR>0 & is.finite(log2OR), log2OR])]
+  if(any(DT$log2OR==(-Inf)) && nrow(DT[log2OR<0 & is.finite(log2OR)]))
+    DT[log2OR==(-Inf), log2OR:= min(DT[log2OR<0 & is.finite(log2OR), log2OR])]
   # padj cutoff
   DT <- DT[padj<=padj_cutoff]
-  if(nrow(DT)>0)
+  if(nrow(DT))
   {
+    # Order
+    if(order=="padj")
+      setorderv(DT, "padj") else if(order=="log2OR")
+        DT <- DT[order(-abs(log2OR))]
     # select top_enrich
     if(!is.na(top_enrich) && nrow(DT)>top_enrich)
-    {
-      if(order=="padj")
-        setorderv(DT, "padj") else if(order=="log2OR")
-          DT <- DT[order(-abs(log2OR))]
       DT <- DT[seq(nrow(DT))<=top_enrich]
-    }
     # Plot
     if(is.null(breaks))
     {
@@ -90,32 +85,27 @@ plot.vl_enr_cl <- function(obj,
     stop("Possible values for order are 'padj', 'log2OR'")
   DT <- data.table::copy(obj)
   # Handle infinite
-  if(any(!is.finite(DT$log2OR)))
-    warning("Non finite log2OR values capped to max finite log2OR")
-  if(any(DT$log2OR==Inf))
-    if(any(is.finite(DT[log2OR>0, log2OR])))
-      DT[log2OR==Inf, log2OR:= max(DT[log2OR>0 & is.finite(log2OR), log2OR])] else
-        stop("Inf OR and no finite pos OR to use for capping. Use other visualization!")
-  if(any(DT$log2OR==(-Inf)))
-    if(any(is.finite(DT[log2OR<0, log2OR])))
-      DT[log2OR==(-Inf), log2OR:= min(DT[log2OR<0 & is.finite(log2OR), log2OR])] else
-        stop("-Inf OR and no finite neg OR to use for capping. Use other visualization!")
+  if(any(is.infinite(DT$log2OR)))
+    warning("Attempt to cap infinite log2OR values max/min finite log2OR.\nIf plot fails, try another representation or cap manually")
+  if(any(DT$log2OR==Inf) && nrow(DT[log2OR>0 & is.finite(log2OR)]))
+    DT[log2OR==Inf, log2OR:= max(DT[log2OR>0 & is.finite(log2OR), log2OR])]
+  if(any(DT$log2OR==(-Inf)) && nrow(DT[log2OR<0 & is.finite(log2OR)]))
+    DT[log2OR==(-Inf), log2OR:= min(DT[log2OR<0 & is.finite(log2OR), log2OR])]
   # Apply cutoffs
   DT <- DT[padj <= padj_cutoff & log2OR > 0]
-  if(nrow(DT)>0)
+  if(nrow(DT))
   {
+    # Order
+    if(order=="padj")
+      setorderv(DT, c("cl", "padj")) else if(order=="log2OR")
+        DT <- DT[order(cl, -abs(log2OR))]
     # select top_enrich
     if(!is.na(top_enrich) && nrow(DT)>top_enrich)
-    {
-      if(order=="padj")
-        setorderv(DT, c("cl", "padj")) else if(order=="log2OR")
-          DT <- DT[order(cl, -abs(log2OR))]
-        DT[rowid(DT$cl)>top_enrich, variable:= NA]
-        DT <- DT[!is.na(variable)]
-    }
+      DT[rowid(DT$cl)>top_enrich, variable:= NA]
+      DT <- DT[!is.na(variable)]
     # Save ordering before dcast
-    setorderv(DT, c("cl", "padj"))
     DT[, variable:= factor(variable, levels= unique(variable))]
+    # Remove empty clusters
     if(!plot_empty_clusters)
       DT[, cl:= droplevels(cl)]
     # Add y coordinates to DT and return
