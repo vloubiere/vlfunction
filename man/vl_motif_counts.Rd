@@ -10,8 +10,7 @@ vl_motif_counts(sequences, ...)
 
 \method{vl_motif_counts}{data.table}(bed, genome, ...)
 
-\method{vl_motif_counts}{character}(sequences = NULL, p.cutoff = 5e-04,
-  sel, what = "motifCounts")
+\method{vl_motif_counts}{character}(sequences = NULL, p.cutoff = 5e-04, sel, what = "motifCounts")
 }
 \arguments{
 \item{sequences}{Named character vector of sequences to analyse. If provided takes over bed argument (in the case where both are specified)}

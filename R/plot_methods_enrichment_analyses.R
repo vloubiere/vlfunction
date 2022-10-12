@@ -91,7 +91,6 @@ plot.vl_enr_cl <- function(obj,
     DT[log2OR==Inf, log2OR:= max(DT[log2OR>0 & is.finite(log2OR), log2OR])]
   # Apply cutoffs
   DT <- DT[padj <= padj_cutoff & log2OR > 0]
-  warning("HELLO")
   if(nrow(DT))
   {
     # Order

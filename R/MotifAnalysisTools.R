@@ -241,7 +241,7 @@ vl_motif_cl_enrich <- function(counts_list,
                     plot= F)
   }, cl]
   res[, cl:= factor(cl, unique(cl))]
-  class(res) <- c("vl_enr_cl", "data.table", "data.frame")
+  setattr(res, "class", c("vl_enr_cl", "data.table", "data.frame"))
 
   # plot
   if(plot)

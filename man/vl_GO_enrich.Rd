@@ -4,10 +4,21 @@
 \alias{vl_GO_enrich}
 \title{GO analysis}
 \usage{
-vl_GO_enrich(geneIDs, geneUniverse_IDs = NULL, species, plot = F,
-  padj_cutoff = 1e-05, top_enrich = NA, order = "padj", x_breaks,
-  color_breaks, cex.balloons = 1, col = c("blue", "red"), main = NA,
-  plot_empty_clusters = T)
+vl_GO_enrich(
+  geneIDs,
+  geneUniverse_IDs = NULL,
+  species,
+  plot = F,
+  padj_cutoff = 1e-05,
+  top_enrich = NA,
+  order = "padj",
+  x_breaks,
+  color_breaks,
+  cex.balloons = 1,
+  col = c("blue", "red"),
+  main = NA,
+  plot_empty_clusters = T
+)
 }
 \arguments{
 \item{geneIDs}{A vector (barplot) of a list (clusters) of gene IDs}

@@ -10,9 +10,17 @@ vl_plot_enh_motifs(sequences, ...)
 
 \method{vl_plot_enh_motifs}{data.table}(bed, genome, ...)
 
-\method{vl_plot_enh_motifs}{character}(sequences, p.cutoff = 5e-04, sel,
-  xleft, ybottom, width, height, col = rainbow(length(sel)),
-  col_alpha = 0.3)
+\method{vl_plot_enh_motifs}{character}(
+  sequences,
+  p.cutoff = 5e-04,
+  sel,
+  xleft,
+  ybottom,
+  width,
+  height,
+  col = rainbow(length(sel)),
+  col_alpha = 0.3
+)
 }
 \arguments{
 \item{sequences}{Named character vector of sequences to analyse. If provided takes over bed argument (in the case where both are specified)}
