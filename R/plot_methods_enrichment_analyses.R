@@ -110,8 +110,8 @@ plot.vl_enr_cl <- function(obj,
       if(order=="padj")
         setorderv(DT, c("cl", "padj")) else if(order=="log2OR")
           DT <- DT[order(cl, -abs(log2OR))]
-        sel <- DT[rowid(DT$cl)<=top_enrich, variable]
-        DT <- DT[variable %in% sel]
+        DT[rowid(DT$cl)>top_enrich, variable:= NA]
+        DT <- DT[!is.na(variable)]
     }
     # Save ordering before dcast
     setorderv(DT, c("cl", "padj"))

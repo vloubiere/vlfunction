@@ -8,11 +8,8 @@
 \usage{
 vl_importBed(bed, ...)
 
-\method{vl_importBed}{character}(
-  bed,
-  cols = c("seqnames", "start", "end", "name", "score", "strand"),
-  extraCols = "auto"
-)
+\method{vl_importBed}{character}(bed, cols = c("seqnames", "start",
+  "end", "name", "score", "strand"), extraCols = "auto")
 
 \method{vl_importBed}{GRanges}(bed)
 }
@@ -22,7 +19,7 @@ vl_importBed(bed, ...)
 \item{extraCols}{Colnames for extra, non-canonical bed columns. "auto" tries to guess whether narrowPeak/broadPeak formats are used}
 }
 \value{
-Imported bed
+DT ranges
 }
 \description{
 Imports bed as data.table and check formats

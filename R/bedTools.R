@@ -1,10 +1,27 @@
+#' Convert character to bed file
+#'
+#' @param coor Character vector of genomic coordinates, e.g chr3RHet:2281049-2281297:*
+#' @examples
+#' vl_toDTranges("chr3RHet:2281049-2281297:*")
+#' @return DT ranges
+#' @export
+vl_toDTranges <- function(coor)
+{
+  if(!is.character(coor))
+    stop("coor should be a character vector e.g chr3RHet:2281049-2281297:*")
+  dat <- data.table::as.data.table(data.table::tstrsplit(coor, ":|-"))
+  setnames(dat, c("seqnames", "start", "end", "strand")[seq(dat)])
+  dat <- vl_importBed(dat)
+  return(dat)
+}
+
 #' Import bed file
 #'
 #' Imports bed as data.table and check formats
 #'
 #' @param bed Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
 #' @param extraCols Colnames for extra, non-canonical bed columns. "auto" tries to guess whether narrowPeak/broadPeak formats are used
-#' @return Imported bed
+#' @return DT ranges
 #' @export
 vl_importBed <- function(bed, ...) UseMethod("vl_importBed")
 
