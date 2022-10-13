@@ -15,6 +15,7 @@
 vl_add_motifs <- function(DT, cex.width= 1, cex.height= 1, lwd= 0.1)
 {
   # Extract PWMs
+  DT <- unique(DT[, .(variable, name, y)])
   mats <- vl_Dmel_motifs_DB_full[DT, pwms_perc, on= "motif_ID==variable"]
   mats <- lapply(mats, TFBSTools::as.matrix)
   # Compute plotting coordinates

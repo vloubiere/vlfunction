@@ -107,8 +107,8 @@ plot.vl_enr_cl <- function(obj,
     # Remove empty clusters
     if(!plot_empty_clusters)
       DT[, cl:= droplevels(cl)]
-    # Add y coordinates to DT and return
-    DT[, y:= as.numeric(variable)]
+    # Add y coordinates to DT and return (matrix upside down)
+    DT[, y:= max(as.numeric(variable))-as.numeric(variable)+1]
     # dcast 
     x <- dcast(DT, variable~cl, value.var = "log2OR", drop= F)
     x <- as.matrix(x, 1)
