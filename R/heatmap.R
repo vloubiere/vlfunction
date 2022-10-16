@@ -93,7 +93,7 @@ vl_heatmap.matrix <- function(x,
                               show_col_dendrogram= TRUE,
                               show_legend= TRUE,
                               display_numbers= FALSE,
-                              display_numbers_matrix= x,
+                              display_numbers_matrix,
                               display_numbers_cex= 1)
 {
   if(is.null(rownames(x)))
@@ -248,13 +248,21 @@ plot.vl_heatmap <- function(obj)
   
   # Plot numbers
   if(display_numbers)
-    if(identical(dim(x), dim(display_numbers_matrix)))
-      text(c(col(x)),
-           rev(c(row(x))),
-           c(display_numbers_matrix),
-           cex= display_numbers_cex,
-           offset= 0) else
-             stop("dim(x) and dim(display_numbers_matrix) should be identical!")
+  {
+    if(missing(display_numbers_matrix))
+      display_numbers_matrix <- x else if(identical(dim(x), dim(display_numbers_matrix)))
+      {
+        display_numbers_matrix <- display_numbers_matrix[(rows$order), , drop=F]
+        display_numbers_matrix <- display_numbers_matrix[, (cols$order), drop=F]
+      }else
+        stop("dim(x) and dim(display_numbers_matrix) should be identical!")
+    
+    text(c(col(display_numbers_matrix)),
+         rev(c(row(display_numbers_matrix))),
+         c(display_numbers_matrix),
+         cex= display_numbers_cex,
+         offset= 0) 
+  }
 
   #----------------------------------#
   # Margins legends

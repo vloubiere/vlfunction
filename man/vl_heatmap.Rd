@@ -39,7 +39,7 @@ vl_heatmap(x, ...)
   show_col_dendrogram = TRUE,
   show_legend = TRUE,
   display_numbers = FALSE,
-  display_numbers_matrix = x,
+  display_numbers_matrix,
   display_numbers_cex = 1
 )
 }
