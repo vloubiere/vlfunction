@@ -130,7 +130,7 @@ vl_bw_coverage_bins <- function(bed,
   bins <- data.table(regions, set_IDs)
   bins[, region_ID:= .I]
   bins[, center:= rowMeans(.SD), .SDcols= c("start", "end")]
-  bins <- vl_resizeBed(bins, "center", upstream, downstream)
+  bins <- vl_resizeBed(bins, "center", upstream, downstream, ignore.strand = !stranded)
   bins <- bins[, {
     coor <- round(seq(start, end, length.out= nbins+1))
     coor <- data.table(start= coor[-length(coor)],
@@ -174,6 +174,7 @@ vl_bw_coverage_bins <- function(bed,
 #' @param ylim ylim for plotting. default= range(data)
 #' @param col Color to be used for plotting. Dataset is ordered using keyby= .(names, set_IDs) before assigning colors
 #' @param legend Should the legend be plotted? default to T
+#' @param legend_pos Legend position. Default to "topleft"
 #' @param legend.cex Legend cex. defaults to 1
 #' @param col.adj Opacity of polygons and lines. default= c(0.5,1)
 #' @examples 
@@ -197,6 +198,7 @@ vl_bw_average_track <- function(bed,
                                 ylim,
                                 col= c("#E69F00","#68B1CB","#15A390","#96C954","#77AB7A","#4F6A6F","#D26429","#C57DA5","#999999"),
                                 legend= T,
+                                legend_pos= "topleft",
                                 legend.cex= 1,
                                 col.adj= c(0.5, 1))
 {
@@ -228,6 +230,7 @@ vl_bw_average_track <- function(bed,
                              ylab= ylab,
                              ylim= ylim,
                              legend= legend,
+                             legend_pos= legend_pos,
                              legend.cex= legend.cex,
                              col.adj= col.adj)
   invisible(obj)
