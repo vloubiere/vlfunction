@@ -10,20 +10,29 @@ vl_motif_counts(sequences, ...)
 
 \method{vl_motif_counts}{data.table}(bed, genome, ...)
 
-\method{vl_motif_counts}{character}(sequences = NULL, p.cutoff = 5e-04, sel, what = "motifCounts")
+\method{vl_motif_counts}{character}(
+  sequences = NULL,
+  sel,
+  genome,
+  bg = "genome",
+  p.cutoff = 5e-04,
+  collapse_overlapping = FALSE
+)
 }
 \arguments{
 \item{sequences}{Named character vector of sequences to analyse. If provided takes over bed argument (in the case where both are specified)}
 
 \item{bed}{Either a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns}
 
-\item{genome}{Genome to be used for coordinates ("dm6, "dm3")}
-
-\item{p.cutoff}{Pval cutoff used for motif detection}
+\item{genome}{Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome"}
 
 \item{sel}{Vector of motif_ID to compute. see vl_Dmel_motifs_DB_full$motif_ID}
 
-\item{what}{Waht value should be return. Either "motifMatches" (logical), "motifCounts" (numeric) or "motifScores" (numeric)}
+\item{bg}{Background used to find motifs. Possible values include "genome" and "even". Default= "genome"}
+
+\item{p.cutoff}{Pval cutoff used for motif detection}
+
+\item{collapse_overlapping}{Should overlapping motifs be merged? Default= F}
 }
 \value{
 Matrix of motif counts

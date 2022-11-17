@@ -10,21 +10,32 @@ vl_motif_pos(sequences, ...)
 
 \method{vl_motif_pos}{data.table}(bed, genome, ...)
 
-\method{vl_motif_pos}{character}(sequences, p.cutoff = 5e-04, sel)
+\method{vl_motif_pos}{character}(
+  sequences,
+  sel,
+  genome,
+  bg = "genome",
+  p.cutoff = 5e-04,
+  collapse_overlapping = TRUE
+)
 }
 \arguments{
 \item{sequences}{Named character vector of sequences to analyse. If provided takes over bed argument (in the case where both are specified)}
 
 \item{bed}{Either a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns}
 
-\item{genome}{Genome to be used for coordinates ("dm6, "dm3")}
+\item{genome}{Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome"}
+
+\item{sel}{List of motifs to compute. see vl_Dmel_motifs_DB_full$motif}
+
+\item{bg}{Background used to find motifs. Possible values include "genome" and "even". Default= "genome"}
 
 \item{p.cutoff}{Pval cutoff used for motif detection}
 
-\item{sel}{List of motifs to compute. see vl_Dmel_motifs_DB_full$motif}
+\item{collapse_overlapping}{Should overlapping motifs be merged? Default= T}
 }
 \value{
-A list of positions of lenght = length(sequences)
+A list of positions of length = length(sequences)
 }
 \description{
 Compute motif positions
@@ -37,5 +48,5 @@ Compute motif positions
 }}
 
 \examples{
-vl_motif_pos.data.table(vl_SUHW_top_peaks[1:2], "dm3", sel= c("cisbp__M2328", "flyfactorsurvey__suHw_FlyReg_FBgn0003567", "jaspar__MA0533.1"))
+vl_motif_pos.data.table(vl_SUHW_top_peaks[1:2], genome= "dm3", sel= c("cisbp__M2328", "flyfactorsurvey__suHw_FlyReg_FBgn0003567", "jaspar__MA0533.1"))
 }

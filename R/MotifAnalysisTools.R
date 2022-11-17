@@ -4,10 +4,11 @@
 #'
 #' @param sequences Named character vector of sequences to analyse. If provided takes over bed argument (in the case where both are specified)
 #' @param bed Either a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns
-#' @param genome Genome to be used for coordinates ("dm6, "dm3")
+#' @param genome Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome"
+#' @param bg Background used to find motifs. Possible values include "genome" and "even". Default= "genome"
 #' @param p.cutoff Pval cutoff used for motif detection
 #' @param sel Vector of motif_ID to compute. see vl_Dmel_motifs_DB_full$motif_ID
-#' @param what Waht value should be return. Either "motifMatches" (logical), "motifCounts" (numeric) or "motifScores" (numeric)
+#' @param collapse_overlapping Should overlapping motifs be merged? Default= F
 #' @examples
 #' # Example run
 #' sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
@@ -31,29 +32,47 @@ vl_motif_counts <- function(sequences, ...) UseMethod("vl_motif_counts")
 vl_motif_counts.data.table <- function(bed, genome, ...)
 {
   sequences <- vl_getSequence(bed, genome)
-  vl_motif_counts.character(sequences, ...)
+  vl_motif_counts.character(sequences, genome= genome, ...)
 }
 
 #' @describeIn vl_motif_counts Identify motifs in sequences
 #' @export
 vl_motif_counts.character <- function(sequences= NULL,
-                                      p.cutoff= 5e-4,
                                       sel,
-                                      what= "motifCounts")
+                                      genome,
+                                      bg= "genome",
+                                      p.cutoff= 5e-4,
+                                      collapse_overlapping= FALSE)
 {
   # Select motifs
   if(any(!sel %in% vl_Dmel_motifs_DB_full$motif_ID))
     stop("Some motif_ID(s) provided in 'sel' do not exist in vl_Dmel_motifs_DB_full$motif_ID")
-  mot <- do.call(TFBSTools::PWMatrixList, 
-                 vl_Dmel_motifs_DB_full[match(unique(sel), motif_ID), pwms_log_odds])
-  # Count
-  res <- as.matrix(motifmatchr::matchMotifs(mot,
-                                            sequences,
-                                            p.cutoff= p.cutoff,
-                                            bg= "even",
-                                            out= "scores")@assays@data[[what]])
+
+  # Collapsed counts
+  if(collapse_overlapping)
+  {
+    res <- vl_motif_pos.character(sequences= sequences, 
+                                  sel= sel, 
+                                  genome= genome, 
+                                  bg = bg, 
+                                  p.cutoff = p.cutoff,
+                                  collapse_overlapping = collapse_overlapping)
+    res <- sapply(res, function(x) sapply(x, function(y) nrow(y)))
+  }else
+  {
+    # Raw counts
+    mot <- do.call(TFBSTools::PWMatrixList, 
+                   vl_Dmel_motifs_DB_full[match(unique(sel), motif_ID), pwms_log_odds])
+    res <- as.matrix(motifmatchr::matchMotifs(mot,
+                                              sequences,
+                                              genome= genome,
+                                              p.cutoff= p.cutoff,
+                                              bg= bg,
+                                              out= "scores")@assays@data[["motifCounts"]])
+  }
   res <- as.data.table(res)
   setnames(res, as.character(sel))
+  
   return(res)
 }
 
@@ -271,12 +290,14 @@ vl_motif_cl_enrich <- function(counts_list,
 #'
 #' @param sequences Named character vector of sequences to analyse. If provided takes over bed argument (in the case where both are specified)
 #' @param bed Either a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns
-#' @param genome Genome to be used for coordinates ("dm6, "dm3")
-#' @param p.cutoff Pval cutoff used for motif detection
 #' @param sel List of motifs to compute. see vl_Dmel_motifs_DB_full$motif
+#' @param genome Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome"
+#' @param bg Background used to find motifs. Possible values include "genome" and "even". Default= "genome"
+#' @param p.cutoff Pval cutoff used for motif detection
+#' @param collapse_overlapping Should overlapping motifs be merged? Default= T
 #' @examples
-#' vl_motif_pos.data.table(vl_SUHW_top_peaks[1:2], "dm3", sel= c("cisbp__M2328", "flyfactorsurvey__suHw_FlyReg_FBgn0003567", "jaspar__MA0533.1"))
-#' @return A list of positions of lenght = length(sequences) 
+#' vl_motif_pos.data.table(vl_SUHW_top_peaks[1:2], genome= "dm3", sel= c("cisbp__M2328", "flyfactorsurvey__suHw_FlyReg_FBgn0003567", "jaspar__MA0533.1"))
+#' @return A list of positions of length = length(sequences) 
 #' @export
 vl_motif_pos <- function(sequences, ...) UseMethod("vl_motif_pos")
 
@@ -285,14 +306,17 @@ vl_motif_pos <- function(sequences, ...) UseMethod("vl_motif_pos")
 vl_motif_pos.data.table <- function(bed, genome, ...)
 {
   sequences <- vl_getSequence(bed, genome)
-  vl_motif_pos.character(sequences, ...)
+  vl_motif_pos.character(sequences, genome= genome, ...)
 }
 
 #' @describeIn vl_motif_pos Identify motif positions within sequences
 #' @export
 vl_motif_pos.character <- function(sequences,
+                                   sel,
+                                   genome,
+                                   bg= "genome",
                                    p.cutoff= 5e-4,
-                                   sel)
+                                   collapse_overlapping= TRUE)
 {
   if(any(!sel %in% vl_Dmel_motifs_DB_full$motif_ID))
     stop("Some motif_ID(s) provided in 'sel' do not exist in vl_Dmel_motifs_DB_full$motif_ID")
@@ -300,15 +324,38 @@ vl_motif_pos.character <- function(sequences,
   pos <- motifmatchr::matchMotifs(do.call(TFBSTools::PWMatrixList, 
                                           sub$pwms_log_odds),
                                   sequences,
+                                  genome= genome,
                                   p.cutoff= p.cutoff,
-                                  bg= "even",
+                                  bg= bg,
                                   out= "positions")
   pos <- lapply(pos, function(x)
   {
     names(x) <- seq(length(sequences))
-    lapply(x, function(y) as.data.table(y))
+    lapply(x, function(y) {
+      y <- as.data.table(y)
+      # Collapse motifs that overlap more than 70% -> return merged motifs
+      if(collapse_overlapping && nrow(y))
+      {
+        # y <- data.table(start=c(1,2,3,4,5), end= c(5,6,7,8,9), score= 1, width= 4)
+        setorderv(y, c("start", "end"))
+        motif_width <- ceiling(y[1, width]*0.7)
+        # Identify overlapping motifs
+        y[, idx:= cumsum(c(1, (start[-.N]+motif_width-1)<=start[-1]))]
+        # Re-split tightly clustered motifs 
+        y[, idx2:= round((start-start[1])/motif_width[1]), idx]
+        y$idx <- rleidv(y, c("idx", "idx2"))
+        # Return motifs
+        y <- y[, .(start= start[1], 
+                   end= end[.N],
+                   score= max(score)), idx]
+        y[, width:= end-start+1]
+        y[, .(start, end, width, score)]
+      }
+      return(y)
+      })
   })
   return(pos)
 }
+
 
 
