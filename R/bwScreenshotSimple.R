@@ -112,9 +112,9 @@ vl_screenshot <- function(bed,
   obj[type=="bed", max:= as.numeric(1)]
   # Compute x,y pos and color
   obj[, x:= rowid(name)]
-  bw_obj <- rbindlist(lapply(seq(widths[1]), function(x) obj[type=="bw"]), idcol = "y")
-  bed_obj <- rbindlist(lapply(seq(widths[2]), function(x) obj[type=="bed"]), idcol = "y")
-  obj <- rbind(bw_obj, bed_obj)
+  obj <- obj[, rbindlist(rep(list(.SD), 
+                             switch(type, "bw"= widths[1], "bed"= widths[2])), 
+                         idcol= "y"), .(file, type)]
   obj[, Cc:= as.character(ifelse(y>(value-min)/(max-min)*100, bg, col))]
   if(density=="density")
     obj[type=="bw", Cc:= {
