@@ -10,6 +10,7 @@
 #' @param col For each gene symbol, the color of corresponding vertice (i.e, tomato for up, cornflowerblue for down)
 #' @param size For each gene symbol, the size of corresponding vertice (i.e, absolute FC)
 #' @param cex.label cex factor to be applied to correponding vertices labels
+#' @param version databse version. default= "10"
 #' @examples 
 #' #USAGE
 #' symbols <- c("Pc", "Psc", "E(z)", "RpL10", "RpL11", "RpL12")
@@ -30,13 +31,13 @@ vl_STRING_interaction <- function(symbols,
                                   top_N= Inf,
                                   col= "tomato",
                                   size= 10,
-                                  cex.label= 1)
+                                  cex.label= 1,
+                                  version= "10")
 {
   if(any(size<0) | any(cex.label<0))
     stop("size and cex.label should all be positive!")
-  string_db <- switch(species,
-                      "Dm" = STRINGdb::STRINGdb$new(version = "10", species = 7227, score_threshold = 0, input_directory = ""),
-                      "Mm" = STRINGdb::STRINGdb$new(version = "10", species = 1090, score_threshold = 0, input_directory = ""))
+  string_db <- STRINGdb::STRINGdb$new(version = version, species = switch(species, "Dm"= 7227, "Mm"= 10090), score_threshold = 0, input_directory = "")
+  
   # Vertices
   V <- data.table(name= symbols,
                   size, 
@@ -98,4 +99,5 @@ plot.vl_STRING <- function(obj,
   plot(.g, 
        vertex.label.cex= V$cex.label,
        vertex.frame.color= NA)
+  invisible(.g)
 }

@@ -13,7 +13,8 @@ vl_STRING_interaction(
   top_N = Inf,
   col = "tomato",
   size = 10,
-  cex.label = 1
+  cex.label = 1,
+  version = "10"
 )
 
 \method{plot}{vl_STRING}(obj, score_cutoff = 400, top_N = Inf)
@@ -34,6 +35,8 @@ vl_STRING_interaction(
 \item{size}{For each gene symbol, the size of corresponding vertice (i.e, absolute FC)}
 
 \item{cex.label}{cex factor to be applied to correponding vertices labels}
+
+\item{version}{databse version. default= "10"}
 }
 \value{
 An igraph network

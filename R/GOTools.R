@@ -100,7 +100,8 @@ vl_GO_enrich <- function(geneIDs,
   DT[, ctl_total:= length(unique(uni$ID))]# Total universe
   # Fisher test
   DT[, c("OR", "pval"):= {
-    fisher.test(matrix(unlist(.BY), byrow= T, ncol= 2))[c("estimate", "p.value")]
+    fisher.test(matrix(unlist(.BY), byrow= T, ncol= 2), 
+                alternative = "greater")[c("estimate", "p.value")]
   }, .(set_hit, set_total, ctl_hit, ctl_total)]
   
   ###############################
