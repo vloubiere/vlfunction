@@ -87,7 +87,8 @@ vl_boxplot.default <-
         {
           .d <- density(groups[[i]],
                         from= box$stats[1,i],
-                        to= box$stats[5,i])
+                        to= box$stats[5,i], 
+                        na.rm= T)
           x <- .d$y
           x <- x/max(x)*viowex/2
           x <- xpos[i]-c(x, rev(-x))
