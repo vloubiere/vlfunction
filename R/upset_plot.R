@@ -42,14 +42,15 @@ vl_upset_plot <- function(dat_list,
                       border= NA,
                       col= "grey20",
                       xaxt= "n")]
-  inter[, text(x, N, N, cex= 0.8, pos= 3, xpd= T)]
+  browser()
+  inter[, text(x, N, N, cex= 0.8, pos= 3, xpd= TRUE)]
   # Add grid
   grid <- melt(inter[, !"N"], id.vars = "x")
   grid[set, y:= par("usr")[3]-strheight("M", cex= 2)*i.I, on= "variable==.id"]
   grid[, col:= ifelse(value==0, "lightgrey", "grey20")]
   grid[, points(x, 
                 y, 
-                xpd= T, 
+                xpd= TRUE, 
                 cex= 2, 
                 pch= 19, 
                 col= col)]
@@ -58,11 +59,11 @@ vl_upset_plot <- function(dat_list,
                           x[1], 
                           max(y), 
                           col= "grey20", 
-                          xpd= T,
+                          xpd= TRUE,
                           lwd= 2), x]
   # Sets names
   set[grid, y:= i.y, on= ".id==variable", mult= "first"]
-  set[, text(par("usr")[1], y, .id, xpd= T, pos= 2)]
+  set[, text(par("usr")[1], y, .id, xpd= TRUE, pos= 2)]
   # Sets barplot
   tot_width <- strwidth(paste0(max(set$N), " Set size  0"))
   set[, top:= y+strheight("M")*0.75]
@@ -75,7 +76,7 @@ vl_upset_plot <- function(dat_list,
              top, 
              border= NA, 
              col= "grey20",
-             xpd= T)]
+             xpd= TRUE)]
   # Sets barplot axis
   s.max <- max(axisTicks(c(0, max(set$N)), log= FALSE))
   x <- c(set[1,right], set[1,right]-(s.max/max(set$N)*tot_width))
@@ -83,18 +84,18 @@ vl_upset_plot <- function(dat_list,
   y <- c(y-strheight("M")*0.1, y)
   lines(rep(x, each= 2),
         c(y, rev(y)),
-        xpd= T)
+        xpd= TRUE)
   text(mean(x),
        min(set[, y-height]),
        offset= 0.8,
        "Set size",
        pos= 1,
-       xpd= T)
+       xpd= TRUE)
   text(x[c(1, 2)],
        y[c(1, 1)],
        c(0, s.max),
        pos= 1,
-       xpd= T,
+       xpd= TRUE,
        cex= 0.5,
        offset= 0.2)
   
