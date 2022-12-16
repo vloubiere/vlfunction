@@ -240,7 +240,7 @@ vl_screenshot_transcripts <- function(obj, genome)
     .c[type=="transcript", idx:= .I]
     .c$y <- .c[.c, .N, .EACHI, on= c("idx<idx", "seg.x0<=seg.x1", "seg.x1>=seg.x0")]$N
     .c[, y:= y[type=="transcript"], TXNAME]
-    .c[, y:= par("usr")[3]-strheight("M", cex= 1.8)*y]
+    .c[, y:= par("usr")[3]-strheight("M", cex= 1.8)*(y+1)]
   }, .EACHI, on= c("seqnames", "start<=end", "end>=start")]
   # Colors and lwd
   pl[, c("col", "lwd"):= 
