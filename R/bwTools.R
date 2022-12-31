@@ -258,7 +258,8 @@ plot.vl_bw_average_track <- function(obj,
        ylim= ylim,
        ylab= ylab,
        xlab= xlab,
-       xaxt= "n")
+       xaxt= "n",
+       frame= F)
   axis(1, 
        at = xlab.at,
        labels = c(xlab.at[1], center_label, xlab.at[3]))

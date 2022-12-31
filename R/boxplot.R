@@ -2,9 +2,9 @@
 #' @description Just a wrapper around boxplot that makes it nicer and allows to add wilcox pvals
 #' @param x list of variables to be plotted
 #' @param compute_pval list of vectors of length two containing pairwise x indexes to be compared
-#' @param pval_offset offset for pval plotting. Defaults to 0.04 (fraction of ylim)
 #' @param names Names to plot under boxplot. If function specified, applied to names before plotting
 #' @param tilt.names Should names be tilted (ignored if horizontal= TRUE)
+#' @param srt rotation angle for titled names
 #' @param violin Should violins be added?
 #' @param viocol Violin colors. Default to transparent
 #' @param viowex Expansion factor for violins
@@ -22,7 +22,7 @@ vl_boxplot <- function(x, ...) UseMethod("vl_boxplot")
 #' @export
 vl_boxplot.default <-
   function(x, ..., 
-           compute_pval= NULL, pval_offset= 0.08, tilt.names= F,
+           compute_pval= NULL, tilt.names= F, srt= 45,
            range = 1.5, width = NULL, varwidth = FALSE,
            notch = FALSE, outline = FALSE, names, plot = TRUE,
            border = par("fg"), col = NULL, log = "",
@@ -39,35 +39,18 @@ vl_boxplot.default <-
     }else
       box <- boxplot(x, ..., names= names, plot = F)
     
-    # Compute groups if relevant
-    if(!is.null(compute_pval) | violin)
-    {
-      args <- list(x, ...)
-      namedargs <-
-        if(!is.null(attributes(args)$names)) attributes(args)$names != ""
-      else rep_len(FALSE, length(args))
-      ## pars <- c(args[namedargs], pars)
-      groups <- if(is.list(x)) x else args[!namedargs]
-      if(0L == (n <- length(groups)))
-        stop("invalid first argument")
-      if(length(class(groups)))
-        groups <- unclass(groups)
-      attr(groups, "names") <- box$names
-    }
-    
-    # Compute pval
-    if(!is.null(compute_pval))
-    {
-      pval <- vl_compute_bxp_pval(groups= groups,
-                                  box= box,
-                                  compute_pval= compute_pval, 
-                                  pval_offset= pval_offset,
-                                  outline= outline,
-                                  at= at,
-                                  horizontal= horizontal)
-      if(is.null(ylim))
-        ylim <- pval$ylim
-    }
+    # Compute groups
+    args <- list(x, ...)
+    namedargs <-
+      if(!is.null(attributes(args)$names)) attributes(args)$names != ""
+    else rep_len(FALSE, length(args))
+    ## pars <- c(args[namedargs], pars)
+    groups <- if(is.list(x)) x else args[!namedargs]
+    if(0L == (n <- length(groups)))
+      stop("invalid first argument")
+    if(length(class(groups)))
+      groups <- unclass(groups)
+    attr(groups, "names") <- box$names
     
     # Plot boxplot
     if(plot)
@@ -106,20 +89,25 @@ vl_boxplot.default <-
                 pars = pars, horizontal = horizontal, add = T, at = at,
                 frame= frame, whisklty = whisklty, ylim= ylim, xaxt= "n", yaxt= "n")
       }
-        
       # Plot pval
-      if(!is.null(compute_pval) && nrow(pval$pval)>0)
-        vl_plot_bxp_pval(pval = pval$pval, 
-                         horizontal = horizontal, 
-                         pos = pval$pos,
-                         offset = pval$offset)
-      
+      if(!is.null(compute_pval))
+      {
+        pval <- vl_compute_bxp_pval(groups= groups,
+                                    box= box,
+                                    compute_pval= compute_pval,
+                                    outline= outline,
+                                    at= at,
+                                    horizontal= horizontal)
+        if(nrow(pval))
+          vl_plot_bxp_pval(pval = pval,
+                           horizontal = horizontal)
+      }
       # Plot tilted names
       if(tilt.names && !horizontal && xaxt!="n")
         vl_tilt_xaxis(if(is.null(at)) seq(box$names) else at,
-                      rep(par("usr")[3], length(box$names))-diff(grconvertY(c(0, par("mgp")[2]), "line", "user")),
+                      grconvertY(grconvertY(0, "npc", "inch")-grconvertY(par("mgp")[2], "lines", "inch"), "inch", "user"),
                       box$names,
-                      srt= 45,
+                      srt= srt,
                       offset= 0.25,
                       pos= 2,
                       xpd= NA,
@@ -167,7 +155,7 @@ vl_boxplot.formula <- function(formula, data = NULL, ..., subset, na.action = NU
 }
 
 #' @export
-vl_compute_bxp_pval <- function(groups, box, compute_pval, pval_offset, outline, at, horizontal)
+vl_compute_bxp_pval <- function(groups, box, compute_pval, outline, at, horizontal)
 {
   if(!is.list(compute_pval) | !all(lengths(compute_pval)==2))
     stop("compute_pval list of vectors of length two containing pairwise x indexes to be compared")
@@ -175,17 +163,11 @@ vl_compute_bxp_pval <- function(groups, box, compute_pval, pval_offset, outline,
     stop("Some indexes provided in compute_pval are bigger than the number of groups in current boxplot")
   # Make pairs object
   dat <- data.table::data.table(dat= groups,
-                                x= if(is.null(at)) seq(groups) else at) # Retrieve at positionsbrowser()
+                                x= if(is.null(at)) seq(groups) else at) # Retrieve at positions
   dat[, dat:= lapply(dat, na.omit)]
   if(outline)
-  {
-    dat[, max:= sapply(dat, max, na.rm= T)]
-    ymin <- min(unlist(dat))
-  }else{
-    dat[, max:= box$stats[5,]]
-    ymin <- min(box$stats[1,])
-  }
-  dat[, max:= as.numeric(max)] # Needed to not lose y precision later
+    dat[, max:= sapply(dat, max, na.rm= T)] else
+      dat[, max:= box$stats[5,]]
   # Order comparison pairs! (x0<=x1)
   compute_pval <- lapply(compute_pval, function(i) i[order(dat[i, x])])
   pval <- cbind(dat[sapply(compute_pval, `[`, 1), !"max"], 
@@ -195,9 +177,16 @@ vl_compute_bxp_pval <- function(groups, box, compute_pval, pval_offset, outline,
   pval[, wilcox:= mapply(function(x, y) wilcox.test(unlist(x), unlist(y))$p.value, x= dat0, y= dat1)]
   # Compute x pos text
   pval[, x:= rowMeans(.SD), .SDcols= c("x0", "x1")]
-  # Compute y pos
-  adj <- pval_offset*(max(dat$max)-ymin)
-  pval[, y:= max(dat[.BY, max, on= c("x>=x0", "x<=x1")]), .(x0, x1)] # Max depending on overlapping boxes
+  # Compute y pos (in inches in case axis is logged)
+  adj <- if(horizontal)
+    strwidth("M", units = "inch") else
+      strheight("M", units = "inch")
+  # Overlapping boxes
+  pval[, y:= max(dat[.BY, max, on= c("x>=x0", "x<=x1")]), .(x0, x1)] 
+  if(horizontal)
+    pval[, y:= grconvertX(y, "user", "inch"), .(x0, x1)] else
+      pval[, y:= grconvertY(y, "user", "inch"), .(x0, x1)]
+  # Adjust based on overlaps
   data.table::setorderv(pval, c("y", "x0", "x1"))
   pval[, idx:= .I] # Index to check previous bars
   for(i in seq(nrow(pval)))
@@ -206,37 +195,38 @@ vl_compute_bxp_pval <- function(groups, box, compute_pval, pval_offset, outline,
     .c <- .c[diff(c(.c, Inf))>2*adj  & .c>=pval[i,y]] # y values with enough space
     pval[i, y:= data.table::first(.c)+adj] # Smaller y value + adj
   }
-  # Horizontal plot
-  pval[, y0:= y] # Convenient if horizontal= T
-  pval[, y1:= y] # Convenient if horizontal= T
-  pos <- ifelse(horizontal, 4, 3)
-  offset <- ifelse(horizontal, 0.3, 0)
-  return(list(pval= pval,
-              ylim= c(ymin, max(c(dat$max, pval$y0+adj))),
-              pos= pos,
-              offset= offset))
+  # Return
+  return(pval)
 }
 
 #' @export
 vl_plot_bxp_pval <- function(pval, 
-                             horizontal,
-                             pos,
-                             offset)
+                             horizontal)
 {
-  # Rotate if horizontal
+  # Convert to users coordinates
   if(horizontal)
   {
-    setnames(pval, 
+    pval[, y0:= grconvertX(y, "inch", "user")]# Convenient if horizontal= T
+    pval[, y1:= y0] # Convenient if horizontal= T
+    pval[, y:= grconvertX(y+strheight("M", "inch")*0.45, "inch", "user")]
+    setnames(pval, # Rotate if horizontal
              c("x", "y", "x0", "x1", "y0", "y1"), 
              c("y", "x", "y0", "y1", "x0", "x1"))
+  }else
+  {
+    pval[, y0:= grconvertY(y, "inch", "user")]# Convenient if horizontal= T
+    pval[, y1:= y0] # Convenient if horizontal= T
+    pval[, y:= grconvertY(y+strwidth("M", "inch")*0.45, "inch", "user")]
   }
   pval[, {
-    segments(x0, y0, x1, y1)
-    vl_plot_pval_text(x,
-                      y,
-                      wilcox,
-                      stars_only = T,
-                      pos= pos,
-                      offset= offset)
+    segments(x0, y0, x1, y1, xpd= NA)
+    .c <- cut(wilcox, c(-Inf, 0.00001, 0.001, 0.01, 0.05, Inf), c("****", "***", "**", "*", "N.S"), include.lowest= T)
+    text(x, 
+         y, 
+         .c,
+         cex= ifelse(.c=="N.S", 0.5, 1),
+         srt= ifelse(horizontal, -90, 0),
+         offset= 0,
+         xpd= NA)
   }]
 }

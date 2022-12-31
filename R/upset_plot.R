@@ -9,7 +9,8 @@
 #' vl_upset_plot(test)
 #' @export
 vl_upset_plot <- function(dat_list, 
-                          intersection_cutoff= 0)
+                          intersection_cutoff= 0,
+                          grid_hex= 2)
 {
   if(is.null(names(dat_list)))
     stop("The list should be named!")
@@ -30,7 +31,7 @@ vl_upset_plot <- function(dat_list,
   # sets
   set <- dat[, .N, keyby= .id]
   setorderv(set, "N", -1)
-  set[, I:= .I]
+  set[, I:= .I-1]
   
   #------------------#
   # PLOT
@@ -42,11 +43,11 @@ vl_upset_plot <- function(dat_list,
                       border= NA,
                       col= "grey20",
                       xaxt= "n")]
-  browser()
   inter[, text(x, N, N, cex= 0.8, pos= 3, xpd= TRUE)]
   # Add grid
   grid <- melt(inter[, !"N"], id.vars = "x")
-  grid[set, y:= par("usr")[3]-strheight("M", cex= 2)*i.I, on= "variable==.id"]
+  grid[, y:= par("usr")[3]-strheight("M", cex= 2)]
+  grid[set, y:= y-strheight("M", cex= grid_hex)*i.I, on= "variable==.id"]
   grid[, col:= ifelse(value==0, "lightgrey", "grey20")]
   grid[, points(x, 
                 y, 

@@ -13,8 +13,8 @@ vl_boxplot(x, ...)
   x,
   ...,
   compute_pval = NULL,
-  pval_offset = 0.08,
   tilt.names = F,
+  srt = 45,
   range = 1.5,
   width = NULL,
   varwidth = FALSE,
@@ -49,9 +49,9 @@ vl_boxplot(x, ...)
 
 \item{compute_pval}{list of vectors of length two containing pairwise x indexes to be compared}
 
-\item{pval_offset}{offset for pval plotting. Defaults to 0.04 (fraction of ylim)}
-
 \item{tilt.names}{Should names be tilted (ignored if horizontal= TRUE)}
+
+\item{srt}{rotation angle for titled names}
 
 \item{names}{Names to plot under boxplot. If function specified, applied to names before plotting}
 

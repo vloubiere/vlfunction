@@ -63,8 +63,6 @@ vl_screenshot <- function(bed,
     names <- gsub("(.*)[.].*", "\\1", basename(tracks))
     names <- make.unique(names)
   }
-  if(!identical(names, unique(names)))
-    stop("Please provide unique names")
   if(!is.integer(widths) | any(widths<10))
     stop("widths should be integers >= 10")
   is_bw <- grepl(".bw", tracks)
@@ -92,7 +90,8 @@ vl_screenshot <- function(bed,
   if(!is.null(highlight_bed))
     bins[vl_covBed(bins, highlight_bed)>0, bg:= highlight_col]
   # Init obj
-  obj <- data.table(file= tracks,
+  obj <- data.table(ID= seq(tracks),
+                    file= tracks,
                     name= names,
                     type= ifelse(is_bw, "bw", "bed"),
                     col= col,
@@ -106,12 +105,12 @@ vl_screenshot <- function(bed,
                                      "bed"= vl_covBed(bins, file)>0))]
   }, (obj)]
   # Compute min/max and scale signal
-  obj[type=="bw" & is.na(min), min:= min(value, na.rm= T), name]
-  obj[type=="bw" & is.na(max), max:= max(value, na.rm= T), name]
+  obj[type=="bw" & is.na(min), min:= min(value, na.rm= T), ID]
+  obj[type=="bw" & is.na(max), max:= max(value, na.rm= T), ID]
   obj[type=="bed", min:= as.numeric(0)]
   obj[type=="bed", max:= as.numeric(1)]
   # Compute x,y pos and color
-  obj[, x:= rowid(name)]
+  obj[, x:= rowid(ID)]
   obj <- obj[, rbindlist(rep(list(.SD), 
                              switch(type, "bw"= widths[1], "bed"= widths[2])), 
                          idcol= "y"), .(file, type)]
@@ -125,8 +124,8 @@ vl_screenshot <- function(bed,
   obj[y==1 & Cc==bg & type=="bw" & !is.na(end), Cc:= col] # Full line at the bottom of bw tracks
   obj[(y<=5 | y>=widths[2]-5) & Cc!=bg & type=="bed", Cc:= bg] # Bg lines around bed tracks
   # Shift the different track bands in y
-  yshift <- rev(cumsum(data.table::shift(rev(obj[, max(y), name]$V1), 1, fill = 0)))
-  obj[, y:= y+yshift[.GRP], name]
+  yshift <- rev(cumsum(data.table::shift(rev(obj[, max(y), ID]$V1), 1, fill = 0)))
+  obj[, y:= y+yshift[.GRP], ID]
   
   #----------------------------------#
   # PLOT
@@ -154,7 +153,7 @@ vl_screenshot <- function(bed,
                     max.y= max(y)-strheight(max, cex= 0.5),
                     max.val= formatC(max, format= "g"),
                     min.y= min(y)+strheight(min, cex= 0.5),
-                    min.val= formatC(min, format= "g")), .(name, type, max, min)]
+                    min.val= formatC(min, format= "g")), .(ID, name, type, max, min)]
     labs[, {
       text(0,
            lab.y[1],
