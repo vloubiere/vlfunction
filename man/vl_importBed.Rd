@@ -29,8 +29,8 @@ Imports bed as data.table and check formats
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{character}: for bed paths
+\item \code{vl_importBed(character)}: for bed paths
 
-\item \code{GRanges}: for GRanges
+\item \code{vl_importBed(GRanges)}: for GRanges
+
 }}
-

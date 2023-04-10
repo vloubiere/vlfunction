@@ -66,13 +66,13 @@ Just a wrapper around boxplot that makes it nicer and allows to add wilcox pvals
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{default}: default method
+\item \code{vl_boxplot(default)}: default method
 
-\item \code{matrix}: method for matrices
+\item \code{vl_boxplot(matrix)}: method for matrices
 
-\item \code{formula}: method for formula
+\item \code{vl_boxplot(formula)}: method for formula
+
 }}
-
 \examples{
 set.seed(1234)
 vl_boxplot(formula= len~supp*dose, data=ToothGrowth, notch=TRUE,

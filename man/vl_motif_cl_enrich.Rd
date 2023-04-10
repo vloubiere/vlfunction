@@ -77,11 +77,11 @@ Fisher test data.table.
 \description{
 Compute motif enrichment for the cluster in cl_columns, using all the lines as background
 }
-\section{Methods (by generic)}{
+\section{Functions}{
 \itemize{
-\item \code{plot}: method to plot enrichment objects (containing variable, log2OR and padj)
-}}
+\item \code{plot(vl_enr_cl)}: method to plot enrichment objects (containing variable, log2OR and padj)
 
+}}
 \examples{
 sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", variable]
 top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks, upstream = 250, downstream = 250, genome = "dm3")

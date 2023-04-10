@@ -73,11 +73,11 @@ vl_STRING_interaction <- function(symbols,
   invisible(obj)
 }
 
-#' @describeIn vl_STRING_interaction Method to plot STRING interaction igraphs
+#' @describeIn vl_STRING_interaction Method to extract igraph from vl_STRING object
 #' @export
-plot.vl_STRING <- function(obj,
-                           score_cutoff= 400,
-                           top_N= Inf)
+vl_STRING_get_network <- function(obj,
+                                  score_cutoff= 400,
+                                  top_N= Inf)
 {
   E <- obj$E
   V <- obj$V
@@ -96,6 +96,18 @@ plot.vl_STRING <- function(obj,
   .g <- igraph::graph_from_data_frame(d = E, 
                                       vertices = V,
                                       directed = F)
+  return(.g)
+}
+
+#' @describeIn vl_STRING_interaction Method to plot STRING interaction igraphs
+#' @export
+plot.vl_STRING <- function(obj,
+                           score_cutoff= 400,
+                           top_N= Inf)
+{
+  .g <- vl_STRING_get_network(obj= obj, 
+                              score_cutoff= score_cutoff, 
+                              top_N= top_N)
   plot(.g, 
        vertex.label.cex= V$cex.label,
        vertex.frame.color= NA)

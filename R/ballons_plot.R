@@ -34,7 +34,8 @@ vl_balloons_plot.matrix <- function(x,
                                     main= NA, 
                                     balloon_size_legend= NA,
                                     balloon_col_legend= NA,
-                                    legend_left_pos)
+                                    legend_left_pos,
+                                    gap.axis= 0)
 {
   # Checks
   if(missing(x_breaks))
@@ -88,13 +89,12 @@ vl_balloons_plot.matrix <- function(x,
          cex= abs(x)*cex.balloons,
          xpd= T)
   # Axes
-  axis(side= 1, 
-       at= seq(ncol(x)),
-       labels = colnames(x),
-       lwd= NA)
+  vl_tilt_xaxis(seq(ncol(x)),
+       labels = colnames(x))
   axis(side= 2, 
        at= seq(nrow(x)),
        labels = rownames(x),
+       gap.axis= gap.axis,
        lwd= NA)
   # Title
   title(main= main)

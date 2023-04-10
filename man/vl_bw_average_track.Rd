@@ -80,9 +80,9 @@ Plots average tracks for a set bw files around (potentially) several sets of pea
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{plot}: Method to plot average tracks
-}}
+\item \code{plot(vl_bw_average_track)}: Method to plot average tracks
 
+}}
 \examples{
 bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
 sets <- c(rep("suhw", 100), rep("STARR", 1000))

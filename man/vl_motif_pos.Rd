@@ -42,11 +42,11 @@ Compute motif positions
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{data.table}: Compute motifs position within
+\item \code{vl_motif_pos(data.table)}: Compute motifs position within
 
-\item \code{character}: Identify motif positions within sequences
+\item \code{vl_motif_pos(character)}: Identify motif positions within sequences
+
 }}
-
 \examples{
 vl_motif_pos.data.table(vl_SUHW_top_peaks[1:2], genome= "dm3", sel= c("cisbp__M2328", "flyfactorsurvey__suHw_FlyReg_FBgn0003567", "jaspar__MA0533.1"))
 }

@@ -48,11 +48,11 @@ Plot enhancer with its motifs
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{data.table}: Plot enhancer with its motifs
+\item \code{vl_plot_enh_motifs(data.table)}: Plot enhancer with its motifs
 
-\item \code{character}: Plot enhancer with its motifs
+\item \code{vl_plot_enh_motifs(character)}: Plot enhancer with its motifs
+
 }}
-
 \examples{
 plot.new()
 vl_plot_enh_motifs(bed= vl_SUHW_top_peaks[1:2], 

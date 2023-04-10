@@ -69,11 +69,11 @@ Returns a table of enrichment which can be plot using ?plot.vl_GO_enr
 \description{
 Compute motif enrichment between a set of regions and control regions
 }
-\section{Methods (by generic)}{
+\section{Functions}{
 \itemize{
-\item \code{plot}: method to plot enrichment objects (containing variable, log2OR and padj)
-}}
+\item \code{plot(vl_enr)}: method to plot enrichment objects (containing variable, log2OR and padj)
 
+}}
 \examples{
 # Example run
 sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]

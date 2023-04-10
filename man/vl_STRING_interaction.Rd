@@ -2,6 +2,7 @@
 % Please edit documentation in R/STRINGtools.R
 \name{vl_STRING_interaction}
 \alias{vl_STRING_interaction}
+\alias{vl_STRING_get_network}
 \alias{plot.vl_STRING}
 \title{get STRING intrations DT}
 \usage{
@@ -16,6 +17,8 @@ vl_STRING_interaction(
   cex.label = 1,
   version = "10"
 )
+
+vl_STRING_get_network(obj, score_cutoff = 400, top_N = Inf)
 
 \method{plot}{vl_STRING}(obj, score_cutoff = 400, top_N = Inf)
 }
@@ -44,11 +47,13 @@ An igraph network
 \description{
 Extract interactions form STRIN db (Dmel only for now)
 }
-\section{Methods (by generic)}{
+\section{Functions}{
 \itemize{
-\item \code{plot}: Method to plot STRING interaction igraphs
-}}
+\item \code{vl_STRING_get_network()}: Method to extract igraph from vl_STRING object
 
+\item \code{plot(vl_STRING)}: Method to plot STRING interaction igraphs
+
+}}
 \examples{
 #USAGE
 symbols <- c("Pc", "Psc", "E(z)", "RpL10", "RpL11", "RpL12")

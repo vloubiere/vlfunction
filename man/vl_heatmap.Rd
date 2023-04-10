@@ -112,11 +112,11 @@ This function plots a heatmap and returns an S3 object of type vl_heatmap_obj wh
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{data.table}: Just a wrapper that collapses DT to a suitable matrix
+\item \code{vl_heatmap(data.table)}: Just a wrapper that collapses DT to a suitable matrix
 
-\item \code{matrix}: Default function using matrix as an input
+\item \code{vl_heatmap(matrix)}: Default function using matrix as an input
+
 }}
-
 \examples{
 # Create test matrix
 set.seed(1234)

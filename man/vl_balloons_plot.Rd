@@ -18,7 +18,8 @@ vl_balloons_plot(x, ...)
   main = NA,
   balloon_size_legend = NA,
   balloon_col_legend = NA,
-  legend_left_pos
+  legend_left_pos,
+  gap.axis = 0
 )
 }
 \arguments{
@@ -48,9 +49,9 @@ Starting from two matrices (dot size and colors, respectively), generates a ball
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{matrix}: matrix_method
-}}
+\item \code{vl_balloons_plot(matrix)}: matrix_method
 
+}}
 \examples{
 x <- matrix(-3:5, ncol= 3)
 cols <- matrix(-3:5, ncol= 3)

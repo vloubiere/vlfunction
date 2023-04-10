@@ -105,7 +105,7 @@ vl_boxplot.default <-
       # Plot tilted names
       if(tilt.names && !horizontal && xaxt!="n")
         vl_tilt_xaxis(if(is.null(at)) seq(box$names) else at,
-                      grconvertY(grconvertY(0, "npc", "inch")-grconvertY(par("mgp")[2], "lines", "inch"), "inch", "user"),
+                      grconvertY(grconvertY(0, "npc", "inch")-grconvertY(par("mgp")[2], "line", "inch"), "inch", "user"),
                       box$names,
                       srt= srt,
                       offset= 0.25,

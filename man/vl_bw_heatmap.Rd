@@ -63,9 +63,9 @@ Plots average tracks for a set bw files around (potentially) several sets of pea
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{plot}: Method to plot bw heatmaps
-}}
+\item \code{plot(vl_bw_heatmap)}: Method to plot bw heatmaps
 
+}}
 \examples{
 bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
 tracks <- c("/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", 

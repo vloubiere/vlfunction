@@ -42,11 +42,11 @@ Counts motif occurences in a set of regions
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{data.table}: Method to extract sequences from BSgenome
+\item \code{vl_motif_counts(data.table)}: Method to extract sequences from BSgenome
 
-\item \code{character}: Identify motifs in sequences
+\item \code{vl_motif_counts(character)}: Identify motifs in sequences
+
 }}
-
 \examples{
 # Example run
 sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]

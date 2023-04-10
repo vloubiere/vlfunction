@@ -85,6 +85,7 @@ vl_GO_enrich <- function(geneIDs,
   uni <- unique(uni[, .(ID, GO)]) # GOs IDs are reported for each evidence type
   if(!is.null(geneUniverse_IDs))
     uni <- uni[ID %chin% geneUniverse_IDs]
+  
   ###############################
   # Format objects and Compute enrichments
   ###############################
