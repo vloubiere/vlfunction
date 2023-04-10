@@ -20,6 +20,8 @@ vl_venn <- function(dat,
                     col= adjustcolor(c("cornflowerblue", "tomato", "gold"), 0.3), 
                     border= NA)
 {
+  stop("Function not working yet with more than two elements :(")
+  
   if(!is.list(dat))
     stop("dat should be a named list")
   if(is.null(names(dat)))
