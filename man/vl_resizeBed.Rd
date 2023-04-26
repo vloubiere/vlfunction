@@ -33,6 +33,8 @@ Resized DT ranges
 Resize a bed file starting from specified origin
 }
 \examples{
-bed <- data.table(seqnames= "chr2L", start= 10000, end= 12000, strand= c("+", "-"))
+bed <- data.table(seqnames= "chr2L", start= 10000, end= 12000, strand= c("+", "-", "*"))
 vl_resizeBed(bed, center= "start", upstream = 2000, downstream = 1000)[]
+vl_resizeBed(bed, center= "end", upstream = 2000, downstream = 1000)[]
+vl_resizeBed(bed, center= "center", upstream = 2000, downstream = 1000)[]
 }

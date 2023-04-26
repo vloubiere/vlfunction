@@ -4,16 +4,25 @@
 \alias{vl_covBed}
 \title{Compute bed coverage}
 \usage{
-vl_covBed(bins, bed)
+vl_covBed(a, b, ignore.strand = T)
 }
 \arguments{
-\item{bins}{bins for which enrichment has to be computed. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()}
+\item{a}{Ranges for which overlaps with b should be counted. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()}
 
-\item{bed}{bed file. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()}
+\item{b}{Ranges from which overlaps should be computed.}
+
+\item{ignore.strand}{Should strand be ignored? default= T, meaning all overlapping elements in 'b'  will be considered}
 }
 \value{
-numeric vector of the number of overlapping reads
+For each range in 'a', reports the number of overlapping features in 'b'
 }
 \description{
 For each bin, computes the number of overlapping reads from a bed file
+}
+\examples{
+a <- data.table(seqnames= c("chr2R"), start= 10000, end= 20000, strand= c("+", "-"))
+b <- data.table(seqnames= c("chr2R"), start= seq(10000, 19000, 1000), end= seq(11000, 20000, 1000), strand= rep(c("+", "-"), each= 10))
+vl_covBed(a, b)
+vl_covBed(a, b, ignore.strand = F)
+
 }

@@ -16,14 +16,17 @@ vl_closestBed(a, b = NULL, n = 1, min_dist = 0)
 \item{min_dist}{Min distance for closest feature}
 }
 \value{
-Return "a" coor and closeet "b" coordinates together with distance
+Return "a" coor and closest "b" coordinates and distance in respect to A (When a is on the - strand, “upstream” means b has a higher (start,stop).)
 }
 \description{
-For each line of a file, returns the closest lines in b
+For each line of a file, returns the closest lines in b.
+Similar to bedtools closest -a a.bed -b b.bed -D a
 }
 \examples{
 To all closest features
-vl_closestBed(vl_STARR_DSCP_top_peaks)
+a <- data.table(seqnames= c("chr2R"), start= c(10000, 20000, 30000), end= c(10000, 20000, 30000), strand= c("+", "-", "*"))
+b <- data.table(seqnames= c("chr2R"), start= c(11000, 21000, 31000), end= c(11000, 21000, 31000), strand= c("-", "*", "+"))
+vl_closestBed(a,b)[]
 To find closet yet non touching features
 vl_closestBed(vl_STARR_DSCP_top_peaks, min_dist = 1)
 To n closest features

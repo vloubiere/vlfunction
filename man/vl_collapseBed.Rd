@@ -4,7 +4,7 @@
 \alias{vl_collapseBed}
 \title{Collapse ranges with a certain min dist}
 \usage{
-vl_collapseBed(bed, mingap = 1, return_idx_only = F)
+vl_collapseBed(bed, mingap = 1, return_idx_only = F, ignore.strand = T)
 }
 \arguments{
 \item{bed}{bed file to be collapsed. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames','start', 'end' columns. see ?vl_importBed()}
@@ -12,6 +12,8 @@ vl_collapseBed(bed, mingap = 1, return_idx_only = F)
 \item{mingap}{min gap ditance for merging. default is 1 (that is, touching coordinates)}
 
 \item{return_idx_only}{If set to T, does not collapse regions but returns idx as an extra columns. default= F}
+
+\item{ignore.strand}{Should strand be ignored? default= T}
 }
 \value{
 Collapse coor data.table
@@ -20,8 +22,19 @@ Collapse coor data.table
 Collapse ranges with a certain min dist between them
 }
 \examples{
-bed <- data.table(seqnames= c("chr3L", "chr3L", "chr3L", "chr3L", "chr3L", "chr2R", "chr2R", "chr2R"),
-start= c(1000, 2000, 2100, 2200, 2500, 2000, 2500, 5000),
-end= c(1500, 2099, 2199, 2299, 3000, 3000, 3500, 6000))
-vl_collapseBed(bed, mingap= 1)
+gr <- GRanges(seqnames=Rle(paste("chr", c(1, 2, 1, 3), sep=""), c(1, 3, 2, 4)),
+ranges=IRanges(1:10, width=10:1, names=letters[1:10]),
+strand=Rle(strand(c("-", "+", "*", "+", "-")), c(1, 2, 2, 3, 2)))
+bed <- vl_importBed(gr)
+vl_collapseBed(bed)
+vl_collapseBed(bed, return_idx_only = T)
+vl_collapseBed(bed, ignore.strand = F)
+vl_collapseBed(bed, ignore.strand = F, return_idx_only = T)
+
+# Mingap
+bed[7, c("start", "end"):= .(start+10, end+10)]
+vl_collapseBed(bed)
+vl_collapseBed(bed, mingap = 10)
+vl_collapseBed(bed, return_idx_only = T)
+
 }

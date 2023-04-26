@@ -4,15 +4,17 @@
 \alias{vl_intersectBed}
 \title{Find closestBed regions}
 \usage{
-vl_intersectBed(a, b)
+vl_intersectBed(a, b, ignore.strand = T)
 }
 \arguments{
 \item{a}{Granges or data.table from which regions overlapping b have to be returned}
 
 \item{b}{Set of regions of interest}
+
+\item{ignore.strand}{Should strand be ignored? default= T}
 }
 \value{
-Return "a" coor and closeet "b" coordinates together with distance
+Return 'a' ranges that overlap with any range in 'b'
 }
 \description{
 Return regions "a" overlapping with regions "b"
@@ -21,4 +23,5 @@ Return regions "a" overlapping with regions "b"
 a <- data.table(seqnames= "chr2L", start= c(1000,2000), end= c(2000, 3000))
 b <- data.table(seqnames= "chr2L", start= 1500, end= 1600)
 vl_intersectBed(a, b) 
+
 }
