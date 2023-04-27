@@ -15,20 +15,15 @@ vl_binBSgenome <- function(genome,
                            steps_width= bins_width,
                            restrict_seqnames= NULL)
 {
-  if(steps_width>bins_width)
-    warning("steps_width>bins_width, meaning bins will not be contiguous")
   dat <- data.table::as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))))
-  dat <- dat[, .(seqnames, width)]
-  bins <- lapply(split(dat$width, dat$seqnames), function(x) {
-    coor <- seq(1, x, steps_width)
-    data.table(start= coor,
-               end= c(coor[-1]-1, x))[end>=start]
-  })
-  bins <- rbindlist(bins, idcol = "seqnames")
-  if(!is.null(restrict_seqnames))
-    bins <- bins[seqnames %in% restrict_seqnames]
-  setkeyv(bins, c("seqnames", "start", "end"))
-  return(bins)
+  # Restrict chromosomes
+  if(is.null(restrict_seqnames))
+    restrict_seqnames <- unique(dat$seqnames)
+  dat <- dat[as.character(seqnames) %chin% as.character(restrict_seqnames), .(seqnames, width)]
+  # Compute bins start and end
+  dat <- dat[, .(start= seq(1, width-bins_width, steps_width)), .(seqnames, width)]
+  dat[, end:= start+bins_width-1]
+  return(dat)
 }
 
 #' Generate control regions
