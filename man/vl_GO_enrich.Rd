@@ -8,6 +8,7 @@ vl_GO_enrich(
   geneIDs,
   geneUniverse_IDs = NULL,
   species,
+  select = c("BP", "CC", "MF"),
   plot = F,
   padj_cutoff = 1e-05,
   top_enrich = NA,
@@ -26,6 +27,8 @@ vl_GO_enrich(
 \item{geneUniverse_IDs}{Vector of FBgn IDs to which the analysis will be restricted. If NULL, uses all genes.}
 
 \item{species}{Chose between "Dm" and "Mm"}
+
+\item{select}{Which annotations should be considered? Default to c("BP", "CC", "MF")}
 
 \item{plot}{Plot result?}
 

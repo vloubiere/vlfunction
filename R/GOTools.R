@@ -5,6 +5,7 @@
 #' @param geneIDs A vector (barplot) of a list (clusters) of gene IDs
 #' @param geneUniverse_IDs Vector of FBgn IDs to which the analysis will be restricted. If NULL, uses all genes.
 #' @param species Chose between "Dm" and "Mm" 
+#' @param select Which annotations should be considered? Default to c("BP", "CC", "MF")
 #' @param plot Plot result?
 #' @param padj_cutoff cutoff for plotting
 #' @param top_enrich Show only n top enriched motifs
@@ -28,6 +29,7 @@
 vl_GO_enrich <- function(geneIDs,
                          geneUniverse_IDs= NULL,
                          species,
+                         select= c("BP", "CC", "MF"),
                          plot= F,
                          padj_cutoff= 1e-5,
                          top_enrich= NA,
@@ -69,7 +71,7 @@ vl_GO_enrich <- function(geneIDs,
   setnames(set, 
            c(keyType, "GOALL"), 
            c("ID", "GO"))
-  set <- unique(set[, .(ID, GO)]) # GOs IDs are reported for each evidence type
+  set <- unique(set[ONTOLOGYALL %in% select, .(ID, GO)]) # GOs IDs are reported for each evidence type
   set <- na.omit(set)
   if(!is.null(geneUniverse_IDs) && any(!set$ID %in% geneUniverse_IDs))
     stop("Some geneIDs are not included in the Universe!")
