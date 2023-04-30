@@ -4,6 +4,7 @@
 #'
 #' @param symbols vector of Dmel gene symbols
 #' @param species either "Dm" or "Mm"
+#' @param network The type of interactions to be used. Can be one of "full" (full functional, default) or "physical" if only physical interactions are to be considered
 #' @param plot Should the graph be plotted?
 #' @param score_cutoff If specified, only plot interactions with score>=cutoff
 #' @param top_N If specified, only plot top N interactions
@@ -26,6 +27,7 @@
 #' @export
 vl_STRING_interaction <- function(symbols,
                                   species,
+                                  network_type= "full",
                                   plot= T,
                                   score_cutoff= 400,
                                   top_N= Inf,
@@ -36,7 +38,11 @@ vl_STRING_interaction <- function(symbols,
 {
   if(any(size<0) | any(cex.label<0))
     stop("size and cex.label should all be positive!")
-  string_db <- STRINGdb::STRINGdb$new(version = version, species = switch(species, "Dm"= 7227, "Mm"= 10090), score_threshold = 0, input_directory = "")
+  string_db <- STRINGdb::STRINGdb$new(version = version, 
+                                      species = switch(species, "Dm"= 7227, "Mm"= 10090),
+                                      score_threshold = 0,
+                                      network_type = network_type,
+                                      input_directory = "")
   
   # Vertices
   V <- data.table(name= symbols,

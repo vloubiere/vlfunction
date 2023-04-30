@@ -9,6 +9,7 @@
 vl_STRING_interaction(
   symbols,
   species,
+  network_type = "full",
   plot = T,
   score_cutoff = 400,
   top_N = Inf,
@@ -40,6 +41,8 @@ vl_STRING_get_network(obj, score_cutoff = 400, top_N = Inf)
 \item{cex.label}{cex factor to be applied to correponding vertices labels}
 
 \item{version}{databse version. default= "10"}
+
+\item{network}{The type of interactions to be used. Can be one of "full" (full functional, default) or "physical" if only physical interactions are to be considered}
 }
 \value{
 An igraph network
