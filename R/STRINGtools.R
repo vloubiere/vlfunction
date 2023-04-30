@@ -36,6 +36,8 @@ vl_STRING_interaction <- function(symbols,
                                   cex.label= 1,
                                   version= "10")
 {
+  if(!network_type %in% c("full", "physical"))
+    stop("Network_type has to be one of 'full' (full functional annot) or 'physical' (physical interactions)")
   if(any(size<0) | any(cex.label<0))
     stop("size and cex.label should all be positive!")
   string_db <- STRINGdb::STRINGdb$new(version = version, 
@@ -115,7 +117,7 @@ plot.vl_STRING <- function(obj,
                               score_cutoff= score_cutoff, 
                               top_N= top_N)
   plot(.g, 
-       vertex.label.cex= V$cex.label,
+       vertex.label.cex= .g$V$cex.label,
        vertex.frame.color= NA)
   invisible(.g)
 }
