@@ -113,10 +113,11 @@ vl_fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
   return(invisible(c(x,y)))
 }
 
-#' Heatkey plot
+#' Plots a heatkey
 #'
 #' @param breaks Legend breaks
 #' @param col Color vectors with the same length as breaks
+#' @param continuous Are the breaks supposed to represent continuous variable? If not, draws discrete categories. Default= T
 #' @param left left pos
 #' @param top top pos
 #' @param height height
@@ -124,47 +125,75 @@ vl_fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
 #' @param main Title
 #' @param ticks.cex cex expansion factor for ticks labels
 #' @param main.cex cex expansion factor for legend title
+#' @param main Title
+#' @param border Border color. default= "black"
 #'
 #' @return Plots heatkey
 #' @export
 vl_heatkey <- function(breaks,
                        col,
-                       left= par("usr")[2], 
+                       continuous= T,
+                       left= par("usr")[2],
                        top= par("usr")[4],
                        height= strheight("M")*6,
                        width= strwidth("M"),
                        ticks.cex= 0.6,
                        main.cex= 1,
-                       main= NA)
+                       main= NA,
+                       border= "black")
 {
-  Cc <- circlize::colorRamp2(breaks = breaks, 
-                             colors = col)
-  mat <- matrix(Cc(rev(seq(min(breaks, na.rm= T), 
-                           max(breaks, na.rm= T), 
-                           length.out= 100))),
-                ncol= 1)
+  
+  mat <- if(continuous)
+  {
+    Cc <- circlize::colorRamp2(breaks = breaks, 
+                               colors = col)
+    matrix(Cc(rev(seq(min(breaks, na.rm= T), 
+                             max(breaks, na.rm= T), 
+                             length.out= 100))),
+                  ncol= 1)
+  }else
+    matrix(rev(col),
+           ncol= 1)
+  # Key
   rasterImage(mat, 
               xleft = left,
               ybottom = top-height, 
               xright = left+width, 
               ytop = top,
-              xpd= T)
-  ticks <- axisTicks(range(breaks, na.rm= T), 
-                     log= F, 
-                     nint = 4)
+              interpolate = continuous,
+              xpd= NA)
+  rect(xleft = left,
+       ybottom = top-height, 
+       xright = left+width, 
+       ytop = top,
+       border= border,
+       xpd= NA)
+  # labels
+  ticks <- if(continuous)
+  {
+    axisTicks(range(breaks, na.rm= T), 
+              log= F, 
+              nint = 4)
+  }else
+    breaks
+  # labels position
+  ypos <- if(continuous)
+    (top-height)+height*((ticks-min(breaks, na.rm= T))/diff(range(breaks, na.rm=T))) else
+      (top-height)+(height/length(breaks))*(seq(breaks)-0.5)
+  # Plot labels
   text(left+width,
-       (top-height)+height*((ticks-min(breaks, na.rm= T))/diff(range(breaks, na.rm=T))),
+       ypos,
        ticks,
        cex= ticks.cex,
        pos= 4,
-       xpd= T)
+       xpd= NA)
   text(left,
        top+strheight("M"),
        main,
        cex= main.cex,
        pos= 4, 
        offset= 0,
-       xpd= T)
+       xpd= NA)
 }
 
 #' Heatkey plot
@@ -247,4 +276,97 @@ vl_tilt_xaxis <- function(x,
        pos= pos,
        xpd= xpd,
        cex= cex)
+}
+
+#' Sets convenient par env
+#'
+#' @param bottom_strings Character vector. If specific, margin will be adjusted to afford longest string.
+#' @param left_strings Character vector. If specific, margin will be adjusted to afford longest string.
+#' @param top_strings Character vector. If specific, margin will be adjusted to afford longest string.
+#' @param right_strings Character vector. If specific, margin will be adjusted to afford longest string.
+#' @param mgp 
+#' @param las 
+#' @param tcl 
+#' @param ... 
+#'
+#' @return Improves default par env
+#' @export
+vl_par <- function(bottom_strings,
+                   left_strings,
+                   top_strings,
+                   right_strings,
+                   mgp= c(1.5, 0.5, 0), 
+                   las= 1, 
+                   tcl= -0.2, 
+                   ...)
+{
+  adj <- c(1.02, 0.82, 0.82, 0.42)
+  lab_dist <- grconvertY(1, "lines", "inch")*(mgp[2]+1)
+  if(!missing(bottom_strings))
+    adj[1] <- max(strwidth(bottom_strings, units = "inches"))+lab_dist
+  if(!missing(left_strings))
+    adj[2] <- max(strwidth(left_strings, units = "inches"))+lab_dist
+  if(!missing(top_strings))
+    adj[3] <- strheight("M", units = "inches")*max(nchar(bottom_strings))+lab_dist
+  if(!missing(right_strings))
+    adj[4] <- max(strwidth(right_strings, units = "inches"))+lab_dist
+  if(!identical(adj, c(1.02, 0.82, 0.82, 0.42)))
+    par(mai= adj, mgp= mgp, las= las, tcl= tcl, ...) else
+      par(mgp= mgp, las= las, tcl= tcl, ...)
+}
+
+#' Plot help
+#'
+#' @return Simply prints an help chart showing how margins work
+#' @export
+vl_plot_help <- function()
+{
+  par(mar= c(5,4,4,2), las= 1, mgp= c(2, 0.5, 0), tcl= -0.2, oma= c(4.2,4.2,4.2,4.2))
+  
+  plot(0,0,xlab='xlab', ylab= "ylab", frame= F)
+  
+  # Plot area
+  rect(grconvertX(0, "npc", "user"), grconvertY(0, "npc", "user"), grconvertX(1, "npc", "user"), grconvertY(1, "npc", "user"), border= "red", col= NA)
+  text(0, par("usr")[4]-strheight("M", cex= 2), labels = "Plot", col= "red", cex= 2)
+  arrows(0, 0.45, par("usr")[2], 0.45, length = 0.1, col= "red")
+  arrows(0, 0.45, par("usr")[1], 0.45, length = 0.1, col= "red")
+  text(0, 0.45, labels = "npc", col= "red", cex= 1, pos= 3, offset= 0.35)
+  arrows(0.45, 0, 0.45, par("usr")[4], length = 0.1, col= "red")
+  arrows(0.45, 0, 0.45, par("usr")[3], length = 0.1, col= "red")
+  text(0.45, 0, labels = "npc", col= "red", cex= 1, pos= 4, srt= -90)
+  
+  # Margins area
+  rect(grconvertX(0, "nfc", "user"), grconvertY(0, "nfc", "user"), grconvertX(1, "nfc", "user"), grconvertY(1, "nfc", "user"), border= "darkgreen", col= NA, xpd= NA)
+  text(0, grconvertY(1, "nfc", "user")-strheight("M", cex= 2), labels = "Margins", col= "darkgreen", cex= 2, xpd= NA)
+  text(0, grconvertY(1, "nfc", "user")-strheight("M", cex= 2), labels = "mar= c(5,4,4,2)", col= "darkgreen", xpd= NA, pos= 1, offset= 1)
+  text(grconvertX(0, "nfc", "user"), par("usr")[3]-diff(grconvertY(c(0,1), "lines", "user")), "line 1", co= "darkgreen", xpd= NA, pos= 4)
+  text(grconvertX(0, "nfc", "user"), par("usr")[3]-diff(grconvertY(c(0,2), "lines", "user")), "line 2", co= "darkgreen", xpd= NA, pos= 4)
+  text(grconvertX(0, "nfc", "user"), par("usr")[3]-diff(grconvertY(c(0,3), "lines", "user")), "line 3", co= "darkgreen", xpd= NA, pos= 4)
+  text(grconvertX(0, "nfc", "user"), par("usr")[3]-diff(grconvertY(c(0,4), "lines", "user")), "line 4", co= "darkgreen", xpd= NA, pos= 4)
+  
+  arrows(0, par("usr")[4]+strheight("M"), grconvertX(0, "nfc", "user"), par("usr")[4]+strheight("M"), length = 0.1, col= "darkgreen", xpd= NA)
+  arrows(0, par("usr")[4]+strheight("M"), grconvertX(1, "nfc", "user"), par("usr")[4]+strheight("M"), length = 0.1, col= "darkgreen", xpd= NA)
+  arrows(par("usr")[2]+strwidth("M"), 0, par("usr")[2]+strwidth("M"), grconvertY(0, "nfc", "user"), length = 0.1, col= "darkgreen", xpd= NA)
+  arrows(par("usr")[2]+strwidth("M"), 0, par("usr")[2]+strwidth("M"), grconvertY(1, "nfc", "user"), length = 0.1, col= "darkgreen", xpd= NA)
+  text(par("usr")[2], par("usr")[4]+strheight("M")*2, labels = "nfc", col= "darkgreen", cex= 1, pos= 2, xpd= NA, offset= 0)
+  text(par("usr")[2]+strwidth("M")*2, par("usr")[4], labels = "nfc", col= "darkgreen", cex= 1, pos= 1, xpd= NA, srt= -90)
+  
+  # Outter margins
+  xadj <- diff(grconvertX(c(0, .2), "lines", "user"))
+  yadj <- diff(grconvertY(c(0, .2), "lines", "user"))
+  rect(grconvertX(0, "ndc", "user")+xadj, grconvertY(0, "ndc", "user")+yadj, grconvertX(1, "ndc", "user")-xadj, grconvertY(1, "ndc", "user")-yadj, border= "blue", col= NA, xpd= NA, lwd= 2)
+  text(0, grconvertY(1, "ndc", "user")-strheight("M", cex= 2)-yadj, labels = "Outer margin area", col= "blue", cex= 2, xpd= NA)
+  text(0, grconvertY(1, "ndc", "user")-strheight("M", cex= 2)-yadj, labels = "oma= c(4,4,4,4)", col= "blue", xpd= NA, pos= 1, offset= 1)
+  text(grconvertX(0, "ndc", "user"), grconvertY(0, "nfc", "user")-diff(grconvertY(c(0,1), "lines", "user")), "line 1", co= "blue", xpd= NA, pos= 4)
+  text(grconvertX(0, "ndc", "user"), grconvertY(0, "nfc", "user")-diff(grconvertY(c(0,2), "lines", "user")), "line 2", co= "blue", xpd= NA, pos= 4)
+  text(grconvertX(0, "ndc", "user"), grconvertY(0, "nfc", "user")-diff(grconvertY(c(0,3), "lines", "user")), "line 3", co= "blue", xpd= NA, pos= 4)
+  
+  arrows(0, grconvertY(1, "nfc", "user")+strheight("M"), grconvertX(0, "ndc", "user")+xadj, grconvertY(1, "nfc", "user")+strheight("M"), length = 0.1, col= "blue", xpd= NA)
+  arrows(0, grconvertY(1, "nfc", "user")+strheight("M"), grconvertX(1, "ndc", "user")-xadj, grconvertY(1, "nfc", "user")+strwidth("M"), length = 0.1, col= "blue", xpd= NA)
+  arrows(grconvertX(1, "nfc", "user")+strwidth("M"), 0, grconvertX(1, "nfc", "user")+strwidth("M"), grconvertY(0, "ndc", "user")+yadj, length = 0.1, col= "blue", xpd= NA)
+  arrows(grconvertX(1, "nfc", "user")+strwidth("M"), 0, grconvertX(1, "nfc", "user")+strwidth("M"), grconvertY(1, "ndc", "user")-yadj, length = 0.1, col= "blue", xpd= NA)
+  text(grconvertX(1, "nfc", "user"), grconvertY(1, "nfc", "user")+strheight("M")*2, labels = "ndc", col= "blue", cex= 1, pos= 2, xpd= NA, offset= 0)
+  text(grconvertX(1, "nfc", "user")+strwidth("M")*2, grconvertY(1, "nfc", "user"), labels = "ndc", col= "blue", cex= 1, pos= 1, xpd= NA, srt= -90)
+  
+  text(grconvertX(0.5, "ndc", "user"), grconvertX(0, "nfc", "user")-diff(grconvertY(c(0,1), "lines", "user")), "par(mar= c(5,4,4,2), las= 1,\nmgp= c(2, 0.5, 0), tcl= -0.2,\noma= c(4,4,4,4))", xpd= NA, pos= 1, offset= 1.65)
 }

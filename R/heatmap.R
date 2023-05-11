@@ -112,8 +112,7 @@ vl_heatmap.matrix <- function(x,
     if(cluster_cols && length(levels(col_clusters))==1)
       col_clusters_col <- grDevices::gray.colors(cutree_cols) else
         col_clusters_col <- grDevices::gray.colors(length(unique(col_clusters)))
-        
-  
+
   #------------------------####
   # Init informative result DT
   #------------------------####

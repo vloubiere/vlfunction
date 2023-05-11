@@ -10,7 +10,7 @@ vl_bw_coverage_bins(
   set_IDs,
   upstream,
   downstream,
-  stranded,
+  ignore.strand,
   nbins,
   names
 )
@@ -26,7 +26,7 @@ vl_bw_coverage_bins(
 
 \item{downstream}{Downstream  extension of bed regions (centered on center)}
 
-\item{stranded}{Should the average track be stranded?}
+\item{ignore.strand}{Should the strand be ignored?}
 
 \item{nbins}{Number of bins spanning the extended regions. Default= 500}
 

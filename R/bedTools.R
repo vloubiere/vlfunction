@@ -192,8 +192,8 @@ vl_resizeBed <- function(bed,
   # Ext
   if(!ignore.strand && "strand" %in% names(bed))
   {
-    bed[strand=="-", c("start", "end"):= .(start-downstream, start+upstream)]
-    bed[strand!="-", c("start", "end"):= .(start-upstream, start+downstream)]
+    bed[, c("start", "end"):= .(start-ifelse(strand=="-", downstream, upstream),
+                                start+ifelse(strand=="-", upstream, downstream))]
   }else
     bed[, c("start", "end"):= .(start-upstream, start+downstream)]
 

@@ -12,7 +12,7 @@ vl_bw_average_track(
   tracks,
   upstream = 5000,
   downstream = 5000,
-  stranded = F,
+  ignore.strand = T,
   nbins = 101L,
   center_label = "Center",
   plot = T,
@@ -53,7 +53,7 @@ vl_bw_average_track(
 
 \item{downstream}{Downstream  extension of bed regions (centered on center)}
 
-\item{stranded}{Should the average track be stranded?}
+\item{ignore.strand}{Should the strand be ignored? Default= T}
 
 \item{nbins}{Number of bins spanning the extended regions. Default= 101L}
 
@@ -87,5 +87,5 @@ Plots average tracks for a set bw files around (potentially) several sets of pea
 bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
 sets <- c(rep("suhw", 100), rep("STARR", 1000))
 tracks <- c("../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", "../gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
-vl_bw_average_track(bed, tracks, plot= T, upstream = 1000, downstream = 1000, set_IDs = sets)
+vl_bw_average_track(bed, tracks= tracks, plot= T, upstream = 1000, downstream = 1000, set_IDs = sets)
 }

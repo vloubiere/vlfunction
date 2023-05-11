@@ -2,24 +2,28 @@
 % Please edit documentation in R/vlPlots.R
 \name{vl_heatkey}
 \alias{vl_heatkey}
-\title{Heatkey plot}
+\title{Plots a heatkey}
 \usage{
 vl_heatkey(
   breaks,
   col,
+  continuous = T,
   left = par("usr")[2],
   top = par("usr")[4],
   height = strheight("M") * 6,
   width = strwidth("M"),
   ticks.cex = 0.6,
   main.cex = 1,
-  main = NA
+  main = NA,
+  border = "black"
 )
 }
 \arguments{
 \item{breaks}{Legend breaks}
 
 \item{col}{Color vectors with the same length as breaks}
+
+\item{continuous}{Are the breaks supposed to represent continuous variable? If not, draws discrete categories. Default= T}
 
 \item{left}{left pos}
 
@@ -34,10 +38,12 @@ vl_heatkey(
 \item{main.cex}{cex expansion factor for legend title}
 
 \item{main}{Title}
+
+\item{border}{Border color. default= "black"}
 }
 \value{
 Plots heatkey
 }
 \description{
-Heatkey plot
+Plots a heatkey
 }

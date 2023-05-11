@@ -11,25 +11,21 @@ vl_bw_heatmap(
   set_IDs = 1,
   upstream = 5000,
   downstream = 5000,
-  stranded = F,
+  ignore.strand = T,
   nbins = 101L,
+  space = 20L,
   names = gsub(".bw$", "", basename(tracks)),
   plot = T,
+  center_label = "Center",
   col = c("blue", "yellow"),
-  order_cols = 1,
+  order_col = names[1],
   order_FUN = function(x) mean(x, na.rm = T),
   max_FUN = function(x) quantile(x, 0.995, na.rm = T),
-  na_col = "lightgrey"
+  na_col = "lightgrey",
+  cex.labels = 0.6
 )
 
-\method{plot}{vl_bw_heatmap}(
-  obj,
-  col = c("blue", "yellow"),
-  order_cols = 1,
-  order_FUN = function(x) mean(x, na.rm = T),
-  max_FUN = function(x) quantile(x, 0.995, na.rm = T),
-  na_col = "lightgrey"
-)
+\method{plot}{vl_bw_heatmap}(obj)
 }
 \arguments{
 \item{bed}{Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
@@ -42,7 +38,7 @@ vl_bw_heatmap(
 
 \item{downstream}{Downstream  extension of bed regions (centered on center)}
 
-\item{stranded}{Should the average track be stranded?}
+\item{ignore.strand}{Should the strande be ignored? Default= T}
 
 \item{nbins}{Number of bins spanning the extended regions. Default= 100}
 
@@ -52,11 +48,15 @@ vl_bw_heatmap(
 
 \item{col}{Vector of colors to be used for heatmap}
 
-\item{order_cols}{Numeric vector giving the indexes of the tracks to be used for ordering}
+\item{order_col}{Name of the track to be used for ordering}
 
 \item{order_FUN}{Function used to aggregated per region and order heatmap. default= function(x) mean(x, na.rm= T)}
 
 \item{max_FUN}{Function to be used for clipping. default= function(x) quantile(x, 0.995, na.rm= T). Using max -> no clipping}
+
+\item{cex.labels}{cex paramter for labels}
+
+\item{venter_label}{Label center heatmap}
 }
 \description{
 Plots average tracks for a set bw files around (potentially) several sets of peaks
@@ -71,7 +71,7 @@ bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
 tracks <- c("/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", 
 "/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
 set_IDs <- c(rep("suhw", 100), rep("STARR", 1000))
-test <- vl_bw_heatmap(bed, tracks, set_IDs= set_IDs, plot= T, upstream = 1000, downstream = 1000, order_FUN = mean, order_cols = 2)
+test <- vl_bw_heatmap(bed, tracks, set_IDs= set_IDs, plot= T, upstream = 1000, downstream = 1000, order_FUN = mean, order_col= 2)
 plot(test, order_col= 2)
 plot(test)
 }
