@@ -363,13 +363,13 @@ plot.vl_heatmap <- function(obj)
       left <- left+mar.lw*1.5
     top <- par("usr")[4]-mar.lh*2
     width <- mar.lw
-    vl_heatkey(breaks,
+    vl_heatkey(breaks = breaks,
                main.cex= 0.8,
-               col,
-               left,
-               top,
-               mar.lh*6,
-               mar.lw,
+               col= col,
+               left= left,
+               top= top,
+               height= mar.lh*6,
+               width= mar.lw,
                main= legend_title)
   }
 }

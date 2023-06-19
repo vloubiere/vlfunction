@@ -326,7 +326,7 @@ vl_bw_heatmap <- function(bed,
                           col= c("blue", "yellow"),
                           order_col= names[1],
                           order_FUN= function(x) mean(x, na.rm= T),
-                          max_FUN= function(x) quantile(x, 0.995, na.rm= T),
+                          max_FUN= function(x) quantile(x, 0.99, na.rm= T),
                           na_col= "lightgrey",
                           cex.labels= 0.6)
 {
@@ -395,7 +395,7 @@ plot.vl_bw_heatmap <- function(obj)
   # labels
   track.names.x <- seq(nbins/2, ncol(im)-nbins/2, length.out= length(levels(hm$name)))
   # Lines between sets
-  Sets.y <- c(0, cumsum(table(hm[region_ID==region_ID[1], set_IDs])))
+  Sets.y <- c(0, cumsum(table(hm[name==name[1] & bin.x==bin.x[1], set_IDs])))
   if(length(Sets.y)>2)
   {
     Sets.lines.y <- nrow(im)-Sets.y[-c(1, length(Sets.y))]

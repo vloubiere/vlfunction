@@ -73,7 +73,7 @@ vl_importBed.default <- function(bed)
     bed[, strand:= ifelse(strand %in% c("+", "-"), strand, "*")]
   }
   
-  if(any(bed[, start>end]))
+  if(any(bed[, start>end], na.rm= T))
     warning("bed file contains ranges with start>end -> malformed!")
    
   return(bed)
@@ -119,13 +119,13 @@ vl_closestBed <- function(a,
   # Closest
   idx <- b[a, {
     dist <- fcase(x.start>i.end, as.integer(x.start-i.end),
-                  x.end<i.start, as.integer(i.start-x.end), 
+                  x.end<i.start, as.integer(i.start-x.end),
                   default= 0L)
     sel <- between(dist, min_dist, unique(sort(dist[dist>=min_dist]))[n])
     .(.GRP, I= .I[sel], dist= dist[sel])
   }, .EACHI, on= "seqnames"]
   idx <- na.omit(idx)
-  idx[I==0, I:= NA]
+  idx[I==0, c("I", "dist"):= .(NA, NA)]
   
   # Return
   setnames(b, paste0(names(b), ".b"))

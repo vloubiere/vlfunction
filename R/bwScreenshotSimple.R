@@ -15,7 +15,7 @@
 #' @param min Min value for tracks. default to 0! (Setting to NA will compute min internally)
 #' @param max Max value for tracks (will be internally reset to 1 for non-bw files)
 #' @param names names for bw/bed files
-#' @param genome Genome used to plot transcripts. Available: "dm3", "dm6", "mm10"
+#' @param genome Genome used to plot transcripts. Available: "dm3", "dm6", "mm10", "hg19
 #' @param add Should only the tracks be added on top of existing plot? default= F
 #'
 #' @examples
@@ -79,11 +79,15 @@ vl_screenshot <- function(bed,
     coor <- round(seq(start, 
                       end, 
                       length.out= round(1000/nrow(bed))+1))
-    if(.GRP<.NGRP)  # Interpolate NAs between regions
-      coor <- append(coor, rep(NA, space))
     res <- data.table(start= coor[-length(coor)], 
                       end= coor[-1])
-    res[-1, start:= start+1]
+    res[.I>1 & end>start, start:= start+1]
+    if(.GRP<.NGRP)  # Except for last region, interpolate NAs
+      res <- rbind(res, 
+                   data.table(start= rep(NA, space),
+                              end= rep(NA, space)))
+    # Return
+    res
   }, .(seqnames, 
        regionID= rleid(seqnames, start, end))]
   bins[, bg:= bg_col]
@@ -190,6 +194,9 @@ vl_screenshot_transcripts <- function(obj, genome)
                                    Keytype= "FLYBASE"),
                        "mm10"= list(TxDb= TxDb.Mmusculus.UCSC.mm10.knownGene::TxDb.Mmusculus.UCSC.mm10.knownGene,
                                     org= org.Mm.eg.db::org.Mm.eg.db,
+                                    Keytype= "ENTREZID"),
+                       "hg19"= list(TxDb= TxDb.Hsapiens.UCSC.hg19.knownGene::TxDb.Hsapiens.UCSC.hg19.knownGene,
+                                    org= org.Hs.eg.db::org.Hs.eg.db,
                                     Keytype= "ENTREZID"))
   # Extract overlapping transcripts
   transcripts <- as.data.table(GenomicFeatures::transcripts(annotation$TxDb, c("TXNAME", "GENEID")))

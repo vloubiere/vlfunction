@@ -13,16 +13,21 @@
 vl_binBSgenome <- function(genome,
                            bins_width= 50L,
                            steps_width= bins_width,
-                           restrict_seqnames= NULL)
+                           restrict_seqnames)
 {
   dat <- data.table::as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))))
   # Restrict chromosomes
-  if(is.null(restrict_seqnames))
-    restrict_seqnames <- unique(dat$seqnames)
-  dat <- dat[as.character(seqnames) %chin% as.character(restrict_seqnames), .(seqnames, width)]
+  if(!missing(restrict_seqnames))
+  {
+    if(!any(dat$seqnames %in% restrict_seqnames))
+      stop(paste("Provided seqnames do not exist in", genome)) else
+        dat <- dat[as.character(seqnames) %chin% as.character(restrict_seqnames)]
+  }
+  dat <- dat[, .(seqnames, width)]
   # Compute bins start and end
-  dat <- dat[, .(start= seq(1, width-bins_width, steps_width)), .(seqnames, width)]
+  dat <- dat[, .(start= seq(1, max(c(width-bins_width, 1)), steps_width)), .(seqnames, width)]
   dat[, end:= start+bins_width-1]
+  dat[end>width, end:= width]
   return(dat)
 }
 
