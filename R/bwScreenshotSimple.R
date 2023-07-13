@@ -16,6 +16,7 @@
 #' @param max Max value for tracks (will be internally reset to 1 for non-bw files)
 #' @param names names for bw/bed files
 #' @param genome Genome used to plot transcripts. Available: "dm3", "dm6", "mm10", "hg19
+#' @param min_symbol Set the min size for symbols that will be plotted. Decreasing= more symbols. default= 1  
 #' @param add Should only the tracks be added on top of existing plot? default= F
 #'
 #' @examples
@@ -53,6 +54,7 @@ vl_screenshot <- function(bed,
                           min= 0,
                           max= as.numeric(NA),
                           genome,
+                          min_symbol= 1,
                           add= F)
 {
   bed <- vl_importBed(bed)
@@ -179,11 +181,11 @@ vl_screenshot <- function(bed,
   # Transcripts
   #----------------------------------#
   if(!missing(genome) & !add)
-    vl_screenshot_transcripts(obj= obj, genome= genome)
+    vl_screenshot_transcripts(obj= obj, genome= genome, min_symbol= min_symbol)
 }
 
 #' @export
-vl_screenshot_transcripts <- function(obj, genome)
+vl_screenshot_transcripts <- function(obj, genome, min_symbol= 1)
 {
   annotation <- switch(genome, 
                        "dm3"= list(TxDb= TxDb.Dmelanogaster.UCSC.dm3.ensGene::TxDb.Dmelanogaster.UCSC.dm3.ensGene,
@@ -218,7 +220,7 @@ vl_screenshot_transcripts <- function(obj, genome)
   exons <- exons[, .(TXNAME= unlist(TXNAME)), setdiff(names(exons), "TXNAME")]
   transcripts <- rbind(transcripts[, type:= "transcript"],
                        exons[, type:= "exon"], fill= T)
-  # Ovelrap with plotting regions
+  # Overlap with plotting regions
   overlap <- obj[!is.na(end), .(start= first(start), 
                                 end= last(end), 
                                 x0= first(x), 
@@ -265,7 +267,7 @@ vl_screenshot_transcripts <- function(obj, genome)
            xpd=T,
            lwd= pl$lwd,
            lend= 2)
-  pl <- pl[seg.x1-seg.x0>strwidth(symbol, cex= 0.8) & type=="transcript"]
+  pl <- pl[seg.x1-seg.x0>strwidth(symbol, cex= 0.8*min_symbol) & type=="transcript"]
   if(nrow(pl)>0)
     text(rowMeans(pl[, .(seg.x0, seg.x1)]),
          pl$y,

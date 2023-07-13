@@ -58,11 +58,14 @@ vl_importBed.default <- function(bed)
 {
   bed <- data.table::copy(bed)
   if("seqnames" %in% names(bed))
-    bed[, seqnames:= as.character(seqnames)]
+    bed[, seqnames:= as.character(seqnames)] else
+      stop("No seqnames column in bed file")
   if("start" %in% names(bed))
-    bed[, start:= as.integer(start)]
+    bed[, start:= as.integer(start)] else
+      stop("No start column in bed file")
   if("end" %in% names(bed))
-    bed[, end:= as.integer(end)]
+    bed[, end:= as.integer(end)]else
+      warning("No end column in bed file")
   if("name" %in% names(bed))
     bed[, name:= as.character(name)]
   if("score" %in% names(bed))
@@ -73,7 +76,7 @@ vl_importBed.default <- function(bed)
     bed[, strand:= ifelse(strand %in% c("+", "-"), strand, "*")]
   }
   
-  if(any(bed[, start>end], na.rm= T))
+  if(any(bed[, start>end], na.rm = T))
     warning("bed file contains ranges with start>end -> malformed!")
    
   return(bed)

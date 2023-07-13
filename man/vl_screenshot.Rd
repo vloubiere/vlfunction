@@ -19,6 +19,7 @@ vl_screenshot(
   min = 0,
   max = as.numeric(NA),
   genome,
+  min_symbol = 1,
   add = F
 )
 }
@@ -49,7 +50,9 @@ vl_screenshot(
 
 \item{max}{Max value for tracks (will be internally reset to 1 for non-bw files)}
 
-\item{genome}{Genome used to plot transcripts. Available: "dm3", "dm6", "mm10"}
+\item{genome}{Genome used to plot transcripts. Available: "dm3", "dm6", "mm10", "hg19}
+
+\item{min_symbol}{Set the min size for symbols that will be plotted. Decreasing= more symbols. default= 1}
 
 \item{add}{Should only the tracks be added on top of existing plot? default= F}
 

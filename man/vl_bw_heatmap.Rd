@@ -20,7 +20,7 @@ vl_bw_heatmap(
   col = c("blue", "yellow"),
   order_col = names[1],
   order_FUN = function(x) mean(x, na.rm = T),
-  max_FUN = function(x) quantile(x, 0.995, na.rm = T),
+  max_FUN = function(x) quantile(x, 0.99, na.rm = T),
   na_col = "lightgrey",
   cex.labels = 0.6
 )
