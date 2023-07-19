@@ -8,7 +8,7 @@ vl_binBSgenome(
   genome,
   bins_width = 50L,
   steps_width = bins_width,
-  restrict_seqnames
+  restrict_seqnames = NULL
 )
 }
 \arguments{

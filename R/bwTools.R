@@ -6,11 +6,19 @@
 #' @param genome BSgenome. "dm3", "dm6", "mm10"
 #' @param bins_width Bin size. default= 25L
 #' @param output Output bw file path
+#' @param restrict_seqnames If specified, bins are restricted to provided seqnames. Default= NULL
 #' @param scoreFUN A function to be applied to the score column before return
 #' @export
-vl_bw_merge <- function(tracks, genome, bins_width= 25L, output, scoreFUN= NULL)
+vl_bw_merge <- function(tracks,
+                        genome,
+                        bins_width= 25L,
+                        output,
+                        restrict_seqnames= NULL,
+                        scoreFUN= NULL)
 {
-  bw <- vl_binBSgenome(genome, bins_width = bins_width)
+  bw <- vl_binBSgenome(genome,
+                       bins_width = bins_width,
+                       restrict_seqnames = restrict_seqnames)
   bw[, score:= as.numeric(0)]
   # Compute value
   for(track in tracks)
@@ -120,6 +128,8 @@ vl_bw_coverage_bins <- function(bed,
     stop("tracks should be unique")
   if(!identical(unique(names), names))
     stop("names should be unique")
+  if(any(!file.exists(tracks)))
+    stop("Some provided bw file(s) do not exist")
   
   # Binning
   cols <- c("seqnames", "start", "end")

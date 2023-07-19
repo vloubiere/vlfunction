@@ -13,11 +13,11 @@
 vl_binBSgenome <- function(genome,
                            bins_width= 50L,
                            steps_width= bins_width,
-                           restrict_seqnames)
+                           restrict_seqnames= NULL)
 {
   dat <- data.table::as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))))
   # Restrict chromosomes
-  if(!missing(restrict_seqnames))
+  if(!is.null(restrict_seqnames))
   {
     if(!any(dat$seqnames %in% restrict_seqnames))
       stop(paste("Provided seqnames do not exist in", genome)) else

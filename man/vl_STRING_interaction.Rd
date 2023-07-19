@@ -2,70 +2,98 @@
 % Please edit documentation in R/STRINGtools.R
 \name{vl_STRING_interaction}
 \alias{vl_STRING_interaction}
-\alias{vl_STRING_get_network}
-\alias{plot.vl_STRING}
-\title{get STRING intrations DT}
+\title{get STRING interactions Object}
 \usage{
 vl_STRING_interaction(
+  STRINGdb,
   symbols,
-  species,
-  network_type = "full",
-  plot = T,
   score_cutoff = 400,
   top_N = Inf,
-  col = "tomato",
-  size = 10,
-  cex.label = 1,
-  version = "10"
+  remove_non_connected = T,
+  plot = T,
+  size = 15,
+  size2 = 15,
+  color = "tomato",
+  frame.color = "black",
+  frame.width = 1,
+  shape = "circle",
+  label = symbols,
+  label.family = "serif",
+  label.font = 1,
+  label.cex = 1,
+  label.dist = 0,
+  label.degree = -pi/4,
+  label.color = "black"
 )
-
-vl_STRING_get_network(obj, score_cutoff = 400, top_N = Inf)
-
-\method{plot}{vl_STRING}(obj, score_cutoff = 400, top_N = Inf)
 }
 \arguments{
+\item{STRINGdb}{A STRINGdb object. See ?vl_STRING_getDB}
+
 \item{symbols}{vector of Dmel gene symbols}
-
-\item{species}{either "Dm" or "Mm"}
-
-\item{plot}{Should the graph be plotted?}
 
 \item{score_cutoff}{If specified, only plot interactions with score>=cutoff}
 
 \item{top_N}{If specified, only plot top N interactions}
 
-\item{col}{For each gene symbol, the color of corresponding vertice (i.e, tomato for up, cornflowerblue for down)}
+\item{remove_non_connected}{Remove proteins that have 0 connections. Default= T}
 
-\item{size}{For each gene symbol, the size of corresponding vertice (i.e, absolute FC)}
+\item{plot}{Should the graph be plotted?}
 
-\item{cex.label}{cex factor to be applied to correponding vertices labels}
+\item{size}{Vertex size. Default= 15}
 
-\item{version}{databse version. default= "10"}
+\item{size2}{Vertex size2 for certain shapes. Default= 15}
 
-\item{network}{The type of interactions to be used. Can be one of "full" (full functional, default) or "physical" if only physical interactions are to be considered}
+\item{color}{Vertex color. Default= "tomato"}
+
+\item{frame.color}{Frame color. Default= "black"}
+
+\item{frame.width}{Frame width. Default= 1}
+
+\item{shape}{Shape of the vertex. Default= "circle"}
+
+\item{label}{Label of the vertex. Default= symbols}
+
+\item{label.family}{Default= "serif"}
+
+\item{label.font}{Default= 1}
+
+\item{label.cex}{Default= 1}
+
+\item{label.dist}{The distance of the label from the center of the vertex. If it is 0 then the label is centered on the vertex. If it is 1 then the label is displayed beside the vertex. Default= 0}
+
+\item{label.degree}{It defines the position of the vertex labels, relative to the center of the vertices. It is interpreted as an angle in radian. Default= -pi/4.}
+
+\item{label.color}{Default= "black"}
 }
 \value{
-An igraph network
+An igraph network. See ?plot.igraph()
 }
 \description{
-Extract interactions form STRIN db (Dmel only for now)
+Extract interactions form STRINGdb
 }
-\section{Functions}{
-\itemize{
-\item \code{vl_STRING_get_network()}: Method to extract igraph from vl_STRING object
-
-\item \code{plot(vl_STRING)}: Method to plot STRING interaction igraphs
-
-}}
 \examples{
-#USAGE
+# Build database
+db <- vl_STRING_getDB(species= "Dm", network_type = "full", version= "11")
+
+# Extract interactions
 symbols <- c("Pc", "Psc", "E(z)", "RpL10", "RpL11", "RpL12")
-net <- vl_STRING_interaction(symbols, species= "Dm", col= vl_palette_few_categ(6))
-E <- igraph::as_data_frame(net, what= "edges") 
-V <- igraph::as_data_frame(net, what= "vertices") 
-V$color <- grey.colors(6)
-.g <- igraph::graph_from_data_frame(d = E, 
-                                    vertices = V,
-                                    directed = F)
-plot(.g)
+vl_STRING_interaction(STRINGdb = db,
+                      symbols = symbols)
+.i <- vl_STRING_interaction(STRINGdb = db,
+                            symbols = symbols,
+                            plot= F)
+plot(.i)
+
+#Modify ploting parameters
+print(paste0("param= ", paste0(colnames(igraph::as_data_frame(.i, what= "vertices")), collapse = ", ")))
+igraph::V(.i)$color <- "cornflowerblue"
+igraph::V(.i)$label.cex <- c(1,1,2,2,3,3)
+plot(.i)
+
+
+.i$V$color <- "cornflowerblue"
+.i$V$label.cex <- seq(1, 3, length.out= 6)
+.i$V$size <- seq(10, 60, 10)
+plot(.i)
+
 }

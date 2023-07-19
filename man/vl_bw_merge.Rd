@@ -4,7 +4,14 @@
 \alias{vl_bw_merge}
 \title{Merge several bigwig files into 1}
 \usage{
-vl_bw_merge(tracks, genome, bins_width = 25L, output, scoreFUN = NULL)
+vl_bw_merge(
+  tracks,
+  genome,
+  bins_width = 25L,
+  output,
+  restrict_seqnames = NULL,
+  scoreFUN = NULL
+)
 }
 \arguments{
 \item{genome}{BSgenome. "dm3", "dm6", "mm10"}
@@ -12,6 +19,8 @@ vl_bw_merge(tracks, genome, bins_width = 25L, output, scoreFUN = NULL)
 \item{bins_width}{Bin size. default= 25L}
 
 \item{output}{Output bw file path}
+
+\item{restrict_seqnames}{If specified, bins are restricted to provided seqnames. Default= NULL}
 
 \item{scoreFUN}{A function to be applied to the score column before return}
 
