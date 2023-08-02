@@ -22,8 +22,10 @@
 #' @param na_col Color for na values. Default= "lightgrey"
 #' @param main Title. Default= NA
 #' @param legend_title Character to plot as title legend
+#' @param legend.cex cex expansion factor applying to the whole legend
 #' @param show_rownames Plot row names? Default= T
 #' @param show_colnames Plot col names? Default= T
+#' @param tilt_colnames Should colnames be tilted? default= F
 #' @param show_row_clusters Plot row cluster names/lines?
 #' @param show_col_clusters Plot col cluster names/lines?
 #' @param show_row_dendrogram Plot row dendrogram?
@@ -85,8 +87,10 @@ vl_heatmap.matrix <- function(x,
                               na_col= "lightgrey",
                               main= NA,
                               legend_title= NA,
+                              legend.cex= 1,
                               show_rownames= TRUE,
                               show_colnames= TRUE,
+                              tilt_colnames= FALSE,
                               show_row_clusters= length(unique(rows$cl))>1,
                               show_col_clusters= length(unique(cols$cl))>1,
                               show_row_dendrogram= TRUE,
@@ -283,13 +287,13 @@ plot.vl_heatmap <- function(obj)
          rleft+mar.lw,
          pos$y1,
          col= pos$col,
-         xpd= T,
+         xpd= NA,
          border= NA)
     text(rleft+mar.lw/2,
          rowMeans(pos[, .(y0, y1)]),
          pos$cl,
          srt= 270,
-         xpd= T,
+         xpd= NA,
          adj= 0.5)
   }
   if(show_col_clusters)
@@ -304,12 +308,12 @@ plot.vl_heatmap <- function(obj)
          pos$x1,
          ctop+mar.lh,
          col= pos$col,
-         xpd= T,
+         xpd= NA,
          border= NA)
     text(rowMeans(pos[, .(x0, x1)]),
          ctop+mar.lh/2,
          pos$cl,
-         xpd= T,
+         xpd= NA,
          adj= 0.5)
   }
 
@@ -327,7 +331,7 @@ plot.vl_heatmap <- function(obj)
              par("usr")[4]-rdend$x+0.5,
              rdend$yend/diff(range(rdend[,c(y, yend)]))*mar.lw*1.5+d.left,
              par("usr")[4]-rdend$xend+0.5,
-             xpd= T)
+             xpd= NA)
   }
   if(show_col_dendrogram & !is.null(cdend))
   {
@@ -338,15 +342,25 @@ plot.vl_heatmap <- function(obj)
              cdend$y/diff(range(cdend[,c(y, yend)]))*mar.lh*1.5+d.bot,
              cdend$xend,
              cdend$yend/diff(range(cdend[,c(y, yend)]))*mar.lh*1.5+d.bot,
-             xpd= T)
+             xpd= NA)
   }
 
   # Plot axes
   if(show_colnames)
-    axis(1,
-         at= seq(ncol(x)),
-         labels = colnames(x),
-         lwd= 0)
+  {
+    if(tilt_colnames)
+      vl_tilt_xaxis(x = seq(ncol(x)),
+                    y = grconvertY(grconvertY(0, "npc", "inch")-grconvertY(par("mgp")[2], "line", "inch"), "inch", "user"),
+                    labels = colnames(x),
+                    offset= 0.25*par("mgp")[2],
+                    pos= 2,
+                    xpd= NA,
+                    cex= par("cex.axis")) else
+                      axis(1,
+                           at= seq(ncol(x)),
+                           labels = colnames(x),
+                           lwd= 0)
+  }
   if(show_rownames)
     axis(2,
          at= seq(nrow(x)),
@@ -361,15 +375,15 @@ plot.vl_heatmap <- function(obj)
       left <- left+mar.lw*1
     if(show_row_dendrogram && !is.null(rdend))
       left <- left+mar.lw*1.5
-    top <- par("usr")[4]-mar.lh*2
-    width <- mar.lw
+    top <- par("usr")[4]-mar.lh
     vl_heatkey(breaks = breaks,
-               main.cex= 0.8,
                col= col,
                left= left,
                top= top,
-               height= mar.lh*6,
-               width= mar.lw,
+               height= mar.lh*6*legend.cex,
+               width= mar.lw*legend.cex,
+               ticks.cex= 0.6*legend.cex,
+               main.cex= 0.8*legend.cex,
                main= legend_title)
   }
 }

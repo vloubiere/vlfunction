@@ -26,19 +26,4 @@ Can be used with the ?vl_motif_counts() function to count motifs
 \description{
 Contains 13899 motifs usable for motif enrichments in Dmel
 }
-\examples{
-table was generated this way:
-load("/groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/TF_clusters_PWMs.RData")
-vl_Dmel_motifs_DB_full <- data.table(motif_ID= TF_clusters_PWMs$metadata$motif_name,
-FBgn= TF_clusters_PWMs$metadata$FBgn,
-Dmel= TF_clusters_PWMs$metadata$Dmel,
-motif_cluster= TF_clusters_PWMs$metadata$Motif_cluster_name,
-collection= TF_clusters_PWMs$metadata$X..motif_collection_name,
-collection_version= TF_clusters_PWMs$metadata$motif_collection_version,
-species= TF_clusters_PWMs$metadata$Species)
-vl_Dmel_motifs_DB_full$pwms_log_odds <- as.list(TF_clusters_PWMs$All_pwms_log_odds[match(vl_Dmel_motifs_DB_full$motif_ID, TFBSTools::name(TF_clusters_PWMs$All_pwms_log_odds))])
-vl_Dmel_motifs_DB_full$pwms_perc <- as.list(TF_clusters_PWMs$All_pwms_perc[match(vl_Dmel_motifs_DB_full$motif_ID, TFBSTools::name(TF_clusters_PWMs$All_pwms_perc))])
-save(vl_Dmel_motifs_DB_full, 
-file= "/groups/stark/vloubiere/vlfunction/data/vl_Dmel_motifs_DB_full.RData")
-}
 \keyword{datasets}

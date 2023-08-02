@@ -4,7 +4,7 @@
 \alias{vl_STRING_getDB}
 \title{Build STRING db}
 \usage{
-vl_STRING_getDB(species, network_type = "full", version = "10")
+vl_STRING_getDB(species, network_type = "full", version = "11.0")
 }
 \arguments{
 \item{species}{either "Dm" or "Mm"}

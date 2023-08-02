@@ -6,13 +6,13 @@
 #' @export
 vl_STRING_getDB <- function(species,
                             network_type= "full",
-                            version= "10")
+                            version= "11.0")
 {
   if(!network_type %in% c("full", "physical"))
     stop("Network_type has to be one of 'full' (full functional annot) or 'physical' (physical interactions)")
   
   STRINGdb::STRINGdb$new(version = version, 
-                         species = switch(species, "Dm"= 7227, "Mm"= 10090),
+                         species = switch(species, "Dm"= 7227, "Mm"= 10090, "Hs"= 9606),
                          score_threshold = 0,
                          network_type = network_type,
                          input_directory = "")
@@ -41,6 +41,7 @@ vl_STRING_getDB <- function(species,
 #' @param label.dist The distance of the label from the center of the vertex. If it is 0 then the label is centered on the vertex. If it is 1 then the label is displayed beside the vertex. Default= 0
 #' @param label.degree It defines the position of the vertex labels, relative to the center of the vertices. It is interpreted as an angle in radian. Default= -pi/4.
 #' @param label.color Default= "black"
+#' @param ... Extra arguments to be passed to plot.igraph
 #' @examples
 #' # Build database
 #' db <- vl_STRING_getDB(species= "Dm", network_type = "full", version= "11")
@@ -66,7 +67,7 @@ vl_STRING_getDB <- function(species,
 #' .i$V$size <- seq(10, 60, 10)
 #' plot(.i)
 #' 
-#' @return An igraph network. See ?plot.igraph()
+#' @return a vl_STRING object that can easily be turned into an igraph object
 #' @export
 vl_STRING_interaction <- function(STRINGdb,
                                   symbols,
@@ -86,7 +87,8 @@ vl_STRING_interaction <- function(STRINGdb,
                                   label.cex= 1,
                                   label.dist= 0,
                                   label.degree= -pi/4,
-                                  label.color= "black")
+                                  label.color= "black",
+                                  ...)
 {
   # Vertices
   V <- data.table(symbol= symbols,
@@ -129,16 +131,34 @@ vl_STRING_interaction <- function(STRINGdb,
     E <- E[from %in% V$symbol & to %in% V$symbol]
   }
   
-  # Make igraph object
-  .i <- igraph::graph_from_data_frame(d = E, 
-                                      vertices = V,
-                                      directed = F)
+  # Make Object
+  obj <- list(V= V, 
+              E= E)
+  class(obj) <- c("vl_STRING", "list")
   
   # PLOT
   if(plot)
-    plot(.i)
+    plot(obj, ...)
   
   # Return
-  invisible(.i)
+  invisible(obj)
+}
+
+#' @describeIn vl_STRING_interaction Transforms a vl_STRING object into regular igraph
+#' @export
+vl_STRING_to_igraph <- function(obj, directed= F)
+{
+  .i <- igraph::graph_from_data_frame(d = obj$E, 
+                                      vertices = obj$V,
+                                      directed = directed)
+  return(.i)
+}
+
+#' @describeIn vl_STRING_interaction Method to plot STRING interaction igraphs
+#' @export
+plot.vl_STRING <- function(obj, ...)
+{
+  .i <- vl_STRING_to_igraph(obj)
+  plot(.i, ...)
 }
 

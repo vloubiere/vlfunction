@@ -2,6 +2,8 @@
 % Please edit documentation in R/STRINGtools.R
 \name{vl_STRING_interaction}
 \alias{vl_STRING_interaction}
+\alias{vl_STRING_to_igraph}
+\alias{plot.vl_STRING}
 \title{get STRING interactions Object}
 \usage{
 vl_STRING_interaction(
@@ -23,8 +25,13 @@ vl_STRING_interaction(
   label.cex = 1,
   label.dist = 0,
   label.degree = -pi/4,
-  label.color = "black"
+  label.color = "black",
+  ...
 )
+
+vl_STRING_to_igraph(obj, directed = F)
+
+\method{plot}{vl_STRING}(obj, ...)
 }
 \arguments{
 \item{STRINGdb}{A STRINGdb object. See ?vl_STRING_getDB}
@@ -64,13 +71,22 @@ vl_STRING_interaction(
 \item{label.degree}{It defines the position of the vertex labels, relative to the center of the vertices. It is interpreted as an angle in radian. Default= -pi/4.}
 
 \item{label.color}{Default= "black"}
+
+\item{...}{Extra arguments to be passed to plot.igraph}
 }
 \value{
-An igraph network. See ?plot.igraph()
+a vl_STRING object that can easily be turned into an igraph object
 }
 \description{
 Extract interactions form STRINGdb
 }
+\section{Functions}{
+\itemize{
+\item \code{vl_STRING_to_igraph()}: Transforms a vl_STRING object into regular igraph
+
+\item \code{plot(vl_STRING)}: Method to plot STRING interaction igraphs
+
+}}
 \examples{
 # Build database
 db <- vl_STRING_getDB(species= "Dm", network_type = "full", version= "11")

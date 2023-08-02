@@ -31,8 +31,10 @@ vl_heatmap(x, ...)
   na_col = "lightgrey",
   main = NA,
   legend_title = NA,
+  legend.cex = 1,
   show_rownames = TRUE,
   show_colnames = TRUE,
+  tilt_colnames = FALSE,
   show_row_clusters = length(unique(rows$cl)) > 1,
   show_col_clusters = length(unique(cols$cl)) > 1,
   show_row_dendrogram = TRUE,
@@ -84,9 +86,13 @@ vl_heatmap(x, ...)
 
 \item{legend_title}{Character to plot as title legend}
 
+\item{legend.cex}{cex expansion factor applying to the whole legend}
+
 \item{show_rownames}{Plot row names? Default= T}
 
 \item{show_colnames}{Plot col names? Default= T}
+
+\item{tilt_colnames}{Should colnames be tilted? default= F}
 
 \item{show_row_clusters}{Plot row cluster names/lines?}
 

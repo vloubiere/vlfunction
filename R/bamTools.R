@@ -20,8 +20,27 @@ vl_importBam <- function(file,
     stop("Selected columns could not be renamed because length(sel) != length(col.names)")
   }
   param <- Rsamtools::ScanBamParam(what= sel)
-  .c <- Rsamtools::scanBam(bam, param = param)[[1]]
+  .c <- Rsamtools::scanBam(file, param = param)[[1]]
   .c <- as.data.table(.c)
   setnames(.c, col.names)
   return(.c)
+}
+
+#' Title
+#'
+#' Uses samtools to import a bam file
+#' @param file bam file path
+#' @param extra_arg Extra arg to be passed to samtools view
+#'
+#' @return Imported bam file
+#' @export
+#'
+#' @examples
+#' vl_importBamRaw("path/to/bam/file.bam")
+vl_importBamRaw <- function(file, extra_arg)
+{
+  cmd <- "module load build-env/2020; module load samtools/1.9-foss-2018b; samtools view"
+  if(!missing(extra_arg))
+    cmd <- paste(cmd, extra_arg)
+  fread(cmd= paste(cmd, file), fill= T)
 }

@@ -370,3 +370,34 @@ vl_plot_help <- function()
   
   text(grconvertX(0.5, "ndc", "user"), grconvertX(0, "nfc", "user")-diff(grconvertY(c(0,1), "lines", "user")), "par(mar= c(5,4,4,2), las= 1,\nmgp= c(2, 0.5, 0), tcl= -0.2,\noma= c(4,4,4,4))", xpd= NA, pos= 1, offset= 1.65)
 }
+
+#' Title
+#'
+#' @param x 
+#' @param rsquare 
+#' @param adjusted Is the Rsq adjusted?
+#' @param bty Box around the legend? default= F
+#' @param digits Rounding digits. Default= 2 
+#' @param ... 
+#'
+#' @return Add Rsquare value as a legend on aplot
+#' @export
+#'
+#' @examples
+#' plot(1,1)
+#' vl_plot_R2(rsquare= 0.01)
+#' vl_plot_R2("topright", rsquare= 0.01, adjusted= T)
+vl_plot_R2 <- function(x= "topleft", rsquare, adjusted= F, bty= "n", digits= 2, ...)
+{
+  if(adjusted)
+  {
+    legend(x, 
+           legend= bquote(Adj.~R^2 == .(round(rsquare, digits))),
+           bty= bty, ...)
+  }else
+  {
+    legend(x, 
+           legend= bquote(R^2 == .(round(rsquare, digits))),
+           bty= bty, ...)
+  }
+}
