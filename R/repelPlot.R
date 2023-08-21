@@ -13,7 +13,7 @@
 #' @param box_padding_y 
 #' @param point_padding_x 
 #' @param point_padding_y 
-#' @param ... 
+#' @param ... Extra arguments to be passed to plot()
 #'
 #' @return Plots a ggrepel-like scatterplot. Returns plotting object as data.table
 #' @export
