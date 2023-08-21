@@ -4,6 +4,7 @@
 #' @param y see ?plot()
 #' @param labels labels to be plotted
 #' @param label.cex Expansion factor for labels 
+#' @param label.col Labels color
 #' @param xlim Scatterplot xlim. default to range(x)
 #' @param ylim Scatterplot xlim. default to range(y)
 #' @param rect.draw Draw rectangle?
@@ -30,6 +31,7 @@ vl_repelLabels <- function(x,
                            y,
                            labels,
                            label.cex= 0.7,
+                           label.col= "black",
                            xlim= range(x),
                            ylim= range(y),
                            rect.draw= T,
@@ -59,6 +61,7 @@ vl_repelLabels <- function(x,
                                               transform_coord = "native")
   coords <- as.data.table(coords)
   coords[, rect.col:= rect.col]
+  coords[, label.col:= label.col]
   # Compute clipping masks for segments
   coords[, clip_x1:= par("usr")[1]]
   coords[, clip_x2:= par("usr")[2]]
@@ -79,7 +82,7 @@ vl_repelLabels <- function(x,
   if(rect.draw)
     with(coords, rect(x1_box, y1_box, x2_box, y2_box, col = rect.col, border= NA))
   # Plot labels
-  with(coords, text(x, y, labels = label, cex = 0.7))
+  with(coords, text(x, y, labels = label, col = label.col, cex = 0.7))
   # Return object
   invisible(coords)
 }
