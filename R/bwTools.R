@@ -33,7 +33,7 @@ vl_bw_merge <- function(tracks,
   bw <- bw[, .(start= start[1], end= end[.N]), .(seqnames, data.table::rleid(score), score)]
   # Format GRanges
   .g <- GenomicRanges::GRanges(bw)
-  BS <- getBSgenome(genome)
+  BS <- BSgenome::getBSgenome(genome)
   GenomeInfoDb::seqlevels(.g) <- GenomeInfoDb::seqlevels(BS)
   GenomeInfoDb::seqlengths(.g) <- GenomeInfoDb::seqlengths(BS)
   # save

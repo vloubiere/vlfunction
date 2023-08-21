@@ -15,7 +15,8 @@ vl_binBSgenome <- function(genome,
                            steps_width= bins_width,
                            restrict_seqnames= NULL)
 {
-  dat <- data.table::as.data.table(GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))))
+  dat <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome)))
+  dat <- data.table::as.data.table(dat)
   # Restrict chromosomes
   if(!is.null(restrict_seqnames))
   {
