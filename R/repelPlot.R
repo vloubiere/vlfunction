@@ -9,11 +9,13 @@
 #' @param ylim Scatterplot xlim. default to range(y)
 #' @param rect.draw Draw rectangle?
 #' @param rect.col Rectangles color
-#' @param points_size 
-#' @param box_padding_x 
-#' @param box_padding_y 
-#' @param point_padding_x 
-#' @param point_padding_y 
+#' @param points_size (numeric) approximate size of points in npc relative cooordinates. Can be small, is used in conjunction with "point_padding" options
+#' @param box_padding_x (numeric) extra margin around text bounding boxes
+#' @param box_padding_y (numeric) extra margin around text bounding boxes
+#' @param point_padding_x (numeric) extra margin around data points
+#' @param point_padding_y (numeric) extra margin around data points
+#' @param force_push (numeric) magnitude of the push force (defaults to 1e-5)
+#' @param force_pull (numeric) magnitude of the pull force (defaults to 1e-5)
 #' @param ... Extra arguments to be passed to plot()
 #'
 #' @return Plots a ggrepel-like scatterplot. Returns plotting object as data.table
@@ -41,7 +43,8 @@ vl_repelLabels <- function(x,
                            box_padding_y = 0,
                            point_padding_x = 0,
                            point_padding_y = 0,
-                           ...)
+                           force_push= 1e-5,
+                           force_pull= 1e-5)
 {
   plot(x, y, ...)
   # USe latticetools to compute positions
@@ -56,8 +59,8 @@ vl_repelLabels <- function(x,
                                               box_padding_y = box_padding_y,
                                               point_padding_x = point_padding_x,
                                               point_padding_y = point_padding_y,
-                                              force_push = 1e-05,
-                                              force_pull = 1e-05,
+                                              force_push = force_push,
+                                              force_pull = force_pull,
                                               transform_coord = "native")
   coords <- as.data.table(coords)
   coords[, rect.col:= rect.col]
