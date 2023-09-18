@@ -374,7 +374,8 @@ vl_plot_help <- function()
 #' Title
 #'
 #' @param x 
-#' @param rsquare 
+#' @param value Rsqaure or r value
+#' @param type Type of value. one between "rsq" and "pcc"
 #' @param adjusted Is the Rsq adjusted?
 #' @param bty Box around the legend? default= F
 #' @param digits Rounding digits. Default= 2 
@@ -385,19 +386,38 @@ vl_plot_help <- function()
 #'
 #' @examples
 #' plot(1,1)
-#' vl_plot_R2(rsquare= 0.01)
-#' vl_plot_R2("topright", rsquare= 0.01, adjusted= T)
-vl_plot_R2 <- function(x= "topleft", rsquare, adjusted= F, bty= "n", digits= 2, ...)
+#' vl_plot_R2(value= 0.01)
+#' vl_plot_R2("topright", value= 0.01, adjusted= T)
+vl_plot_coeff <- function(x= "topleft",
+                          value,
+                          type= "rsq",
+                          adjusted= F,
+                          bty= "n",
+                          digits= 2,
+                          ...)
 {
-  if(adjusted)
+  if(!type %in% c("pcc", "rsq"))
+    stop("type has to be one of 'rsq', 'pcc'")
+  if(type=="rsq")
   {
-    legend(x, 
-           legend= bquote(Adj.~R^2 == .(round(rsquare, digits))),
-           bty= bty, ...)
-  }else
-  {
-    legend(x, 
-           legend= bquote(R^2 == .(round(rsquare, digits))),
-           bty= bty, ...)
+    if(adjusted)
+    {
+      legend(x, 
+             legend= bquote(Adj.~R^2 == .(round(value, digits))),
+             bty= bty,
+             ...)
+    }else
+    {
+      legend(x, 
+             legend= bquote(R^2 == .(round(value, digits))),
+             bty= bty,
+             ...)
+    }
   }
+  if(type=="pcc")
+    legend(x, 
+           legend= bquote(italic(r) == .(round(value, digits))),
+           bty= bty,
+           ...)
+  
 }

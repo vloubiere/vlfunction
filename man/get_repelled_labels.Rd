@@ -8,7 +8,6 @@ get_repelled_labels(
   x,
   y,
   labels,
-  label.sel = NULL,
   cex = 1,
   xlim = c(0, 1),
   ylim = c(0, 1),
@@ -26,8 +25,6 @@ get_repelled_labels(
 \item{x, y}{(numeric) vectors representing x and y coordinates of points}
 
 \item{labels}{(character) vector of labels}
-
-\item{label.sel}{Numeric or boolean vector indicating which labels should be plotted}
 
 \item{cex}{(numeric) size of text labels}
 

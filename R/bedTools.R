@@ -127,7 +127,7 @@ vl_closestBed <- function(a,
     sel <- between(dist, min_dist, unique(sort(dist[dist>=min_dist]))[n])
     .(.GRP, I= .I[sel], dist= dist[sel])
   }, .EACHI, on= "seqnames"]
-  idx <- na.omit(idx)
+  # idx <- na.omit(idx)
   idx[I==0, c("I", "dist"):= .(NA, NA)]
   
   # Return

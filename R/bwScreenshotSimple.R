@@ -120,11 +120,11 @@ vl_screenshot <- function(bed,
   obj <- obj[, rbindlist(rep(list(.SD), 
                              switch(type, "bw"= widths[1], "bed"= widths[2])), 
                          idcol= "y"), .(file, type)]
-  obj[, Cc:= as.character(ifelse(y>(value-min)/(max-min)*100, bg, col))]
+  obj[, Cc:= as.character(ifelse(y>(value-min)/(max-min)*widths[1], bg, col))]
   if(density=="density")
     obj[type=="bw", Cc:= {
-      idx <- round((value-min)/(max-min)*100)+1
-      colorRampPalette(density_col)(101)[ifelse(idx>101, 101, idx)]}]
+      idx <- round((value-min)/(max-min)*widths[1])+1
+      colorRampPalette(density_col)(widths[1]+1)[ifelse(idx>widths[1]+1, widths[1]+1, idx)]}]
   obj[is.na(start), Cc:= bg]
   # Borders
   obj[y==1 & Cc==bg & type=="bw" & !is.na(end), Cc:= col] # Full line at the bottom of bw tracks

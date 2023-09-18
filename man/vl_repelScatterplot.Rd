@@ -7,8 +7,9 @@
 vl_repelScatterplot(
   x,
   y = NULL,
+  col = "black",
   labels,
-  label.sel = NULL,
+  label.sel = rep(T, length(x)),
   label.cex = 0.7,
   label.col = "black",
   xlab = ifelse(is.null(y), "Index", deparse1(substitute(x))),
@@ -16,7 +17,9 @@ vl_repelScatterplot(
   xlim = if (add) par("usr")[1:2] else range(x),
   ylim = if (add) par("usr")[3:4] else range(y),
   rect.draw = T,
-  rect.col = adjustcolor("lightgrey", 0.5),
+  rect.col = col,
+  seg.col = col,
+  noOverlap = F,
   point_size = 0.001,
   box_padding_x = 0.005,
   box_padding_y = 0.005,
@@ -52,7 +55,7 @@ vl_repelScatterplot(
 
 \item{rect.draw}{Draw rectangle?}
 
-\item{rect.col}{Rectangles color}
+\item{rect.col}{Segments colors}
 
 \item{point_size}{(numeric) approximate size of points, defined as a fraction of char size. Can be small, is used in conjunction with "point_padding". default= 0.001}
 

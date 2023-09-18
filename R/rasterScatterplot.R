@@ -48,8 +48,8 @@ vl_rasterScatterplot <- function(x,
       res = res,
       type="cairo",
       bg = "transparent")
-  plot.new()
   par(mar = c(0,0,0,0))
+  plot.new()
   plot.window(coords[1:2],
               coords[3:4],
               xaxs = "i",
