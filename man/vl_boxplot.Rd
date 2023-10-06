@@ -13,6 +13,7 @@ vl_boxplot(x, ...)
   x,
   ...,
   compute_pval = NULL,
+  pval_cex = 0.8,
   tilt.names = F,
   srt = 45,
   range = 1.5,
@@ -48,6 +49,8 @@ vl_boxplot(x, ...)
 \item{...}{Extra parameters for boxplot()}
 
 \item{compute_pval}{list of vectors of length two containing pairwise x indexes to be compared}
+
+\item{pval_cex}{cex value for pval plotting. Default= .8.}
 
 \item{tilt.names}{Should names be tilted (ignored if horizontal= TRUE)}
 

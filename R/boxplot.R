@@ -2,6 +2,7 @@
 #' @description Just a wrapper around boxplot that makes it nicer and allows to add wilcox pvals
 #' @param x list of variables to be plotted
 #' @param compute_pval list of vectors of length two containing pairwise x indexes to be compared
+#' @param pval_cex cex value for pval plotting. Default= .8.
 #' @param names Names to plot under boxplot. If function specified, applied to names before plotting
 #' @param tilt.names Should names be tilted (ignored if horizontal= TRUE)
 #' @param srt rotation angle for titled names
@@ -22,7 +23,7 @@ vl_boxplot <- function(x, ...) UseMethod("vl_boxplot")
 #' @export
 vl_boxplot.default <-
   function(x, ..., 
-           compute_pval= NULL, tilt.names= F, srt= 45,
+           compute_pval= NULL, pval_cex= .8, tilt.names= F, srt= 45,
            range = 1.5, width = NULL, varwidth = FALSE,
            notch = FALSE, outline = FALSE, names, plot = TRUE,
            border = par("fg"), col = NULL, log = "",
@@ -220,11 +221,14 @@ vl_plot_bxp_pval <- function(pval,
   }
   pval[, {
     segments(x0, y0, x1, y1, xpd= NA)
-    .c <- cut(wilcox, c(-Inf, 0.00001, 0.001, 0.01, 0.05, Inf), c("****", "***", "**", "*", "N.S"), include.lowest= T)
+    .c <- cut(wilcox,
+              c(-Inf, 0.00001, 0.001, 0.01, 0.05, Inf),
+              c("****", "***", "**", "*", "N.S"),
+              include.lowest= T)
     text(x, 
          y, 
          .c,
-         cex= ifelse(.c=="N.S", 0.5, 1),
+         cex= pval_cex*ifelse(.c=="N.S", 0.5, 1),
          srt= ifelse(horizontal, -90, 0),
          offset= 0,
          xpd= NA)

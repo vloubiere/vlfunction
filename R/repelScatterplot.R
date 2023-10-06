@@ -235,6 +235,8 @@ vl_repelScatterplot <- function(x,
   if(!add)
     plot.default(x= x, 
                  y= y,
+                 xlim= xlim,
+                 ylim= ylim,
                  xlab= xlab,
                  ylab= ylab,
                  frame= frame,
