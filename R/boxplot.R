@@ -101,7 +101,8 @@ vl_boxplot.default <-
                                     horizontal= horizontal)
         if(nrow(pval))
           vl_plot_bxp_pval(pval = pval,
-                           horizontal = horizontal)
+                           horizontal = horizontal,
+                           pval_cex= pval_cex)
       }
       # Plot tilted names
       if(tilt.names && !horizontal && xaxt!="n")
@@ -202,7 +203,8 @@ vl_compute_bxp_pval <- function(groups, box, compute_pval, outline, at, horizont
 
 #' @export
 vl_plot_bxp_pval <- function(pval, 
-                             horizontal)
+                             horizontal,
+                             pval_cex)
 {
   # Convert to users coordinates
   if(horizontal)
