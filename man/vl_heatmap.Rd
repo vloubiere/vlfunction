@@ -29,6 +29,7 @@ vl_heatmap(x, ...)
   breaks = seq(min(x, na.rm = T), max(x, na.rm = TRUE), length.out = length(col)),
   col = c("cornflowerblue", "white", "red"),
   na_col = "lightgrey",
+  grid = FALSE,
   main = NA,
   legend_title = NA,
   legend.cex = 1,
@@ -81,6 +82,8 @@ vl_heatmap(x, ...)
 \item{col}{Color scale. default= c("cornflowerblue", "white", "red")}
 
 \item{na_col}{Color for na values. Default= "lightgrey"}
+
+\item{grid}{Should grid be drawn? Default= F}
 
 \item{main}{Title. Default= NA}
 

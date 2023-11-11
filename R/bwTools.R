@@ -148,9 +148,7 @@ vl_bw_coverage_bins <- function(bed,
   if(!ignore.strand & "strand" %in% names(bins))
     bins[strand=="-", bin.x:= rev(bin.x), region_ID]
   
-  #--------------------------#
-  # Quantif tracks
-  #--------------------------#
+  # Quantif tracks ----
   obj <- parallel::mclapply(tracks, function(x) {
     data.table(bins[, .(set_IDs, region_ID, bin.x)], 
                score= vl_bw_coverage(bins, x))
@@ -180,7 +178,7 @@ vl_bw_coverage_bins <- function(bed,
 #' @param legend Should the legend be plotted? default to T
 #' @param legend_pos Legend position. Default to "topleft"
 #' @param legend.cex Legend cex. defaults to 1
-#' @param col.adj Opacity of polygons and lines. default= c(0.5,1)
+#' @param col.adj Opacity of polygons. default= 0.5
 #' @examples 
 #' bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
 #' sets <- c(rep("suhw", 100), rep("STARR", 1000))
@@ -204,7 +202,7 @@ vl_bw_average_track <- function(bed,
                                 legend= T,
                                 legend_pos= "topleft",
                                 legend.cex= 1,
-                                col.adj= c(0.5, 1))
+                                col.adj= 0.5)
 {
   # By default, preserve order bw tracks as specified in input
   if(missing(names))
@@ -251,7 +249,7 @@ plot.vl_bw_average_track <- function(obj,
                                      legend= T,
                                      legend_pos= "topleft",
                                      legend.cex= 1,
-                                     col.adj= c(0.5, 1))
+                                     col.adj= 0.5)
 {
   pl <- obj[, .(mean= mean(score, na.rm= T), 
                 se= sd(score, na.rm= T)/sqrt(.N)), .(name, col, set_IDs, bin.x)]
@@ -271,10 +269,10 @@ plot.vl_bw_average_track <- function(obj,
     polygon(c(bin.x, rev(bin.x)), 
             c(mean+se, rev(mean-se)),
             border= NA,
-            col= adjustcolor(col, col.adj[1]))
+            col= adjustcolor(col[1], col.adj))
     lines(bin.x, 
           mean, 
-          col= adjustcolor(col, col.adj[2]))
+          col= col[1])
   }, .(name, set_IDs, col)]
   # Legend
   if(legend)

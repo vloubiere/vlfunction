@@ -4,12 +4,48 @@
 \alias{vl_upset_plot}
 \title{upset Plot}
 \usage{
-vl_upset_plot(dat_list, intersection_cutoff = 0, grid_hex = 2)
+vl_upset_plot(
+  dat_list,
+  col = "grey20",
+  col.set = "grey20",
+  cex.grid = 2,
+  grid_hex = 2,
+  cex.inter = 0.8,
+  show_empty = F,
+  lwd = 1,
+  xaxt = "n",
+  intersection_cutoff = 0,
+  border = NA,
+  ylab = "Intersection size",
+  las = par("las")
+)
 }
 \arguments{
 \item{dat_list}{List containing the names to intersect (see examples)}
 
+\item{col}{Color used for intersection bars}
+
+\item{col.set}{Color used for set size bars}
+
+\item{cex.grid}{Cex for grid points}
+
+\item{grid_hex}{Height of grid lines}
+
+\item{cex.inter}{Cex size intersection labels}
+
+\item{show_empty}{Should empty instersections be shown? default= F}
+
+\item{lwd}{line width}
+
+\item{xaxt}{Should x axis be drawn? default= "n}
+
 \item{intersection_cutoff}{min cutoff for selections to be shown}
+
+\item{border}{Default to NA}
+
+\item{ylab}{ylab}
+
+\item{las}{las}
 }
 \description{
 Plots an upset plot convenient to visualize intersections

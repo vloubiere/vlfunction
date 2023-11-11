@@ -18,6 +18,25 @@
 #' @source {"/groups/stark/almeida/data/motifs/motif_collection_v7_no_transfac_SteinAerts/TF_clusters_PWMs.RData"}
 "vl_Dmel_motifs_DB_full"
 
+#' Motifs DB noin-redundant version (BA) 
+#'
+#' Contains 6502 non-redundant motifs
+#'
+#' @usage This curated list of non-redundant motifs was assembled by Bernardo P. de almeida (https://github.com/bernardo-de-almeida/motif-clustering). It can be used with the ?vl_motif_counts() function to count motifs
+#' 
+#' @format An object containing 6502 motifs and related metadata
+#' \describe{
+#'   \item{motif_name}{Motif ID from TF_clusters_PWMs.RData}
+#'   \item{motif_cluster}{Motif cluster from Bernardo Almeida}
+#'   \item{collection}{}
+#'   \item{collection_version}{}
+#'   \item{species}{PWM expressed as log odds}
+#'   \item{pwms_log_odds}{list of PWM matrices}
+#'   \item{pwms_perc}{list of PWM matrices}
+#' }
+#' @source {"/groups/stark/almeida/Papers/DeepSTARR/Code/TF_motif_database/TF_clusters_PWMs.RData"}
+"vl_motifs_DB_v2"
+
 #' SUHW top peaks
 #'
 #' Example set that can be used for motif enrichment...

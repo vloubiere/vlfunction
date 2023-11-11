@@ -20,6 +20,7 @@
 #' @param breaks Heatmap breaks, which should be the same length as the color vector
 #' @param col Color scale. default= c("cornflowerblue", "white", "red")
 #' @param na_col Color for na values. Default= "lightgrey"
+#' @param grid Should grid be drawn? Default= F
 #' @param main Title. Default= NA
 #' @param legend_title Character to plot as title legend
 #' @param legend.cex cex expansion factor applying to the whole legend
@@ -85,6 +86,7 @@ vl_heatmap.matrix <- function(x,
                               breaks= seq(min(x, na.rm= T), max(x, na.rm= TRUE), length.out= length(col)),
                               col= c("cornflowerblue", "white", "red"),
                               na_col= "lightgrey",
+                              grid= FALSE,
                               main= NA,
                               legend_title= NA,
                               legend.cex= 1,
@@ -109,17 +111,17 @@ vl_heatmap.matrix <- function(x,
   if(!is.factor(col_clusters))
     col_clusters <- factor(col_clusters)
   if(is.null(row_clusters_col))
-    if(cluster_rows && length(levels(row_clusters))==1)
-      row_clusters_col <- grDevices::gray.colors(cutree_rows) else
-        row_clusters_col <- grDevices::gray.colors(length(unique(row_clusters)))
+    if(cluster_rows && !is.na(kmeans_k))
+      row_clusters_col <- grDevices::gray.colors(kmeans_k) else
+        if(cluster_rows && length(levels(row_clusters))==1)
+          row_clusters_col <- grDevices::gray.colors(cutree_rows) else
+            row_clusters_col <- grDevices::gray.colors(length(unique(row_clusters)))
   if(is.null(col_clusters_col))
     if(cluster_cols && length(levels(col_clusters))==1)
       col_clusters_col <- grDevices::gray.colors(cutree_cols) else
         col_clusters_col <- grDevices::gray.colors(length(unique(col_clusters)))
 
-  #------------------------####
-  # Init informative result DT
-  #------------------------####
+  # Init informative result DT ----
   rows <- data.table(name= rownames(x),
                      cl= row_clusters)
   rows[, order:= order(cl)]
@@ -132,9 +134,7 @@ vl_heatmap.matrix <- function(x,
   ccl <- NULL
   cdend <- NULL
   
-  #------------------------####
-  # Clustering rows
-  #------------------------####
+  # Clustering rows ----
   if(cluster_rows && nrow(x)>1 && length(levels(row_clusters))==1)
   {
     set.seed(3453)
@@ -167,9 +167,7 @@ vl_heatmap.matrix <- function(x,
   rows[, col:= row_clusters_col[cl]]
   rows[(order), y:= rev(.I)]
   
-  #------------------------####
-  # Clustering cols
-  #------------------------####
+  # Clustering cols ----
   if(cluster_cols && ncol(x)>1 && length(levels(col_clusters))==1)
   {
     set.seed(3453)
@@ -193,9 +191,7 @@ vl_heatmap.matrix <- function(x,
   cols[, col:= col_clusters_col[cl]]
   cols[(order), x:= .I]
   
-  #------------------------####
-  # PLOT
-  #------------------------####
+  # PLOT ----
   obj <- mget(ls())
   setattr(obj, "class", c("vl_heatmap", "list"))
   if(plot)
@@ -222,13 +218,10 @@ plot.vl_heatmap <- function(obj)
     par(mar= c(bot, left, 5, 7))
   }
   
-  #----------------------------------#
-  # Heatmap
-  #----------------------------------#
+  # Heatmap ----
   # Order matrix
   x <- x[(rows$order), , drop=F]
   x <- x[, (cols$order), drop=F]
-    
   # Palette
   Cc <- circlize::colorRamp2(breaks, 
                              colors= col)
@@ -249,7 +242,21 @@ plot.vl_heatmap <- function(obj)
               interpolate = F)
   box(lwd= 0.25)
   
-  # Plot numbers
+  # plot grid ----
+  if(grid)
+  {
+    segments(c(0.5, seq(ncol(x))+0.5),
+             0.5,
+             c(0.5, seq(ncol(x))+0.5),
+             nrow(x)+0.5,
+             xpd= T)
+    segments(0.5,
+             c(0.5, seq(nrow(x))+0.5),
+             ncol(x)+0.5,
+             c(0.5, seq(nrow(x))+0.5),
+             xpd= T)
+  }
+  # Plot numbers ----
   if(display_numbers)
   {
     if(missing(display_numbers_matrix))
@@ -267,14 +274,12 @@ plot.vl_heatmap <- function(obj)
          offset= 0) 
   }
 
-  #----------------------------------#
-  # Margins legends
-  #----------------------------------#
+  # Margins legends ----
   # Margin lines width and height in user coordinates
   mar.lw <- diff(grconvertX(c(0,1), "lines", "user"))
   mar.lh <- diff(grconvertY(c(0,1), "lines", "user"))
 
-  # Cluser lines
+  # Cluster lines ----
   if(show_row_clusters)
   {
     pos <- rows[rev(order)][, .(y1= .N), .(cl, col)]
@@ -317,11 +322,11 @@ plot.vl_heatmap <- function(obj)
          adj= 0.5)
   }
 
-  # Title
+  # Title ----
   if(!is.na(main))
     title(main= main)
 
-  # Plot dendrograms
+  # Plot dendrograms ----
   if(show_row_dendrogram & !is.null(rdend))
   {
     if(show_row_clusters)
@@ -345,7 +350,7 @@ plot.vl_heatmap <- function(obj)
              xpd= NA)
   }
 
-  # Plot axes
+  # Plot axes ----
   if(show_colnames)
   {
     if(tilt_colnames)
@@ -367,7 +372,7 @@ plot.vl_heatmap <- function(obj)
          labels = rev(rownames(x)),
          lwd= 0)
 
-  # Plot legend
+  # Plot legend ----
   if(show_legend)
   {
     left <- par("usr")[2]+mar.lw

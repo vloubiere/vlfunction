@@ -16,7 +16,8 @@ vl_motif_pos(sequences, ...)
   genome,
   bg = "genome",
   p.cutoff = 5e-04,
-  collapse_overlapping = TRUE
+  collapse_overlapping = TRUE,
+  motifDB = vl_Dmel_motifs_DB_full
 )
 }
 \arguments{
@@ -32,7 +33,7 @@ vl_motif_pos(sequences, ...)
 
 \item{p.cutoff}{Pval cutoff used for motif detection}
 
-\item{collapse_overlapping}{Should overlapping motifs be merged? Default= T}
+\item{collapse_overlapping}{Should overlapping motifs be merged? If TRUE (default), motif instances that overlap more than 70 percent of their width are collapsed.}
 }
 \value{
 A list of positions of length = length(sequences)

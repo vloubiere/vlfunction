@@ -132,8 +132,8 @@ vl_closestBed <- function(a,
   
   # Return
   setnames(b, paste0(names(b), ".b"))
-  res <- data.table(a[idx$GRP],
-                    b[idx$I],
+  res <- data.table(a[eval(idx$GRP, with= F)],
+                    b[eval(idx$I, with= F)],
                     dist= idx$dist)
   if("strand" %in% names(res))
   {

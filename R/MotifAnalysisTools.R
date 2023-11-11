@@ -8,7 +8,7 @@
 #' @param bg Background used to find motifs. Possible values include "genome" and "even". Default= "genome"
 #' @param p.cutoff Pval cutoff used for motif detection
 #' @param sel Vector of motif_ID to compute. see vl_Dmel_motifs_DB_full$motif_ID
-#' @param collapse_overlapping Should overlapping motifs be merged? Default= F
+#' @param motifDB The motifDB object to be used. see ?vl_Dmel_motifs_DB_full and ?vl_motifs_DB_v2, Default= vl_Dmel_motifs_DB_full
 #' @examples
 #' # Example run
 #' sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
@@ -42,37 +42,25 @@ vl_motif_counts.character <- function(sequences= NULL,
                                       genome,
                                       bg= "genome",
                                       p.cutoff= 5e-4,
-                                      collapse_overlapping= FALSE)
+                                      motifDB= vl_Dmel_motifs_DB_full)
 {
   # Select motifs
-  if(any(!sel %in% vl_Dmel_motifs_DB_full$motif_ID))
-    stop("Some motif_ID(s) provided in 'sel' do not exist in vl_Dmel_motifs_DB_full$motif_ID")
+  if(any(!sel %in% motifDB$motif_ID))
+    stop("Some motif_ID(s) provided in 'sel' do not exist in motifDB$motif_ID")
 
-  # Collapsed counts
-  if(collapse_overlapping)
-  {
-    res <- vl_motif_pos.character(sequences= sequences, 
-                                  sel= sel, 
-                                  genome= genome, 
-                                  bg = bg, 
-                                  p.cutoff = p.cutoff,
-                                  collapse_overlapping = collapse_overlapping)
-    res <- sapply(res, function(x) sapply(x, function(y) nrow(y)))
-  }else
-  {
-    # Raw counts
-    mot <- do.call(TFBSTools::PWMatrixList, 
-                   vl_Dmel_motifs_DB_full[match(unique(sel), motif_ID), pwms_log_odds])
-    res <- as.matrix(motifmatchr::matchMotifs(mot,
-                                              sequences,
-                                              genome= genome,
-                                              p.cutoff= p.cutoff,
-                                              bg= bg,
-                                              out= "scores")@assays@data[["motifCounts"]])
-  }
+  # Compute counts
+  mot <- do.call(TFBSTools::PWMatrixList,
+                 motifDB[match(unique(sel), motif_ID), pwms_log_odds])
+  res <- as.matrix(motifmatchr::matchMotifs(mot,
+                                            sequences,
+                                            genome= genome,
+                                            p.cutoff= p.cutoff,
+                                            bg= bg,
+                                            out= "scores")@assays@data[["motifCounts"]])
+  
+  # Save
   res <- as.data.table(res)
   setnames(res, as.character(sel))
-  
   return(res)
 }
 
@@ -82,7 +70,7 @@ vl_motif_counts.character <- function(sequences= NULL,
 #'
 #' @param counts data.table containing counts for the regions of interest
 #' @param control_counts data.table containing counts for control regions (data.table)
-#' @param names Convenient names to be used for plotting and so on... Default (NULL) returns to vl_Dmel_motifs_DB_full$motif_cluster
+#' @param names Convenient names to be used for plotting and so on... Default (NULL) returns to vl_Dmel_motifs_DB_full$motif_cluster names
 #' @param plot Plot result?
 #' @param padj_cutoff cutoff for plotting. Default to FALSE
 #' @param top_enrich Show only n top enriched motifs
@@ -133,10 +121,17 @@ vl_motif_enrich <- function(counts,
   if(!is.null(names) && length(names)!=ncol(counts))
     stop("names should match ncol(counts)")
   
-  # make obj
-  obj <- rbindlist(list(set= as.data.table(counts),
-                        control= as.data.table(control_counts)),
+  # make obj ----
+  obj <- rbindlist(list(set= counts,
+                        control= control_counts),
                    idcol = T)
+  
+  # Append (cluster) name to motif ID ----
+  if(is.null(names))
+    names <- vl_Dmel_motifs_DB_full[names(obj)[-1], motif_cluster, on= "motif_ID"]
+  names(obj)[-1] <- paste0(names, "__", names(obj)[-1]) # Append (cluster) name to motif ID
+  
+  # Melt ----
   obj <- melt(obj, 
               id.vars = ".id",
               variable.name= "variable")
@@ -157,9 +152,8 @@ vl_motif_enrich <- function(counts,
   }, variable]
   
   # Add names
-  if(is.null(names))
-    res[vl_Dmel_motifs_DB_full, name:= motif_cluster, on= "variable==motif_ID"] else
-      res[, names:= names]
+  res[, name:= tstrsplit(variable, "__", keep= 1)]
+  res[, variable:= gsub(paste0("^", name, "__"), "", variable), name]
   
   # padj...
   res[, padj:= p.adjust(pval, method = "fdr")]
@@ -190,9 +184,9 @@ vl_motif_enrich <- function(counts,
 #'
 #' Compute motif enrichment for the cluster in cl_columns, using all the lines as background
 #'
-#' @param counts_list List of data.table containing counts for the regions of interest and potentially control regions
+#' @param counts_list List of data.table containing counts for the regions of interest and potentially control regions (see next argument)
 #' @param control_cl IDs of clusters to be used as background. default to NULL, meaning all clusters are used except the one being tested
-#' @param names Convenient names to be used for plotting and so on... Default (NULL) returns vl_Dmel_motifs_DB_full$motif_cluster
+#' @param names Convenient names to be used for plotting and so on... Default (NULL) returns vl_Dmel_motifs_DB_full$motif_cluster names
 #' @param plot Should the result be plot using balloons plot? Default to FALSE
 #' @param padj_cutoff cutoff for ballons to be plotted
 #' @param top_enrich Select top enriched motifs/cluster. Default to NA (All)
@@ -208,7 +202,7 @@ vl_motif_enrich <- function(counts,
 #' @param cex.height expansion factor for motif heights
 #'
 #' @examples 
-#' sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", variable]
+#' sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
 #' top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
 #' top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
 #' counts <- vl_motif_counts(top_SUHW, genome= "dm3", sel= sel)
@@ -246,13 +240,14 @@ vl_motif_cl_enrich <- function(counts_list,
     stop("control_cl should match names(counts_list)")
   
   # Compute enrichment in non-control clusters
-  cmb <- CJ(cl= names(counts_list), 
-            ctl= names(counts_list), 
-            unique = T, 
-            sorted = F)
-  cmb <- cmb[cl!=ctl]
-  if(!is.null(control_cl))
-    cmb <- cmb[!(cl %in% control_cl) & (ctl %in% control_cl)]
+  cmb <- data.table(cl= names(counts_list))
+  if(is.null(control_cl))
+    cmb <- cmb[, .(ctl= cmb$cl[cmb$cl!=cl]), cl] else
+      cmb <- cmb[, .(ctl= control_cl), cl]
+  # Remove self-comparisons ----
+  cmb[, self:= identical(cl, ctl), cl]
+  cmb <- cmb[!(self), !"self"]
+  # Motif enrichment ----
   res <- cmb[, {
     vl_motif_enrich(counts = counts_list[[cl]],
                     control_counts = rbindlist(counts_list[ctl]),
@@ -294,7 +289,7 @@ vl_motif_cl_enrich <- function(counts_list,
 #' @param genome Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome"
 #' @param bg Background used to find motifs. Possible values include "genome" and "even". Default= "genome"
 #' @param p.cutoff Pval cutoff used for motif detection
-#' @param collapse_overlapping Should overlapping motifs be merged? Default= T
+#' @param collapse_overlapping Should overlapping motifs be merged? If TRUE (default), motif instances that overlap more than 70 percent of their width are collapsed.
 #' @examples
 #' vl_motif_pos.data.table(vl_SUHW_top_peaks[1:2], genome= "dm3", sel= c("cisbp__M2328", "flyfactorsurvey__suHw_FlyReg_FBgn0003567", "jaspar__MA0533.1"))
 #' @return A list of positions of length = length(sequences) 
@@ -316,11 +311,12 @@ vl_motif_pos.character <- function(sequences,
                                    genome,
                                    bg= "genome",
                                    p.cutoff= 5e-4,
-                                   collapse_overlapping= TRUE)
+                                   collapse_overlapping= TRUE,
+                                   motifDB= vl_Dmel_motifs_DB_full)
 {
-  if(any(!sel %in% vl_Dmel_motifs_DB_full$motif_ID))
-    stop("Some motif_ID(s) provided in 'sel' do not exist in vl_Dmel_motifs_DB_full$motif_ID")
-  sub <- vl_Dmel_motifs_DB_full[match(unique(sel), motif_ID)]
+  if(any(!sel %in% motifDB$motif_ID))
+    stop("Some motif_ID(s) provided in 'sel' do not exist in motifDB$motif_ID")
+  sub <- motifDB[match(unique(sel), motif_ID)]
   pos <- motifmatchr::matchMotifs(do.call(TFBSTools::PWMatrixList, 
                                           sub$pwms_log_odds),
                                   sequences,
@@ -356,6 +352,3 @@ vl_motif_pos.character <- function(sequences,
   })
   return(pos)
 }
-
-
-

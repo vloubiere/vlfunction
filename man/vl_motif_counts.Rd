@@ -16,7 +16,7 @@ vl_motif_counts(sequences, ...)
   genome,
   bg = "genome",
   p.cutoff = 5e-04,
-  collapse_overlapping = FALSE
+  motifDB = vl_Dmel_motifs_DB_full
 )
 }
 \arguments{
@@ -32,7 +32,7 @@ vl_motif_counts(sequences, ...)
 
 \item{p.cutoff}{Pval cutoff used for motif detection}
 
-\item{collapse_overlapping}{Should overlapping motifs be merged? Default= F}
+\item{motifDB}{The motifDB object to be used. see ?vl_Dmel_motifs_DB_full and ?vl_motifs_DB_v2, Default= vl_Dmel_motifs_DB_full}
 }
 \value{
 Matrix of motif counts

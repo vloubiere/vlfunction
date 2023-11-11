@@ -39,11 +39,11 @@ vl_motif_cl_enrich(
 )
 }
 \arguments{
-\item{counts_list}{List of data.table containing counts for the regions of interest and potentially control regions}
+\item{counts_list}{List of data.table containing counts for the regions of interest and potentially control regions (see next argument)}
 
 \item{control_cl}{IDs of clusters to be used as background. default to NULL, meaning all clusters are used except the one being tested}
 
-\item{names}{Convenient names to be used for plotting and so on... Default (NULL) returns vl_Dmel_motifs_DB_full$motif_cluster}
+\item{names}{Convenient names to be used for plotting and so on... Default (NULL) returns vl_Dmel_motifs_DB_full$motif_cluster names}
 
 \item{plot}{Should the result be plot using balloons plot? Default to FALSE}
 
@@ -83,7 +83,7 @@ Compute motif enrichment for the cluster in cl_columns, using all the lines as b
 
 }}
 \examples{
-sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", variable]
+sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
 top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
 top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
 counts <- vl_motif_counts(top_SUHW, genome= "dm3", sel= sel)

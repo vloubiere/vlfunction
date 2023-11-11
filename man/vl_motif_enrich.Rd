@@ -37,7 +37,7 @@ vl_motif_enrich(
 
 \item{control_counts}{data.table containing counts for control regions (data.table)}
 
-\item{names}{Convenient names to be used for plotting and so on... Default (NULL) returns to vl_Dmel_motifs_DB_full$motif_cluster}
+\item{names}{Convenient names to be used for plotting and so on... Default (NULL) returns to vl_Dmel_motifs_DB_full$motif_cluster names}
 
 \item{plot}{Plot result?}
 
