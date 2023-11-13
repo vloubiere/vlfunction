@@ -4,16 +4,16 @@
 \alias{vl_bw_coverage_integer}
 \title{bw coverage integer}
 \usage{
-vl_bw_coverage_integer(bed, bw, read_length = 50)
+vl_bw_coverage_integer(bed, bw, read.length = 50)
 }
 \arguments{
 \item{bed}{Regions to quantify. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 
 \item{bw}{Path to target bw file (character vector)}
 
-\item{read_length}{read length, used when integer_counts is set to TRUE}
+\item{read.length}{read length, used when integer_counts is set to TRUE}
 
-\item{integer_counts}{If set to TRUE, returns integer counts using approximated total read counts based on read_length}
+\item{integer_counts}{If set to TRUE, returns integer counts using approximated total read counts based on read.length}
 }
 \description{
 IN DEVELOPMENT!! -> Quantify bw file at a set of intervals and returns integer values
@@ -22,11 +22,19 @@ IN DEVELOPMENT!! -> Quantify bw file at a set of intervals and returns integer v
 Note that strand-specific overlap is not implemented! bw files do not contain strand info!?
 }
 \examples{
-bins <- vl_binBSgenome("dm3", restrict_seqnames = "chr3R")
+# Bins
+bins <- vl_binBSgenome(genome= "dm3",
+                       restrict.seqnames = "chr3R")
 bins <- bins[start>=10.3e6 & end<=10.4e6]
-cov1 <- vl_bw_coverage(bins, "../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw")
-cov2 <- vl_bw_coverage_integer(bins, "../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", read_length = 50)
-par(mfrow=c(2,1))
+
+# Coverage
+cov1 <- vl_bw_coverage(bins,
+                       bw= "../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw")
+cov2 <- vl_bw_coverage_integer(bins,
+                               bw= "../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw",
+                               read.length = 50)
+                               
+# plot
 plot(cov1, type= "l")
 plot(cov2, type= "l")
 }

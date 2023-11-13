@@ -3,6 +3,7 @@
 #' @param DT DT object output from vl_motif_enrich or vl_motif_cl_enrich
 #' @param cex.width expansion factor for motif widths
 #' @param cex.height expansion factor for motif heights
+#' 
 #' @examples 
 #' For vl_enr object
 #' pl <- plot(vl_enr)
@@ -11,8 +12,12 @@
 #' For vl_enr_cl object
 #' pl <- plot(vl_enr)
 #' vl_add_motif(pl$DT)
+#' 
 #' @export
-vl_add_motifs <- function(DT, cex.width= 1, cex.height= 1, lwd= 0.1)
+vl_add_motifs <- function(DT,
+                          cex.width= 1,
+                          cex.height= 1,
+                          lwd= 0.1)
 {
   # Extract PWMs
   DT <- unique(DT[, .(variable, name, y)])
@@ -48,10 +53,12 @@ vl_add_motifs <- function(DT, cex.width= 1, cex.height= 1, lwd= 0.1)
 #' @param cex.width width expansion factor applied before plotting motifs
 #' @param cex.height height expansion factor applied before plotting motifs
 #' @param add Should the pwm be plot on the top of opened device? Default= T
+#' 
 #' @examples
 #' pwm <- matrix(c(0.33,0.21,0.33,0.13,0.1,0.42,0.38,0.1,0.26,0.26,0.27,0.21,0,0.03,0.19,0.78,0.1,0.05,0.1,0.75,0.24,0.05,0.18,0.53,0.8,0.04,0,0.16,0.13,0.16,0.02,0.69,0.04,0.05,0.7,0.21,0.24,0.09,0.57,0.1,0.02,0.8,0.15,0.03,0.22,0.28,0.31,0.19,0.35,0.26,0.26,0.13,0.19,0.33,0.26,0.22), nrow= 4)
 #' plot.new()
 #' vl_seqlogo(pwm)
+#' 
 #' @export
 vl_seqlogo <- function(pwm, 
                        x,

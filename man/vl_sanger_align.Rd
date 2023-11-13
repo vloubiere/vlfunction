@@ -8,10 +8,10 @@ vl_sanger_align(
   refseq,
   abfiles,
   revcomp = NULL,
-  feat_mismatches = 0,
-  feat_sequences = NULL,
-  feat_names = NULL,
-  feat_cols = NULL
+  feat.mismatches = 0,
+  feat.sequences = NULL,
+  feat.names = NULL,
+  feat.cols = NULL
 )
 }
 \arguments{
@@ -21,13 +21,13 @@ vl_sanger_align(
 
 \item{revcomp}{Boolean value specifying if the sequence shoul be reversed before alignment to the refseq}
 
-\item{feat_mismatches}{Number of mismatches allowed to align features}
+\item{feat.mismatches}{Number of mismatches allowed to align features}
 
-\item{feat_sequences}{additional feature sequences to plot on top of the matrix}
+\item{feat.sequences}{additional feature sequences to plot on top of the matrix}
 
-\item{feat_names}{Names of additional feature sequences}
+\item{feat.names}{Names of additional feature sequences}
 
-\item{feat_cols}{Colors to use to plot additional feature sequences}
+\item{feat.cols}{Colors to use to plot additional feature sequences}
 }
 \description{
 This function plots a heatmap showing alignment to a reference sequence
@@ -38,19 +38,20 @@ refseq <- "CGCGCGCGTTGACAGTGAGCGCGTCTCTCACCGGAGCAAGTACTCCGTTCGAAGTTTTATACCGCTTAA
 abfiles <- c("/groups/stark/vloubiere/projects/pe_STARRSeq/db/sanger_sequencing/vllib_006_011_sanger/LOUB_vllib006.1_CASeq044_A01.ab1",
 "/groups/stark/vloubiere/projects/pe_STARRSeq/db/sanger_sequencing/vllib_006_011_sanger/LOUB_vllib006.1_CASeq003_A04.ab1")
 revcomp <- c(F, T)
-feat_names <- c("illumina_F", "Flink_-2", "illumina_R", "R1link+0", "R2link+0", "R3link-3", "spacer")
-feat_sequences <- c("ACACTCTTTCCCTACACGACGCTCTTCCGATCT",
+feat.names <- c("illumina_F", "Flink_-2", "illumina_R", "R1link+0", "R2link+0", "R3link-3", "spacer")
+feat.sequences <- c("ACACTCTTTCCCTACACGACGCTCTTCCGATCT",
 "GACAGTGAGCGCGTCTCTCACCG", 
 "GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT", 
 "TTGTCCGCGTCGATCCTAGG", 
 "ATTCTGCACGCTTCAAAAGC", 
 "AGCTGCTGTCTAAGGCACAGG", 
 "CCGCGCGCGCTCATCAATGTATCTTATCATGTCTGCTCGAAGCGGCCGGCCGAATTCG")
-feat_cols <- c("blue", "green", "red", "pink", "purple", "gold", "black")
+feat.cols <- c("blue", "green", "red", "pink", "purple", "gold", "black")
 vl_sanger_align(refseq = refseq,
 abfiles = abfiles,
 revcomp= c(F, T),
-feat_names = feat_names,
-feat_sequences = feat_sequences,
-feat_cols= feat_cols)
+feat.names = feat.names,
+feat.sequences = feat.sequences,
+feat.cols= feat.cols)
+
 }

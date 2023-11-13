@@ -17,4 +17,5 @@ Reverse complement DNA sequence character string
 }
 \examples{
 vl_revComp("ATCG")
+
 }

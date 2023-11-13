@@ -4,7 +4,7 @@
 \alias{vl_bw_enrich}
 \title{Compute ChIP enrichment}
 \usage{
-vl_bw_enrich(regions, ChIP_bw, Input_bw, read_length = 50)
+vl_bw_enrich(regions, ChIP_bw, Input_bw, read.length = 50)
 }
 \arguments{
 \item{regions}{Regions to analyse. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()}
@@ -13,7 +13,7 @@ vl_bw_enrich(regions, ChIP_bw, Input_bw, read_length = 50)
 
 \item{Input_bw}{Input bw files paths. If several provided, cat}
 
-\item{read_length}{Used to estimate total reads. default to 50}
+\item{read.length}{Used to estimate total reads. default to 50}
 }
 \value{
 original bins file with OR, pval and padj corresponding to fisher result

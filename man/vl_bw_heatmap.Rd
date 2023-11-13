@@ -7,8 +7,8 @@
 \usage{
 vl_bw_heatmap(
   bed,
+  set.IDs = 1,
   tracks,
-  set_IDs = 1,
   upstream = 5000,
   downstream = 5000,
   ignore.strand = T,
@@ -16,12 +16,12 @@ vl_bw_heatmap(
   space = 20L,
   names = gsub(".bw$", "", basename(tracks)),
   plot = T,
-  center_label = "Center",
+  center.label = "Center",
   col = c("blue", "yellow"),
-  order_col = names[1],
-  order_FUN = function(x) mean(x, na.rm = T),
-  max_FUN = function(x) quantile(x, 0.99, na.rm = T),
-  na_col = "lightgrey",
+  order.col = 1,
+  fun.order = function(x) mean(x, na.rm = T),
+  fun.max = function(x) quantile(x, 0.99, na.rm = T),
+  na.col = "lightgrey",
   cex.labels = 0.6
 )
 
@@ -30,9 +30,9 @@ vl_bw_heatmap(
 \arguments{
 \item{bed}{Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 
-\item{tracks}{Vector of bw files to plot. Use full paths to avoid pbs.}
+\item{set.IDs}{Set IDs specifying the groups as subsets of the bed file}
 
-\item{set_IDs}{Set IDs specifying the groups as subsets of the bed file}
+\item{tracks}{Vector of bw files to plot. Use full paths to avoid pbs.}
 
 \item{upstream}{Upstream  extension of bed regions (centered on center)}
 
@@ -48,11 +48,11 @@ vl_bw_heatmap(
 
 \item{col}{Vector of colors to be used for heatmap}
 
-\item{order_col}{Name of the track to be used for ordering}
+\item{order.col}{Index of the column(s) to be used for ordering. Default= 1L}
 
-\item{order_FUN}{Function used to aggregated per region and order heatmap. default= function(x) mean(x, na.rm= T)}
+\item{fun.order}{Function used to aggregated per region and order heatmap. default= function(x) mean(x, na.rm= T)}
 
-\item{max_FUN}{Function to be used for clipping. default= function(x) quantile(x, 0.995, na.rm= T). Using max -> no clipping}
+\item{fun.max}{Function to be used for clipping. default= function(x) quantile(x, 0.995, na.rm= T). Using max -> no clipping}
 
 \item{cex.labels}{cex paramter for labels}
 
@@ -67,11 +67,21 @@ Plots average tracks for a set bw files around (potentially) several sets of pea
 
 }}
 \examples{
-bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
+bed <- list(suhw= vl_SUHW_top_peaks,
+             STARR= vl_STARR_DSCP_top_peaks)
+bed <- rbindlist(bed,
+                 idcol = T,
+                 fill = T)
 tracks <- c("/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", 
-"/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
-set_IDs <- c(rep("suhw", 100), rep("STARR", 1000))
-test <- vl_bw_heatmap(bed, tracks, set_IDs= set_IDs, plot= T, upstream = 1000, downstream = 1000, order_FUN = mean, order_col= 2)
-plot(test, order_col= 2)
+            "/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
+test <- vl_bw_heatmap(bed,
+                      set.IDs= bed$.id,
+                      tracks,
+                      plot= T,
+                      upstream = 1000,
+                      downstream = 1000,
+                      fun.order = mean,
+                      order.col= 2)
 plot(test)
+
 }

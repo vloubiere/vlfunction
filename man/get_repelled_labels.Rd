@@ -8,17 +8,16 @@ get_repelled_labels(
   x,
   y,
   labels,
-  cex = 1,
-  xlim = c(0, 1),
-  ylim = c(0, 1),
-  point_size = 0.001,
-  box_padding_x = 0.005,
-  box_padding_y = 0.005,
-  point_padding_x = 0.01,
-  point_padding_y = 0.01,
-  force_push = 1e-05,
-  force_pull = 1e-05,
-  transform_coord = "npc"
+  cex,
+  xlim,
+  ylim,
+  point_size,
+  box_padding_x,
+  box_padding_y,
+  points_padding_x,
+  points_padding_y,
+  force_push,
+  force_pull
 )
 }
 \arguments{
@@ -42,13 +41,13 @@ is used in conjunction with "point_padding" options}
 
 \item{box_padding_y}{(numeric) extra margin around text bounding boxes}
 
+\item{force_push}{(numeric) magnitude of the push force}
+
+\item{force_pull}{(numeric) magnitude of the pull force}
+
 \item{point_padding_x}{(numeric) extra margin around data points}
 
 \item{point_padding_y}{(numeric) extra margin around data points}
-
-\item{force_push}{(numeric) magnitude of the push force (defaults to \code{1e-5})}
-
-\item{force_pull}{(numeric) magnitude of the pull force (defaults to \code{1e-5})}
 
 \item{transform_coord}{(character) the coordinate system used for calculating
 bounding boxes. The default, "npc", is to transfrom all cordinates to

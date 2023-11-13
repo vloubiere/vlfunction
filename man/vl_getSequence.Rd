@@ -19,4 +19,5 @@ Returns the sequences of a DTranges
 }
 \examples{
 vl_getSequence(vl_SUHW_top_peaks, "dm3")
+
 }

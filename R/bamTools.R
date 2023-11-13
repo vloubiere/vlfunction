@@ -3,7 +3,7 @@
 #'
 #' @param file Path to bam file
 #' @param sel columns to be imported (see Rsamtools::scanBamWhat()). Default= c("qname", "flag", "rname", "strand", "pos", "qwidth", "mapq", "mrnm", "mpos", "isize")
-#' @param col.names Names of the columns to be imported. 
+#' @param col.names Names of the columns to be imported. Default= c("readID", "samFlag", "seqnames", "strand", "leftStart", "width", "mapq", "mateSeqnames", "mateLeftStart", "isize")
 #'
 #' @return Returns a bam file content as data.table
 #' @export
@@ -37,10 +37,14 @@ vl_importBam <- function(file,
 #'
 #' @examples
 #' vl_importBamRaw("path/to/bam/file.bam")
-vl_importBamRaw <- function(file, extra_arg)
+vl_importBamRaw <- function(file,
+                            extra_arg)
 {
   cmd <- "module load build-env/2020; module load samtools/1.9-foss-2018b; samtools view"
   if(!missing(extra_arg))
-    cmd <- paste(cmd, extra_arg)
-  fread(cmd= paste(cmd, file), fill= T)
+    cmd <- paste(cmd,
+                 extra_arg)
+  cmd <- paste(cmd, file)
+  fread(cmd= cmd,
+        fill= T)
 }

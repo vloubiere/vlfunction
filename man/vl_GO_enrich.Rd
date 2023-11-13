@@ -6,25 +6,25 @@
 \usage{
 vl_GO_enrich(
   geneIDs,
-  geneUniverse_IDs = NULL,
+  geneUniverse.IDs = NULL,
   species,
   select = c("BP", "CC", "MF"),
   plot = F,
-  padj_cutoff = 1e-05,
-  top_enrich = NA,
+  padj.cutoff = 1e-05,
+  top.enrich = Inf,
   order = "padj",
-  x_breaks,
-  color_breaks,
+  x.breaks,
+  color.breaks,
   cex.balloons = 1,
   col = c("blue", "red"),
   main = NA,
-  plot_empty_clusters = T
+  plot.empty.clusters = T
 )
 }
 \arguments{
 \item{geneIDs}{A vector (barplot) of a list (clusters) of gene IDs}
 
-\item{geneUniverse_IDs}{Vector of FBgn IDs to which the analysis will be restricted. If NULL, uses all genes.}
+\item{geneUniverse.IDs}{Vector of FBgn IDs to which the analysis will be restricted. If NULL, uses all genes.}
 
 \item{species}{Chose between "Dm" and "Mm"}
 
@@ -32,15 +32,15 @@ vl_GO_enrich(
 
 \item{plot}{Plot result?}
 
-\item{padj_cutoff}{cutoff for plotting}
+\item{padj.cutoff}{cutoff for plotting}
 
-\item{top_enrich}{Show only n top enriched motifs}
+\item{top.enrich}{Show only n top enriched motifs. Default= 10L}
 
 \item{order}{Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"}
 
-\item{x_breaks}{Breaks used for balloons sizes}
+\item{x.breaks}{Breaks used for balloons sizes}
 
-\item{color_breaks}{Balloons color breaks}
+\item{color.breaks}{Balloons color breaks}
 
 \item{cex.balloons}{Balloons size expansion factor}
 
@@ -48,7 +48,7 @@ vl_GO_enrich(
 
 \item{main}{Title}
 
-\item{plot_empty_clusters}{Should empty clusters be plotted? Default to TRUE}
+\item{plot.empty.clusters}{Should empty clusters be plotted? Default to TRUE}
 }
 \description{
 This function compute GO enrichment in a group of genes
@@ -56,10 +56,23 @@ This function compute GO enrichment in a group of genes
 \examples{
 RpL <- vl_genes_set[GO=="RpL_genes", FBgn]
 Hox <- vl_genes_set[GO=="HOX_genes", FBgn]
-par(mar= c(4,20,2,6), las= 1)
+
+# Compute and plot enrichments of RpL genes
 vl_GO_enrich(RpL, species= "Dm", plot= T)
+
+# Separately compute and plot enrichments of HOX genes
 DT <- vl_GO_enrich(Hox, species= "Dm")
-plot(DT, padj_cutoff= 1e-10)
-DT <- vl_GO_enrich(list(RpL, Hox), species= "Dm", cex.balloons = 0.3, padj_cutoff= 1e-5, top_enrich = 20, plot= T)
-plot(DT, top_enrich= 5)
+plot(DT, padj.cutoff= 1e-10)
+
+# Do it for the two groups at once (useful to compare clusters...)
+DT <- vl_GO_enrich(list(RpL= RpL,
+                        Hox= Hox),
+                   species= "Dm",
+                   cex.balloons = 0.3,
+                   padj.cutoff= 1e-5,
+                   top.enrich = 20,
+                   plot= T)
+plot(DT,
+     top.enrich= 5)
+
 }

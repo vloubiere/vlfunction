@@ -4,14 +4,14 @@
 \alias{vl_enrichBed}
 \title{Compute ChIP enrichment}
 \usage{
-vl_enrichBed(regions, ChIP_bed, Input_bed)
+vl_enrichBed(regions, ChIP.bed, Input.bed)
 }
 \arguments{
 \item{regions}{Regions to analyse. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()}
 
-\item{ChIP_bed}{ChIP bed file. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()}
+\item{ChIP.bed}{ChIP bed file. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()}
 
-\item{Input_bed}{Input bed file.}
+\item{Input.bed}{Input bed file.}
 }
 \value{
 original bins file with OR, pval and padj corresponding to fisher result

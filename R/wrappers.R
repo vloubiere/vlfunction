@@ -1,9 +1,27 @@
 #' Stark lab wrappers
 #'
 #' bsub submits to the cluster
+#' 
+#' @param cmd Command to be submitted
+#' @param cores Number of cores. default= 1L
+#' @param name Name of the job. Default= "vl
+#' @param d Name of te dependent job
+#' @param m Memory in Go. Example= 16
+#' @param o Std output directory
+#' @param e Std error directory
+#' @param t Time parameter for slurm in the format hh:mm:ss. Example 2 days:'2-00:00:00'
+#' @param execute If FALSE, simply returns the full command. Default= TRUE
+#'
 #' @export
-
-vl_bsub <- function(cmd, cores= 1, name= "vl", d= NA, m= NA, o= NA, e= NA, t= NA, execute= T)
+vl_bsub <- function(cmd,
+                    cores= 1L,
+                    name= "vl",
+                    d= NA,
+                    m= NA,
+                    o= NA,
+                    e= NA,
+                    t= NA,
+                    execute= T)
 {
   # DO NOT MODIFY UNLESS YOU EXACTLY KNOW WHAT YOU ARE DOING (all other functions use it)
   # gen cmd
@@ -45,7 +63,9 @@ vl_Rsub <- function(R_script, args_v= NULL)
 
 #' Extract reads from bam VBC
 #' @export
-vl_extract_reads_VBC <- function(bam, output_prefix, rev_comp_i5)
+vl_extract_reads_VBC <- function(bam,
+                                 output_prefix,
+                                 rev_comp_i5)
 {
   paste0("module load build-env/2020; module load samtools/1.9-foss-2018b; 
          /groups/stark/software-all/shell/demultiplexPE.sh -i ", bam, " -o ", output_prefix, " -b ", '"', rev_comp_i5, '"', " -u TRUE")
@@ -53,7 +73,8 @@ vl_extract_reads_VBC <- function(bam, output_prefix, rev_comp_i5)
 
 #' Use dropbox uploader
 #' @export
-vl_dropbox_upload <- function(local_path, remote_path)
+vl_dropbox_upload <- function(local_path,
+                              remote_path)
 {
   cmd <- paste("sh  /groups/stark/vloubiere/apps/dropbox/dropbox_uploader.sh upload", local_path, remote_path)
   system(cmd)
@@ -61,7 +82,8 @@ vl_dropbox_upload <- function(local_path, remote_path)
 
 #' Use dropbox downloader
 #' @export
-vl_dropbox_download <- function(local_path, remote_path)
+vl_dropbox_download <- function(local_path,
+                                remote_path)
 {
   cmd <- paste("sh  /groups/stark/vloubiere/apps/dropbox/dropbox_uploader.sh download", remote_path, local_path)
   system(cmd)
@@ -94,7 +116,9 @@ vl_download_iCistarget <- function(url,
 #' @param bam_path 
 #' @param bedpe Imports bam as BEDPE format. Requires BAM to be grouped or sorted by query.
 #' @param ed Use BAM edit distance (NM tag) for BED score. Default for BED is to use mapping quality. Default for BEDPE is to use the minimum of the two mapping qualities for the pair. When -ed is used with bedpe= T, the total edit distance from the two mates is reported.
-vl_import_bamToBed <- function(bam_path, bedpe= F, ed= F)
+vl_import_bamToBed <- function(bam_path,
+                               bedpe= F,
+                               ed= F)
 {
   cmd <- "module load build-env/2020; module load bedtools/2.17.0-foss-2018b; bamToBed -i"
   cmd <- paste(cmd, bam_path)
@@ -109,7 +133,8 @@ vl_import_bamToBed <- function(bam_path, bedpe= F, ed= F)
 #' Import bam file with all fields
 #'
 #' @param bam_path 
-vl_import_bam <- function(bam_path, ncores= data.table::getDTthreads()-1)
+vl_import_bam <- function(bam_path,
+                          ncores= data.table::getDTthreads()-1)
 {
   cmd <- "module load build-env/2020; module load samtools/1.9-foss-2018b; module load bedtools/2.17.0-foss-2018b; samtools view -@"
   cmd <- paste(cmd, ncores, bam_path)
@@ -118,7 +143,8 @@ vl_import_bam <- function(bam_path, ncores= data.table::getDTthreads()-1)
 }
 
 #' Submits to R using singularity
-vl_Rsub_singularity <- function(R_script, args_v= NULL)
+vl_Rsub_singularity <- function(R_script,
+                                args_v= NULL)
 {
   args_v <- paste0(args_v, collapse= " ")
   cmd <- paste0("module load singularity/3.4.1;

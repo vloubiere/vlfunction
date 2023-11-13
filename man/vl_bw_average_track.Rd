@@ -8,13 +8,13 @@
 vl_bw_average_track(
   bed,
   names,
-  set_IDs,
+  set.IDs,
   tracks,
   upstream = 5000,
   downstream = 5000,
   ignore.strand = T,
   nbins = 101L,
-  center_label = "Center",
+  center.label = "Center",
   plot = T,
   xlab = "genomic distance",
   ylab = "Enrichment",
@@ -24,20 +24,20 @@ vl_bw_average_track(
   legend = T,
   legend_pos = "topleft",
   legend.cex = 1,
-  col.adj = c(0.5, 1)
+  col.adj = 0.5
 )
 
 \method{plot}{vl_bw_average_track}(
   obj,
   xlab = "genomic distance",
   xlab.at = c(min(obj$bin.x), 0, max(obj$bin.x)),
-  center_label = "Center",
+  center.label = "Center",
   ylab = "Enrichment",
   ylim,
   legend = T,
   legend_pos = "topleft",
   legend.cex = 1,
-  col.adj = c(0.5, 1)
+  col.adj = 0.5
 )
 }
 \arguments{
@@ -45,7 +45,7 @@ vl_bw_average_track(
 
 \item{names}{Track names to plot, further used for ordering. By default, bw basenames will be used (as factors).}
 
-\item{set_IDs}{Set IDs specifying the groups as subsets of the bed file. Used for ordering.}
+\item{set.IDs}{Set IDs specifying the groups as subsets of the bed file. Used for ordering.}
 
 \item{tracks}{Vector of bw files to plot. Use full paths to avoid pbs.}
 
@@ -65,7 +65,7 @@ vl_bw_average_track(
 
 \item{ylim}{ylim for plotting. default= range(data)}
 
-\item{col}{Color to be used for plotting. Dataset is ordered using keyby= .(names, set_IDs) before assigning colors}
+\item{col}{Color to be used for plotting. Dataset is ordered using keyby= .(names, set.IDs) before assigning colors}
 
 \item{legend}{Should the legend be plotted? default to T}
 
@@ -73,7 +73,7 @@ vl_bw_average_track(
 
 \item{legend.cex}{Legend cex. defaults to 1}
 
-\item{col.adj}{Opacity of polygons and lines. default= c(0.5,1)}
+\item{col.adj}{Opacity of polygons. default= 0.5}
 }
 \description{
 Plots average tracks for a set bw files around (potentially) several sets of peaks
@@ -87,5 +87,5 @@ Plots average tracks for a set bw files around (potentially) several sets of pea
 bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
 sets <- c(rep("suhw", 100), rep("STARR", 1000))
 tracks <- c("../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", "../gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
-vl_bw_average_track(bed, tracks= tracks, plot= T, upstream = 1000, downstream = 1000, set_IDs = sets)
+vl_bw_average_track(bed, tracks= tracks, plot= T, upstream = 1000, downstream = 1000, set.IDs = sets)
 }

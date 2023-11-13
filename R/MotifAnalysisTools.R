@@ -9,30 +9,58 @@
 #' @param p.cutoff Pval cutoff used for motif detection
 #' @param sel Vector of motif_ID to compute. see vl_Dmel_motifs_DB_full$motif_ID
 #' @param motifDB The motifDB object to be used. see ?vl_Dmel_motifs_DB_full and ?vl_motifs_DB_v2, Default= vl_Dmel_motifs_DB_full
+#' 
 #' @examples
 #' # Example run
 #' sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
-#' top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
-#' top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
-#' counts <- vl_motif_counts(top_SUHW, genome= "dm3", sel= sel)
-#' control_counts <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
 #' 
-#' suhw <- vl_motif_counts(vl_SUHW_top_peaks, "dm3")
-#' ctls_regions <- vl_control_regions_BSgenome(bed= vl_SUHW_top_peaks, "dm3")
-#' ctl <- vl_motif_counts(ctls_regions, "dm3")
-#' pl <- vl_motif_enrich(suhw, ctl, plot= F)
-#' par(mar= c(4,15,4,6))
-#' plot(pl, padj_cutoff= 1e-3)
+#' # Regions
+#' top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks,
+#'                          upstream = 250,
+#'                          downstream = 250,
+#'                          genome = "dm3")
+#' top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks,
+#'                           upstream = 250,
+#'                           downstream = 250,
+#'                           genome = "dm3")
+#' ctls_regions <- vl_control_regions_BSgenome(bed= vl_SUHW_top_peaks,
+#'                                             genome= "dm3")
+#'                           
+#' # Motif counts
+#' suhw <- vl_motif_counts(top_SUHW,
+#'                         genome= "dm3",
+#'                         sel= sel)
+#' starr <- vl_motif_counts(top_STARR,
+#'                          genome= "dm3",
+#'                          sel= sel)
+#' ctl <- vl_motif_counts(ctls_regions,
+#'                        genome= "dm3",
+#'                        sel= sel)
+#'                        
+#' # Enrichment                        
+#' pl <- vl_motif_enrich(suhw,
+#'                       ctl,
+#'                       plot= F)
+#'
+#' # Plot
+#' plot(pl,
+#'      padj.cutoff= 5e-2)
+#' vl_motif_enrich(starr, ctl)  
+#' 
 #' @return Matrix of motif counts
 #' @export
 vl_motif_counts <- function(sequences, ...) UseMethod("vl_motif_counts")
 
 #' @describeIn vl_motif_counts Method to extract sequences from BSgenome
 #' @export
-vl_motif_counts.data.table <- function(bed, genome, ...)
+vl_motif_counts.data.table <- function(bed,
+                                       genome,
+                                       ...)
 {
   sequences <- vl_getSequence(bed, genome)
-  vl_motif_counts.character(sequences, genome= genome, ...)
+  vl_motif_counts.character(sequences,
+                            genome= genome,
+                            ...)
 }
 
 #' @describeIn vl_motif_counts Identify motifs in sequences
@@ -69,61 +97,79 @@ vl_motif_counts.character <- function(sequences= NULL,
 #' Compute motif enrichment between a set of regions and control regions
 #'
 #' @param counts data.table containing counts for the regions of interest
-#' @param control_counts data.table containing counts for control regions (data.table)
+#' @param control.counts data.table containing counts for control regions (data.table)
 #' @param names Convenient names to be used for plotting and so on... Default (NULL) returns to vl_Dmel_motifs_DB_full$motif_cluster names
 #' @param plot Plot result?
-#' @param padj_cutoff cutoff for plotting. Default to FALSE
-#' @param top_enrich Show only n top enriched motifs
+#' @param padj.cutoff cutoff for plotting. Default to FALSE
+#' @param top.enrich Show only n top enriched motifs
 #' @param breaks Color breaks to be used. Defaults to range of filtered padj.
 #' @param order Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"
-#' @param add_motifs Should motif pwms be plotted?
+#' @param add.motifs Should motif pwms be plotted?
 #' @param cex.width expansion factor for motif widths
 #' @param col Colors vector for bars
 #' @param xlab x label
 #' @param cex.height expansion factor for motif heights
-#'
-#' @return DT of enrichment values
+#' 
 #' @examples 
-#' # Example run
+#' # Motif counts
 #' sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
-#' top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
-#' top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
-#' counts <- vl_motif_counts(top_SUHW, genome= "dm3", sel= sel)
-#' control_counts <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
-#' par(mar= c(4,15,4,6))
-#' DT <- vl_motif_enrich(counts, control_counts, add_motifs= T, padj_cutoff= 1e-5, plot= T)
-#' DT <- plot(DT, padj_cutoff= 1e-7)
+#' top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks,
+#'                          upstream = 250,
+#'                          downstream = 250,
+#'                          genome = "dm3")
+#' top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks,
+#'                           upstream = 250,
+#'                           downstream = 250,
+#'                           genome = "dm3")
+#' counts <- vl_motif_counts(top_SUHW,
+#'                           genome= "dm3",
+#'                           sel= sel)
+#' control.counts <- vl_motif_counts(top_STARR,
+#'                                   genome= "dm3",
+#'                                   sel= sel)
+#'                                   
+#' # Enrichment
+#' DT <- vl_motif_enrich(counts,
+#'                       control.counts,
+#'                       add.motifs= T,
+#'                       padj.cutoff= 1e-5,
+#'                       plot= T)
+#' 
+#' # Plot
+#' DT <- plot(DT,
+#'            padj.cutoff= 1e-7)
 #' vl_add_motifs(DT)
-#' @return Returns a table of enrichment which can be plot using ?plot.vl_GO_enr
+#' 
+#' @return DT of enrichment values which can be plot using ?plot.vl_GO_enr
 #' @export
 vl_motif_enrich <- function(counts,
-                            control_counts,
+                            control.counts,
                             names= NULL,
                             plot= F,
-                            padj_cutoff= 0.05,
-                            top_enrich= NA, 
+                            padj.cutoff= 0.05,
+                            top.enrich= NA, 
                             order= "padj",
                             breaks= NULL,
                             col= c("blue", "red"),
                             xlab = "Odd Ratio (log2)",
-                            add_motifs= F,
+                            add.motifs= F,
                             cex.width= 1,
                             cex.height= 1)
 {
   if(!is.data.table(counts))
     counts <- as.data.table(counts)
-  if(!is.data.table(control_counts))
-    counts <- as.data.table(control_counts)
+  if(!is.data.table(control.counts))
+    counts <- as.data.table(control.counts)
   if(!all(sapply(counts, class)=="numeric"))
     stop("counts should only contain numeric values")
-  if(!all(sapply(control_counts, class)=="numeric"))
-    stop("control_counts should only contain numeric values")
+  if(!all(sapply(control.counts, class)=="numeric"))
+    stop("control.counts should only contain numeric values")
   if(!is.null(names) && length(names)!=ncol(counts))
     stop("names should match ncol(counts)")
   
   # make obj ----
   obj <- rbindlist(list(set= counts,
-                        control= control_counts),
+                        control= control.counts),
                    idcol = T)
   
   # Append (cluster) name to motif ID ----
@@ -166,13 +212,13 @@ vl_motif_enrich <- function(counts,
   if(plot)
   {
     DT <- plot.vl_enr(obj= res,
-                      padj_cutoff= padj_cutoff,
-                      top_enrich= top_enrich,
+                      padj.cutoff= padj.cutoff,
+                      top.enrich= top.enrich,
                       order= order,
                       breaks= breaks, 
                       xlab = xlab, 
                       col = col)
-    if(add_motifs)
+    if(add.motifs)
       vl_add_motifs(DT,
                     cex.width= cex.width, 
                     cex.height= cex.height)
@@ -184,21 +230,21 @@ vl_motif_enrich <- function(counts,
 #'
 #' Compute motif enrichment for the cluster in cl_columns, using all the lines as background
 #'
-#' @param counts_list List of data.table containing counts for the regions of interest and potentially control regions (see next argument)
-#' @param control_cl IDs of clusters to be used as background. default to NULL, meaning all clusters are used except the one being tested
+#' @param counts.list List of data.table containing counts for the regions of interest and potentially control regions (see next argument)
+#' @param control.cl IDs of clusters to be used as background. default to NULL, meaning all clusters are used except the one being tested
 #' @param names Convenient names to be used for plotting and so on... Default (NULL) returns vl_Dmel_motifs_DB_full$motif_cluster names
 #' @param plot Should the result be plot using balloons plot? Default to FALSE
-#' @param padj_cutoff cutoff for ballons to be plotted
-#' @param top_enrich Select top enriched motifs/cluster. Default to NA (All)
+#' @param padj.cutoff cutoff for ballons to be plotted
+#' @param top.enrich Select top enriched motifs/cluster. Default to NA (All)
 #' @param order Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"
-#' @param x_breaks Breaks used for ballon's sizes
-#' @param color_breaks Color breaks used for coloring
+#' @param x.breaks Breaks used for ballon's sizes
+#' @param color.breaks Color breaks used for coloring
 #' @param col Vector of colors used for coloring
 #' @param main Title. Default= NA
-#' @param add_motifs Should motif pwms be plotted?
+#' @param add.motifs Should motif pwms be plotted?
 #' @param cex.width expansion factor for motif widths
 #' @param cex.balloons Expansion factor for balloons
-#' @param plot_empty_clusters Should empty clusters be plotted? Default= TRUE
+#' @param plot.empty.clusters Should empty clusters be plotted? Default= TRUE
 #' @param cex.height expansion factor for motif heights
 #'
 #' @examples 
@@ -206,51 +252,51 @@ vl_motif_enrich <- function(counts,
 #' top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
 #' top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
 #' counts <- vl_motif_counts(top_SUHW, genome= "dm3", sel= sel)
-#' control_counts <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
-#' counts_list <- list(SUHW= counts, ATAC= control_counts)
+#' control.counts <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
+#' counts.list <- list(SUHW= counts, ATAC= control.counts)
 #' par(mar= c(3,20,2,5), las= 1)
-#' DT <- vl_motif_cl_enrich(counts_list, padj_cutoff = 1e-3, plot= T, add_motifs= T)
-#' DT <- plot(DT, padj_cutoff= 1e-5)
+#' DT <- vl_motif_cl_enrich(counts.list, padj.cutoff = 1e-3, plot= T, add.motifs= T)
+#' DT <- plot(DT, padj.cutoff= 1e-5)
 #' vl_add_motifs(DT)
 #' 
 #' @return Fisher test data.table.
 #' @export
-vl_motif_cl_enrich <- function(counts_list, 
-                               control_cl= NULL,
+vl_motif_cl_enrich <- function(counts.list, 
+                               control.cl= NULL,
                                names= NULL,
                                plot= F,
-                               padj_cutoff= 1e-5,
-                               top_enrich= NA,
+                               padj.cutoff= 1e-5,
+                               top.enrich= NA,
                                order= "padj",
-                               x_breaks,
-                               color_breaks,
+                               x.breaks,
+                               color.breaks,
                                cex.balloons= 1,
                                col= c("cornflowerblue", "lightgrey", "tomato"),
                                main= NA,
-                               plot_empty_clusters= T,
-                               add_motifs= F,
+                               plot.empty.clusters= T,
+                               add.motifs= F,
                                cex.width= 1,
                                cex.height= 1)
 {
-  if(!all(sapply(counts_list, is.data.table)))
-    counts_list <- lapply(counts_list, as.data.table)
-  if(is.null(names(counts_list)))
-    names(counts_list) <- seq(counts_list)
-  if(!is.null(control_cl) && any(!control_cl %in% names(counts_list)))
-    stop("control_cl should match names(counts_list)")
+  if(!all(sapply(counts.list, is.data.table)))
+    counts.list <- lapply(counts.list, as.data.table)
+  if(is.null(names(counts.list)))
+    names(counts.list) <- seq(counts.list)
+  if(!is.null(control.cl) && any(!control.cl %in% names(counts.list)))
+    stop("control.cl should match names(counts.list)")
   
   # Compute enrichment in non-control clusters
-  cmb <- data.table(cl= names(counts_list))
-  if(is.null(control_cl))
+  cmb <- data.table(cl= names(counts.list))
+  if(is.null(control.cl))
     cmb <- cmb[, .(ctl= cmb$cl[cmb$cl!=cl]), cl] else
-      cmb <- cmb[, .(ctl= control_cl), cl]
+      cmb <- cmb[, .(ctl= control.cl), cl]
   # Remove self-comparisons ----
   cmb[, self:= identical(cl, ctl), cl]
   cmb <- cmb[!(self), !"self"]
   # Motif enrichment ----
   res <- cmb[, {
-    vl_motif_enrich(counts = counts_list[[cl]],
-                    control_counts = rbindlist(counts_list[ctl]),
+    vl_motif_enrich(counts = counts.list[[cl]],
+                    control.counts = rbindlist(counts.list[ctl]),
                     names= names,
                     plot= F)
   }, cl]
@@ -261,16 +307,16 @@ vl_motif_cl_enrich <- function(counts_list,
   if(plot)
   {
     DT <- plot.vl_enr_cl(obj = res,
-                         padj_cutoff= padj_cutoff,
-                         top_enrich= top_enrich, 
+                         padj.cutoff= padj.cutoff,
+                         top.enrich= top.enrich, 
                          order= order,
-                         x_breaks= x_breaks,
-                         color_breaks= color_breaks,
+                         x.breaks= x.breaks,
+                         color.breaks= color.breaks,
                          cex.balloons= cex.balloons,
                          col= col,
                          main= main, 
-                         plot_empty_clusters = plot_empty_clusters)
-    if(add_motifs)
+                         plot.empty.clusters = plot.empty.clusters)
+    if(add.motifs)
       vl_add_motifs(DT,
                     cex.width= cex.width, 
                     cex.height= cex.height)
@@ -289,9 +335,13 @@ vl_motif_cl_enrich <- function(counts_list,
 #' @param genome Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome"
 #' @param bg Background used to find motifs. Possible values include "genome" and "even". Default= "genome"
 #' @param p.cutoff Pval cutoff used for motif detection
-#' @param collapse_overlapping Should overlapping motifs be merged? If TRUE (default), motif instances that overlap more than 70 percent of their width are collapsed.
+#' @param collapse.overlapping Should overlapping motifs be merged? If TRUE (default), motif instances that overlap more than 70 percent of their width are collapsed.
+#' 
 #' @examples
-#' vl_motif_pos.data.table(vl_SUHW_top_peaks[1:2], genome= "dm3", sel= c("cisbp__M2328", "flyfactorsurvey__suHw_FlyReg_FBgn0003567", "jaspar__MA0533.1"))
+#' vl_motif_pos.data.table(vl_SUHW_top_peaks[1:2],
+#'                         genome= "dm3",
+#'                         sel= c("cisbp__M2328", "flyfactorsurvey__suHw_FlyReg_FBgn0003567", "jaspar__MA0533.1"))
+#'                         
 #' @return A list of positions of length = length(sequences) 
 #' @export
 vl_motif_pos <- function(sequences, ...) UseMethod("vl_motif_pos")
@@ -311,7 +361,7 @@ vl_motif_pos.character <- function(sequences,
                                    genome,
                                    bg= "genome",
                                    p.cutoff= 5e-4,
-                                   collapse_overlapping= TRUE,
+                                   collapse.overlapping= TRUE,
                                    motifDB= vl_Dmel_motifs_DB_full)
 {
   if(any(!sel %in% motifDB$motif_ID))
@@ -330,7 +380,7 @@ vl_motif_pos.character <- function(sequences,
     lapply(x, function(y) {
       y <- as.data.table(y)
       # Collapse motifs that overlap more than 70% -> return merged motifs
-      if(collapse_overlapping && nrow(y))
+      if(collapse.overlapping && nrow(y))
       {
         # y <- data.table(start=c(1,2,3,4,5), end= c(5,6,7,8,9), score= 1, width= 4)
         setorderv(y, c("start", "end"))

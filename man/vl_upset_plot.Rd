@@ -5,23 +5,23 @@
 \title{upset Plot}
 \usage{
 vl_upset_plot(
-  dat_list,
+  dat.list,
   col = "grey20",
   col.set = "grey20",
   cex.grid = 2,
-  grid_hex = 2,
+  grid.hex = 2,
   cex.inter = 0.8,
-  show_empty = F,
+  show.empty = F,
   lwd = 1,
   xaxt = "n",
-  intersection_cutoff = 0,
+  intersection.cutoff = 0,
   border = NA,
   ylab = "Intersection size",
   las = par("las")
 )
 }
 \arguments{
-\item{dat_list}{List containing the names to intersect (see examples)}
+\item{dat.list}{List containing the names to intersect (see examples)}
 
 \item{col}{Color used for intersection bars}
 
@@ -29,17 +29,17 @@ vl_upset_plot(
 
 \item{cex.grid}{Cex for grid points}
 
-\item{grid_hex}{Height of grid lines}
+\item{grid.hex}{Height of grid lines}
 
 \item{cex.inter}{Cex size intersection labels}
 
-\item{show_empty}{Should empty instersections be shown? default= F}
+\item{show.empty}{Should empty instersections be shown? default= F}
 
 \item{lwd}{line width}
 
 \item{xaxt}{Should x axis be drawn? default= "n}
 
-\item{intersection_cutoff}{min cutoff for selections to be shown}
+\item{intersection.cutoff}{min cutoff for selections to be shown}
 
 \item{border}{Default to NA}
 

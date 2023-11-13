@@ -16,7 +16,7 @@ vl_resizeBed(
 \arguments{
 \item{bed}{Bed file to resize. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 
-\item{center}{From where should the region be centered before extension. Either "center", "start" or "end"}
+\item{center}{From where should the region be centered before extension. Either "center", "start" or "end". Default= "center".}
 
 \item{upstream}{Upstream extension. default= 500L}
 
@@ -33,8 +33,11 @@ Resized DT ranges
 Resize a bed file starting from specified origin
 }
 \examples{
-bed <- data.table(seqnames= "chr2L", start= 10000, end= 12000, strand= c("+", "-", "*"))
-vl_resizeBed(bed, center= "start", upstream = 2000, downstream = 1000)[]
-vl_resizeBed(bed, center= "end", upstream = 2000, downstream = 1000)[]
-vl_resizeBed(bed, center= "center", upstream = 2000, downstream = 1000)[]
+bed <- data.table(seqnames= "chr2L",
+                  start= 10000,
+                  end= 12000,
+                  strand= c("+", "-", "*"))
+vl_resizeBed(bed, center= "start", upstream = 0, downstream = 0)[]
+vl_resizeBed(bed, center= "end", upstream = 0, downstream = 0)[]
+vl_resizeBed(bed, center= "center", upstream = 0, downstream = 0)[]
 }

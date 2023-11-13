@@ -20,8 +20,12 @@ Return 'a' ranges that overlap with any range in 'b'
 Return regions "a" overlapping with regions "b"
 }
 \examples{
-a <- data.table(seqnames= "chr2L", start= c(1000,2000), end= c(2000, 3000))
-b <- data.table(seqnames= "chr2L", start= 1500, end= 1600)
-vl_intersectBed(a, b) 
+a <- data.table(seqnames= "chr2L",
+                start= c(1000,2000),
+                end= c(2000, 3000))
+b <- data.table(seqnames= "chr2L",
+                start= 1500,
+                end= 1600)
+vl_intersectBed(a, b)
 
 }

@@ -3,38 +3,37 @@
 #' This function plots a heatmap and returns an S3 object of type vl_heatmap_obj which can be modified and used for later plotting.
 #' 
 #' @param x Data to plot. Can be one of matrix, data.table, or formula.
-#' @param cluster_rows Should rows be clustered? Default= T
-#' @param row_clusters Vector of row clusters (overwritten by clustering, Default= 1)
-#' @param row_clusters_col Row clusters colors (default is to use grey palette)
-#' @param kmeans_k Number of row kmean clusters. If specified, takes over row clustering.
-#' @param clustering_distance_rows Method for clustering distance rows. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"
-#' @param cutree_rows Number of cuts for rows tree. Default= 1L
-#' @param cluster_cols Should columns be clustered? Default= T
-#' @param col_clusters Vector of col clusters (overwritten by clustering, Default= 1)
-#' @param col_clusters_col Col clusters colors (default is to use grey palette)
-#' @param clustering_distance_cols Method for clustering distance cols. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"
-#' @param cutree_cols  Number of cuts for cols tree. default= 1L
-#' @param clustering_method Clustering method to use. Must be one of "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median" or "centroid".
+#' @param cluster.rows Should rows be clustered? Default= T
+#' @param row.clusters Vector of row clusters (overwritten by clustering, Default= 1)
+#' @param row.clusters.col Row clusters colors (default is to use grey palette)
+#' @param kmeans.k Number of row kmean clusters. If specified, takes over row clustering.
+#' @param clustering.distance.rows Method for clustering distance rows. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"
+#' @param cutree.rows Number of cuts for rows tree. Default= 1L
+#' @param cluster.cols Should columns be clustered? Default= T
+#' @param col.clusters Vector of col clusters (overwritten by clustering, Default= 1)
+#' @param col.clusters.col Col clusters colors (default is to use grey palette)
+#' @param clustering.distance.cols Method for clustering distance cols. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"
+#' @param cutree.cols  Number of cuts for cols tree. default= 1L
+#' @param clustering.method Clustering method to use. Must be one of "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median" or "centroid".
 #' @param plot Should the heatmap be plotted? Default= T
-#' @param auto_margins Should auto margins be computed and used?
 #' @param breaks Heatmap breaks, which should be the same length as the color vector
 #' @param col Color scale. default= c("cornflowerblue", "white", "red")
-#' @param na_col Color for na values. Default= "lightgrey"
+#' @param na.col Color for na values. Default= "lightgrey"
 #' @param grid Should grid be drawn? Default= F
 #' @param main Title. Default= NA
-#' @param legend_title Character to plot as title legend
+#' @param legend.title Character to plot as title legend
 #' @param legend.cex cex expansion factor applying to the whole legend
-#' @param show_rownames Plot row names? Default= T
-#' @param show_colnames Plot col names? Default= T
-#' @param tilt_colnames Should colnames be tilted? default= F
-#' @param show_row_clusters Plot row cluster names/lines?
-#' @param show_col_clusters Plot col cluster names/lines?
-#' @param show_row_dendrogram Plot row dendrogram?
-#' @param show_col_dendrogram Plot col dendrogram?
-#' @param show_legend Should the legend be plotted?
-#' @param display_numbers Display numbers on heatmap? Default= F
-#' @param display_numbers_matrix Matrix of numbers to be displayed. useful for fine tuning. Default= x
-#' @param display_numbers_cex cex display numbers 
+#' @param show.rownames Plot row names? Default= T
+#' @param show.colnames Plot col names? Default= T
+#' @param tilt.colnames Should colnames be tilted? default= F
+#' @param show.row.clusters Plot row cluster names/lines?
+#' @param show.col.clusters Plot col cluster names/lines?
+#' @param show.row.dendrogram Plot row dendrogram?
+#' @param show.col.dendrogram Plot col dendrogram?
+#' @param show.legend Should the legend be plotted?
+#' @param display.numbers Display numbers on heatmap? Default= F
+#' @param display.numbers.matrix Matrix of numbers to be displayed. useful for fine tuning. Default= x
+#' @param display.numbers.cex cex display numbers 
 #' @examples
 #' # Create test matrix
 #' set.seed(1234)
@@ -46,8 +45,18 @@
 #' rownames(test) = paste("Gene", 1:20, sep = "")
 #' 
 #' par(mfrow=c(2,2))
-#' res <- vl_heatmap(test, kmeans_k = 4, cutree_rows = 3, cutree_cols = 5, legend_title = "log2FoldChange", main= "test")
-#' vl_heatmap(test, cutree_rows = 3, cutree_cols = 2, show_col_clusters = F, legend_title = "log2FoldChange", main= "test")
+#' res <- vl_heatmap(test,
+#'                   kmeans.k = 4,
+#'                   cutree.rows = 3,
+#'                   cutree.cols = 5,
+#'                   legend.title = "log2FoldChange",
+#'                   main= "test")
+#' vl_heatmap(test,
+#'            cutree.rows = 3,
+#'            cutree.cols = 2,
+#'            show.col.clusters = F,
+#'            legend.title = "log2FoldChange",
+#'            main= "test")
 #' 
 #' @return An object of class vl_heatmap_obj containing clustering data and can be used for plotting using plot(obj, ...)
 #' @export
@@ -69,64 +78,63 @@ vl_heatmap.data.table <- function(x,
 #' @describeIn vl_heatmap Default function using matrix as an input
 #' @export
 vl_heatmap.matrix <- function(x,
-                              cluster_rows= TRUE,
-                              row_clusters= 1,
-                              row_clusters_col= NULL,
-                              kmeans_k= NA,
-                              clustering_distance_rows= "euclidean",
-                              cutree_rows = 1,
-                              cluster_cols = TRUE,
-                              col_clusters= 1,
-                              col_clusters_col= NULL,
-                              clustering_distance_cols = "euclidean",
-                              cutree_cols = 1,
-                              clustering_method = "complete",
+                              cluster.rows= TRUE,
+                              row.clusters= 1,
+                              row.clusters.col= NULL,
+                              kmeans.k= NA,
+                              clustering.distance.rows= "euclidean",
+                              cutree.rows = 1,
+                              cluster.cols = TRUE,
+                              col.clusters= 1,
+                              col.clusters.col= NULL,
+                              clustering.distance.cols = "euclidean",
+                              cutree.cols = 1,
+                              clustering.method = "complete",
                               plot= TRUE,
-                              auto_margins= FALSE,
                               breaks= seq(min(x, na.rm= T), max(x, na.rm= TRUE), length.out= length(col)),
                               col= c("cornflowerblue", "white", "red"),
-                              na_col= "lightgrey",
+                              na.col= "lightgrey",
                               grid= FALSE,
                               main= NA,
-                              legend_title= NA,
+                              legend.title= NA,
                               legend.cex= 1,
-                              show_rownames= TRUE,
-                              show_colnames= TRUE,
-                              tilt_colnames= FALSE,
-                              show_row_clusters= length(unique(rows$cl))>1,
-                              show_col_clusters= length(unique(cols$cl))>1,
-                              show_row_dendrogram= TRUE,
-                              show_col_dendrogram= TRUE,
-                              show_legend= TRUE,
-                              display_numbers= FALSE,
-                              display_numbers_matrix,
-                              display_numbers_cex= 1)
+                              show.rownames= TRUE,
+                              show.colnames= TRUE,
+                              tilt.colnames= FALSE,
+                              show.row.clusters= length(unique(rows$cl))>1,
+                              show.col.clusters= length(unique(cols$cl))>1,
+                              show.row.dendrogram= TRUE,
+                              show.col.dendrogram= TRUE,
+                              show.legend= TRUE,
+                              display.numbers= FALSE,
+                              display.numbers.matrix,
+                              display.numbers.cex= 1)
 {
   if(is.null(rownames(x)))
     rownames(x) <- seq(nrow(x))
   if(is.null(colnames(x)))
     colnames(x) <- seq(ncol(x))
-  if(!is.factor(row_clusters))
-    row_clusters <- factor(row_clusters)
-  if(!is.factor(col_clusters))
-    col_clusters <- factor(col_clusters)
-  if(is.null(row_clusters_col))
-    if(cluster_rows && !is.na(kmeans_k))
-      row_clusters_col <- grDevices::gray.colors(kmeans_k) else
-        if(cluster_rows && length(levels(row_clusters))==1)
-          row_clusters_col <- grDevices::gray.colors(cutree_rows) else
-            row_clusters_col <- grDevices::gray.colors(length(unique(row_clusters)))
-  if(is.null(col_clusters_col))
-    if(cluster_cols && length(levels(col_clusters))==1)
-      col_clusters_col <- grDevices::gray.colors(cutree_cols) else
-        col_clusters_col <- grDevices::gray.colors(length(unique(col_clusters)))
+  if(!is.factor(row.clusters))
+    row.clusters <- factor(row.clusters)
+  if(!is.factor(col.clusters))
+    col.clusters <- factor(col.clusters)
+  if(is.null(row.clusters.col))
+    if(cluster.rows && !is.na(kmeans.k))
+      row.clusters.col <- grDevices::gray.colors(kmeans.k) else
+        if(cluster.rows && length(levels(row.clusters))==1)
+          row.clusters.col <- grDevices::gray.colors(cutree.rows) else
+            row.clusters.col <- grDevices::gray.colors(length(unique(row.clusters)))
+  if(is.null(col.clusters.col))
+    if(cluster.cols && length(levels(col.clusters))==1)
+      col.clusters.col <- grDevices::gray.colors(cutree.cols) else
+        col.clusters.col <- grDevices::gray.colors(length(unique(col.clusters)))
 
   # Init informative result DT ----
   rows <- data.table(name= rownames(x),
-                     cl= row_clusters)
+                     cl= row.clusters)
   rows[, order:= order(cl)]
   cols <- data.table(name= colnames(x),
-                     cl= col_clusters)
+                     cl= col.clusters)
   cols[, order:= order(cl)]
   
   rcl <- NULL
@@ -135,21 +143,21 @@ vl_heatmap.matrix <- function(x,
   cdend <- NULL
   
   # Clustering rows ----
-  if(cluster_rows && nrow(x)>1 && length(levels(row_clusters))==1)
+  if(cluster.rows && nrow(x)>1 && length(levels(row.clusters))==1)
   {
     set.seed(3453)
-    if(is.na(kmeans_k))
+    if(is.na(kmeans.k))
     {
-      if(clustering_distance_rows %in% c("pearson", "spearman"))
+      if(clustering.distance.rows %in% c("pearson", "spearman"))
         .d <- as.dist(1 - cor(t(x), 
                               use= "pairwise.complete.obs", 
-                              method= clustering_distance_rows)) else
-                                .d <- dist(x, method = clustering_distance_rows)
+                              method= clustering.distance.rows)) else
+                                .d <- dist(x, method = clustering.distance.rows)
                               # Hierarchical clustering
-                              rcl <- hclust(.d, method = clustering_method) 
+                              rcl <- hclust(.d, method = clustering.method) 
                               rows[, order:= rcl$order]
                               # Cutree
-                              rows[, cl:= cutree(rcl, cutree_rows)]
+                              rows[, cl:= cutree(rcl, cutree.rows)]
                               # Extract dend
                               dend <- ggdendro::dendro_data(rcl, 
                                                             type = "rectangle", 
@@ -158,29 +166,29 @@ vl_heatmap.matrix <- function(x,
     }else
     {
       # Kmeans clustering
-      rcl <- kmeans(x, centers = kmeans_k)
+      rcl <- kmeans(x, centers = kmeans.k)
       rows[, order:= order(rcl$cluster)]
       rows[, cl:= rcl$cluster]
     }
   }
   # Add cluster color and y pos
-  rows[, col:= row_clusters_col[cl]]
+  rows[, col:= row.clusters.col[cl]]
   rows[(order), y:= rev(.I)]
   
   # Clustering cols ----
-  if(cluster_cols && ncol(x)>1 && length(levels(col_clusters))==1)
+  if(cluster.cols && ncol(x)>1 && length(levels(col.clusters))==1)
   {
     set.seed(3453)
-    if(clustering_distance_cols %in% c("pearson", "spearman"))
+    if(clustering.distance.cols %in% c("pearson", "spearman"))
       .d <- as.dist(1 - cor(x, 
                             use= "pairwise.complete.obs", 
-                            method= clustering_distance_cols)) else
-                              .d <- dist(t(x), method = clustering_distance_cols)
+                            method= clustering.distance.cols)) else
+                              .d <- dist(t(x), method = clustering.distance.cols)
                             # Hierarchical clustering
-                            ccl <- hclust(.d, method = clustering_method)
+                            ccl <- hclust(.d, method = clustering.method)
                             cols[, order:= ccl$order]
                             # Cutree
-                            cols[, cl:= cutree(ccl, cutree_cols)]
+                            cols[, cl:= cutree(ccl, cutree.cols)]
                             # Extract dend
                             dend <- ggdendro::dendro_data(ccl,
                                                           type = "rectangle", 
@@ -188,7 +196,7 @@ vl_heatmap.matrix <- function(x,
                             cdend <- data.table::as.data.table(dend$segments)
   }
   # Add cluster color and x pos
-  cols[, col:= col_clusters_col[cl]]
+  cols[, col:= col.clusters.col[cl]]
   cols[(order), x:= .I]
   
   # PLOT ----
@@ -206,18 +214,6 @@ plot.vl_heatmap <- function(obj)
 {
   list2env(obj, environment())
   
-  # Margins
-  if(auto_margins)
-  {
-    bot <- 1
-    left <- 1
-    if(show_colnames)
-      bot <- bot+grconvertY(max(strwidth(cols$name, "inches")), "inches", "lines")
-    if(show_rownames)
-      left <- left+grconvertX(max(strwidth(rows$name, "inches")), "inches", "lines")
-    par(mar= c(bot, left, 5, 7))
-  }
-  
   # Heatmap ----
   # Order matrix
   x <- x[(rows$order), , drop=F]
@@ -228,7 +224,7 @@ plot.vl_heatmap <- function(obj)
   # Image
   im <- x
   im[!is.na(im)] <- Cc(im[!is.na(im)])
-  im[is.na(im)] <- na_col
+  im[is.na(im)] <- na.col
   plot.new()
   plot.window(xlim = c(0.5,ncol(im)+0.5),
               ylim = c(0.5,nrow(im)+0.5),
@@ -257,20 +253,20 @@ plot.vl_heatmap <- function(obj)
              xpd= T)
   }
   # Plot numbers ----
-  if(display_numbers)
+  if(display.numbers)
   {
-    if(missing(display_numbers_matrix))
-      display_numbers_matrix <- x else if(identical(dim(x), dim(display_numbers_matrix)))
+    if(missing(display.numbers.matrix))
+      display.numbers.matrix <- x else if(identical(dim(x), dim(display.numbers.matrix)))
       {
-        display_numbers_matrix <- display_numbers_matrix[(rows$order), , drop=F]
-        display_numbers_matrix <- display_numbers_matrix[, (cols$order), drop=F]
+        display.numbers.matrix <- display.numbers.matrix[(rows$order), , drop=F]
+        display.numbers.matrix <- display.numbers.matrix[, (cols$order), drop=F]
       }else
-        stop("dim(x) and dim(display_numbers_matrix) should be identical!")
+        stop("dim(x) and dim(display.numbers.matrix) should be identical!")
     
-    text(c(col(display_numbers_matrix)),
-         rev(c(row(display_numbers_matrix))),
-         c(display_numbers_matrix),
-         cex= display_numbers_cex,
+    text(c(col(display.numbers.matrix)),
+         rev(c(row(display.numbers.matrix))),
+         c(display.numbers.matrix),
+         cex= display.numbers.cex,
          offset= 0) 
   }
 
@@ -280,7 +276,7 @@ plot.vl_heatmap <- function(obj)
   mar.lh <- diff(grconvertY(c(0,1), "lines", "user"))
 
   # Cluster lines ----
-  if(show_row_clusters)
+  if(show.row.clusters)
   {
     pos <- rows[rev(order)][, .(y1= .N), .(cl, col)]
     pos[, y1:= cumsum(y1)+0.5]
@@ -301,7 +297,7 @@ plot.vl_heatmap <- function(obj)
          xpd= NA,
          adj= 0.5)
   }
-  if(show_col_clusters)
+  if(show.col.clusters)
   {
     pos <- cols[(order)][, .(x1= .N), .(cl, col)]
     pos[, x1:= cumsum(x1)+0.5]
@@ -327,9 +323,9 @@ plot.vl_heatmap <- function(obj)
     title(main= main)
 
   # Plot dendrograms ----
-  if(show_row_dendrogram & !is.null(rdend))
+  if(show.row.dendrogram & !is.null(rdend))
   {
-    if(show_row_clusters)
+    if(show.row.clusters)
       d.left <- rleft+mar.lw else
         d.left <- par("usr")[2]
     segments(rdend$y/diff(range(rdend[,c(y, yend)]))*mar.lw*1.5+d.left,
@@ -338,9 +334,9 @@ plot.vl_heatmap <- function(obj)
              par("usr")[4]-rdend$xend+0.5,
              xpd= NA)
   }
-  if(show_col_dendrogram & !is.null(cdend))
+  if(show.col.dendrogram & !is.null(cdend))
   {
-    if(show_col_clusters)
+    if(show.col.clusters)
       d.bot <- ctop+mar.lh else
         d.bot <- par("usr")[4]
     segments(cdend$x,
@@ -351,9 +347,9 @@ plot.vl_heatmap <- function(obj)
   }
 
   # Plot axes ----
-  if(show_colnames)
+  if(show.colnames)
   {
-    if(tilt_colnames)
+    if(tilt.colnames)
       vl_tilt_xaxis(x = seq(ncol(x)),
                     y = grconvertY(grconvertY(0, "npc", "inch")-grconvertY(par("mgp")[2], "line", "inch"), "inch", "user"),
                     labels = colnames(x),
@@ -366,19 +362,19 @@ plot.vl_heatmap <- function(obj)
                            labels = colnames(x),
                            lwd= 0)
   }
-  if(show_rownames)
+  if(show.rownames)
     axis(2,
          at= seq(nrow(x)),
          labels = rev(rownames(x)),
          lwd= 0)
 
   # Plot legend ----
-  if(show_legend)
+  if(show.legend)
   {
     left <- par("usr")[2]+mar.lw
-    if(show_row_clusters)
+    if(show.row.clusters)
       left <- left+mar.lw*1
-    if(show_row_dendrogram && !is.null(rdend))
+    if(show.row.dendrogram && !is.null(rdend))
       left <- left+mar.lw*1.5
     top <- par("usr")[4]-mar.lh
     vl_heatkey(breaks = breaks,
@@ -389,6 +385,6 @@ plot.vl_heatmap <- function(obj)
                width= mar.lw*legend.cex,
                ticks.cex= 0.6*legend.cex,
                main.cex= 0.8*legend.cex,
-               main= legend_title)
+               main= legend.title)
   }
 }

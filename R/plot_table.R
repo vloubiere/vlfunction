@@ -3,17 +3,18 @@
 #' Plots a data.table as text
 #'
 #' @param DT data.table
-#' @param wrap_text Number of characters after which text can be wrapped
+#' @param wrap.text Number of characters after which text can be wrapped
 #' @return Plots table
 #' @export
-vl_plot_table <- function(DT, wrap_text= 20)
+vl_plot_table <- function(DT,
+                          wrap.text= 20)
 {
   frame <- as.data.table(as.list(names(DT)))
   setnames(frame, names(DT))
   frame <- rbind(frame, DT, fill= T)
   frame <- cbind(row= seq(nrow(frame)), frame)
   frame <- melt(frame, "row")
-  frame[, value:= lapply(value, function(x) paste0(strwrap(x, width = wrap_text), collapse= "\n"))]
+  frame[, value:= lapply(value, function(x) paste0(strwrap(x, width = wrap.text), collapse= "\n"))]
   frame[, value:= gsub("\n$", "", value)]
   
   plot.new()

@@ -4,57 +4,58 @@
 #' @param tracks bw or bed (peaks) files.
 #' @param space space between regions. Default is 30 px
 #' @param widths Length 2 integer vector specifying the width of bw and bed tracks, respectively. Default= c(100L, 20L)
-#' @param highlight_bed Regions to be highlighted
+#' @param highlight.bed Regions to be highlighted
 #' @param col Track colors
-#' @param highlight_col Color used for highlighted region
-#' @param bg_col Color used for background. default= "white"
+#' @param highlight.col Color used for highlighted region
+#' @param bg.col Color used for background. default= "white"
 #' @param density Type of track to plot. either "track" (default) or "density"
-#' @param density_col Color palette used for density bw. default= viridis::viridis(10)
+#' @param density.col Color palette used for density bw. default= viridis::viridis(10)
 #' @param space= 30,
 #' @param widths= c(100L, 20L),
 #' @param min Min value for tracks. default to 0! (Setting to NA will compute min internally)
 #' @param max Max value for tracks (will be internally reset to 1 for non-bw files)
 #' @param names names for bw/bed files
 #' @param genome Genome used to plot transcripts. Available: "dm3", "dm6", "mm10", "hg19
-#' @param min_symbol Set the min size for symbols that will be plotted. Decreasing= more symbols. default= 1  
+#' @param min.symbol Set the min size for symbols that will be plotted. Decreasing= more symbols. default= 1  
 #' @param add Should only the tracks be added on top of existing plot? default= F
 #'
 #' @examples
-#' regions <- data.table(seqnames= "chr3R",
-#' start= c(2166691, 12049006),
-#' end= c(2949651, 12932873),
-#' name= c("ANTP-C", "BX-C"))
+#' bed <- data.table(seqnames= "chr3R",
+#'                   start= c(2166691, 12049006),
+#'                   end= c(2949651, 12932873),
+#'                   name= c("ANTP-C", "BX-C"))
 #' 
-#' bw <-c("../available_data_dm3/db/bw/GSE41440_H3K27ac_rep1_uniq.bw",
-#' "../available_data_dm3/db/bw/GSE41440_H3K27me3_rep1_uniq.bw")
+#' bw <-c("/groups/stark/vloubiere/projects/epigenetic_cancer/db/bw/cutnrun/H3K27me3_PH18_merge.bw",
+#'        "/groups/stark/vloubiere/projects/epigenetic_cancer/db/bw/cutnrun/H3K27Ac_PH18_merge.bw")
 #' 
 #' highlight_regions <- data.table(seqnames= "chr3R",
-#' start= 12586652,
-#' end= 12630183)
+#'                                 start= 12586652,
+#'                                 end= 12630183)
 #' 
-#' peaks <- "db/peaks/ATAC_peaks.txt"
+#' peaks <- "/groups/stark/vloubiere/projects/epigenetic_cancer/db/peaks/cutnrun/H3K27Ac_PH18_confident_peaks.narrowPeak"
 #' 
-#' vl_screenshot(bed = regions, 
-#' tracks = c(bw, peaks), 
-#' highlight_bed = highlight_regions, 
-#' col = c("black", "blue", "red"),
-#' genome = "dm3")
+#' vl_screenshot(bed = bed, 
+#'               tracks = c(bw, peaks), 
+#'               highlight.bed = highlight_regions, 
+#'               col = c("black", "blue", "red"),
+#'               genome = "dm6")
+#'
 #' @export
 vl_screenshot <- function(bed,
                           tracks,
-                          highlight_bed= NULL,
+                          highlight.bed= NULL,
                           col= "black",
-                          highlight_col= "lightgrey",
-                          bg_col= "white",
+                          highlight.col= "lightgrey",
+                          bg.col= "white",
                           density= "track",
-                          density_col= viridis::viridis(10),
+                          density.col= c("#440154FF", "#482878FF", "#3E4A89FF", "#31688EFF", "#26828EFF", "#1F9E89FF", "#35B779FF", "#6DCD59FF", "#B4DE2CFF", "#FDE725FF"),
                           space= 30,
                           widths= c(100L, 20L),
                           names= NULL,
                           min= 0,
                           max= as.numeric(NA),
                           genome,
-                          min_symbol= 1,
+                          min.symbol= 1,
                           add= F)
 {
   bed <- vl_importBed(bed)
@@ -73,9 +74,7 @@ vl_screenshot <- function(bed,
   if(length(min)>1 && length(max)!=sum(is_bw))
     stop("min should either be length 1 or match the number of bw tracks")
   
-  #----------------------------------#
-  # Compute object
-  #----------------------------------#
+  # Compute object ----
   # Binning and bg color
   bins <- bed[, {
     coor <- round(seq(start, 
@@ -92,9 +91,9 @@ vl_screenshot <- function(bed,
     res
   }, .(seqnames, 
        regionID= rleid(seqnames, start, end))]
-  bins[, bg:= bg_col]
-  if(!is.null(highlight_bed))
-    bins[vl_covBed(bins, highlight_bed)>0, bg:= highlight_col]
+  bins[, bg:= bg.col]
+  if(!is.null(highlight.bed))
+    bins[vl_covBed(bins, highlight.bed)>0, bg:= highlight.col]
   # Init obj
   obj <- data.table(ID= seq(tracks),
                     file= tracks,
@@ -124,7 +123,7 @@ vl_screenshot <- function(bed,
   if(density=="density")
     obj[type=="bw", Cc:= {
       idx <- round((value-min)/(max-min)*widths[1])+1
-      colorRampPalette(density_col)(widths[1]+1)[ifelse(idx>widths[1]+1, widths[1]+1, idx)]}]
+      colorRampPalette(density.col)(widths[1]+1)[ifelse(idx>widths[1]+1, widths[1]+1, idx)]}]
   obj[is.na(start), Cc:= bg]
   # Borders
   obj[y==1 & Cc==bg & type=="bw" & !is.na(end), Cc:= col] # Full line at the bottom of bw tracks
@@ -133,9 +132,7 @@ vl_screenshot <- function(bed,
   yshift <- rev(cumsum(data.table::shift(rev(obj[, max(y), ID]$V1), 1, fill = 0)))
   obj[, y:= y+yshift[.GRP], ID]
   
-  #----------------------------------#
-  # PLOT
-  #----------------------------------#
+  # Plot ----
   im <- dcast(obj, -y~x, value.var = "Cc")
   im <- as.matrix(im, 1)
   if(!add)
@@ -161,31 +158,31 @@ vl_screenshot <- function(bed,
                     min.y= min(y)+strheight(min, cex= 0.5),
                     min.val= formatC(min, format= "g")), .(ID, name, type, max, min)]
     labs[, {
-      text(0,
-           lab.y[1],
-           name[1],
-           pos= 2,
-           xpd= T,
-           cex= ifelse(lab.cex<1, lab.cex, 1)) #Adjust size of peak tracks
+      axis(2,
+           at = lab.y[1],
+           labels = name[1],
+           lwd = 0,
+           cex= par("cex.lab")*ifelse(lab.cex<1, lab.cex, 1)) #Adjust size of peak tracks
       if(type=="bw")
-        text(0,
-             c(max.y, min.y),
-             c(max.val, min.val),
-             pos= 2,
-             xpd= T,
-             cex= 0.5)
+        axis(2,
+             at = c(max.y, min.y),
+             labels = c(max.val, min.val),
+             lwd = 0,
+             cex= par("cex.axis")*0.5)
     }, (labs)]
   }
   
-  #----------------------------------#
-  # Transcripts
-  #----------------------------------#
+  # Transcripts ----
   if(!missing(genome) & !add)
-    vl_screenshot_transcripts(obj= obj, genome= genome, min_symbol= min_symbol)
+    vl_screenshot_transcripts(obj= obj,
+                              genome= genome,
+                              min.symbol= min.symbol)
 }
 
 #' @export
-vl_screenshot_transcripts <- function(obj, genome, min_symbol= 1)
+vl_screenshot_transcripts <- function(obj,
+                                      genome,
+                                      min.symbol= 1)
 {
   annotation <- switch(genome, 
                        "dm3"= list(TxDb= TxDb.Dmelanogaster.UCSC.dm3.ensGene::TxDb.Dmelanogaster.UCSC.dm3.ensGene,
@@ -201,7 +198,8 @@ vl_screenshot_transcripts <- function(obj, genome, min_symbol= 1)
                                     org= org.Hs.eg.db::org.Hs.eg.db,
                                     Keytype= "ENTREZID"))
   # Extract overlapping transcripts
-  transcripts <- as.data.table(GenomicFeatures::transcripts(annotation$TxDb, c("TXNAME", "GENEID")))
+  transcripts <- GenomicFeatures::transcripts(annotation$TxDb, c("TXNAME", "GENEID"))
+  transcripts <- as.data.table(transcripts)
   transcripts <- transcripts[, .(GENEID= unlist(GENEID)), setdiff(names(transcripts), "GENEID")]
   
   # Add symbols
@@ -267,7 +265,7 @@ vl_screenshot_transcripts <- function(obj, genome, min_symbol= 1)
            xpd=T,
            lwd= pl$lwd,
            lend= 2)
-  pl <- pl[seg.x1-seg.x0>strwidth(symbol, cex= 0.8*min_symbol) & type=="transcript"]
+  pl <- pl[seg.x1-seg.x0>strwidth(symbol, cex= 0.8*min.symbol) & type=="transcript"]
   if(nrow(pl)>0)
     text(rowMeans(pl[, .(seg.x0, seg.x1)]),
          pl$y,

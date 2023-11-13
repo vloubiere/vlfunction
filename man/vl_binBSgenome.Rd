@@ -6,19 +6,19 @@
 \usage{
 vl_binBSgenome(
   genome,
-  bins_width = 50L,
-  steps_width = bins_width,
-  restrict_seqnames = NULL
+  bins.width = 50L,
+  steps.width = bins.width,
+  restrict.seqnames = NULL
 )
 }
 \arguments{
 \item{genome}{BSgenome object to use. Example "dm3"}
 
-\item{bins_width}{bins width default to 50bp}
+\item{bins.width}{bins width default to 50bp}
 
-\item{steps_width}{steps width separating each bin. default set to bins_width}
+\item{steps.width}{steps width separating each bin. default set to bins.width}
 
-\item{restrict_seqnames}{If specified, bins are restricted to provided seqnames}
+\item{restrict.seqnames}{If specified, bins are restricted to provided seqnames}
 }
 \value{
 data.table containing bin coordinates
@@ -27,5 +27,7 @@ data.table containing bin coordinates
 Very fast using data.table
 }
 \examples{
-vl_binBSgenome(genome= "dm3", bins_width= 50)
+vl_binBSgenome(genome= "dm3",
+               bins.width= 50)
+               
 }

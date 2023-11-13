@@ -7,7 +7,7 @@
 vl_bw_coverage_bins(
   bed,
   tracks,
-  set_IDs,
+  set.IDs,
   upstream,
   downstream,
   ignore.strand,
@@ -20,7 +20,7 @@ vl_bw_coverage_bins(
 
 \item{tracks}{Vector of bw files to plot. Use full paths to avoid pbs.}
 
-\item{set_IDs}{Set IDs specifying the groups as subsets of the bed file}
+\item{set.IDs}{Set IDs specifying the groups as subsets of the bed file}
 
 \item{upstream}{Upstream  extension of bed regions (centered on center)}
 

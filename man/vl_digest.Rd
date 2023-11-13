@@ -22,4 +22,5 @@ Simulate DNA digest from thermofisher "simple" enzymes
 \examples{
 vl_digest(seq= "AAAAAAAAGGTACCTTTTTTTTTTTTGCGGCCGCAAAAAAAAAA",
 enzyme= c("KpnI", "NotI"))
+
 }

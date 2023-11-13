@@ -1,8 +1,8 @@
 #' @title Boxplot
 #' @description Just a wrapper around boxplot that makes it nicer and allows to add wilcox pvals
 #' @param x list of variables to be plotted
-#' @param compute_pval list of vectors of length two containing pairwise x indexes to be compared
-#' @param pval_cex cex value for pval plotting. Default= .8.
+#' @param compute.pval list of vectors of length two containing pairwise x indexes to be compared
+#' @param pval.cex cex value for pval plotting. Default= .8.
 #' @param names Names to plot under boxplot. If function specified, applied to names before plotting
 #' @param tilt.names Should names be tilted (ignored if horizontal= TRUE)
 #' @param srt rotation angle for titled names
@@ -15,7 +15,7 @@
 #' vl_boxplot(formula= len~supp*dose, data=ToothGrowth, notch=TRUE,
 #' col= c("gold","darkgreen"),
 #' main="Tooth Growth", xlab="Suppliment and Dose",
-#' compute_pval= list(c(1,2), c(5,6), c(1,6)))
+#' compute.pval= list(c(1,2), c(5,6), c(1,6)))
 #' @export
 vl_boxplot <- function(x, ...) UseMethod("vl_boxplot")
 
@@ -23,14 +23,33 @@ vl_boxplot <- function(x, ...) UseMethod("vl_boxplot")
 #' @export
 vl_boxplot.default <-
   function(x, ..., 
-           compute_pval= NULL, pval_cex= .8, tilt.names= F, srt= 45,
-           range = 1.5, width = NULL, varwidth = FALSE,
-           notch = FALSE, outline = FALSE, names, plot = TRUE,
-           border = par("fg"), col = NULL, log = "",
-           pars = list(boxwex = ifelse(violin, .2, .4), staplewex = NA, outwex = NA),
-           horizontal = FALSE, add = FALSE, at = NULL,
-           frame= F, whisklty = ifelse(violin, 2, 1), ylim= NULL, xaxt= "s",
-           violin= FALSE, viocol = "#FFFFFF00", viowex= 0.4)
+           compute.pval= NULL,
+           pval.cex= .8,
+           tilt.names= F,
+           srt= 45,
+           range = 1.5,
+           width = NULL,
+           varwidth = FALSE,
+           notch = FALSE,
+           outline = FALSE,
+           names,
+           plot = TRUE,
+           border = par("fg"),
+           col = NULL,
+           log = "",
+           pars = list(boxwex = ifelse(violin, .2, .4),
+                       staplewex = NA,
+                       outwex = NA),
+           horizontal = FALSE,
+           add = FALSE,
+           at = NULL,
+           frame= F,
+           whisklty = ifelse(violin, 2, 1),
+           ylim= NULL,
+           xaxt= "s",
+           violin= FALSE,
+           viocol = "#FFFFFF00",
+           viowex= 0.4)
   {
     # Boxplot stats
     if(!missing(names) && is.function(names))
@@ -91,18 +110,18 @@ vl_boxplot.default <-
                 frame= frame, whisklty = whisklty, ylim= ylim, xaxt= "n", yaxt= "n")
       }
       # Plot pval
-      if(!is.null(compute_pval))
+      if(!is.null(compute.pval))
       {
         pval <- vl_compute_bxp_pval(groups= groups,
                                     box= box,
-                                    compute_pval= compute_pval,
+                                    compute.pval= compute.pval,
                                     outline= outline,
                                     at= at,
                                     horizontal= horizontal)
         if(nrow(pval))
           vl_plot_bxp_pval(pval = pval,
                            horizontal = horizontal,
-                           pval_cex= pval_cex)
+                           pval.cex= pval.cex)
       }
       # Plot tilted names
       if(tilt.names && !horizontal && xaxt!="n")
@@ -117,7 +136,7 @@ vl_boxplot.default <-
     }
     
     # Return
-    if(is.null(compute_pval))
+    if(is.null(compute.pval))
       invisible(box) else
         invisible(c(box, pval))
   }
@@ -157,12 +176,12 @@ vl_boxplot.formula <- function(formula, data = NULL, ..., subset, na.action = NU
 }
 
 #' @export
-vl_compute_bxp_pval <- function(groups, box, compute_pval, outline, at, horizontal)
+vl_compute_bxp_pval <- function(groups, box, compute.pval, outline, at, horizontal)
 {
-  if(!is.list(compute_pval) | !all(lengths(compute_pval)==2))
-    stop("compute_pval list of vectors of length two containing pairwise x indexes to be compared")
-  if(any(unlist(compute_pval)>length(groups)))
-    stop("Some indexes provided in compute_pval are bigger than the number of groups in current boxplot")
+  if(!is.list(compute.pval) | !all(lengths(compute.pval)==2))
+    stop("compute.pval list of vectors of length two containing pairwise x indexes to be compared")
+  if(any(unlist(compute.pval)>length(groups)))
+    stop("Some indexes provided in compute.pval are bigger than the number of groups in current boxplot")
   # Make pairs object
   dat <- data.table::data.table(dat= groups,
                                 x= if(is.null(at)) seq(groups) else at) # Retrieve at positions
@@ -171,9 +190,9 @@ vl_compute_bxp_pval <- function(groups, box, compute_pval, outline, at, horizont
     dat[, max:= sapply(dat, max, na.rm= T)] else
       dat[, max:= box$stats[5,]]
   # Order comparison pairs! (x0<=x1)
-  compute_pval <- lapply(compute_pval, function(i) i[order(dat[i, x])])
-  pval <- cbind(dat[sapply(compute_pval, `[`, 1), !"max"], 
-                dat[sapply(compute_pval, `[`, 2), !"max"])
+  compute.pval <- lapply(compute.pval, function(i) i[order(dat[i, x])])
+  pval <- cbind(dat[sapply(compute.pval, `[`, 1), !"max"], 
+                dat[sapply(compute.pval, `[`, 2), !"max"])
   data.table::setnames(pval, c("dat0", "x0", "dat1", "x1"))
   # Compute wilcox pval
   pval[, wilcox:= mapply(function(x, y) wilcox.test(unlist(x), unlist(y))$p.value, x= dat0, y= dat1)]
@@ -204,7 +223,7 @@ vl_compute_bxp_pval <- function(groups, box, compute_pval, outline, at, horizont
 #' @export
 vl_plot_bxp_pval <- function(pval, 
                              horizontal,
-                             pval_cex)
+                             pval.cex)
 {
   # Convert to users coordinates
   if(horizontal)
@@ -230,7 +249,7 @@ vl_plot_bxp_pval <- function(pval,
     text(x, 
          y, 
          .c,
-         cex= pval_cex*ifelse(.c=="N.S", 0.5, 1),
+         cex= pval.cex*ifelse(.c=="N.S", 0.5, 1),
          srt= ifelse(horizontal, -90, 0),
          offset= 0,
          xpd= NA)

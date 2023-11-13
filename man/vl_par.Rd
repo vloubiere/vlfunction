@@ -5,17 +5,48 @@
 \title{Sets convenient par env}
 \usage{
 vl_par(
-  bottom_strings,
-  left_strings,
-  top_strings,
-  right_strings,
-  mgp = c(1.5, 0.5, 0),
+  mai = c(0.9, 0.9, 0.9, 0.9),
   las = 1,
-  tcl = -0.2,
+  tcl = -0.1,
+  mgp = c(1.5, 0.35, 0),
+  cex = 1,
+  cex.lab = 9/12,
+  cex.axis = 7/12,
+  bty = "n",
+  ...
+)
+
+vl_par(
+  mai = c(0.9, 0.9, 0.9, 0.9),
+  las = 1,
+  tcl = -0.1,
+  mgp = c(1.5, 0.35, 0),
+  cex = 1,
+  cex.lab = 9/12,
+  cex.axis = 7/12,
+  bty = "n",
   ...
 )
 }
 \arguments{
+\item{mai}{See ?par()}
+
+\item{las}{}
+
+\item{tcl}{}
+
+\item{mgp}{}
+
+\item{cex}{}
+
+\item{cex.lab}{}
+
+\item{cex.axis}{}
+
+\item{bty}{}
+
+\item{...}{Extra arguments to be passed to ?par()}
+
 \item{bottom_strings}{Character vector. If specific, margin will be adjusted to afford longest string.}
 
 \item{left_strings}{Character vector. If specific, margin will be adjusted to afford longest string.}
@@ -23,18 +54,14 @@ vl_par(
 \item{top_strings}{Character vector. If specific, margin will be adjusted to afford longest string.}
 
 \item{right_strings}{Character vector. If specific, margin will be adjusted to afford longest string.}
-
-\item{mgp}{}
-
-\item{las}{}
-
-\item{tcl}{}
-
-\item{...}{}
 }
 \value{
 Improves default par env
+
+Set up nice plotting parameters
 }
 \description{
 Sets convenient par env
+
+Sets up my favorite par parameters. Optimized for 3x3 inch square.
 }

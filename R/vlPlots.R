@@ -5,7 +5,7 @@
 #' @param x X position for plotting
 #' @param y Y position for plotting
 #' @param pval Pval to be plotted
-#' @param stars_only If set to TRU, then only plots */N.S. Default= FALSE
+#' @param stars.only If set to TRU, then only plots */N.S. Default= FALSE
 #' @param pos pos argument (label position). see ?text()
 #' @param srt srt argument (rotation). see ?text()
 #' @param ... Extra arguments passed to test function
@@ -17,7 +17,7 @@
 vl_plot_pval_text <- function(x, 
                               y, 
                               pval, 
-                              stars_only= F,
+                              stars.only= F,
                               pos= 3,
                               offset= 0,
                               ...)
@@ -30,7 +30,7 @@ vl_plot_pval_text <- function(x,
   star <- as.character(star)
   ns_val <- !is.na(star) & star=="N.S"
   value <- formatC(pval, format = "e", digits = 1)
-  if(stars_only)
+  if(stars.only)
     value <- rep("", length(value))
   if(any(ns_val))
     text(x = x[ns_val], 
@@ -47,70 +47,6 @@ vl_plot_pval_text <- function(x,
        offset= offset-0.2,
        pos= pos,
        ...)
-}
-
-#' figure label
-#'
-#' Plots a convenient label for paper figures
-#'
-#' @param text Text to plot.
-#' @param region Can be "figure", "plot", "device"
-#' @param cex Scaling factor
-#' @param ... Extra args for text function
-#' @export
-vl_fig_label <- function(text, region="figure", pos="topleft", cex=NULL, ...) {
-  region <- match.arg(region, c("figure", "plot", "device"))
-  pos <- match.arg(pos, c("topleft", "top", "topright", 
-                          "left", "center", "right", 
-                          "bottomleft", "bottom", "bottomright"))
-  if(region %in% c("figure", "device")) {
-    ds <- grDevices::dev.size("in")
-    # xy coordinates of device corners in user coordinates
-    x <- graphics::grconvertX(c(0, ds[1]), from="in", to="user")
-    y <- graphics::grconvertY(c(0, ds[2]), from="in", to="user")
-    # fragment of the device we use to plot
-    if(region == "figure") {
-      # account for the fragment of the device that 
-      # the figure is using
-      fig <- par("fig")
-      dx <- (x[2] - x[1])
-      dy <- (y[2] - y[1])
-      x <- x[1] + dx * fig[1:2]
-      y <- y[1] + dy * fig[3:4]
-    } 
-  }
-  # much simpler if in plotting region
-  if(region == "plot") {
-    u <- graphics::par("usr")
-    x <- u[1:2]
-    y <- u[3:4]
-  }
-  sw <- graphics::strwidth(text, cex=cex) * 60/100
-  sh <- graphics::strheight(text, cex=cex) * 60/100
-  x1 <- switch(pos,
-               topleft     =x[1] + sw, 
-               left        =x[1] + sw,
-               bottomleft  =x[1] + sw,
-               top         =(x[1] + x[2])/2,
-               center      =(x[1] + x[2])/2,
-               bottom      =(x[1] + x[2])/2,
-               topright    =x[2] - sw,
-               right       =x[2] - sw,
-               bottomright =x[2] - sw)
-  y1 <- switch(pos,
-               topleft     =y[2] - sh,
-               top         =y[2] - sh,
-               topright    =y[2] - sh,
-               left        =(y[1] + y[2])/2,
-               center      =(y[1] + y[2])/2,
-               right       =(y[1] + y[2])/2,
-               bottomleft  =y[1] + sh,
-               bottom      =y[1] + sh,
-               bottomright =y[1] + sh)
-  old.par <- graphics::par(xpd=NA)
-  on.exit(graphics::par(old.par))
-  graphics::text(x1, y1, text, cex=cex, ...)
-  return(invisible(c(x,y)))
 }
 
 #' Plots a heatkey
@@ -196,7 +132,7 @@ vl_heatkey <- function(breaks,
        xpd= NA)
 }
 
-#' Heatkey plot
+#' Plots balloons legend
 #'
 #' @param sizes Balloons sizes (cex)
 #' @param labels Labels corresponding to each size
@@ -315,66 +251,44 @@ vl_par <- function(bottom_strings,
       par(mgp= mgp, las= las, tcl= tcl, ...)
 }
 
-#' Plot help
+#' Sets up my favorite par parameters. Optimized for 3x3 inch square.
 #'
-#' @return Simply prints an help chart showing how margins work
+#' @param mai See ?par()
+#' @param tcl 
+#' @param mgp 
+#' @param cex 
+#' @param cex.lab 
+#' @param cex.axis 
+#' @param bty 
+#' @param ... Extra arguments to be passed to ?par()
+#'
+#' @return Set up nice plotting parameters
 #' @export
-vl_plot_help <- function()
+vl_par <- function(mai= c(.9, .9, .9, .9),
+                   las= 1,
+                   tcl= -0.1,
+                   mgp= c(1.5, 0.35, 0),
+                   cex= 1,
+                   cex.lab= 9/12,
+                   cex.axis= 7/12,
+                   bty= "n",
+                   ...)
 {
-  par(mar= c(5,4,4,2), las= 1, mgp= c(2, 0.5, 0), tcl= -0.2, oma= c(4.2,4.2,4.2,4.2))
-  
-  plot(0,0,xlab='xlab', ylab= "ylab", frame= F)
-  
-  # Plot area
-  rect(grconvertX(0, "npc", "user"), grconvertY(0, "npc", "user"), grconvertX(1, "npc", "user"), grconvertY(1, "npc", "user"), border= "red", col= NA)
-  text(0, par("usr")[4]-strheight("M", cex= 2), labels = "Plot", col= "red", cex= 2)
-  arrows(0, 0.45, par("usr")[2], 0.45, length = 0.1, col= "red")
-  arrows(0, 0.45, par("usr")[1], 0.45, length = 0.1, col= "red")
-  text(0, 0.45, labels = "npc", col= "red", cex= 1, pos= 3, offset= 0.35)
-  arrows(0.45, 0, 0.45, par("usr")[4], length = 0.1, col= "red")
-  arrows(0.45, 0, 0.45, par("usr")[3], length = 0.1, col= "red")
-  text(0.45, 0, labels = "npc", col= "red", cex= 1, pos= 4, srt= -90)
-  
-  # Margins area
-  rect(grconvertX(0, "nfc", "user"), grconvertY(0, "nfc", "user"), grconvertX(1, "nfc", "user"), grconvertY(1, "nfc", "user"), border= "darkgreen", col= NA, xpd= NA)
-  text(0, grconvertY(1, "nfc", "user")-strheight("M", cex= 2), labels = "Margins", col= "darkgreen", cex= 2, xpd= NA)
-  text(0, grconvertY(1, "nfc", "user")-strheight("M", cex= 2), labels = "mar= c(5,4,4,2)", col= "darkgreen", xpd= NA, pos= 1, offset= 1)
-  text(grconvertX(0, "nfc", "user"), par("usr")[3]-diff(grconvertY(c(0,1), "lines", "user")), "line 1", co= "darkgreen", xpd= NA, pos= 4)
-  text(grconvertX(0, "nfc", "user"), par("usr")[3]-diff(grconvertY(c(0,2), "lines", "user")), "line 2", co= "darkgreen", xpd= NA, pos= 4)
-  text(grconvertX(0, "nfc", "user"), par("usr")[3]-diff(grconvertY(c(0,3), "lines", "user")), "line 3", co= "darkgreen", xpd= NA, pos= 4)
-  text(grconvertX(0, "nfc", "user"), par("usr")[3]-diff(grconvertY(c(0,4), "lines", "user")), "line 4", co= "darkgreen", xpd= NA, pos= 4)
-  
-  arrows(0, par("usr")[4]+strheight("M"), grconvertX(0, "nfc", "user"), par("usr")[4]+strheight("M"), length = 0.1, col= "darkgreen", xpd= NA)
-  arrows(0, par("usr")[4]+strheight("M"), grconvertX(1, "nfc", "user"), par("usr")[4]+strheight("M"), length = 0.1, col= "darkgreen", xpd= NA)
-  arrows(par("usr")[2]+strwidth("M"), 0, par("usr")[2]+strwidth("M"), grconvertY(0, "nfc", "user"), length = 0.1, col= "darkgreen", xpd= NA)
-  arrows(par("usr")[2]+strwidth("M"), 0, par("usr")[2]+strwidth("M"), grconvertY(1, "nfc", "user"), length = 0.1, col= "darkgreen", xpd= NA)
-  text(par("usr")[2], par("usr")[4]+strheight("M")*2, labels = "nfc", col= "darkgreen", cex= 1, pos= 2, xpd= NA, offset= 0)
-  text(par("usr")[2]+strwidth("M")*2, par("usr")[4], labels = "nfc", col= "darkgreen", cex= 1, pos= 1, xpd= NA, srt= -90)
-  
-  # Outter margins
-  xadj <- diff(grconvertX(c(0, .2), "lines", "user"))
-  yadj <- diff(grconvertY(c(0, .2), "lines", "user"))
-  rect(grconvertX(0, "ndc", "user")+xadj, grconvertY(0, "ndc", "user")+yadj, grconvertX(1, "ndc", "user")-xadj, grconvertY(1, "ndc", "user")-yadj, border= "blue", col= NA, xpd= NA, lwd= 2)
-  text(0, grconvertY(1, "ndc", "user")-strheight("M", cex= 2)-yadj, labels = "Outer margin area", col= "blue", cex= 2, xpd= NA)
-  text(0, grconvertY(1, "ndc", "user")-strheight("M", cex= 2)-yadj, labels = "oma= c(4,4,4,4)", col= "blue", xpd= NA, pos= 1, offset= 1)
-  text(grconvertX(0, "ndc", "user"), grconvertY(0, "nfc", "user")-diff(grconvertY(c(0,1), "lines", "user")), "line 1", co= "blue", xpd= NA, pos= 4)
-  text(grconvertX(0, "ndc", "user"), grconvertY(0, "nfc", "user")-diff(grconvertY(c(0,2), "lines", "user")), "line 2", co= "blue", xpd= NA, pos= 4)
-  text(grconvertX(0, "ndc", "user"), grconvertY(0, "nfc", "user")-diff(grconvertY(c(0,3), "lines", "user")), "line 3", co= "blue", xpd= NA, pos= 4)
-  
-  arrows(0, grconvertY(1, "nfc", "user")+strheight("M"), grconvertX(0, "ndc", "user")+xadj, grconvertY(1, "nfc", "user")+strheight("M"), length = 0.1, col= "blue", xpd= NA)
-  arrows(0, grconvertY(1, "nfc", "user")+strheight("M"), grconvertX(1, "ndc", "user")-xadj, grconvertY(1, "nfc", "user")+strwidth("M"), length = 0.1, col= "blue", xpd= NA)
-  arrows(grconvertX(1, "nfc", "user")+strwidth("M"), 0, grconvertX(1, "nfc", "user")+strwidth("M"), grconvertY(0, "ndc", "user")+yadj, length = 0.1, col= "blue", xpd= NA)
-  arrows(grconvertX(1, "nfc", "user")+strwidth("M"), 0, grconvertX(1, "nfc", "user")+strwidth("M"), grconvertY(1, "ndc", "user")-yadj, length = 0.1, col= "blue", xpd= NA)
-  text(grconvertX(1, "nfc", "user"), grconvertY(1, "nfc", "user")+strheight("M")*2, labels = "ndc", col= "blue", cex= 1, pos= 2, xpd= NA, offset= 0)
-  text(grconvertX(1, "nfc", "user")+strwidth("M")*2, grconvertY(1, "nfc", "user"), labels = "ndc", col= "blue", cex= 1, pos= 1, xpd= NA, srt= -90)
-  
-  text(grconvertX(0.5, "ndc", "user"), grconvertX(0, "nfc", "user")-diff(grconvertY(c(0,1), "lines", "user")), "par(mar= c(5,4,4,2), las= 1,\nmgp= c(2, 0.5, 0), tcl= -0.2,\noma= c(4,4,4,4))", xpd= NA, pos= 1, offset= 1.65)
+  par(mai= mai,
+      las= las,
+      tcl= tcl,
+      mgp= mgp,
+      cex= cex,
+      cex.lab= cex.lab,
+      cex.axis= cex.axis,
+      bty= bty,
+      ...)
 }
 
-#' Title
+#' Plots Rsq or PCC coeff
 #'
 #' @param x 
-#' @param value Rsqaure or r value
+#' @param value Rsquare or r value
 #' @param type Type of value. one between "rsq" and "pcc"
 #' @param adjusted Is the Rsq adjusted?
 #' @param bty Box around the legend? default= F

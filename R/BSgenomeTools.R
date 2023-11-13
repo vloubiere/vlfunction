@@ -3,31 +3,34 @@
 #' Very fast using data.table
 #'
 #' @param genome BSgenome object to use. Example "dm3"
-#' @param bins_width bins width default to 50bp
-#' @param steps_width steps width separating each bin. default set to bins_width
-#' @param restrict_seqnames If specified, bins are restricted to provided seqnames
+#' @param bins.width bins width default to 50bp
+#' @param steps.width steps width separating each bin. default set to bins.width
+#' @param restrict.seqnames If specified, bins are restricted to provided seqnames
+#' 
 #' @examples 
-#' vl_binBSgenome(genome= "dm3", bins_width= 50)
+#' vl_binBSgenome(genome= "dm3",
+#'                bins.width= 50)
+#'                
 #' @return data.table containing bin coordinates
 #' @export
 vl_binBSgenome <- function(genome,
-                           bins_width= 50L,
-                           steps_width= bins_width,
-                           restrict_seqnames= NULL)
+                           bins.width= 50L,
+                           steps.width= bins.width,
+                           restrict.seqnames= NULL)
 {
   dat <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome)))
   dat <- data.table::as.data.table(dat)
   # Restrict chromosomes
-  if(!is.null(restrict_seqnames))
+  if(!is.null(restrict.seqnames))
   {
-    if(!any(dat$seqnames %in% restrict_seqnames))
+    if(!any(dat$seqnames %in% restrict.seqnames))
       stop(paste("Provided seqnames do not exist in", genome)) else
-        dat <- dat[as.character(seqnames) %chin% as.character(restrict_seqnames)]
+        dat <- dat[as.character(seqnames) %chin% as.character(restrict.seqnames)]
   }
   dat <- dat[, .(seqnames, width)]
   # Compute bins start and end
-  dat <- dat[, .(start= seq(1, max(c(width-bins_width, 1)), steps_width)), .(seqnames, width)]
-  dat[, end:= start+bins_width-1]
+  dat <- dat[, .(start= seq(1, max(c(width-bins.width, 1)), steps.width)), .(seqnames, width)]
+  dat[, end:= start+bins.width-1]
   dat[end>width, end:= width]
   return(dat)
 }
@@ -38,9 +41,11 @@ vl_binBSgenome <- function(genome,
 #'
 #' @param genome BSgneome object to use. ex: "dm3", "dm6"
 #' @param bed Bed file used to produce similar control
-#' @return data.table containing control regions
+#' 
 #' @examples 
 #' vl_control_regions_BSgenome(vl_SUHW_top_peaks, "dm3")
+#' 
+#' @return data.table containing control regions
 #' @export
 vl_control_regions_BSgenome <- function(bed, genome)
 {
@@ -63,21 +68,23 @@ vl_control_regions_BSgenome <- function(bed, genome)
 #'
 #' @param n Number of regions to sample
 #' @param width Widths of regions to sample (length should either be 1 or equal n)
-#' @param restrict_seqnames If specified, only the provided seqnames will be used
-#' @return data.table containing randomly sampled regions
+#' @param restrict.seqnames If specified, only the provided seqnames will be used
+#' 
 #' @examples
 #' vl_control_regions_BSgenome("dm3", 100, 1)
+#' 
+#' @return data.table containing randomly sampled regions
 #' @export
 vl_random_regions_BSgenome <- function(genome,
                                        n,
                                        width= 1,
-                                       restrict_seqnames= NULL)
+                                       restrict.seqnames= NULL)
 {
   # Format
   regions <- data.table::as.data.table(GenomicRanges::GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))))
   setnames(regions, "width", "seqlength")
-  if(!is.null(restrict_seqnames))
-    regions <- regions[seqnames %in% restrict_seqnames]
+  if(!is.null(restrict.seqnames))
+    regions <- regions[seqnames %in% restrict.seqnames]
   regions <- regions[sample(nrow(regions), n, replace = T, prob = regions$width)]
   regions[, width:= width]
   # Random sampling
@@ -93,11 +100,14 @@ vl_random_regions_BSgenome <- function(genome,
 #'
 #' @param bed Bed file for which regions have to be returned
 #' @param genome BSgenome ID ("dm3", "dm6"...)
-#' @return Character vector of sequences
+#' 
 #' @examples
 #' vl_getSequence(vl_SUHW_top_peaks, "dm3")
+#' 
+#' @return Character vector of sequences
 #' @export
-vl_getSequence <- function(bed, genome)
+vl_getSequence <- function(bed,
+                           genome)
 {
   bed <- vl_importBed(bed)
   if(!"strand" %in% names(bed))

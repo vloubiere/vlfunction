@@ -7,7 +7,7 @@
 vl_toDTranges(coor)
 }
 \arguments{
-\item{coor}{Character vector of genomic coordinates, e.g chr3RHet:2281049-2281297:*}
+\item{coor}{Character vector of genomic coordinates, e.g "chr3R:2281049-2281297:*"}
 }
 \value{
 DT ranges
@@ -16,5 +16,5 @@ DT ranges
 Convert character to bed file
 }
 \examples{
-vl_toDTranges("chr3RHet:2281049-2281297:*")
+vl_toDTranges("chr3R:2281049-2281297:*")
 }

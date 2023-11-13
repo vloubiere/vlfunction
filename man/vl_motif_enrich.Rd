@@ -8,24 +8,24 @@
 \usage{
 vl_motif_enrich(
   counts,
-  control_counts,
+  control.counts,
   names = NULL,
   plot = F,
-  padj_cutoff = 0.05,
-  top_enrich = NA,
+  padj.cutoff = 0.05,
+  top.enrich = NA,
   order = "padj",
   breaks = NULL,
   col = c("blue", "red"),
   xlab = "Odd Ratio (log2)",
-  add_motifs = F,
+  add.motifs = F,
   cex.width = 1,
   cex.height = 1
 )
 
 \method{plot}{vl_enr}(
   obj,
-  padj_cutoff = 0.05,
-  top_enrich = NA,
+  padj.cutoff = 0.05,
+  top.enrich = Inf,
   order = "padj",
   xlab = "Odd Ratio (log2)",
   col = c("blue", "red"),
@@ -35,15 +35,15 @@ vl_motif_enrich(
 \arguments{
 \item{counts}{data.table containing counts for the regions of interest}
 
-\item{control_counts}{data.table containing counts for control regions (data.table)}
+\item{control.counts}{data.table containing counts for control regions (data.table)}
 
 \item{names}{Convenient names to be used for plotting and so on... Default (NULL) returns to vl_Dmel_motifs_DB_full$motif_cluster names}
 
 \item{plot}{Plot result?}
 
-\item{padj_cutoff}{padjust cutoff to be applied before plotting}
+\item{padj.cutoff}{padjust cutoff to be applied before plotting}
 
-\item{top_enrich}{Top enrichments to plot (based on padj)}
+\item{top.enrich}{Top enrichments to plot (based on padj). Default is to show all enriched features}
 
 \item{order}{Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"}
 
@@ -53,7 +53,7 @@ vl_motif_enrich(
 
 \item{xlab}{Default to "Odd Ratio (log2)"}
 
-\item{add_motifs}{Should motif pwms be plotted?}
+\item{add.motifs}{Should motif pwms be plotted?}
 
 \item{cex.width}{expansion factor for motif widths}
 
@@ -62,9 +62,7 @@ vl_motif_enrich(
 \item{obj}{An object of class vl_enr}
 }
 \value{
-DT of enrichment values
-
-Returns a table of enrichment which can be plot using ?plot.vl_GO_enr
+DT of enrichment values which can be plot using ?plot.vl_GO_enr
 }
 \description{
 Compute motif enrichment between a set of regions and control regions
@@ -75,14 +73,33 @@ Compute motif enrichment between a set of regions and control regions
 
 }}
 \examples{
-# Example run
+# Motif counts
 sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
-top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
-top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
-counts <- vl_motif_counts(top_SUHW, genome= "dm3", sel= sel)
-control_counts <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
-par(mar= c(4,15,4,6))
-DT <- vl_motif_enrich(counts, control_counts, add_motifs= T, padj_cutoff= 1e-5, plot= T)
-DT <- plot(DT, padj_cutoff= 1e-7)
+top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks,
+                         upstream = 250,
+                         downstream = 250,
+                         genome = "dm3")
+top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks,
+                          upstream = 250,
+                          downstream = 250,
+                          genome = "dm3")
+counts <- vl_motif_counts(top_SUHW,
+                          genome= "dm3",
+                          sel= sel)
+control.counts <- vl_motif_counts(top_STARR,
+                                  genome= "dm3",
+                                  sel= sel)
+                                  
+# Enrichment
+DT <- vl_motif_enrich(counts,
+                      control.counts,
+                      add.motifs= T,
+                      padj.cutoff= 1e-5,
+                      plot= T)
+
+# Plot
+DT <- plot(DT,
+           padj.cutoff= 1e-7)
 vl_add_motifs(DT)
+
 }

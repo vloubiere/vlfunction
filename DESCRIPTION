@@ -1,19 +1,20 @@
 Package: vlfunctions
 Title: My functions @vloubiere
-Version: 0.0.0.9000
+Version: 0.1.0.0
 Authors@R: 
     person(given = "Vincent",
            family = "Loubiere",
            role = c("aut", "cre"),
            email = "vincent.loubiere@imp.ac.at",
            comment = c(ORCID = "https://orcid.org/0000-0002-3632-378X"))
-Description: Violin, heatmap and bw screenshot.
+Description: Functions to manipulate bw, bed and bam files, compute motif and GO enrichments and plots the results.
 License: What license it uses
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3
 Depends:
     R (>= 3.5.0),
-    data.table
+    data.table,
+    rtracklayer
 Imports:
 Suggests:

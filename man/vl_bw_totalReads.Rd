@@ -4,12 +4,12 @@
 \alias{vl_bw_totalReads}
 \title{bw total reads}
 \usage{
-vl_bw_totalReads(bw, read_length)
+vl_bw_totalReads(bw, read.length)
 }
 \arguments{
 \item{bw}{Path to target bw file(s) (character vector)}
 
-\item{read_length}{length of the reads used to generate bw file}
+\item{read.length}{length of the reads used to generate bw file}
 }
 \description{
 IN DEVELOPMENT!! -> Estimate total reads within bw file

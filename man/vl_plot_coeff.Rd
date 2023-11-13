@@ -2,7 +2,7 @@
 % Please edit documentation in R/vlPlots.R
 \name{vl_plot_coeff}
 \alias{vl_plot_coeff}
-\title{Title}
+\title{Plots Rsq or PCC coeff}
 \usage{
 vl_plot_coeff(
   x = "topleft",
@@ -17,7 +17,7 @@ vl_plot_coeff(
 \arguments{
 \item{x}{}
 
-\item{value}{Rsqaure or r value}
+\item{value}{Rsquare or r value}
 
 \item{type}{Type of value. one between "rsq" and "pcc"}
 
@@ -33,7 +33,7 @@ vl_plot_coeff(
 Add Rsquare value as a legend on aplot
 }
 \description{
-Title
+Plots Rsq or PCC coeff
 }
 \examples{
 plot(1,1)

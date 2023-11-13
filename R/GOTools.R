@@ -3,43 +3,57 @@
 #' This function compute GO enrichment in a group of genes
 #'
 #' @param geneIDs A vector (barplot) of a list (clusters) of gene IDs
-#' @param geneUniverse_IDs Vector of FBgn IDs to which the analysis will be restricted. If NULL, uses all genes.
+#' @param geneUniverse.IDs Vector of FBgn IDs to which the analysis will be restricted. If NULL, uses all genes.
 #' @param species Chose between "Dm" and "Mm" 
 #' @param select Which annotations should be considered? Default to c("BP", "CC", "MF")
 #' @param plot Plot result?
-#' @param padj_cutoff cutoff for plotting
-#' @param top_enrich Show only n top enriched motifs
-#' @param x_breaks Breaks used for balloons sizes
-#' @param color_breaks Balloons color breaks
+#' @param padj.cutoff cutoff for plotting
+#' @param top.enrich Show only n top enriched motifs. Default= 10L
+#' @param x.breaks Breaks used for balloons sizes
+#' @param color.breaks Balloons color breaks
 #' @param cex.balloons Balloons size expansion factor
 #' @param col Color vector
 #' @param main Title
-#' @param plot_empty_clusters Should empty clusters be plotted? Default to TRUE
+#' @param plot.empty.clusters Should empty clusters be plotted? Default to TRUE
 #' @param order Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"
+#' 
 #' @examples
 #' RpL <- vl_genes_set[GO=="RpL_genes", FBgn]
 #' Hox <- vl_genes_set[GO=="HOX_genes", FBgn]
-#' par(mar= c(4,20,2,6), las= 1)
+#' 
+#' # Compute and plot enrichments of RpL genes
 #' vl_GO_enrich(RpL, species= "Dm", plot= T)
+#' 
+#' # Separately compute and plot enrichments of HOX genes
 #' DT <- vl_GO_enrich(Hox, species= "Dm")
-#' plot(DT, padj_cutoff= 1e-10)
-#' DT <- vl_GO_enrich(list(RpL, Hox), species= "Dm", cex.balloons = 0.3, padj_cutoff= 1e-5, top_enrich = 20, plot= T)
-#' plot(DT, top_enrich= 5)
+#' plot(DT, padj.cutoff= 1e-10)
+#' 
+#' # Do it for the two groups at once (useful to compare clusters...)
+#' DT <- vl_GO_enrich(list(RpL= RpL,
+#'                         Hox= Hox),
+#'                    species= "Dm",
+#'                    cex.balloons = 0.3,
+#'                    padj.cutoff= 1e-5,
+#'                    top.enrich = 20,
+#'                    plot= T)
+#' plot(DT,
+#'      top.enrich= 5)
+#' 
 #' @export
 vl_GO_enrich <- function(geneIDs,
-                         geneUniverse_IDs= NULL,
+                         geneUniverse.IDs= NULL,
                          species,
                          select= c("BP", "CC", "MF"),
                          plot= F,
-                         padj_cutoff= 1e-5,
-                         top_enrich= NA,
+                         padj.cutoff= 1e-5,
+                         top.enrich= Inf,
                          order= "padj",
-                         x_breaks,
-                         color_breaks,
+                         x.breaks,
+                         color.breaks,
                          cex.balloons= 1,
                          col= c("blue", "red"),
                          main= NA,
-                         plot_empty_clusters= T)
+                         plot.empty.clusters= T)
 {
   # Checks
   if(is.character(geneIDs))
@@ -59,9 +73,7 @@ vl_GO_enrich <- function(geneIDs,
                     "Dm"= "FLYBASE",
                     "Mm"= "ENSEMBL")
   
-  #-----------------------------------#
-  # Extract sets and universe GOs
-  #-----------------------------------#
+  # Extract sets and universe GOs ----
   # Sets
   set <- AnnotationDbi::select(x= db,
                                keys = unique(unlist(geneIDs)),
@@ -73,7 +85,7 @@ vl_GO_enrich <- function(geneIDs,
            c("ID", "GO"))
   set <- unique(set[ONTOLOGYALL %in% select, .(ID, GO)]) # GOs IDs are reported for each evidence type
   set <- na.omit(set)
-  if(!is.null(geneUniverse_IDs) && any(!set$ID %in% geneUniverse_IDs))
+  if(!is.null(geneUniverse.IDs) && any(!set$ID %in% geneUniverse.IDs))
     stop("Some geneIDs are not included in the Universe!")
   # Universe
   uni <- AnnotationDbi::select(x= db,
@@ -85,12 +97,10 @@ vl_GO_enrich <- function(geneIDs,
            c(keyType, "GOALL"),
            c("ID", "GO"))
   uni <- unique(uni[, .(ID, GO)]) # GOs IDs are reported for each evidence type
-  if(!is.null(geneUniverse_IDs))
-    uni <- uni[ID %chin% geneUniverse_IDs]
+  if(!is.null(geneUniverse.IDs))
+    uni <- uni[ID %chin% geneUniverse.IDs]
   
-  ###############################
-  # Format objects and Compute enrichments
-  ###############################
+  # Format objects and Compute enrichments ----
   DT <- CJ(variable= unique(set$GO), 
            cl= factor(names(geneIDs), names(geneIDs)))
   # Overlaps set
@@ -107,9 +117,7 @@ vl_GO_enrich <- function(geneIDs,
                 alternative = "greater")[c("estimate", "p.value")]
   }, .(set_hit, set_total, ctl_hit, ctl_total)]
   
-  ###############################
-  # Add GO description and clean
-  ###############################
+  # Add GO description and clean ----
   terms <- AnnotationDbi::select(GO.db::GO.db,
                                  keys = as.character(unique(DT$variable)),
                                  keytype= "GOID", 
@@ -122,30 +130,28 @@ vl_GO_enrich <- function(geneIDs,
   DT <- na.omit(DT)
   setorderv(DT, c("cl", "log2OR"))
 
-  ###############################
-  # Plot and export
-  ###############################
+  # Plot and export ----
   if(length(levels(DT$cl))>1)
   {
     setattr(DT, "class", c("vl_enr_cl", "data.table", "data.frame"))
     if(plot)
       DT <- plot.vl_enr_cl(obj= DT,
-                           padj_cutoff= padj_cutoff,
-                           top_enrich= top_enrich, 
+                           padj.cutoff= padj.cutoff,
+                           top.enrich= top.enrich, 
                            order= order,
-                           x_breaks= x_breaks,
-                           color_breaks= color_breaks,
+                           x.breaks= x.breaks,
+                           color.breaks= color.breaks,
                            cex.balloons= cex.balloons,
                            col= col,
                            main= main, 
-                           plot_empty_clusters = plot_empty_clusters)
+                           plot.empty.clusters = plot.empty.clusters)
   }else{
     setattr(DT, "class", c("vl_enr", "data.table", "data.frame"))
     if(plot)
     {
       plot.vl_enr(obj= DT,
-                  padj_cutoff= padj_cutoff,
-                  top_enrich= top_enrich,
+                  padj.cutoff= padj.cutoff,
+                  top.enrich= top.enrich,
                   order= order,
                   xlab = "Odd Ratio (log2)",
                   col = col)

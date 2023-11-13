@@ -78,27 +78,5 @@
 #'   \item{consensus_F}{consensus motif}
 #'   ...
 #' }
-#' @examples 
-#' The table was generated using the following code:
-#' setwd("/groups/stark/vloubiere/projects/z_miscellaneous/thermofisher_restriction_enzymes_table/")
-#' require(rvest)
-#' html <- read_html("https://www.thermofisher.com/at/en/home/brands/thermo-scientific/molecular-biology/thermo-scientific-restriction-modifying-enzymes/restriction-enzymes-thermo-scientific/conventional-restriction#' #' #' -enzymes-thermo-scientific.html")
-#' dat <- as.data.table(matrix(html %>%
-#'                               html_nodes("#quickchart a") %>%
-#'                               html_text(), ncol= 3, byrow = T))
-#' colnames(dat) <- c("name1", "name2", "fastdigest")
-#' dat[, buffer := html %>%
-#'       html_nodes(".optimalbuffer") %>%
-#'       html_text()]
-#' dat[, temperature:= html %>%
-#'       html_nodes(".otherconditions tr:nth-child(1) td") %>%
-#'       html_text()]
-#' dat[, cutsite := html %>%
-#' html_nodes("code") %>%
-#'       html_text()]
-#' dat[, consensus_F := {
-#'   .c <- unlist(strsplit(cutsite, ""))
-#'   .c <- .c[.c %in% DNA_ALPHABET[1:15]]
-#'   paste0(.c, collapse= "")}, cutsite]
 #' @source {"https://www.thermofisher.com/at/en/home/brands/thermo-scientific/molecular-biology/thermo-scientific-restriction-modifying-enzymes/restriction-enzymes-thermo-scientific/conventional-restriction-enzymes-thermo-scientific.html"}
 "vl_thermofisher_restriction_enzymes_table"

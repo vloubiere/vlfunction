@@ -2,7 +2,7 @@
 % Please edit documentation in R/vlPlots.R
 \name{vl_balloonskey}
 \alias{vl_balloonskey}
-\title{Heatkey plot}
+\title{Plots balloons legend}
 \usage{
 vl_balloonskey(
   sizes,
@@ -35,5 +35,5 @@ vl_balloonskey(
 Plots heatkey
 }
 \description{
-Heatkey plot
+Plots balloons legend
 }

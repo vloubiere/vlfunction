@@ -7,19 +7,20 @@
 vl_screenshot(
   bed,
   tracks,
-  highlight_bed = NULL,
+  highlight.bed = NULL,
   col = "black",
-  highlight_col = "lightgrey",
-  bg_col = "white",
+  highlight.col = "lightgrey",
+  bg.col = "white",
   density = "track",
-  density_col = viridis::viridis(10),
+  density.col = c("#440154FF", "#482878FF", "#3E4A89FF", "#31688EFF", "#26828EFF",
+    "#1F9E89FF", "#35B779FF", "#6DCD59FF", "#B4DE2CFF", "#FDE725FF"),
   space = 30,
   widths = c(100L, 20L),
   names = NULL,
   min = 0,
   max = as.numeric(NA),
   genome,
-  min_symbol = 1,
+  min.symbol = 1,
   add = F
 )
 }
@@ -28,17 +29,17 @@ vl_screenshot(
 
 \item{tracks}{bw or bed (peaks) files.}
 
-\item{highlight_bed}{Regions to be highlighted}
+\item{highlight.bed}{Regions to be highlighted}
 
 \item{col}{Track colors}
 
-\item{highlight_col}{Color used for highlighted region}
+\item{highlight.col}{Color used for highlighted region}
 
-\item{bg_col}{Color used for background. default= "white"}
+\item{bg.col}{Color used for background. default= "white"}
 
 \item{density}{Type of track to plot. either "track" (default) or "density"}
 
-\item{density_col}{Color palette used for density bw. default= viridis::viridis(10)}
+\item{density.col}{Color palette used for density bw. default= viridis::viridis(10)}
 
 \item{space}{space between regions. Default is 30 px}
 
@@ -52,7 +53,7 @@ vl_screenshot(
 
 \item{genome}{Genome used to plot transcripts. Available: "dm3", "dm6", "mm10", "hg19}
 
-\item{min_symbol}{Set the min size for symbols that will be plotted. Decreasing= more symbols. default= 1}
+\item{min.symbol}{Set the min size for symbols that will be plotted. Decreasing= more symbols. default= 1}
 
 \item{add}{Should only the tracks be added on top of existing plot? default= F}
 
@@ -64,23 +65,24 @@ vl_screenshot(
 Simplified version. less options, faster
 }
 \examples{
-regions <- data.table(seqnames= "chr3R",
-start= c(2166691, 12049006),
-end= c(2949651, 12932873),
-name= c("ANTP-C", "BX-C"))
+bed <- data.table(seqnames= "chr3R",
+                  start= c(2166691, 12049006),
+                  end= c(2949651, 12932873),
+                  name= c("ANTP-C", "BX-C"))
 
-bw <-c("../available_data_dm3/db/bw/GSE41440_H3K27ac_rep1_uniq.bw",
-"../available_data_dm3/db/bw/GSE41440_H3K27me3_rep1_uniq.bw")
+bw <-c("/groups/stark/vloubiere/projects/epigenetic_cancer/db/bw/cutnrun/H3K27me3_PH18_merge.bw",
+       "/groups/stark/vloubiere/projects/epigenetic_cancer/db/bw/cutnrun/H3K27Ac_PH18_merge.bw")
 
 highlight_regions <- data.table(seqnames= "chr3R",
-start= 12586652,
-end= 12630183)
+                                start= 12586652,
+                                end= 12630183)
 
-peaks <- "db/peaks/ATAC_peaks.txt"
+peaks <- "/groups/stark/vloubiere/projects/epigenetic_cancer/db/peaks/cutnrun/H3K27Ac_PH18_confident_peaks.narrowPeak"
 
-vl_screenshot(bed = regions, 
-tracks = c(bw, peaks), 
-highlight_bed = highlight_regions, 
-col = c("black", "blue", "red"),
-genome = "dm3")
+vl_screenshot(bed = bed, 
+              tracks = c(bw, peaks), 
+              highlight.bed = highlight_regions, 
+              col = c("black", "blue", "red"),
+              genome = "dm6")
+
 }

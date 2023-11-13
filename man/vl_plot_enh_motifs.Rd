@@ -56,10 +56,11 @@ Plot enhancer with its motifs
 \examples{
 plot.new()
 vl_plot_enh_motifs(bed= vl_SUHW_top_peaks[1:2], 
-genome= "dm3", 
-sel= c("cisbp__M2328", "flyfactorsurvey__suHw_FlyReg_FBgn0003567", "jaspar__MA0533.1"), 
-xleft=0, 
-ybottom=c(0.25,0.5), 
-width=1, 
-height= 0.1)
+                   genome= "dm3", 
+                   sel= c("cisbp__M2328", "flyfactorsurvey__suHw_FlyReg_FBgn0003567", "jaspar__MA0533.1"), 
+                   xleft=0, 
+                   ybottom=c(0.25,0.5), 
+                   width=1, 
+                   height= 0.1)
+
 }

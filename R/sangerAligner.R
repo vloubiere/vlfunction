@@ -5,39 +5,41 @@
 #' @param refseq A character string corresponding to the reference sequence
 #' @param abfiles Paths to abfiles to analyse
 #' @param revcomp Boolean value specifying if the sequence shoul be reversed before alignment to the refseq
-#' @param feat_mismatches Number of mismatches allowed to align features
-#' @param feat_sequences additional feature sequences to plot on top of the matrix
-#' @param feat_names Names of additional feature sequences
-#' @param feat_cols Colors to use to plot additional feature sequences
+#' @param feat.mismatches Number of mismatches allowed to align features
+#' @param feat.sequences additional feature sequences to plot on top of the matrix
+#' @param feat.names Names of additional feature sequences
+#' @param feat.cols Colors to use to plot additional feature sequences
+#' 
 #' @examples
 #' refseq <- "CGCGCGCGTTGACAGTGAGCGCGTCTCTCACCGGAGCAAGTACTCCGTTCGAAGTTTTATACCGCTTAACTATTTAGAGGATGCCAGCCAACTGGATACGGATTTATTGACCAAATGCTGCAGTGACGTTCATCCGTGTGCCTTGCTCTTCTGCTACTTCAACAATCGAGGAGCTTTTCTGGACTATCTAAATGTGTATCAAGGAAAGTGGCTTATATTGATTGGACCATTGCCCGCCCTGGGAATCCACACAGATCCCAATCCCGCCCAGCCCCAACTGCCCCTAGGATCGACGCGGACAAAGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGTCCCGGGCCCGGGCCCCAGGCTTTCAACAAGTGCATTCTTAGTCCCCATATACCCTGCTTGTATGATTTTTTTGAACGAGGTATCGTTCAACTGGCAGAGAGTTCAAAATCATAAATTTCAAACGATATTAGGCCGCAGCCGCAGTGGCGCGTTGATGATGCAGCTCCGCTCCACTCTGCCCCACTGCCATTCTGCCACTCTGCCACCTGGTGGTGCCCCAAAGAGCAGACTGGTGCAGTTGCAGTTGCTGAGAATTTTTGGCCCATGCTGGTGCGTAGATTCCCCCCCTCACCCTTCCCATTGCACGGCTAGAGCGTGCAGCACATTTTCTTTTGTTGTACGAATGCCGGAGTGGATTTATTGATTTTGGTCAAAAGCCATGCTTAAGCGTAAATTATGTGCTGGCTTAAACGCTGCGCTCGAACTTTTCGCGTCTCTCTCGCTTGGCGGCAAGTGCGATGAAAGCCACTGATTTGTGTGCCAGTCTAGGGTACGGCCATAAATCCGTTCAATTTCATAACCAAACAGCAATTTATCAACCGCACCCCCCTTTGCGCAAAAACACCGCCCATATGCCAACGGACTAATTAAAAGCAGCGACAAATATGCGGCGCAAAGTGCGAAAATCGAAATGAAAATGAAAATGAAACGACGATGAAAAGCTAAGGGGCACAACAAAAAAAAGGCTGGGAAACTGTGTCAGAAAAGCCGGCCAAACGACAAGTAGCTGATATCGCATAAAGCAACGATTTAATTAGGCGCTGATAATTATTGTACAACTAGTTCTGGCCAACTTCGCCATCGTTCCGAGTTCAAAATCGAGTTTGGTCTCAGACTTTCAGGTTGAGGTAGGCGCAACCGACGATAGCCGCGGCCGCCTATCGCACATGTTAGATTTGGCTAATTTACGAAATTGGTAGTGCCCGATATCGCCGAGACCCGGCTAATTCAATCATTCGCTGCCGGCGTCTGGCATTAGCGGATGATTTATGGTAACATTTCGGACTCAAGCGAGCTCGATTCTGAGCTTAGTGCCTAGATTCTGGAATCAACATGCCAAGCTAACCACATAAATAGTATACAACCCATGCTATAAATAACACTGCATTTTAAAGATATTCAAAGTATAGAAGATAATGTTAATTATTTAAACCAACCTAAGTACAGATAAGTACTTAGGATAATTGTTATGTAAAAAAAAGTCATACCACCATTTATACAGAAATACACACCACTTATCGATTGAGTTACTATGTTATAAAACGAACTTTGTTTTAATACCGTGCCTATAACTCAAGCTTAATTTATATATTCCAGCTCGCATCGCCTGTCTCTACGGTTATTTTTTTTTTTTTTGAGCCGCCAGCGGCTTTCGTTGAAAAAACTTGGAACAAATTCGAATTGCTACCGCCAATCCATCGATTCTCGATCGAAGCTTAACCCAATTGATCTTACAACGCGAATGGCATGTTAAACACCCTACACTCGTGTAATTTGTGTCCGAAATGAAATAAATTTATGAACATCGATGGCAAAGTTGATTAGACGAAAGTCGCCGCCAACTCGGACATGGTCGTGGTCCATGGAGTCGCGGACATGGACCGGGATTTGGACTTGGATTTGGGCATGGCACGGTATGCTATGGTTGGGGGCCACCGAATAACCAGTTTGCCTCTGCTTAGCGGACACTTGTAATATTTCTGTTGAACTTCTCCTAATTGCAATTTGATGTTTCAGTTTTCGCTCTTTTGGTAATTAAGTTGTATTTGGATAAGGATTTTCTTTTTCCCTTTTTTATTTGAATCCATTTTTCGGGGCGCACTTAGCGGCAGCGTGTGAAAAGTTGTGACGGGGGCCCCCGGGGGGTGACTGGAGTTCAGACGTGTGCTCTTCCGATCTTTGACAGTGAGCGCGTCTCTCACCGATTCTCGCCGTTCAGCCGGCTTTTTTCTCAATTGTATCGTAATCGTGAGTCAGCATAAAGCCATCGCGCCTCTGTTGATCAACTCATTCTAGAAAGATACTCCAAACATATATGTACTATGCGATAGCTCTCCCCTTTCGATGATGATAAGAATGAGCATGAGTGGACTTCATTATGGGTCAGCACATTTGGTTTGGGCTGGGGGCTTCCAAAGAGGGGGAACACCACATTGTGACACACTCGTTTAAAGCTTTTGAAGCGTGCAGAAT"
 #' 
 #' abfiles <- c("/groups/stark/vloubiere/projects/pe_STARRSeq/db/sanger_sequencing/vllib_006_011_sanger/LOUB_vllib006.1_CASeq044_A01.ab1",
 #' "/groups/stark/vloubiere/projects/pe_STARRSeq/db/sanger_sequencing/vllib_006_011_sanger/LOUB_vllib006.1_CASeq003_A04.ab1")
 #' revcomp <- c(F, T)
-#' feat_names <- c("illumina_F", "Flink_-2", "illumina_R", "R1link+0", "R2link+0", "R3link-3", "spacer")
-#' feat_sequences <- c("ACACTCTTTCCCTACACGACGCTCTTCCGATCT",
+#' feat.names <- c("illumina_F", "Flink_-2", "illumina_R", "R1link+0", "R2link+0", "R3link-3", "spacer")
+#' feat.sequences <- c("ACACTCTTTCCCTACACGACGCTCTTCCGATCT",
 #' "GACAGTGAGCGCGTCTCTCACCG", 
 #' "GTGACTGGAGTTCAGACGTGTGCTCTTCCGATCT", 
 #' "TTGTCCGCGTCGATCCTAGG", 
 #' "ATTCTGCACGCTTCAAAAGC", 
 #' "AGCTGCTGTCTAAGGCACAGG", 
 #' "CCGCGCGCGCTCATCAATGTATCTTATCATGTCTGCTCGAAGCGGCCGGCCGAATTCG")
-#' feat_cols <- c("blue", "green", "red", "pink", "purple", "gold", "black")
+#' feat.cols <- c("blue", "green", "red", "pink", "purple", "gold", "black")
 #' vl_sanger_align(refseq = refseq,
 #' abfiles = abfiles,
 #' revcomp= c(F, T),
-#' feat_names = feat_names,
-#' feat_sequences = feat_sequences,
-#' feat_cols= feat_cols)
+#' feat.names = feat.names,
+#' feat.sequences = feat.sequences,
+#' feat.cols= feat.cols)
+#' 
 #' @export
 vl_sanger_align <- function(refseq, 
                             abfiles, 
                             revcomp= NULL,
-                            feat_mismatches= 0, 
-                            feat_sequences= NULL,
-                            feat_names= NULL,
-                            feat_cols= NULL)
+                            feat.mismatches= 0, 
+                            feat.sequences= NULL,
+                            feat.names= NULL,
+                            feat.cols= NULL)
 {
   if(length(refseq)!=1)
     stop("length(refseq)!=1")
@@ -49,21 +51,21 @@ vl_sanger_align <- function(refseq,
     revcomp <- rep(T, length(abfiles))
   if(length(revcomp) != length(abfiles))
     stop("revcomp vector length should match the length of provided abfiles")
-  if(!is.null(feat_sequences))
+  if(!is.null(feat.sequences))
   {
-    if(any(is.na(feat_sequences)))
+    if(any(is.na(feat.sequences)))
       stop("Some feat sequences are NAs -> stop")
-    if(is.null(feat_names))
-      feat_names <- paste0("feat_", seq(feat_sequences))
-    if(length(feat_names) != length(feat_sequences))
+    if(is.null(feat.names))
+      feat.names <- paste0("feat_", seq(feat.sequences))
+    if(length(feat.names) != length(feat.sequences))
       stop("length feat names should match the length of feat seqauences")
-    if(is.null(feat_cols))
+    if(is.null(feat.cols))
     {
-      if(length(feat_sequences)==1)
-        feat_cols <- "black" else
-          feat_cols <- colorRamps::matlab.like2(length(feat_sequences))
+      if(length(feat.sequences)==1)
+        feat.cols <- "black" else
+          feat.cols <- colorRamps::matlab.like2(length(feat.sequences))
     }
-    if(length(feat_cols) != length(feat_sequences))
+    if(length(feat.cols) != length(feat.sequences))
       stop("length feat colors should match the length of feat seqauences")
   }
 
@@ -93,9 +95,7 @@ vl_sanger_align <- function(refseq,
     mat[mat[, i] != "white", i] <- ifelse(mat[mat[, i] != "white", i]==mat[mat[, i] != "white", 1], "blue", "red")
   mat[mat[, 1]!="white",1] <- apply(mat[mat[, 1]!="white",], 1, function(x) ifelse(any(x=="blue"), "blue", "red"))
   
-  #-----------------------####
-  # Plot figure
-  #-----------------------####
+  # Plot figure ----
   plot.new()
   rasterImage(t(mat), 0, 0, 1, 1, interpolate = F)
   abline(h= seq(0, 1, length.out= ncol(mat)+1))
@@ -109,20 +109,18 @@ vl_sanger_align <- function(refseq,
        labels = colnames(mat), 
        las= 1)
   
-  #-----------------------####
-  # Add features
-  #-----------------------####
-  if(!is.null(feat_sequences))
+  # Add features ----
+  if(!is.null(feat.sequences))
   {
-    feat <- data.table::data.table(name= feat_names,
-                                   seq= feat_sequences,
-                                   Cc= feat_cols)
+    feat <- data.table::data.table(name= feat.names,
+                                   seq= feat.sequences,
+                                   Cc= feat.cols)
     feat[, {
       # Add forward feature
       .c <- data.table::as.data.table(Biostrings::matchPattern(Biostrings::DNAString(seq),
                                                                subject = refseq, 
                                                                with.indels= T,
-                                                               max.mismatch = feat_mismatches)@ranges)
+                                                               max.mismatch = feat.mismatches)@ranges)
       if(nrow(.c)>0)
       {
         arrows(.c$start/nrow(mat), 1.1, 
@@ -137,7 +135,7 @@ vl_sanger_align <- function(refseq,
       .c <- data.table::as.data.table(Biostrings::matchPattern(Biostrings::reverseComplement(Biostrings::DNAString(seq)),
                                                                subject = refseq,
                                                                with.indels= T,
-                                                               max.mismatch = feat_mismatches)@ranges)
+                                                               max.mismatch = feat.mismatches)@ranges)
       if(nrow(.c)>0)
       {
         arrows(.c$end/nrow(mat), 1.1, 

@@ -4,12 +4,12 @@
 \alias{vl_plot_table}
 \title{Table plot}
 \usage{
-vl_plot_table(DT, wrap_text = 20)
+vl_plot_table(DT, wrap.text = 20)
 }
 \arguments{
 \item{DT}{data.table}
 
-\item{wrap_text}{Number of characters after which text can be wrapped}
+\item{wrap.text}{Number of characters after which text can be wrapped}
 }
 \value{
 Plots table

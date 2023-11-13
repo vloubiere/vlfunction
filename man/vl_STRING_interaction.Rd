@@ -9,9 +9,9 @@
 vl_STRING_interaction(
   STRINGdb,
   symbols,
-  score_cutoff = 400,
-  top_N = Inf,
-  remove_non_connected = T,
+  score.cutoff = 400,
+  top.N = Inf,
+  remove.non.connected = T,
   plot = T,
   size = 15,
   size2 = 15,
@@ -38,11 +38,11 @@ vl_STRING_to_igraph(obj, directed = F)
 
 \item{symbols}{vector of Dmel gene symbols}
 
-\item{score_cutoff}{If specified, only plot interactions with score>=cutoff}
+\item{score.cutoff}{If specified, only plot interactions with score>=cutoff}
 
-\item{top_N}{If specified, only plot top N interactions}
+\item{top.N}{If specified, only plot top N interactions}
 
-\item{remove_non_connected}{Remove proteins that have 0 connections. Default= T}
+\item{remove.non.connected}{Remove proteins that have 0 connections. Default= T}
 
 \item{plot}{Should the graph be plotted?}
 

@@ -34,3 +34,11 @@ Imports bed as data.table and check formats
 \item \code{vl_importBed(GRanges)}: for GRanges
 
 }}
+\examples{
+bed <- vl_importBed("/path/to/file.bed")
+test <- data.table(seqnames= "chr3R",
+                   start= 100000,
+                   end= 110000)
+bed <- vl_importBed(test)
+
+}

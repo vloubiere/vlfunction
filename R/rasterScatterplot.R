@@ -60,5 +60,9 @@ vl_rasterScatterplot <- function(x,
   
   # Plot png
   panel <- png::readPNG(tmp)
-  rasterImage(panel, coords[1], coords[3], coords[2], coords[4])
+  rasterImage(panel,
+              coords[1],
+              coords[3],
+              coords[2],
+              coords[4])
 }

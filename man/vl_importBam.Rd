@@ -17,7 +17,7 @@ vl_importBam(
 
 \item{sel}{columns to be imported (see Rsamtools::scanBamWhat()). Default= c("qname", "flag", "rname", "strand", "pos", "qwidth", "mapq", "mrnm", "mpos", "isize")}
 
-\item{col.names}{Names of the columns to be imported.}
+\item{col.names}{Names of the columns to be imported. Default= c("readID", "samFlag", "seqnames", "strand", "leftStart", "width", "mapq", "mateSeqnames", "mateLeftStart", "isize")}
 }
 \value{
 Returns a bam file content as data.table

@@ -6,7 +6,7 @@
 \usage{
 vl_alluvial_plot(
   dat,
-  col = vl_palette_many_categ(length(unique(unlist(dat)))),
+  col = rainbow(length(unique(unlist(dat)))),
   alpha.f = 0.5,
   space = 1,
   width = 0.5,
@@ -20,6 +20,10 @@ vl_alluvial_plot(
 
 \item{alpha.f}{Alpha value for transition colors}
 
+\item{space}{Space between bars. See ?barplot()}
+
+\item{width}{Bars width. See ?barplot()}
+
 \item{...}{Extra parameters to be passed to barplot}
 }
 \value{
@@ -30,12 +34,7 @@ Plots average tracks for a set bw files around (potentially) several sets of pea
 }
 \examples{
 test <- data.table(c("A", "A", "A", "A", "A", "B", "B", "B", "C", "C", "C"),
-c("A", "A", "A", "B", "B", "B", "B", "C", "C", "C", "C"),
-c("A", "A", "B", "B", "B", "B", "B", "B", "B", "C", "C"))
+                   c("B", "A", "A", "B", "C", "B", "B", "C", "C", "A", "A"),
+                   c("A", "A", "B", "B", "B", "B", "B", "B", "B", "C", "A"))
 vl_alluvial_plot(test)
-test2 <- data.table(rep(c("Up", "Unaffected", "Down"), each= 3), 
-rep(c("Up", "Unaffected", "Down"), 3), 
-rep(c("Up", "Unaffected", "Down"), 3), 
-rep(c("Up", "Unaffected", "Down"), each= 3))
-vl_alluvial_plot(test2)
 }

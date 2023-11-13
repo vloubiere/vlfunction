@@ -50,15 +50,38 @@ Counts motif occurences in a set of regions
 \examples{
 # Example run
 sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
-top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
-top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
-counts <- vl_motif_counts(top_SUHW, genome= "dm3", sel= sel)
-control_counts <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
 
-suhw <- vl_motif_counts(vl_SUHW_top_peaks, "dm3")
-ctls_regions <- vl_control_regions_BSgenome(bed= vl_SUHW_top_peaks, "dm3")
-ctl <- vl_motif_counts(ctls_regions, "dm3")
-pl <- vl_motif_enrich(suhw, ctl, plot= F)
-par(mar= c(4,15,4,6))
-plot(pl, padj_cutoff= 1e-3)
+# Regions
+top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks,
+                         upstream = 250,
+                         downstream = 250,
+                         genome = "dm3")
+top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks,
+                          upstream = 250,
+                          downstream = 250,
+                          genome = "dm3")
+ctls_regions <- vl_control_regions_BSgenome(bed= vl_SUHW_top_peaks,
+                                            genome= "dm3")
+                          
+# Motif counts
+suhw <- vl_motif_counts(top_SUHW,
+                        genome= "dm3",
+                        sel= sel)
+starr <- vl_motif_counts(top_STARR,
+                         genome= "dm3",
+                         sel= sel)
+ctl <- vl_motif_counts(ctls_regions,
+                       genome= "dm3",
+                       sel= sel)
+                       
+# Enrichment                        
+pl <- vl_motif_enrich(suhw,
+                      ctl,
+                      plot= F)
+
+# Plot
+plot(pl,
+     padj.cutoff= 5e-2)
+vl_motif_enrich(starr, ctl)  
+
 }

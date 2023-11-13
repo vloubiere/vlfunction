@@ -20,8 +20,14 @@ For each range in 'a', reports the number of overlapping features in 'b'
 For each bin, computes the number of overlapping reads from a bed file
 }
 \examples{
-a <- data.table(seqnames= c("chr2R"), start= 10000, end= 20000, strand= c("+", "-"))
-b <- data.table(seqnames= c("chr2R"), start= seq(10000, 19000, 1000), end= seq(11000, 20000, 1000), strand= rep(c("+", "-"), each= 10))
+a <- data.table(seqnames= "chr2R",
+                start= 10000,
+                end= 20000,
+                strand= c("+", "-"))
+b <- data.table(seqnames= "chr2R",
+                start= seq(10000, 19000, 1000),
+                end= seq(11000, 20000, 1000),
+                strand= rep(c("+", "-"), each= 10))
 vl_covBed(a, b)
 vl_covBed(a, b, ignore.strand = F)
 

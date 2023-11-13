@@ -24,9 +24,9 @@ vl_STRING_getDB <- function(species,
 #'
 #' @param STRINGdb A STRINGdb object. See ?vl_STRING_getDB
 #' @param symbols vector of Dmel gene symbols
-#' @param score_cutoff If specified, only plot interactions with score>=cutoff
-#' @param top_N If specified, only plot top N interactions
-#' @param remove_non_connected Remove proteins that have 0 connections. Default= T
+#' @param score.cutoff If specified, only plot interactions with score>=cutoff
+#' @param top.N If specified, only plot top N interactions
+#' @param remove.non.connected Remove proteins that have 0 connections. Default= T
 #' @param plot Should the graph be plotted?
 #' @param size Vertex size. Default= 15
 #' @param size2 Vertex size2 for certain shapes. Default= 15
@@ -71,9 +71,9 @@ vl_STRING_getDB <- function(species,
 #' @export
 vl_STRING_interaction <- function(STRINGdb,
                                   symbols,
-                                  score_cutoff= 400,
-                                  top_N= Inf,
-                                  remove_non_connected= T,
+                                  score.cutoff= 400,
+                                  top.N= Inf,
+                                  remove.non.connected= T,
                                   plot= T,
                                   size= 15,
                                   size2= 15,
@@ -119,13 +119,13 @@ vl_STRING_interaction <- function(STRINGdb,
   E <- E[, .(width= max(combined_score)), .(from, to)]
   
   # Checks and cutoffs
-  E <- E[width>=score_cutoff]
+  E <- E[width>=score.cutoff]
   setorderv(E, "width", -1)
-  E <- E[seq(nrow(E))<=top_N]
+  E <- E[seq(nrow(E))<=top.N]
   E[, width:= width/999*3]
   
   # Keep only V and E interacting within subgroup
-  if(remove_non_connected)
+  if(remove.non.connected)
   {
     V <- V[symbol %in% E[, c(from, to)]]
     E <- E[from %in% V$symbol & to %in% V$symbol]

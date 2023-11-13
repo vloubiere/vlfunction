@@ -4,37 +4,36 @@
 \alias{vl_collapseBed}
 \title{Collapse ranges with a certain min dist}
 \usage{
-vl_collapseBed(bed, mingap = 1, return_idx_only = F, ignore.strand = T)
+vl_collapseBed(bed, ming.gap = 1, return.idx.only = F, ignore.strand = T)
 }
 \arguments{
 \item{bed}{bed file to be collapsed. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames','start', 'end' columns. see ?vl_importBed()}
 
-\item{mingap}{min gap ditance for merging. default is 1 (that is, touching coordinates)}
+\item{ming.gap}{min gap ditance for merging. default is 1 (that is, touching coordinates)}
 
-\item{return_idx_only}{If set to T, does not collapse regions but returns idx as an extra columns. default= F}
+\item{return.idx.only}{If set to T, does not collapse regions but returns idx as an extra columns. default= F}
 
 \item{ignore.strand}{Should strand be ignored? default= T}
 }
 \value{
-Collapse coor data.table
+Collapse bed data.table
 }
 \description{
 Collapse ranges with a certain min dist between them
 }
 \examples{
-gr <- GRanges(seqnames=Rle(paste("chr", c(1, 2, 1, 3), sep=""), c(1, 3, 2, 4)),
-ranges=IRanges(1:10, width=10:1, names=letters[1:10]),
-strand=Rle(strand(c("-", "+", "*", "+", "-")), c(1, 2, 2, 3, 2)))
-bed <- vl_importBed(gr)
+bed <- data.table(seqnames= "chr3R",
+                  start= c(10e3, 11e3, 12e3, 20e3, 21e3),
+                  end= c(12e3, 13e3, 14e3, 22e3, 23e3),
+                  strand= c("+", "+", "-", "+", "+"))
+                  
 vl_collapseBed(bed)
-vl_collapseBed(bed, return_idx_only = T)
+# Return mergin index only
+vl_collapseBed(bed, return.idx.only = T)
+# Only merge if strand is similar
 vl_collapseBed(bed, ignore.strand = F)
-vl_collapseBed(bed, ignore.strand = F, return_idx_only = T)
-
-# Mingap
-bed[7, c("start", "end"):= .(start+10, end+10)]
-vl_collapseBed(bed)
-vl_collapseBed(bed, mingap = 10)
-vl_collapseBed(bed, return_idx_only = T)
+# Allow a certain gap for merging
+vl_collapseBed(bed, ming.gap = 1000)
+vl_collapseBed(bed, ming.gap = 10000)
 
 }

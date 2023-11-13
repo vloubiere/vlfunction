@@ -17,4 +17,5 @@ Calculates Oligo Tm and GC %
 }
 \examples{
 vl_oligo_Tm("GCCGATTCTCGGGCAGTTCCTC")
+
 }

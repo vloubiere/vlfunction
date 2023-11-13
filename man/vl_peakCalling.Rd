@@ -7,14 +7,14 @@
 vl_peakCalling(
   ChIP,
   Input,
-  read_length = 50,
-  average_function = function(x) ceiling(mean(x)),
-  gaussian_blur = F,
+  read.length = 50,
+  fun.average = function(x) ceiling(mean(x)),
+  gaussian.blur = F,
   BSgenome,
-  bins_width = 100,
-  steps_width = round(bins_width/2),
-  bins_pval_cutoff = 0.05,
-  bins_OR_cutoff = 1
+  bins.width = 100,
+  steps.width = round(bins.width/2),
+  bins.pval.cutoff = 0.05,
+  bins.OR.cutoff = 1
 )
 }
 \arguments{
@@ -22,21 +22,21 @@ vl_peakCalling(
 
 \item{Input}{Input file (same format as ChIP).}
 
-\item{read_length}{If ChIP and Input are bigwig files, this argument will be used to estimate total reads. default to 50}
+\item{read.length}{If ChIP and Input are bigwig files, this argument will be used to estimate total reads. default to 50}
 
-\item{average_function}{Function applied to ChIP read counts to define candidate peaks}
+\item{fun.average}{Function applied to ChIP read counts to define candidate peaks}
 
-\item{gaussian_blur}{Applies gaussian blur to ChIP signal to identify peak candidates. Useful for noisy signal. default= FALSE}
+\item{gaussian.blur}{Applies gaussian blur to ChIP signal to identify peak candidates. Useful for noisy signal. default= FALSE}
 
 \item{BSgenome}{A BSgenome object used for gw binning}
 
-\item{bins_width}{bins width used for peak calling, Default to 100L (narrow Peaks). Use larger bins to call domains}
+\item{bins.width}{bins width used for peak calling, Default to 100L (narrow Peaks). Use larger bins to call domains}
 
-\item{steps_width}{Step between bins. default to round(bins_width/2)}
+\item{steps.width}{Step between bins. default to round(bins.width/2)}
 
-\item{bins_pval_cutoff}{The cutoff that will be applied to find candidate bins and merge them into peaks. Less stringent cutoffs means broader regions. default to 0.05}
+\item{bins.pval.cutoff}{The cutoff that will be applied to find candidate bins and merge them into peaks. Less stringent cutoffs means broader regions. default to 0.05}
 
-\item{bins_OR_cutoff}{Enrichment cutoff that will be applied to find candidate bins and merge them into peaks. Less stringent cutoffs means broader regions. default to 1}
+\item{bins.OR.cutoff}{Enrichment cutoff that will be applied to find candidate bins and merge them into peaks. Less stringent cutoffs means broader regions. default to 1}
 }
 \value{
 significantly enriched peaks

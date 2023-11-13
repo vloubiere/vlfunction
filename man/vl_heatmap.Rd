@@ -12,106 +12,103 @@ vl_heatmap(x, ...)
 
 \method{vl_heatmap}{matrix}(
   x,
-  cluster_rows = TRUE,
-  row_clusters = 1,
-  row_clusters_col = NULL,
-  kmeans_k = NA,
-  clustering_distance_rows = "euclidean",
-  cutree_rows = 1,
-  cluster_cols = TRUE,
-  col_clusters = 1,
-  col_clusters_col = NULL,
-  clustering_distance_cols = "euclidean",
-  cutree_cols = 1,
-  clustering_method = "complete",
+  cluster.rows = TRUE,
+  row.clusters = 1,
+  row.clusters.col = NULL,
+  kmeans.k = NA,
+  clustering.distance.rows = "euclidean",
+  cutree.rows = 1,
+  cluster.cols = TRUE,
+  col.clusters = 1,
+  col.clusters.col = NULL,
+  clustering.distance.cols = "euclidean",
+  cutree.cols = 1,
+  clustering.method = "complete",
   plot = TRUE,
-  auto_margins = FALSE,
   breaks = seq(min(x, na.rm = T), max(x, na.rm = TRUE), length.out = length(col)),
   col = c("cornflowerblue", "white", "red"),
-  na_col = "lightgrey",
+  na.col = "lightgrey",
   grid = FALSE,
   main = NA,
-  legend_title = NA,
+  legend.title = NA,
   legend.cex = 1,
-  show_rownames = TRUE,
-  show_colnames = TRUE,
-  tilt_colnames = FALSE,
-  show_row_clusters = length(unique(rows$cl)) > 1,
-  show_col_clusters = length(unique(cols$cl)) > 1,
-  show_row_dendrogram = TRUE,
-  show_col_dendrogram = TRUE,
-  show_legend = TRUE,
-  display_numbers = FALSE,
-  display_numbers_matrix,
-  display_numbers_cex = 1
+  show.rownames = TRUE,
+  show.colnames = TRUE,
+  tilt.colnames = FALSE,
+  show.row.clusters = length(unique(rows$cl)) > 1,
+  show.col.clusters = length(unique(cols$cl)) > 1,
+  show.row.dendrogram = TRUE,
+  show.col.dendrogram = TRUE,
+  show.legend = TRUE,
+  display.numbers = FALSE,
+  display.numbers.matrix,
+  display.numbers.cex = 1
 )
 }
 \arguments{
 \item{x}{Data to plot. Can be one of matrix, data.table, or formula.}
 
-\item{cluster_rows}{Should rows be clustered? Default= T}
+\item{cluster.rows}{Should rows be clustered? Default= T}
 
-\item{row_clusters}{Vector of row clusters (overwritten by clustering, Default= 1)}
+\item{row.clusters}{Vector of row clusters (overwritten by clustering, Default= 1)}
 
-\item{row_clusters_col}{Row clusters colors (default is to use grey palette)}
+\item{row.clusters.col}{Row clusters colors (default is to use grey palette)}
 
-\item{kmeans_k}{Number of row kmean clusters. If specified, takes over row clustering.}
+\item{kmeans.k}{Number of row kmean clusters. If specified, takes over row clustering.}
 
-\item{clustering_distance_rows}{Method for clustering distance rows. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"}
+\item{clustering.distance.rows}{Method for clustering distance rows. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"}
 
-\item{cutree_rows}{Number of cuts for rows tree. Default= 1L}
+\item{cutree.rows}{Number of cuts for rows tree. Default= 1L}
 
-\item{cluster_cols}{Should columns be clustered? Default= T}
+\item{cluster.cols}{Should columns be clustered? Default= T}
 
-\item{col_clusters}{Vector of col clusters (overwritten by clustering, Default= 1)}
+\item{col.clusters}{Vector of col clusters (overwritten by clustering, Default= 1)}
 
-\item{col_clusters_col}{Col clusters colors (default is to use grey palette)}
+\item{col.clusters.col}{Col clusters colors (default is to use grey palette)}
 
-\item{clustering_distance_cols}{Method for clustering distance cols. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"}
+\item{clustering.distance.cols}{Method for clustering distance cols. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"}
 
-\item{cutree_cols}{Number of cuts for cols tree. default= 1L}
+\item{cutree.cols}{Number of cuts for cols tree. default= 1L}
 
-\item{clustering_method}{Clustering method to use. Must be one of "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median" or "centroid".}
+\item{clustering.method}{Clustering method to use. Must be one of "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median" or "centroid".}
 
 \item{plot}{Should the heatmap be plotted? Default= T}
-
-\item{auto_margins}{Should auto margins be computed and used?}
 
 \item{breaks}{Heatmap breaks, which should be the same length as the color vector}
 
 \item{col}{Color scale. default= c("cornflowerblue", "white", "red")}
 
-\item{na_col}{Color for na values. Default= "lightgrey"}
+\item{na.col}{Color for na values. Default= "lightgrey"}
 
 \item{grid}{Should grid be drawn? Default= F}
 
 \item{main}{Title. Default= NA}
 
-\item{legend_title}{Character to plot as title legend}
+\item{legend.title}{Character to plot as title legend}
 
 \item{legend.cex}{cex expansion factor applying to the whole legend}
 
-\item{show_rownames}{Plot row names? Default= T}
+\item{show.rownames}{Plot row names? Default= T}
 
-\item{show_colnames}{Plot col names? Default= T}
+\item{show.colnames}{Plot col names? Default= T}
 
-\item{tilt_colnames}{Should colnames be tilted? default= F}
+\item{tilt.colnames}{Should colnames be tilted? default= F}
 
-\item{show_row_clusters}{Plot row cluster names/lines?}
+\item{show.row.clusters}{Plot row cluster names/lines?}
 
-\item{show_col_clusters}{Plot col cluster names/lines?}
+\item{show.col.clusters}{Plot col cluster names/lines?}
 
-\item{show_row_dendrogram}{Plot row dendrogram?}
+\item{show.row.dendrogram}{Plot row dendrogram?}
 
-\item{show_col_dendrogram}{Plot col dendrogram?}
+\item{show.col.dendrogram}{Plot col dendrogram?}
 
-\item{show_legend}{Should the legend be plotted?}
+\item{show.legend}{Should the legend be plotted?}
 
-\item{display_numbers}{Display numbers on heatmap? Default= F}
+\item{display.numbers}{Display numbers on heatmap? Default= F}
 
-\item{display_numbers_matrix}{Matrix of numbers to be displayed. useful for fine tuning. Default= x}
+\item{display.numbers.matrix}{Matrix of numbers to be displayed. useful for fine tuning. Default= x}
 
-\item{display_numbers_cex}{cex display numbers}
+\item{display.numbers.cex}{cex display numbers}
 }
 \value{
 An object of class vl_heatmap_obj containing clustering data and can be used for plotting using plot(obj, ...)
@@ -137,7 +134,17 @@ colnames(test) = paste("Test", 1:10, sep = "")
 rownames(test) = paste("Gene", 1:20, sep = "")
 
 par(mfrow=c(2,2))
-res <- vl_heatmap(test, kmeans_k = 4, cutree_rows = 3, cutree_cols = 5, legend_title = "log2FoldChange", main= "test")
-vl_heatmap(test, cutree_rows = 3, cutree_cols = 2, show_col_clusters = F, legend_title = "log2FoldChange", main= "test")
+res <- vl_heatmap(test,
+                  kmeans.k = 4,
+                  cutree.rows = 3,
+                  cutree.cols = 5,
+                  legend.title = "log2FoldChange",
+                  main= "test")
+vl_heatmap(test,
+           cutree.rows = 3,
+           cutree.cols = 2,
+           show.col.clusters = F,
+           legend.title = "log2FoldChange",
+           main= "test")
 
 }

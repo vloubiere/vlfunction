@@ -14,8 +14,8 @@
 #' @param box_padding_y (numeric) extra margin around text bounding boxes
 #' @param point_padding_x (numeric) extra margin around data points
 #' @param point_padding_y (numeric) extra margin around data points
-#' @param force_push (numeric) magnitude of the push force (defaults to \code{1e-5})
-#' @param force_pull (numeric) magnitude of the pull force (defaults to \code{1e-5})
+#' @param force_push (numeric) magnitude of the push force
+#' @param force_pull (numeric) magnitude of the pull force
 #' @param transform_coord (character) the coordinate system used for calculating
 #'   bounding boxes. The default, "npc", is to transfrom all cordinates to
 #'   'Normalised Parent Coordinates'. When calling externally, use "native"
@@ -62,14 +62,16 @@
 get_repelled_labels <- function(x,
                                 y,
                                 labels,
-                                cex = 1,
-                                xlim = c(0, 1),
-                                ylim = c(0, 1),
-                                point_size= 0,
-                                box_padding_x = 1,
-                                box_padding_y = 1,
-                                force_push = 1e-05,
-                                force_pull = 1e-05)
+                                cex,
+                                xlim,
+                                ylim,
+                                point_size,
+                                box_padding_x,
+                                box_padding_y,
+                                points_padding_x,
+                                points_padding_y,
+                                force_push,
+                                force_pull)
 {
   dat <- data.table(x,
                     y,
@@ -77,10 +79,10 @@ get_repelled_labels <- function(x,
                     cex)
   dat[, width:= strwidth(labels, cex= cex)]
   dat[, height:= strheight(labels, cex= cex)]
-  dat[, x1:= x-width/2-strwidth("M", cex= cex)]
-  dat[, y1:= y-height/2-strheight("M", cex= cex)]
-  dat[, x2:= x+width/2+strwidth("M", cex= cex)]
-  dat[, y2:= y+height/2+strheight("M", cex= cex)]
+  dat[, x1:= x-width/2-strwidth("M")*box_padding_x*cex]
+  dat[, y1:= y-height/2-strheight("M")*box_padding_y*cex]
+  dat[, x2:= x+width/2+strwidth("M")*box_padding_x*cex]
+  dat[, y2:= y+height/2+strheight("M")*box_padding_y*cex]
   
   # Points and boxes DF ----
   posdf <- data.frame(x = x, y = y)
@@ -89,8 +91,8 @@ get_repelled_labels <- function(x,
   # Compute positions boxes
   moved <- latticetools::repel_boxes(data_points = as.matrix(posdf),
                                      point_size = rep(point_size, nrow(posdf)),
-                                     point_padding_x = 0,
-                                     point_padding_y = 0,
+                                     point_padding_x = points_padding_x,
+                                     point_padding_y = points_padding_y,
                                      boxes = as.matrix(boxdf),
                                      xlim = xlim,
                                      ylim = ylim,
@@ -104,13 +106,16 @@ get_repelled_labels <- function(x,
                                      direction = "both", 
                                      verbose = FALSE)
   coords <- cbind(posdf, moved)
-  dat[, c("x1", "x2"):= .(x1+(coords[,3]-coords[,1]),
-                          x2+(coords[,3]-coords[,1]))]
-  dat[, c("y1", "y2"):= .(y1+(coords[,4]-coords[,2]),
-                          y2+(coords[,4]-coords[,2]))]
+  coords <- as.data.table(coords)
+  setnames(coords, c("x_orig", "y_orig", "x", "y", "overlapping"))
+  coords[, x1_box:= boxdf$x1+(x-x_orig)]
+  coords[, y1_box:= boxdf$y1+(y-y_orig)]
+  coords[, x2_box:= boxdf$x2+(x-x_orig)]
+  coords[, y2_box:= boxdf$y2+(y-y_orig)]
+  coords$label <- labels
   
   # return coordinates
-  return(dat)
+  return(coords)
 }
 
 #' Title
@@ -165,9 +170,11 @@ vl_repelScatterplot <- function(x,
                                 rect.col= col,
                                 seg.col= col,
                                 noOverlap= F,
-                                point_size = 0.001,
-                                box_padding_x = 0.005,
-                                box_padding_y = 0.005,
+                                point_size= 0,
+                                box_padding_x = .5,
+                                box_padding_y = .5,
+                                points_padding_x = 0,
+                                points_padding_y = 0,
                                 force_push = 1e-05,
                                 force_pull = 1e-05,
                                 add= F,
@@ -204,6 +211,10 @@ vl_repelScatterplot <- function(x,
                                              labels = dat$labels,
                                              cex = dat$label.cex*par("cex"),
                                              point_size = point_size,
+                                             box_padding_x = box_padding_x,
+                                             box_padding_y = box_padding_y,
+                                             points_padding_x= points_padding_x,
+                                             points_padding_y= points_padding_y,
                                              xlim = xlim,
                                              ylim = ylim,
                                              force_push = force_push,
@@ -220,8 +231,7 @@ vl_repelScatterplot <- function(x,
   coords[, clip_x2:= par("usr")[2]]
   coords[, clip_y1:= par("usr")[3]]
   coords[, clip_y2:= par("usr")[4]]
-  browser()
-  coords[, max.y.diff:= ((y2-y1)/2)*(abs(x_orig-x)/((x2_box-x1_box)/2))]
+  coords[, max.y.diff:= ((y2_box-y1_box)/2)*(abs(x_orig-x)/((x2_box-x1_box)/2))]
   coords[(y_orig-y)>=max.y.diff, clip_y1:= y2_box]
   coords[(y_orig-y)<=(-max.y.diff), clip_y2:= y1_box]
   coords[abs(y_orig-y)<=max.y.diff & x_orig>=x2_box, clip_x1:= x2_box]

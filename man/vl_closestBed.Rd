@@ -4,7 +4,7 @@
 \alias{vl_closestBed}
 \title{Find closestBed regions}
 \usage{
-vl_closestBed(a, b = NULL, n = 1, min_dist = 0)
+vl_closestBed(a, b = NULL, n = 1, min.dist = 0)
 }
 \arguments{
 \item{a}{Granges or data.table FOR which closest features have to be found.}
@@ -13,7 +13,7 @@ vl_closestBed(a, b = NULL, n = 1, min_dist = 0)
 
 \item{n}{Number of closest features to be reported. Default to 1}
 
-\item{min_dist}{Min distance for closest feature}
+\item{min.dist}{Min distance for closest feature}
 }
 \value{
 Return "a" coor and closest "b" coordinates and distance in respect to A (When a is on the - strand, “upstream” means b has a higher (start,stop).)
@@ -23,13 +23,24 @@ For each line of a file, returns the closest lines in b.
 Similar to bedtools closest -a a.bed -b b.bed -D a
 }
 \examples{
-To all closest features
-a <- data.table(seqnames= c("chr2R"), start= c(10000, 20000, 30000), end= c(10000, 20000, 30000), strand= c("+", "-", "*"))
-b <- data.table(seqnames= c("chr2R"), start= c(11000, 21000, 31000), end= c(11000, 21000, 31000), strand= c("-", "*", "+"))
-vl_closestBed(a,b)[]
-To find closet yet non touching features
-vl_closestBed(vl_STARR_DSCP_top_peaks, min_dist = 1)
-To n closest features
-vl_closestBed(vl_STARR_DSCP_top_peaks, min_dist = 1, n= 2)
+a <- data.table(seqnames= "chr2R",
+                start= c(10000, 20000, 30000),
+                end= c(10000, 20000, 30000),
+                strand= c("+", "-", "*"))
+b <- data.table(seqnames= "chr2R",
+                start= c(11000, 21000, 31000),
+                end= c(11000, 21000, 31000),
+                strand= c("-", "*", "+"))
+
+# All closest features
+vl_closestBed(a, b)[]
+
+# To find closet yet non touching features
+vl_closestBed(vl_STARR_DSCP_top_peaks,
+              min.dist = 1)
+# To n closest features
+vl_closestBed(vl_STARR_DSCP_top_peaks,
+              min.dist = 1,
+              n= 2)
 
 }

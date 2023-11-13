@@ -7,7 +7,7 @@
 vl_repelScatterplot(
   x,
   y = NULL,
-  col = "black",
+  col = "lightgrey",
   labels,
   label.sel = rep(T, length(x)),
   label.cex = 0.7,
@@ -20,11 +20,11 @@ vl_repelScatterplot(
   rect.col = col,
   seg.col = col,
   noOverlap = F,
-  point_size = 0.001,
-  box_padding_x = 0.005,
-  box_padding_y = 0.005,
-  point_padding_x = 0.01,
-  point_padding_y = 0.01,
+  point_size = 0,
+  box_padding_x = 0.5,
+  box_padding_y = 0.5,
+  points_padding_x = 0,
+  points_padding_y = 0,
   force_push = 1e-05,
   force_pull = 1e-05,
   add = F,
@@ -63,10 +63,6 @@ vl_repelScatterplot(
 
 \item{box_padding_y}{(numeric) extra margin around text bounding boxes, defined as a fraction of char size. Default= 0.005}
 
-\item{point_padding_x}{(numeric) extra margin around data points, defined as a fraction of char size. Default= 0.01}
-
-\item{point_padding_y}{(numeric) extra margin around data points, defined as a fraction of char size. Default= 0.01}
-
 \item{force_push}{(numeric) magnitude of the push force (defaults to 1e-5)}
 
 \item{force_pull}{(numeric) magnitude of the pull force (defaults to 1e-5)}
@@ -76,6 +72,10 @@ vl_repelScatterplot(
 \item{frame}{Should the frame be plotted? Deault= F}
 
 \item{...}{Extra arguments to be passed to plot()}
+
+\item{point_padding_x}{(numeric) extra margin around data points, defined as a fraction of char size. Default= 0.01}
+
+\item{point_padding_y}{(numeric) extra margin around data points, defined as a fraction of char size. Default= 0.01}
 }
 \value{
 Plots a ggrepel-like scatterplot. Returns plotting object as data.table

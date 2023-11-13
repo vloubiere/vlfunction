@@ -16,7 +16,7 @@ vl_motif_pos(sequences, ...)
   genome,
   bg = "genome",
   p.cutoff = 5e-04,
-  collapse_overlapping = TRUE,
+  collapse.overlapping = TRUE,
   motifDB = vl_Dmel_motifs_DB_full
 )
 }
@@ -33,7 +33,7 @@ vl_motif_pos(sequences, ...)
 
 \item{p.cutoff}{Pval cutoff used for motif detection}
 
-\item{collapse_overlapping}{Should overlapping motifs be merged? If TRUE (default), motif instances that overlap more than 70 percent of their width are collapsed.}
+\item{collapse.overlapping}{Should overlapping motifs be merged? If TRUE (default), motif instances that overlap more than 70 percent of their width are collapsed.}
 }
 \value{
 A list of positions of length = length(sequences)
@@ -49,5 +49,8 @@ Compute motif positions
 
 }}
 \examples{
-vl_motif_pos.data.table(vl_SUHW_top_peaks[1:2], genome= "dm3", sel= c("cisbp__M2328", "flyfactorsurvey__suHw_FlyReg_FBgn0003567", "jaspar__MA0533.1"))
+vl_motif_pos.data.table(vl_SUHW_top_peaks[1:2],
+                        genome= "dm3",
+                        sel= c("cisbp__M2328", "flyfactorsurvey__suHw_FlyReg_FBgn0003567", "jaspar__MA0533.1"))
+                        
 }

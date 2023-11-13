@@ -1,7 +1,7 @@
 #' @param obj An object of class vl_enr
 #'
-#' @param padj_cutoff padjust cutoff to be applied before plotting
-#' @param top_enrich Top enrichments to plot (based on padj)
+#' @param padj.cutoff padjust cutoff to be applied before plotting
+#' @param top.enrich Top enrichments to plot (based on padj). Default is to show all enriched features
 #' @param order Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"
 #' @param xlab Default to "Odd Ratio (log2)"
 #' @param col Color scale
@@ -10,8 +10,8 @@
 #' @describeIn vl_motif_enrich method to plot enrichment objects (containing variable, log2OR and padj)
 #' @export
 plot.vl_enr <- function(obj,
-                        padj_cutoff= 0.05,
-                        top_enrich= NA,
+                        padj.cutoff= 0.05,
+                        top.enrich= Inf,
                         order= "padj",
                         xlab= "Odd Ratio (log2)",
                         col= c("blue", "red"),
@@ -28,16 +28,16 @@ plot.vl_enr <- function(obj,
   if(any(DT$log2OR==(-Inf)) && nrow(DT[log2OR<0 & is.finite(log2OR)]))
     DT[log2OR==(-Inf), log2OR:= min(DT[log2OR<0 & is.finite(log2OR), log2OR])]
   # padj cutoff
-  DT <- DT[padj<=padj_cutoff]
+  DT <- DT[padj<=padj.cutoff]
   if(nrow(DT))
   {
     # Order
     if(order=="padj")
       setorderv(DT, "padj") else if(order=="log2OR")
         DT <- DT[order(-abs(log2OR))]
-    # select top_enrich
-    if(!is.na(top_enrich) && nrow(DT)>top_enrich)
-      DT <- DT[seq(nrow(DT))<=top_enrich]
+    # select top.enrich
+    if(nrow(DT)>top.enrich)
+      DT <- DT[seq(nrow(DT))<=top.enrich]
     # Plot
     if(is.null(breaks))
     {
@@ -73,15 +73,15 @@ plot.vl_enr <- function(obj,
 #' @describeIn vl_motif_cl_enrich method to plot enrichment objects (containing variable, log2OR and padj)
 #' @export
 plot.vl_enr_cl <- function(obj,
-                           x_breaks,
-                           padj_cutoff= 0.05,
-                           top_enrich= NA,
+                           x.breaks,
+                           padj.cutoff= 0.05,
+                           top.enrich= Inf,
                            order= "padj",
-                           color_breaks,
+                           color.breaks,
                            cex.balloons= 1,
                            col= c("blue", "red"),
                            main= NA,
-                           plot_empty_clusters= T)
+                           plot.empty.clusters= T)
 {
   if(!(order %in% c("padj", "log2OR")))
     stop("Possible values for order are 'padj', 'log2OR'")
@@ -92,20 +92,20 @@ plot.vl_enr_cl <- function(obj,
   if(any(DT$log2OR==Inf) && nrow(DT[log2OR>0 & is.finite(log2OR)]))
     DT[log2OR==Inf, log2OR:= max(DT[log2OR>0 & is.finite(log2OR), log2OR])]
   # Apply cutoffs
-  DT <- DT[padj <= padj_cutoff & log2OR > 0]
+  DT <- DT[padj <= padj.cutoff & log2OR > 0]
   if(nrow(DT))
   {
     # Order
     if(order=="padj")
       setorderv(DT, c("cl", "padj")) else if(order=="log2OR")
         DT <- DT[order(cl, -abs(log2OR))]
-    # select top_enrich
-    if(!is.na(top_enrich))
-      DT <- DT[variable %in% DT[rowid(DT$cl)<=top_enrich, variable]] 
+    # select top.enrich
+    if(any(DT[, .N, cl]$N>top.enrich))
+      DT <- DT[variable %in% DT[rowid(DT$cl)<=top.enrich, variable]] 
     # Save ordering before dcast
     DT[, variable:= factor(variable, levels= unique(variable))]
     # Remove empty clusters
-    if(!plot_empty_clusters)
+    if(!plot.empty.clusters)
       DT[, cl:= droplevels(cl)]
     # Add y coordinates to DT and return (matrix upside down)
     DT[, y:= max(as.numeric(variable))-as.numeric(variable)+1]
@@ -113,18 +113,18 @@ plot.vl_enr_cl <- function(obj,
     x <- dcast(DT, variable~cl, value.var = "log2OR", drop= F)
     x <- as.matrix(x, 1)
     rownames(x) <- DT[rownames(x), name, on= "variable", mult= "first"]
-    color_var <- dcast(DT, variable~cl, value.var = "padj", drop= F)
-    color_var <- as.matrix(color_var, 1)
-    color_var <- -log10(color_var)
+    color.var <- dcast(DT, variable~cl, value.var = "padj", drop= F)
+    color.var <- as.matrix(color.var, 1)
+    color.var <- -log10(color.var)
     # Plot
     vl_balloons_plot(x= x,
-                     color_var= color_var,
-                     x_breaks= x_breaks,
+                     color.var= color.var,
+                     x.breaks= x.breaks,
                      col= col,
                      cex.balloons= cex.balloons,
                      main= main,
-                     balloon_size_legend= "OR (log2)",
-                     balloon_col_legend= "padj (-log10)")
+                     balloon.size.legend= "OR (log2)",
+                     balloon.col.legend= "padj (-log10)")
   }else
     warning("No enrichment found with current cutoffs!")
   

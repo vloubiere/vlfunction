@@ -24,4 +24,5 @@ vl_add_motif(pl)
 For vl_enr_cl object
 pl <- plot(vl_enr)
 vl_add_motif(pl$DT)
+
 }
