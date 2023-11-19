@@ -22,7 +22,7 @@ vl_bw_average_track(
   col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A", "#4F6A6F", "#D26429",
     "#C57DA5", "#999999"),
   legend = T,
-  legend_pos = "topleft",
+  legend.pos = "topleft",
   legend.cex = 1,
   col.adj = 0.5
 )
@@ -35,7 +35,7 @@ vl_bw_average_track(
   ylab = "Enrichment",
   ylim,
   legend = T,
-  legend_pos = "topleft",
+  legend.pos = "topleft",
   legend.cex = 1,
   col.adj = 0.5
 )
@@ -69,7 +69,7 @@ vl_bw_average_track(
 
 \item{legend}{Should the legend be plotted? default to T}
 
-\item{legend_pos}{Legend position. Default to "topleft"}
+\item{legend.pos}{Legend position. Default to "topleft"}
 
 \item{legend.cex}{Legend cex. defaults to 1}
 

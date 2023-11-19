@@ -102,6 +102,7 @@ vl_motif_counts.character <- function(sequences= NULL,
 #' @param plot Plot result?
 #' @param padj.cutoff cutoff for plotting. Default to FALSE
 #' @param top.enrich Show only n top enriched motifs
+#' @param min.counts The minimum number of counts required to call a hit. Default= 3L
 #' @param breaks Color breaks to be used. Defaults to range of filtered padj.
 #' @param order Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"
 #' @param add.motifs Should motif pwms be plotted?
@@ -147,7 +148,8 @@ vl_motif_enrich <- function(counts,
                             names= NULL,
                             plot= F,
                             padj.cutoff= 0.05,
-                            top.enrich= NA, 
+                            top.enrich= NA,
+                            min.counts= 3L,
                             order= "padj",
                             breaks= NULL,
                             col= c("blue", "red"),
@@ -214,6 +216,7 @@ vl_motif_enrich <- function(counts,
     DT <- plot.vl_enr(obj= res,
                       padj.cutoff= padj.cutoff,
                       top.enrich= top.enrich,
+                      min.counts= min.counts,
                       order= order,
                       breaks= breaks, 
                       xlab = xlab, 
@@ -236,6 +239,7 @@ vl_motif_enrich <- function(counts,
 #' @param plot Should the result be plot using balloons plot? Default to FALSE
 #' @param padj.cutoff cutoff for ballons to be plotted
 #' @param top.enrich Select top enriched motifs/cluster. Default to NA (All)
+#' @param min.counts The minimum number of counts required to call a hit. Default= 3L
 #' @param order Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"
 #' @param x.breaks Breaks used for ballon's sizes
 #' @param color.breaks Color breaks used for coloring
@@ -267,6 +271,7 @@ vl_motif_cl_enrich <- function(counts.list,
                                plot= F,
                                padj.cutoff= 1e-5,
                                top.enrich= NA,
+                               min.counts= 3L,
                                order= "padj",
                                x.breaks,
                                color.breaks,
@@ -309,6 +314,7 @@ vl_motif_cl_enrich <- function(counts.list,
     DT <- plot.vl_enr_cl(obj = res,
                          padj.cutoff= padj.cutoff,
                          top.enrich= top.enrich, 
+                         min.counts= min.counts,
                          order= order,
                          x.breaks= x.breaks,
                          color.breaks= color.breaks,

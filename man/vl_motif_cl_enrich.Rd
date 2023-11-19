@@ -13,6 +13,7 @@ vl_motif_cl_enrich(
   plot = F,
   padj.cutoff = 1e-05,
   top.enrich = NA,
+  min.counts = 3L,
   order = "padj",
   x.breaks,
   color.breaks,
@@ -30,6 +31,7 @@ vl_motif_cl_enrich(
   x.breaks,
   padj.cutoff = 0.05,
   top.enrich = Inf,
+  min.counts = 3L,
   order = "padj",
   color.breaks,
   cex.balloons = 1,
@@ -50,6 +52,8 @@ vl_motif_cl_enrich(
 \item{padj.cutoff}{cutoff for ballons to be plotted}
 
 \item{top.enrich}{Select top enriched motifs/cluster. Default to NA (All)}
+
+\item{min.counts}{The minimum number of counts required to call a hit. Default= 3L}
 
 \item{order}{Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"}
 

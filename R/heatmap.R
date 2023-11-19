@@ -27,6 +27,8 @@
 #' @param show.colnames Plot col names? Default= T
 #' @param tilt.colnames Should colnames be tilted? default= F
 #' @param show.row.clusters Plot row cluster names/lines?
+#' @param row.clusters.pos One of "left" or "right"
+#' @param row.cluster.line.col Color of the line separting row clusters
 #' @param show.col.clusters Plot col cluster names/lines?
 #' @param show.row.dendrogram Plot row dendrogram?
 #' @param show.col.dendrogram Plot col dendrogram?
@@ -34,6 +36,7 @@
 #' @param display.numbers Display numbers on heatmap? Default= F
 #' @param display.numbers.matrix Matrix of numbers to be displayed. useful for fine tuning. Default= x
 #' @param display.numbers.cex cex display numbers 
+#' @param box.lwd Line width of the box around the heatmap
 #' @examples
 #' # Create test matrix
 #' set.seed(1234)
@@ -102,13 +105,16 @@ vl_heatmap.matrix <- function(x,
                               show.colnames= TRUE,
                               tilt.colnames= FALSE,
                               show.row.clusters= length(unique(rows$cl))>1,
+                              row.clusters.pos= "right",
+                              row.cluster.line.col= "black",
                               show.col.clusters= length(unique(cols$cl))>1,
                               show.row.dendrogram= TRUE,
                               show.col.dendrogram= TRUE,
                               show.legend= TRUE,
                               display.numbers= FALSE,
                               display.numbers.matrix,
-                              display.numbers.cex= 1)
+                              display.numbers.cex= 1,
+                              box.lwd= .25)
 {
   if(is.null(rownames(x)))
     rownames(x) <- seq(nrow(x))
@@ -119,16 +125,25 @@ vl_heatmap.matrix <- function(x,
   if(!is.factor(col.clusters))
     col.clusters <- factor(col.clusters)
   if(is.null(row.clusters.col))
+  {
     if(cluster.rows && !is.na(kmeans.k))
-      row.clusters.col <- grDevices::gray.colors(kmeans.k) else
-        if(cluster.rows && length(levels(row.clusters))==1)
-          row.clusters.col <- grDevices::gray.colors(cutree.rows) else
-            row.clusters.col <- grDevices::gray.colors(length(unique(row.clusters)))
+    {
+      row.clusters.col <- grDevices::gray.colors(kmeans.k)
+    }else if(cluster.rows && length(levels(row.clusters))==1)
+    {
+      row.clusters.col <- grDevices::gray.colors(cutree.rows)
+    }else
+      row.clusters.col <- grDevices::gray.colors(length(unique(row.clusters)))
+  }
   if(is.null(col.clusters.col))
+  {
     if(cluster.cols && length(levels(col.clusters))==1)
       col.clusters.col <- grDevices::gray.colors(cutree.cols) else
         col.clusters.col <- grDevices::gray.colors(length(unique(col.clusters)))
-
+  }
+  if(row.clusters.pos=="right")
+    show.rownames <- F
+    
   # Init informative result DT ----
   rows <- data.table(name= rownames(x),
                      cl= row.clusters)
@@ -236,7 +251,8 @@ plot.vl_heatmap <- function(obj)
               xright = ncol(im)+0.5,
               ytop = nrow(im)+0.5,
               interpolate = F)
-  box(lwd= 0.25)
+  if(box.lwd)
+    box(lwd= box.lwd)
   
   # plot grid ----
   if(grid)
@@ -281,21 +297,34 @@ plot.vl_heatmap <- function(obj)
     pos <- rows[rev(order)][, .(y1= .N), .(cl, col)]
     pos[, y1:= cumsum(y1)+0.5]
     pos[, y0:= data.table::shift(y1, 1, fill = 0.5)]
-    abline(h= data.table::first(pos$y1, nrow(pos)-1))
-    rleft <- par("usr")[2]+mar.lw/10
-    rect(rleft,
-         pos$y0,
-         rleft+mar.lw,
-         pos$y1,
-         col= pos$col,
-         xpd= NA,
-         border= NA)
-    text(rleft+mar.lw/2,
-         rowMeans(pos[, .(y0, y1)]),
-         pos$cl,
-         srt= 270,
-         xpd= NA,
-         adj= 0.5)
+    abline(h= data.table::first(pos$y1, nrow(pos)-1),
+           col= row.cluster.line.col)
+    if(row.clusters.pos=="right")
+    {
+      rleft <- par("usr")[2]+mar.lw/10
+      rect(rleft,
+           pos$y0,
+           rleft+mar.lw,
+           pos$y1,
+           col= pos$col,
+           xpd= NA,
+           border= NA)
+      text(rleft+mar.lw/2,
+           rowMeans(pos[, .(y0, y1)]),
+           pos$cl,
+           srt= 270,
+           xpd= NA,
+           adj= 0.5)
+    }else if(row.clusters.pos=="left")
+    {
+      text(par("usr")[1]-diff(grconvertX(c(0, par("mgp")[1]+.5), "line", "user")),
+           rowMeans(pos[, .(y0, y1)]),
+           offset= 0,
+           pos$cl,
+           xpd= NA,
+           adj= 1,
+           cex= par("cex.lab"))
+    }
   }
   if(show.col.clusters)
   {

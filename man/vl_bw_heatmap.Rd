@@ -17,7 +17,8 @@ vl_bw_heatmap(
   names = gsub(".bw$", "", basename(tracks)),
   plot = T,
   center.label = "Center",
-  col = c("blue", "yellow"),
+  col = c("#440154FF", "#482878FF", "#3E4A89FF", "#31688EFF", "#26828EFF", "#1F9E89FF",
+    "#35B779FF", "#6DCD59FF", "#B4DE2CFF", "#FDE725FF"),
   order.col = 1,
   fun.order = function(x) mean(x, na.rm = T),
   fun.max = function(x) quantile(x, 0.99, na.rm = T),
@@ -48,7 +49,7 @@ vl_bw_heatmap(
 
 \item{col}{Vector of colors to be used for heatmap}
 
-\item{order.col}{Index of the column(s) to be used for ordering. Default= 1L}
+\item{order.col}{Index of the column(s) to be used for ordering. If set to FALSE, no ordering besides Set.IDs. Default= 1L}
 
 \item{fun.order}{Function used to aggregated per region and order heatmap. default= function(x) mean(x, na.rm= T)}
 

@@ -162,13 +162,13 @@ vl_screenshot <- function(bed,
            at = lab.y[1],
            labels = name[1],
            lwd = 0,
-           cex= par("cex.lab")*ifelse(lab.cex<1, lab.cex, 1)) #Adjust size of peak tracks
+           cex.axis= par("cex.lab")*ifelse(lab.cex<1, lab.cex, 1)) #Adjust size of peak tracks
       if(type=="bw")
         axis(2,
              at = c(max.y, min.y),
              labels = c(max.val, min.val),
              lwd = 0,
-             cex= par("cex.axis")*0.5)
+             cex.axis= par("cex.axis")*0.5)
     }, (labs)]
   }
   

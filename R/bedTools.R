@@ -270,6 +270,7 @@ vl_collapseBed <- function(bed,
 {
   # Hard copy of bed file
   DT <- vl_importBed(bed)
+  DT <- DT[, names(DT) %in% c("seqnames", "start", "end", "strand"), with= F]
   DT[, init_ord:= .I]
   setorderv(DT, c("seqnames", "start", "end"))
   

@@ -12,6 +12,7 @@ vl_GO_enrich(
   plot = F,
   padj.cutoff = 1e-05,
   top.enrich = Inf,
+  min.counts = 3L,
   order = "padj",
   x.breaks,
   color.breaks,
@@ -35,6 +36,8 @@ vl_GO_enrich(
 \item{padj.cutoff}{cutoff for plotting}
 
 \item{top.enrich}{Show only n top enriched motifs. Default= 10L}
+
+\item{min.counts}{The minimum number of counts required to call a hit. Default= 3L}
 
 \item{order}{Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"}
 

@@ -13,6 +13,7 @@ vl_par(
   cex.lab = 9/12,
   cex.axis = 7/12,
   bty = "n",
+  lend = 2,
   ...
 )
 
@@ -25,6 +26,7 @@ vl_par(
   cex.lab = 9/12,
   cex.axis = 7/12,
   bty = "n",
+  lend = 2,
   ...
 )
 }
@@ -64,4 +66,17 @@ Set up nice plotting parameters
 Sets convenient par env
 
 Sets up my favorite par parameters. Optimized for 3x3 inch square.
+}
+\examples{
+# example code
+pdf("testbc1558fcb6ef.pdf", 3, 3)
+plot(1, 1, main= "before")
+vl_par()
+plot(1, 1, main= "after")
+dev.off()
+
+file.show("testbc1558fcb6ef.pdf")
+file.remove("testbc1558fcb6ef.pdf")
+
+ path.R
 }

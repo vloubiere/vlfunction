@@ -36,13 +36,16 @@ vl_heatmap(x, ...)
   show.colnames = TRUE,
   tilt.colnames = FALSE,
   show.row.clusters = length(unique(rows$cl)) > 1,
+  row.clusters.pos = "left",
+  row.cluster.line.col = "black",
   show.col.clusters = length(unique(cols$cl)) > 1,
   show.row.dendrogram = TRUE,
   show.col.dendrogram = TRUE,
   show.legend = TRUE,
   display.numbers = FALSE,
   display.numbers.matrix,
-  display.numbers.cex = 1
+  display.numbers.cex = 1,
+  box.lwd = 0.25
 )
 }
 \arguments{
@@ -96,6 +99,10 @@ vl_heatmap(x, ...)
 
 \item{show.row.clusters}{Plot row cluster names/lines?}
 
+\item{row.clusters.pos}{One of "left" or "right"}
+
+\item{row.cluster.line.col}{Color of the line separting row clusters}
+
 \item{show.col.clusters}{Plot col cluster names/lines?}
 
 \item{show.row.dendrogram}{Plot row dendrogram?}
@@ -109,6 +116,8 @@ vl_heatmap(x, ...)
 \item{display.numbers.matrix}{Matrix of numbers to be displayed. useful for fine tuning. Default= x}
 
 \item{display.numbers.cex}{cex display numbers}
+
+\item{box.lwd}{Line width of the box around the heatmap}
 }
 \value{
 An object of class vl_heatmap_obj containing clustering data and can be used for plotting using plot(obj, ...)

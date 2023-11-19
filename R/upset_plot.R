@@ -113,14 +113,14 @@ vl_upset_plot <- function(dat.list,
   # Sets barplot axis ----
   s.max <- max(axisTicks(c(0, max(set$N)), log= FALSE))
   x <- c(set[1,right], set[1,right]-(s.max/max(set$N)*tot_width))
-  y <- min(set[, y-height])
+  y <- min(set[, y-height], na.rm = T)
   y <- c(y-strheight("M")*0.1, y)
   lines(rep(x, each= 2),
         c(y, rev(y)),
         xpd= TRUE)
   text(mean(x),
-       min(set[, y-height]),
-       offset= 0.8,
+       min(set[, y-height], na.rm = T),
+       offset= par("mgp")[1],
        "Set size",
        pos= 1,
        cex= par("cex.lab"),
@@ -131,7 +131,7 @@ vl_upset_plot <- function(dat.list,
        pos= 1,
        xpd= TRUE,
        cex= par("cex.axis"),
-       offset= 0.2)
+       offset= par("mgp")[2])
   
   invisible(list(inter= inter,
                  grid= grid,

@@ -9,6 +9,7 @@
 #' @param plot Plot result?
 #' @param padj.cutoff cutoff for plotting
 #' @param top.enrich Show only n top enriched motifs. Default= 10L
+#' @param min.counts The minimum number of counts required to call a hit. Default= 3L
 #' @param x.breaks Breaks used for balloons sizes
 #' @param color.breaks Balloons color breaks
 #' @param cex.balloons Balloons size expansion factor
@@ -47,6 +48,7 @@ vl_GO_enrich <- function(geneIDs,
                          plot= F,
                          padj.cutoff= 1e-5,
                          top.enrich= Inf,
+                         min.counts= 3L,
                          order= "padj",
                          x.breaks,
                          color.breaks,
@@ -137,7 +139,8 @@ vl_GO_enrich <- function(geneIDs,
     if(plot)
       DT <- plot.vl_enr_cl(obj= DT,
                            padj.cutoff= padj.cutoff,
-                           top.enrich= top.enrich, 
+                           top.enrich= top.enrich,
+                           min.counts= min.counts,
                            order= order,
                            x.breaks= x.breaks,
                            color.breaks= color.breaks,
@@ -152,6 +155,7 @@ vl_GO_enrich <- function(geneIDs,
       plot.vl_enr(obj= DT,
                   padj.cutoff= padj.cutoff,
                   top.enrich= top.enrich,
+                  min.counts= min.counts,
                   order= order,
                   xlab = "Odd Ratio (log2)",
                   col = col)

@@ -174,7 +174,7 @@ vl_bw_coverage_bins <- function(bed,
 #' @param ylim ylim for plotting. default= range(data)
 #' @param col Color to be used for plotting. Dataset is ordered using keyby= .(names, set.IDs) before assigning colors
 #' @param legend Should the legend be plotted? default to T
-#' @param legend_pos Legend position. Default to "topleft"
+#' @param legend.pos Legend position. Default to "topleft"
 #' @param legend.cex Legend cex. defaults to 1
 #' @param col.adj Opacity of polygons. default= 0.5
 #' @examples 
@@ -198,7 +198,7 @@ vl_bw_average_track <- function(bed,
                                 ylim,
                                 col= c("#E69F00","#68B1CB","#15A390","#96C954","#77AB7A","#4F6A6F","#D26429","#C57DA5","#999999"),
                                 legend= T,
-                                legend_pos= "topleft",
+                                legend.pos= "topleft",
                                 legend.cex= 1,
                                 col.adj= 0.5)
 {
@@ -230,7 +230,7 @@ vl_bw_average_track <- function(bed,
                              ylab= ylab,
                              ylim= ylim,
                              legend= legend,
-                             legend_pos= legend_pos,
+                             legend.pos= legend.pos,
                              legend.cex= legend.cex,
                              col.adj= col.adj)
   invisible(obj)
@@ -245,7 +245,7 @@ plot.vl_bw_average_track <- function(obj,
                                      ylab= "Enrichment",
                                      ylim,
                                      legend= T,
-                                     legend_pos= "topleft",
+                                     legend.pos= "topleft",
                                      legend.cex= 1,
                                      col.adj= 0.5)
 {
@@ -281,7 +281,7 @@ plot.vl_bw_average_track <- function(obj,
         leg[, labels:= set.IDs] else if(length(unique(leg$name))>1)
           leg[, labels:= name]
     if("labels" %in% names(leg))
-      legend(legend_pos,
+      legend(legend.pos,
              legend= leg$labels,
              fill= leg$col,
              bty= "n",
@@ -304,7 +304,7 @@ plot.vl_bw_average_track <- function(obj,
 #' @param plot Should the average track be ploted? default= T
 #' @param venter_label Label center heatmap
 #' @param col Vector of colors to be used for heatmap
-#' @param order.col Index of the column(s) to be used for ordering. Default= 1L
+#' @param order.col Index of the column(s) to be used for ordering. If set to FALSE, no ordering besides Set.IDs. Default= 1L
 #' @param fun.order Function used to aggregated per region and order heatmap. default= function(x) mean(x, na.rm= T)
 #' @param fun.max Function to be used for clipping. default= function(x) quantile(x, 0.995, na.rm= T). Using max -> no clipping
 #' @param fun.max Function to be used for clipping. default= function(x) quantile(x, 0.995, na.rm= T). Using max -> no clipping
@@ -340,7 +340,7 @@ vl_bw_heatmap <- function(bed,
                           names= gsub(".bw$", "", basename(tracks)),
                           plot= T,
                           center.label= "Center",
-                          col= c("blue", "yellow"),
+                          col= c("#440154FF", "#482878FF", "#3E4A89FF", "#31688EFF", "#26828EFF", "#1F9E89FF", "#35B779FF", "#6DCD59FF", "#B4DE2CFF", "#FDE725FF"),
                           order.col= 1,
                           fun.order= function(x) mean(x, na.rm= T),
                           fun.max= function(x) quantile(x, 0.99, na.rm= T),
@@ -363,11 +363,18 @@ vl_bw_heatmap <- function(bed,
     hm[, set.IDs:= factor(set.IDs, unique(as.character(set.IDs)))]
   
   # Reorder region_ID depending on order.col
-  ord <- dcast(hm[levels(hm$name)[order.col], on= "name"],
-               region_ID+set.IDs~name,
-               fun.aggregate = fun.order)
-  setorderv(ord, names(ord)[-1], order = c(1, rep(-1, ncol(ord)-2)))
-  hm[, region_ID:= factor(region_ID, ord$region_ID)]
+  if(order.col)
+  {
+    ord <- dcast(hm[levels(hm$name)[order.col], on= "name"],
+                 region_ID+set.IDs~name,
+                 fun.aggregate = fun.order)
+    setorderv(ord, names(ord)[-1], order = c(1, rep(-1, ncol(ord)-2)))
+    hm[, region_ID:= factor(region_ID, ord$region_ID)]
+  }else
+  {
+    setorderv(hm, "set.IDs")
+    hm[, region_ID:= factor(region_ID, unique(region_ID))]
+  }
     
   # Compute max values
   hm[, max:= fun.max(score), name]
@@ -390,88 +397,59 @@ plot.vl_bw_heatmap <- function(obj)
   
   # Clip outliers
   clip <- copy(hm)
-  clip[, score:= ifelse(score>max, max, score), name]
-  # Compute colors
-  clip[!is.na(score), col:= {
-    Cc <- circlize::colorRamp2(range(score), col)
-    Cc(score)
-  }, name]
-  clip[is.na(score), col:= na.col]
+  clip[, clip:= cut(score, c(seq(0, max, length.out= 100), Inf), 1:100), max]
+  clip[, clip:= as.numeric(clip)]
+  clip[is.na(clip), clip:= 0]
   # Dcast image
-  dmat <- dcast(clip,
-                set.IDs+region_ID~name+bin.x,
-                value.var = "col")
-  im <- as.matrix(dmat[, !c("set.IDs", "region_ID")])
-  # Add white spaces
-  pos <- seq(levels(hm$name))
-  pos <- pos[-length(pos)]
-  for(i in pos)
+  im <- dcast(clip,
+              name+set.IDs+region_ID~bin.x,
+              value.var = "clip")
+  # Add white space
+  white <- matrix(NA,
+                  nrow= nrow(im),
+                  ncol= space)
+  white <- as.data.table(white)
+  im <- cbind(im, white)
+  set.IDs <- split(im, im$name)[[1]]$set.IDs
+  im <- split(im[, -c(1,2,3), with= F], im$name)
+  im <- do.call(cbind, im)
+  im <- as.matrix(im[, 1:(ncol(im)-space)])
+  im <- im/100
+  # Plot
+  vl_heatmap(im,
+             row.clusters= set.IDs,
+             cluster.rows= F,
+             cluster.cols= F,
+             col= col,
+             show.rownames= F,
+             show.colnames= F,
+             na.col= "white", 
+             row.cluster.line.col= "white",
+             row.clusters.pos= "left",
+             box.lwd= 0,
+             legend.title= "Score")
+  # Add Title and center
+  for(i in seq(levels(clip$name)))
   {
-    cut <- i*nbins+(i-1)*space
-    im <- cbind(im[, 1:cut],
-                matrix("white",
-                       nrow = nrow(im),
-                       ncol= space),
-                im[, (cut+1):ncol(im)])
-  }
-  # labels
-  track.names.x <- seq(nbins/2,
-                       ncol(im)-nbins/2,
-                       length.out= length(levels(hm$name)))
-  # Lines between sets
-  Sets.y <- c(0, cumsum(table(hm[name==name[1] & bin.x==bin.x[1], set.IDs])))
-  if(length(Sets.y)>2)
-  {
-    Sets.lines.y <- nrow(im)-Sets.y[-c(1, length(Sets.y))]
-    Sets.names.y <- nrow(im)-(Sets.y[-1]-diff(Sets.y)/2)
-  }
-  
-  # Plot ----
-  plot.new()
-  plot.window(xlim= c(0.5, ncol(im)+0.5),
-              ylim= c(0.5, nrow(im)+0.5))
-  rasterImage(xleft = 1, 
-              ybottom = 1, 
-              xright = ncol(im),
-              ytop = nrow(im),
-              im)
-  text(track.names.x,
-       par("usr")[4], 
-       levels(hm$name),
-       xpd= T)
-  # Add labels
-  x <- c(rep(1,2), rep(nbins/2, 3), rep(nbins, 2))
-  y <- c(-strheight("M")*0.35, 0, 0, 0-strheight("M")*0.35, 0, 0, -strheight("M")*0.35)
-  min.lab <- min(hm$bin.x)
-  max.lab <- max(hm$bin.x)
-  for(i in seq(levels(hm$name)))
-  {
-    lines(x, y, xpd= T)
-    text(x[1]+strwidth("M", cex = cex.labels), 
-         y[1], 
-         min.lab, 
-         pos= 1, 
-         xpd= T, 
-         cex= cex.labels, 
-         offset= 0.25)
-    text(x[4], y[1], center.label, pos= 1, xpd= T, cex= cex.labels, offset= 0.25)
-    text(x[7]-strwidth("M", cex = cex.labels), 
-         y[1], 
-         max.lab, 
-         pos= 1, 
-         xpd= T, 
-         cex= cex.labels, 
-         offset= 0.25)
-    x <- x+(nbins+space)
-  }
-  # Add lines between groups
-  if(length(Sets.y)>2)
-  {
-    segments(1, Sets.lines.y, ncol(im), Sets.lines.y, xpd= T)
-    text(0,
-         Sets.names.y,
-         levels(hm$set.IDs),
-         pos= 2,
-         xpd= T)
+    # Labels
+    text(nbins/2+((i-1)*(nbins+space)),
+         par("usr")[3]-diff(grconvertY(c(0, par("mgp")[1]+.5), "line", "user")),
+         center.label,
+         xpd= NA,
+         cex= par("cex.lab"))
+    text(nbins/2+((i-1)*(nbins+space)),
+         par("usr")[4]+diff(grconvertY(c(0, par("mgp")[1]+.5), "line", "user")),
+         levels(clip$name)[i],
+         xpd= NA,
+         cex= par("cex.lab"))
+    # Genomic distance axis
+    axis(1,
+         c(1, nbins/2, nbins)+((i-1)*(nbins+space)),
+         labels = F)
+    text(c(1, nbins/2, nbins)+((i-1)*(nbins+space)),
+         par("usr")[3]-diff(grconvertY(c(0, par("mgp")[2]+.5), "line", "user")),
+         c(upstream, "", downstream),
+         xpd= NA,
+         cex= par("cex.axis"))
   }
 }

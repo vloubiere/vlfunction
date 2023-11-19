@@ -262,6 +262,18 @@ vl_par <- function(bottom_strings,
 #' @param bty 
 #' @param ... Extra arguments to be passed to ?par()
 #'
+#' @examples
+#' # example code
+#' pdf("testbc1558fcb6ef.pdf", 3, 3)
+#' plot(1, 1, main= "before")
+#' vl_par()
+#' plot(1, 1, main= "after")
+#' dev.off()
+#' 
+#' file.show("testbc1558fcb6ef.pdf")
+#' file.remove("testbc1558fcb6ef.pdf")
+#' 
+#'  path.R
 #' @return Set up nice plotting parameters
 #' @export
 vl_par <- function(mai= c(.9, .9, .9, .9),
@@ -272,6 +284,7 @@ vl_par <- function(mai= c(.9, .9, .9, .9),
                    cex.lab= 9/12,
                    cex.axis= 7/12,
                    bty= "n",
+                   lend= 2,
                    ...)
 {
   par(mai= mai,
@@ -282,6 +295,7 @@ vl_par <- function(mai= c(.9, .9, .9, .9),
       cex.lab= cex.lab,
       cex.axis= cex.axis,
       bty= bty,
+      lend= lend,
       ...)
 }
 
