@@ -102,8 +102,8 @@ vl_bw_coverage <- function(bed,
 #' Compared to vl_bw_coverage, this functions bins bed file before quantifying the signal. Useful to make heatmaps/average tracks
 #'
 #' @param bed Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
-#' @param tracks Vector of bw files to plot. Use full paths to avoid pbs.
 #' @param set.IDs Set IDs specifying the groups as subsets of the bed file
+#' @param tracks Vector of bw files to plot. Use full paths to avoid pbs.
 #' @param upstream Upstream  extension of bed regions (centered on center)
 #' @param downstream Downstream  extension of bed regions (centered on center)
 #' @param ignore.strand Should the strand be ignored?
@@ -111,8 +111,8 @@ vl_bw_coverage <- function(bed,
 #' @param names Track names to plot. If specified, must be the same length as bw vector. By default, bw basenames will be used.
 #' @export
 vl_bw_coverage_bins <- function(bed,
-                                tracks,
                                 set.IDs,
+                                tracks,
                                 upstream, 
                                 downstream,
                                 ignore.strand,
@@ -161,9 +161,9 @@ vl_bw_coverage_bins <- function(bed,
 #' Plots average tracks for a set bw files around (potentially) several sets of peaks
 #'
 #' @param bed Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
-#' @param names Track names to plot, further used for ordering. By default, bw basenames will be used (as factors).
 #' @param set.IDs Set IDs specifying the groups as subsets of the bed file. Used for ordering.
 #' @param tracks Vector of bw files to plot. Use full paths to avoid pbs.
+#' @param names Track names to plot, further used for ordering. By default, bw basenames will be used (as factors).
 #' @param upstream Upstream  extension of bed regions (centered on center)
 #' @param downstream Downstream  extension of bed regions (centered on center)
 #' @param ignore.strand Should the strand be ignored? Default= T
@@ -184,9 +184,9 @@ vl_bw_coverage_bins <- function(bed,
 #' vl_bw_average_track(bed, tracks= tracks, plot= T, upstream = 1000, downstream = 1000, set.IDs = sets)
 #' @export
 vl_bw_average_track <- function(bed,
-                                names,
                                 set.IDs,
                                 tracks,
+                                names,
                                 upstream= 5000,
                                 downstream= 5000,
                                 ignore.strand= T,
@@ -306,6 +306,7 @@ plot.vl_bw_average_track <- function(obj,
 #' @param col Vector of colors to be used for heatmap
 #' @param order.col Index of the column(s) to be used for ordering. If set to FALSE, no ordering besides Set.IDs. Default= 1L
 #' @param fun.order Function used to aggregated per region and order heatmap. default= function(x) mean(x, na.rm= T)
+#' @param max Allows to manually specify max values. Otherwise, max is computed using the fun.max function for each track.
 #' @param fun.max Function to be used for clipping. default= function(x) quantile(x, 0.995, na.rm= T). Using max -> no clipping
 #' @param fun.max Function to be used for clipping. default= function(x) quantile(x, 0.995, na.rm= T). Using max -> no clipping
 #' @param cex.labels cex paramter for labels
@@ -342,6 +343,7 @@ vl_bw_heatmap <- function(bed,
                           center.label= "Center",
                           col= c("#440154FF", "#482878FF", "#3E4A89FF", "#31688EFF", "#26828EFF", "#1F9E89FF", "#35B779FF", "#6DCD59FF", "#B4DE2CFF", "#FDE725FF"),
                           order.col= 1,
+                          max= NULL,
                           fun.order= function(x) mean(x, na.rm= T),
                           fun.max= function(x) quantile(x, 0.99, na.rm= T),
                           na.col= "lightgrey",
@@ -367,6 +369,7 @@ vl_bw_heatmap <- function(bed,
   {
     ord <- dcast(hm[levels(hm$name)[order.col], on= "name"],
                  region_ID+set.IDs~name,
+                 value.var = "score",
                  fun.aggregate = fun.order)
     setorderv(ord, names(ord)[-1], order = c(1, rep(-1, ncol(ord)-2)))
     hm[, region_ID:= factor(region_ID, ord$region_ID)]
@@ -377,7 +380,9 @@ vl_bw_heatmap <- function(bed,
   }
     
   # Compute max values
-  hm[, max:= fun.max(score), name]
+  if(is.null(max))
+    hm[, max:= fun.max(score), name] else
+      hm[, max:= max[.GRP], name]
   
   # SAVE
   obj <- ls()

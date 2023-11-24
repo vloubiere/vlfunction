@@ -6,8 +6,11 @@
 #' @param y Y position for plotting
 #' @param pval Pval to be plotted
 #' @param stars.only If set to TRU, then only plots */N.S. Default= FALSE
+#' @param show.NS Should NS values be shown?
 #' @param pos pos argument (label position). see ?text()
-#' @param srt srt argument (rotation). see ?text()
+#' @param offset Offset parameter passed to text to print N.S values
+#' @param offset.star Adjust star (signif) offest relative to offset (used for N.S values)
+#' @param cex cex expansion factor passed to text
 #' @param ... Extra arguments passed to test function
 #' @examples 
 #' pval <- c(1e-10, 1e-5, 1e-3, 1e-2, 1e-1, 1)
@@ -18,35 +21,50 @@ vl_plot_pval_text <- function(x,
                               y, 
                               pval, 
                               stars.only= F,
+                              show.NS= T,
                               pos= 3,
-                              offset= 0,
+                              offset= 0, 
+                              offset.star= offset-0.1, 
+                              cex= .6,
                               ...)
 {
   if(length(y)==1 & length(x)>1)
     y <- rep(y, length(x))
+  if(!show.NS)
+  {
+    check <- pval<0.05
+    x <- x[check]
+    y <- y[check]
+    pval <- pval[check]
+  }
+  # Compute stars
   star <- cut(pval, 
               breaks = c(-Inf, 1e-5, 1e-3, 1e-2, 5e-2, Inf), 
               labels = c("****", "***", "**", "*", "N.S"))
   star <- as.character(star)
+  # Index of NS values
   ns_val <- !is.na(star) & star=="N.S"
+  # Values as scientific 
   value <- formatC(pval, format = "e", digits = 1)
   if(stars.only)
     value <- rep("", length(value))
+  # Plot NS values
   if(any(ns_val))
     text(x = x[ns_val], 
          y = y[ns_val], 
          labels= bquote(paste(.(value[ns_val]), ""^N.S)), 
-         cex= 0.6,
-         offset= offset-0.1,
+         offset= offset,
          pos= pos,
+         cex= cex,
          ...)
   if(!all(ns_val))
-  text(x = x[!ns_val], 
-       y = y[!ns_val], 
-       labels= paste0(value[!ns_val], star[!ns_val]),
-       offset= offset-0.2,
-       pos= pos,
-       ...)
+    text(x = x[!ns_val], 
+         y = y[!ns_val], 
+         labels= paste0(value[!ns_val], star[!ns_val]),
+         offset= offset.star,
+         pos= pos,
+         cex= cex,
+         ...)
 }
 
 #' Plots a heatkey
@@ -212,43 +230,6 @@ vl_tilt_xaxis <- function(x,
        pos= pos,
        xpd= xpd,
        cex= cex)
-}
-
-#' Sets convenient par env
-#'
-#' @param bottom_strings Character vector. If specific, margin will be adjusted to afford longest string.
-#' @param left_strings Character vector. If specific, margin will be adjusted to afford longest string.
-#' @param top_strings Character vector. If specific, margin will be adjusted to afford longest string.
-#' @param right_strings Character vector. If specific, margin will be adjusted to afford longest string.
-#' @param mgp 
-#' @param las 
-#' @param tcl 
-#' @param ... 
-#'
-#' @return Improves default par env
-#' @export
-vl_par <- function(bottom_strings,
-                   left_strings,
-                   top_strings,
-                   right_strings,
-                   mgp= c(1.5, 0.5, 0), 
-                   las= 1, 
-                   tcl= -0.2, 
-                   ...)
-{
-  adj <- c(1.02, 0.82, 0.82, 0.42)
-  lab_dist <- grconvertY(1, "lines", "inch")*(mgp[2]+1)
-  if(!missing(bottom_strings))
-    adj[1] <- max(strwidth(bottom_strings, units = "inches"))+lab_dist
-  if(!missing(left_strings))
-    adj[2] <- max(strwidth(left_strings, units = "inches"))+lab_dist
-  if(!missing(top_strings))
-    adj[3] <- strheight("M", units = "inches")*max(nchar(bottom_strings))+lab_dist
-  if(!missing(right_strings))
-    adj[4] <- max(strwidth(right_strings, units = "inches"))+lab_dist
-  if(!identical(adj, c(1.02, 0.82, 0.82, 0.42)))
-    par(mai= adj, mgp= mgp, las= las, tcl= tcl, ...) else
-      par(mgp= mgp, las= las, tcl= tcl, ...)
 }
 
 #' Sets up my favorite par parameters. Optimized for 3x3 inch square.

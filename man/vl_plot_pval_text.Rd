@@ -4,7 +4,18 @@
 \alias{vl_plot_pval_text}
 \title{Plot pval}
 \usage{
-vl_plot_pval_text(x, y, pval, stars.only = F, pos = 3, offset = 0, ...)
+vl_plot_pval_text(
+  x,
+  y,
+  pval,
+  stars.only = F,
+  show.NS = T,
+  pos = 3,
+  offset = 0,
+  offset.star = offset - 0.1,
+  cex = 0.6,
+  ...
+)
 }
 \arguments{
 \item{x}{X position for plotting}
@@ -15,11 +26,17 @@ vl_plot_pval_text(x, y, pval, stars.only = F, pos = 3, offset = 0, ...)
 
 \item{stars.only}{If set to TRU, then only plots */N.S. Default= FALSE}
 
+\item{show.NS}{Should NS values be shown?}
+
 \item{pos}{pos argument (label position). see ?text()}
 
-\item{...}{Extra arguments passed to test function}
+\item{offset}{Offset parameter passed to text to print N.S values}
 
-\item{srt}{srt argument (rotation). see ?text()}
+\item{offset.star}{Adjust star (signif) offest relative to offset (used for N.S values)}
+
+\item{cex}{cex expansion factor passed to text}
+
+\item{...}{Extra arguments passed to test function}
 }
 \description{
 Plots formated pval data as text

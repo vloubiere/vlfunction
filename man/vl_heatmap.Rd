@@ -36,7 +36,7 @@ vl_heatmap(x, ...)
   show.colnames = TRUE,
   tilt.colnames = FALSE,
   show.row.clusters = length(unique(rows$cl)) > 1,
-  row.clusters.pos = "left",
+  row.clusters.pos = "right",
   row.cluster.line.col = "black",
   show.col.clusters = length(unique(cols$cl)) > 1,
   show.row.dendrogram = TRUE,

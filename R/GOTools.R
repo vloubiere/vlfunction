@@ -64,6 +64,8 @@ vl_GO_enrich <- function(geneIDs,
     names(geneIDs) <- seq(geneIDs)
   if(anyDuplicated(names(geneIDs)))
     stop("names(geneIDs) should be unique!")
+  if(!species %in% c("Dm", "Mm"))
+    stop("Species should be one of 'Dm' or 'Mm'")
   # Make unique
   geneIDs <- lapply(geneIDs, unique)
   

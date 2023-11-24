@@ -52,9 +52,8 @@ plot.vl_enr <- function(obj,
     breaks <- seq(min(breaks), max(breaks), length.out= length(col))
   }
   Cc <- circlize::colorRamp2(breaks, col)
-  # If order= 'padj', reorder by Log2OR before plotting
-  if(order=="padj")
-    setorderv(DT, "log2OR")
+  # Reorder by Log2OR before plotting
+  setorderv(DT, "log2OR")
   # Barplot
   DT[, y:= barplot(log2OR,
                    horiz= T,

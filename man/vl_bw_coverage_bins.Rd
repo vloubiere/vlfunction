@@ -6,8 +6,8 @@
 \usage{
 vl_bw_coverage_bins(
   bed,
-  tracks,
   set.IDs,
+  tracks,
   upstream,
   downstream,
   ignore.strand,
@@ -18,9 +18,9 @@ vl_bw_coverage_bins(
 \arguments{
 \item{bed}{Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 
-\item{tracks}{Vector of bw files to plot. Use full paths to avoid pbs.}
-
 \item{set.IDs}{Set IDs specifying the groups as subsets of the bed file}
+
+\item{tracks}{Vector of bw files to plot. Use full paths to avoid pbs.}
 
 \item{upstream}{Upstream  extension of bed regions (centered on center)}
 

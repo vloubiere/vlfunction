@@ -141,7 +141,7 @@ vl_heatmap.matrix <- function(x,
       col.clusters.col <- grDevices::gray.colors(cutree.cols) else
         col.clusters.col <- grDevices::gray.colors(length(unique(col.clusters)))
   }
-  if(row.clusters.pos=="right")
+  if(row.clusters.pos=="left")
     show.rownames <- F
     
   # Init informative result DT ----
@@ -317,7 +317,7 @@ plot.vl_heatmap <- function(obj)
            adj= 0.5)
     }else if(row.clusters.pos=="left")
     {
-      text(par("usr")[1]-diff(grconvertX(c(0, par("mgp")[1]+.5), "line", "user")),
+      text(par("usr")[1]-diff(grconvertX(c(0, par("mgp")[2]+.5), "line", "user")),
            rowMeans(pos[, .(y0, y1)]),
            offset= 0,
            pos$cl,
@@ -380,9 +380,9 @@ plot.vl_heatmap <- function(obj)
   {
     if(tilt.colnames)
       vl_tilt_xaxis(x = seq(ncol(x)),
-                    y = grconvertY(grconvertY(0, "npc", "inch")-grconvertY(par("mgp")[2], "line", "inch"), "inch", "user"),
+                    y = par("usr")[3]-diff(grconvertY(c(0, par("mgp")[2]+0.5), "line", "user")),
                     labels = colnames(x),
-                    offset= 0.25*par("mgp")[2],
+                    offset= 0,
                     pos= 2,
                     xpd= NA,
                     cex= par("cex.axis")) else

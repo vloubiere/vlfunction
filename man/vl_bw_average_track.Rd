@@ -7,9 +7,9 @@
 \usage{
 vl_bw_average_track(
   bed,
-  names,
   set.IDs,
   tracks,
+  names,
   upstream = 5000,
   downstream = 5000,
   ignore.strand = T,
@@ -43,11 +43,11 @@ vl_bw_average_track(
 \arguments{
 \item{bed}{Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 
-\item{names}{Track names to plot, further used for ordering. By default, bw basenames will be used (as factors).}
-
 \item{set.IDs}{Set IDs specifying the groups as subsets of the bed file. Used for ordering.}
 
 \item{tracks}{Vector of bw files to plot. Use full paths to avoid pbs.}
+
+\item{names}{Track names to plot, further used for ordering. By default, bw basenames will be used (as factors).}
 
 \item{upstream}{Upstream  extension of bed regions (centered on center)}
 
