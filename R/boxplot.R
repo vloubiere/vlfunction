@@ -45,6 +45,7 @@ vl_boxplot.default <-
            at = NULL,
            frame= F,
            whisklty = ifelse(violin, 2, 1),
+           lwd= 1,
            ylim= NULL,
            xaxt= "s",
            violin= FALSE,
@@ -80,7 +81,7 @@ vl_boxplot.default <-
               names= if(tilt.names && !horizontal) NA else box$names,
               plot = plot, border = if(violin) NA else border, col = if(violin) NA else col, log = log,
               pars = pars, horizontal = horizontal, add = add, at = at,
-              frame= frame, whisklty = if(violin) 0 else whisklty, ylim= ylim, xaxt= xaxt)
+              frame= frame, whisklty = if(violin) 0 else whisklty, lwd= lwd, ylim= ylim, xaxt= xaxt)
       if(violin)
       {
         # Violins
@@ -98,8 +99,8 @@ vl_boxplot.default <-
           y <- .d$x
           y <- c(y, rev(y))
           if(horizontal)
-            polygon(y, x, col= viocols[i]) else
-              polygon(x, y, col= viocols[i])
+            polygon(y, x, col= viocols[i], lwd= lwd) else
+              polygon(x, y, col= viocols[i], lwd= lwd)
         })
         # Add boxes
         boxplot(x, ..., range = range, width = width, varwidth = varwidth,
@@ -107,7 +108,7 @@ vl_boxplot.default <-
                 names= if(tilt.names && !horizontal) NA else box$names,
                 plot = plot, border = border, col = col, log = log,
                 pars = pars, horizontal = horizontal, add = T, at = at,
-                frame= frame, whisklty = whisklty, ylim= ylim, xaxt= "n", yaxt= "n")
+                frame= frame, whisklty = whisklty, lwd= lwd, ylim= ylim, xaxt= "n", yaxt= "n")
       }
       # Plot pval
       if(!is.null(compute.pval))

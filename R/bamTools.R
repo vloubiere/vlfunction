@@ -21,6 +21,12 @@ vl_importBam <- function(file,
   }
   param <- Rsamtools::ScanBamParam(what= sel)
   .c <- Rsamtools::scanBam(file, param = param)[[1]]
+  if(any(sapply(.c, class)=="DNAStringSet"))
+  {
+    idx <- which(sapply(.c, class)=="DNAStringSet")
+    for(i in idx)
+      .c[[i]] <- as.character(.c[[i]])
+  }
   .c <- as.data.table(.c)
   setnames(.c, col.names)
   return(.c)

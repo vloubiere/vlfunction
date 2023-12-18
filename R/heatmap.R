@@ -251,8 +251,7 @@ plot.vl_heatmap <- function(obj)
               xright = ncol(im)+0.5,
               ytop = nrow(im)+0.5,
               interpolate = F)
-  if(box.lwd)
-    box(lwd= box.lwd)
+  box(lwd= box.lwd)
   
   # plot grid ----
   if(grid)

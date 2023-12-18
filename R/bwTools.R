@@ -107,6 +107,7 @@ vl_bw_coverage <- function(bed,
 #' @param upstream Upstream  extension of bed regions (centered on center)
 #' @param downstream Downstream  extension of bed regions (centered on center)
 #' @param ignore.strand Should the strand be ignored?
+#' @param genome BSgenome used to check limits of extended regions. Out of limit ranges will be resized accordingly
 #' @param nbins Number of bins spanning the extended regions. Default= 500
 #' @param names Track names to plot. If specified, must be the same length as bw vector. By default, bw basenames will be used.
 #' @export
@@ -116,6 +117,7 @@ vl_bw_coverage_bins <- function(bed,
                                 upstream, 
                                 downstream,
                                 ignore.strand,
+                                genome,
                                 nbins, 
                                 names)
 {
@@ -135,7 +137,12 @@ vl_bw_coverage_bins <- function(bed,
     cols <- c(cols, "strand")
   bed <- bed[, cols, with= F]
   bed[, c("set.IDs", "region_ID"):= .(set.IDs, .I)]
-  bed <- vl_resizeBed(bed, "center", upstream, downstream, ignore.strand = ignore.strand)
+  bed <- vl_resizeBed(bed,
+                      "center",
+                      upstream,
+                      downstream,
+                      ignore.strand = ignore.strand,
+                      genome= genome)
   bins <- bed[, {
     coor <- round(seq(start, end, length.out= nbins+1))
     coor <- data.table(start= coor[-length(coor)],
@@ -167,6 +174,7 @@ vl_bw_coverage_bins <- function(bed,
 #' @param upstream Upstream  extension of bed regions (centered on center)
 #' @param downstream Downstream  extension of bed regions (centered on center)
 #' @param ignore.strand Should the strand be ignored? Default= T
+#' @param genome BSgenome used to check limits of extended regions. Out of limit ranges will be resized accordingly
 #' @param nbins Number of bins spanning the extended regions. Default= 101L
 #' @param plot Should the average track be ploted? default= T
 #' @param xlab X label. default= "genomic distance"
@@ -190,6 +198,7 @@ vl_bw_average_track <- function(bed,
                                 upstream= 5000,
                                 downstream= 5000,
                                 ignore.strand= T,
+                                genome,
                                 nbins= 101L, 
                                 center.label= "Center",
                                 plot= T,
@@ -217,7 +226,8 @@ vl_bw_average_track <- function(bed,
                              downstream= downstream,
                              ignore.strand= ignore.strand,
                              nbins= nbins, 
-                             names= names)
+                             names= names,
+                             genome= genome)
   obj[, col:= colorRampPalette(col)(.NGRP)[.GRP], keyby= .(name, set.IDs)]
   setattr(obj, 
           "class", 
@@ -431,30 +441,25 @@ plot.vl_bw_heatmap <- function(obj)
              na.col= "white", 
              row.cluster.line.col= "white",
              row.clusters.pos= "left",
-             box.lwd= 0,
+             box.lwd= 0.25,
              legend.title= "Score")
   # Add Title and center
   for(i in seq(levels(clip$name)))
   {
-    # Labels
-    text(nbins/2+((i-1)*(nbins+space)),
-         par("usr")[3]-diff(grconvertY(c(0, par("mgp")[1]+.5), "line", "user")),
-         center.label,
-         xpd= NA,
-         cex= par("cex.lab"))
+    # Title
     text(nbins/2+((i-1)*(nbins+space)),
          par("usr")[4]+diff(grconvertY(c(0, par("mgp")[1]+.5), "line", "user")),
          levels(clip$name)[i],
          xpd= NA,
          cex= par("cex.lab"))
     # Genomic distance axis
+    # browser()
+    at <- c(1, nbins)+((i-1)*(nbins+space))
+    anchor <- upstream/(upstream+downstream)
+    at <- c(at[1], at[1]+(at[2]-at[1])*anchor, at[2])
     axis(1,
-         c(1, nbins/2, nbins)+((i-1)*(nbins+space)),
-         labels = F)
-    text(c(1, nbins/2, nbins)+((i-1)*(nbins+space)),
-         par("usr")[3]-diff(grconvertY(c(0, par("mgp")[2]+.5), "line", "user")),
-         c(upstream, "", downstream),
-         xpd= NA,
-         cex= par("cex.axis"))
+         at,
+         labels = c(upstream, center.label, downstream),
+         gap.axis= 0)
   }
 }

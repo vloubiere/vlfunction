@@ -29,7 +29,7 @@ vl_binBSgenome <- function(genome,
   }
   dat <- dat[, .(seqnames, width)]
   # Compute bins start and end
-  dat <- dat[, .(start= seq(1, max(c(width-bins.width, 1)), steps.width)), .(seqnames, width)]
+  dat <- dat[, .(start= seq(1, max(width, 1), steps.width)), .(seqnames, width)]
   dat[, end:= start+bins.width-1]
   dat[end>width, end:= width]
   return(dat)
@@ -39,15 +39,16 @@ vl_binBSgenome <- function(genome,
 #'
 #' Generate regions with similar dispersion and widths ditrib than provided bed file
 #'
-#' @param genome BSgneome object to use. ex: "dm3", "dm6"
 #' @param bed Bed file used to produce similar control
+#' @param genome BSgneome object to use. ex: "dm3", "dm6"
+#' @param no.overlap If set to TRUE, avoids overlap between control sequences and the original bed file. Default= FALSE.
 #' 
 #' @examples 
 #' vl_control_regions_BSgenome(vl_SUHW_top_peaks, "dm3")
 #' 
 #' @return data.table containing control regions
 #' @export
-vl_control_regions_BSgenome <- function(bed, genome)
+vl_control_regions_BSgenome <- function(bed, genome, no.overlap= F)
 {
   bed <- vl_importBed(bed)
   # Format
@@ -58,6 +59,21 @@ vl_control_regions_BSgenome <- function(bed, genome)
   # Random sampling
   regions[, start:= sample(seqlength-width, .N), .(seqlength, width)]
   regions[, end:= start+width-1]
+  # Avoid overlaps between original bed file and control
+  if(no.overlap)
+  {
+    regions[, cov:= vl_covBed(regions, bed)]
+    i <- 1
+    while(any(regions$cov))
+    {
+      set.seed(i)
+      regions[cov>0, start:= sample(seqlength-width, .N), .(seqlength, width)]
+      regions[cov>0, end:= start+width-1]
+      regions[cov>0, cov:= vl_covBed(.SD, bed)]
+      i <- i+1
+    }
+    regions$cov <- NULL
+  }
   # Make sure stays within genome range
   return(regions)
 }

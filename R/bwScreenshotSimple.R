@@ -74,8 +74,7 @@ vl_screenshot <- function(bed,
   if(length(min)>1 && length(max)!=sum(is_bw))
     stop("min should either be length 1 or match the number of bw tracks")
   
-  # Compute object ----
-  # Binning and bg color
+  # Binning and bg color ----
   bins <- bed[, {
     coor <- round(seq(start, 
                       end, 
@@ -83,10 +82,6 @@ vl_screenshot <- function(bed,
     res <- data.table(start= coor[-length(coor)], 
                       end= coor[-1])
     res[.I>1 & end>start, start:= start+1]
-    if(.GRP<.NGRP)  # Except for last region, interpolate NAs
-      res <- rbind(res, 
-                   data.table(start= rep(NA, space),
-                              end= rep(NA, space)))
     # Return
     res
   }, .(seqnames, 
@@ -94,7 +89,7 @@ vl_screenshot <- function(bed,
   bins[, bg:= bg.col]
   if(!is.null(highlight.bed))
     bins[vl_covBed(bins, highlight.bed)>0, bg:= highlight.col]
-  # Init obj
+  # Init obj ----
   obj <- data.table(ID= seq(tracks),
                     file= tracks,
                     name= names,
@@ -103,18 +98,26 @@ vl_screenshot <- function(bed,
                     min= min)
   obj[type=="bw", max:= max]
   obj[type!="bw", max:= 1]
-  # Quantif signal
+  # Quantif signal ----
   obj <- obj[, {
     bins[, value:= as.numeric(switch(type,
                                      "bw"= vl_bw_coverage(bins, file),
                                      "bed"= vl_covBed(bins, file)>0))]
   }, (obj)]
-  # Compute min/max and scale signal
+  # Compute min/max and scale signal ----
   obj[type=="bw" & is.na(min), min:= min(value, na.rm= T), ID]
   obj[type=="bw" & is.na(max), max:= max(value, na.rm= T), ID]
   obj[type=="bed", min:= as.numeric(0)]
   obj[type=="bed", max:= as.numeric(1)]
-  # Compute x,y pos and color
+  # Add white spaces (NA) between regions ----
+  # wsp <- data.table(seqnames= rep(as.character(NA), widths[2]),
+  #                   start= as.numeric(NA),
+  #                   end= as.numeric(NA),
+  #                   value= as.numeric(NA))
+  # obj <- obj[, {
+  #   rbind(.SD, wsp)
+  # }, .(ID, file, name, type, col, min, max, regionID, bg)]
+  # Compute x,y pos and color ----
   obj[, x:= rowid(ID)]
   obj <- obj[, rbindlist(rep(list(.SD), 
                              switch(type, "bw"= widths[1], "bed"= widths[2])), 
@@ -125,7 +128,7 @@ vl_screenshot <- function(bed,
       idx <- round((value-min)/(max-min)*widths[1])+1
       colorRampPalette(density.col)(widths[1]+1)[ifelse(idx>widths[1]+1, widths[1]+1, idx)]}]
   obj[is.na(start), Cc:= bg]
-  # Borders
+  # Borders ----
   obj[y==1 & Cc==bg & type=="bw" & !is.na(end), Cc:= col] # Full line at the bottom of bw tracks
   obj[(y<=5 | y>=widths[2]-5) & Cc!=bg & type=="bed", Cc:= bg] # Bg lines around bed tracks
   # Shift the different track bands in y
@@ -146,7 +149,7 @@ vl_screenshot <- function(bed,
               xright = ncol(im),
               ybottom = 1, 
               ytop = nrow(im))
-  # Labels
+  # Labels ----
   if(!add)
   {
     labs <- obj[, .(lab.y= mean(y),
@@ -197,12 +200,12 @@ vl_screenshot_transcripts <- function(obj,
                        "hg19"= list(TxDb= TxDb.Hsapiens.UCSC.hg19.knownGene::TxDb.Hsapiens.UCSC.hg19.knownGene,
                                     org= org.Hs.eg.db::org.Hs.eg.db,
                                     Keytype= "ENTREZID"))
-  # Extract overlapping transcripts
+  # Extract overlapping transcripts ----
   transcripts <- GenomicFeatures::transcripts(annotation$TxDb, c("TXNAME", "GENEID"))
   transcripts <- as.data.table(transcripts)
   transcripts <- transcripts[, .(GENEID= unlist(GENEID)), setdiff(names(transcripts), "GENEID")]
   
-  # Add symbols
+  # Add symbols ----
   transcripts[, symbol:= GENEID]
   symbols <- try(AnnotationDbi::mapIds(annotation$org,
                                        key= unique(as.character(transcripts$GENEID)),
@@ -211,19 +214,19 @@ vl_screenshot_transcripts <- function(obj,
                                        multiVals= "first"), silent = T)
   if(class(symbols)=="character")
     transcripts[GENEID %in% names(na.omit(symbols)), symbol:= symbols[data.table::chmatch(GENEID, names(symbols))]]
-  # Add exons
+  # Add exons ----
   exons <- as.data.table(GenomicFeatures::exons(annotation$TxDb, 
                                                 filter= list("tx_name"= transcripts$TXNAME), 
                                                 columns= "TXNAME"))
   exons <- exons[, .(TXNAME= unlist(TXNAME)), setdiff(names(exons), "TXNAME")]
   transcripts <- rbind(transcripts[, type:= "transcript"],
                        exons[, type:= "exon"], fill= T)
-  # Overlap with plotting regions
+  # Overlap with plotting regions ----
   overlap <- obj[!is.na(end), .(start= first(start), 
                                 end= last(end), 
                                 x0= first(x), 
                                 x1= last(x)), .(regionID, seqnames)]
-  # Compute plotting positions
+  # Compute plotting positions ----
   pl <- transcripts[overlap, {
     .c <- data.table(x.start,
                      x.end,
@@ -248,7 +251,7 @@ vl_screenshot_transcripts <- function(obj,
     .c[, y:= y[type=="transcript"], TXNAME]
     .c[, y:= par("usr")[3]-strheight("M", cex= 1.8)*(y+1)]
   }, .EACHI, on= c("seqnames", "start<=end", "end>=start")]
-  # Colors and lwd
+  # Colors and lwd ----
   pl[, c("col", "lwd"):= 
        .(switch(as.character(strand), 
                 "-"= "cornflowerblue", 
@@ -256,7 +259,7 @@ vl_screenshot_transcripts <- function(obj,
          switch(as.character(type), 
                 "transcript"= 1, 
                 "exon"= 3, 1)), .(strand, type)]
-  # Plot
+  # Plot ----
   segments(pl$seg.x0,
            pl$y,
            pl$seg.x1,

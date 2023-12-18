@@ -24,7 +24,7 @@ vl_resizeBed(
 
 \item{ignore.strand}{Should the strand be considered when defininng start or end centering? Default= F}
 
-\item{genome}{BSgenome used to check limits of extended regions. Out of limit ranges will be resized accodtingly}
+\item{genome}{BSgenome used to check limits of extended regions. Out of limit ranges will be resized accordingly}
 }
 \value{
 Resized DT ranges

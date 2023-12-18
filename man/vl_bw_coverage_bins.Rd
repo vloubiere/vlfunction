@@ -11,6 +11,7 @@ vl_bw_coverage_bins(
   upstream,
   downstream,
   ignore.strand,
+  genome,
   nbins,
   names
 )
@@ -27,6 +28,8 @@ vl_bw_coverage_bins(
 \item{downstream}{Downstream  extension of bed regions (centered on center)}
 
 \item{ignore.strand}{Should the strand be ignored?}
+
+\item{genome}{BSgenome used to check limits of extended regions. Out of limit ranges will be resized accordingly}
 
 \item{nbins}{Number of bins spanning the extended regions. Default= 500}
 

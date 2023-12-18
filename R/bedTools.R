@@ -173,7 +173,7 @@ vl_closestBed <- function(a,
 #' @param upstream Upstream extension. default= 500L
 #' @param downstream Downstream extension. default= 500L
 #' @param ignore.strand Should the strand be considered when defininng start or end centering? Default= F
-#' @param genome BSgenome used to check limits of extended regions. Out of limit ranges will be resized accodtingly
+#' @param genome BSgenome used to check limits of extended regions. Out of limit ranges will be resized accordingly
 #' @examples 
 #' bed <- data.table(seqnames= "chr2L",
 #'                   start= 10000,
@@ -303,6 +303,8 @@ vl_collapseBed <- function(bed,
 #' @param a Granges or data.table from which regions overlapping b have to be returned
 #' @param b Set of regions of interest
 #' @param ignore.strand Should strand be ignored? default= T
+#' @param min.overlap A vector integer of length 1 or nrow(a) specifying the minimum overlap (bp) require to count overlaps. Default= 1L
+#' @param invert If set to true, returns non-overlapping features. Default= F
 #' @examples 
 #' a <- data.table(seqnames= "chr2L",
 #'                 start= c(1000,2000),
@@ -315,16 +317,41 @@ vl_collapseBed <- function(bed,
 #' @return Return 'a' ranges that overlap with any range in 'b'
 #' @export
 vl_intersectBed <- function(a, 
-                            b, 
-                            ignore.strand= T)
+                            b,
+                            ignore.strand= T,
+                            min.overlap= 1L,
+                            invert= F)
 {
   # Import
+  bed <- vl_importBed(a)
   a <- vl_importBed(a)
   b <- vl_importBed(b)
+  # Prepare foverlaps
   if(!ignore.strand && "strand" %in% names(a) && "strand" %in% names(b))
-    sel <- b[a, .N, .EACHI, on= c("seqnames", "start<=end", "end>=start", "strand")]$N>0 else
-      sel <- b[a, .N, .EACHI, on= c("seqnames", "start<=end", "end>=start")]$N>0
-  a[sel]
+  {
+    a <- a[, .(seqnames, start, end, strand)]
+    b <- b[, .(seqnames, start, end, strand)]
+    setkeyv(a, c("seqnames", "strand", "start", "end"))
+    setkeyv(b, c("seqnames", "strand", "start", "end"))
+  }else
+  {
+    a <- a[, .(seqnames, start, end)]
+    b <- b[, .(seqnames, start, end)]
+    setkeyv(a, c("seqnames", "start", "end"))
+    setkeyv(b, c("seqnames", "start", "end"))
+  }
+  a[, idx:= .I]
+  a[, minOv:= min.overlap]
+  # Intersect
+  inter <- foverlaps(b, a, nomatch= NULL)
+  inter[, maxStart:= apply(.SD, 1, max), .SDcols= c("start", "i.start")]
+  inter[, minEnd:= apply(.SD, 1, min), .SDcols= c("end", "i.end")]
+  inter <- inter[, .(minEnd-maxStart+1>=minOv, idx)]
+  sel <- unique(inter[(V1), idx])
+  if(invert)
+    sel <- setdiff(a$idx, sel)
+  # Return
+  return(bed[(sel)])
 }
 
 #' Compute bed coverage
@@ -333,6 +360,7 @@ vl_intersectBed <- function(a,
 #' @param a Ranges for which overlaps with b should be counted. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()
 #' @param b Ranges from which overlaps should be computed.
 #' @param ignore.strand Should strand be ignored? default= T, meaning all overlapping elements in 'b'  will be considered
+#' @param min.overlap A vector integer of length 1 or nrow(a) specifying the minimum overlap (bp) require to count overlaps. Default= 1L
 #' @examples
 #' a <- data.table(seqnames= "chr2R",
 #'                 start= 10000,
@@ -348,15 +376,33 @@ vl_intersectBed <- function(a,
 #' @return For each range in 'a', reports the number of overlapping features in 'b'
 #' @export
 vl_covBed <- function(a,
-                      b, 
-                      ignore.strand= T)
+                      b,
+                      ignore.strand= T,
+                      min.overlap= 1L)
 {
-  # Import reads
+  # Import
   a <- vl_importBed(a)
   b <- vl_importBed(b)
-  # Count
+  # Prepare foverlaps
   if(!ignore.strand && "strand" %in% names(a) && "strand" %in% names(b))
-    counts <- b[a, .N, .EACHI, on= c("seqnames", "start<=end", "end>=start", "strand")]$N else
-      counts <- b[a, .N, .EACHI, on= c("seqnames", "start<=end", "end>=start")]$N
-  return(counts)
+  {
+    a <- a[, .(seqnames, start, end, strand)]
+    b <- b[, .(seqnames, start, end, strand)]
+    setkeyv(a, c("seqnames", "strand", "start", "end"))
+    setkeyv(b, c("seqnames", "strand", "start", "end"))
+  }else
+  {
+    a <- a[, .(seqnames, start, end)]
+    b <- b[, .(seqnames, start, end)]
+    setkeyv(a, c("seqnames", "start", "end"))
+    setkeyv(b, c("seqnames", "start", "end"))
+  }
+  a[, idx:= .I]
+  a[, minOv:= min.overlap]
+  # Intersect
+  inter <- foverlaps(a, b)
+  inter[, maxStart:= apply(.SD, 1, max), .SDcols= c("start", "i.start")]
+  inter[, minEnd:= apply(.SD, 1, min), .SDcols= c("end", "i.end")]
+  # Return
+  return(inter[, sum(minEnd-maxStart+1>=minOv, na.rm= T), keyby= idx]$V1)
 }

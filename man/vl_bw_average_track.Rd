@@ -13,6 +13,7 @@ vl_bw_average_track(
   upstream = 5000,
   downstream = 5000,
   ignore.strand = T,
+  genome,
   nbins = 101L,
   center.label = "Center",
   plot = T,
@@ -54,6 +55,8 @@ vl_bw_average_track(
 \item{downstream}{Downstream  extension of bed regions (centered on center)}
 
 \item{ignore.strand}{Should the strand be ignored? Default= T}
+
+\item{genome}{BSgenome used to check limits of extended regions. Out of limit ranges will be resized accordingly}
 
 \item{nbins}{Number of bins spanning the extended regions. Default= 101L}
 
