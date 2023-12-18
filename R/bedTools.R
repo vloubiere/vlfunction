@@ -323,25 +323,23 @@ vl_intersectBed <- function(a,
                             invert= F)
 {
   # Import
-  bed <- vl_importBed(a)
   a <- vl_importBed(a)
-  b <- vl_importBed(b)
+  a[, idx:= .I]
+  a[, minOv:= min.overlap]
   # Prepare foverlaps
   if(!ignore.strand && "strand" %in% names(a) && "strand" %in% names(b))
   {
-    a <- a[, .(seqnames, start, end, strand)]
+    a <- a[, .(seqnames, start, end, strand, idx, minOv)]
     b <- b[, .(seqnames, start, end, strand)]
     setkeyv(a, c("seqnames", "strand", "start", "end"))
     setkeyv(b, c("seqnames", "strand", "start", "end"))
   }else
   {
-    a <- a[, .(seqnames, start, end)]
+    a <- a[, .(seqnames, start, end, idx, minOv)]
     b <- b[, .(seqnames, start, end)]
     setkeyv(a, c("seqnames", "start", "end"))
     setkeyv(b, c("seqnames", "start", "end"))
   }
-  a[, idx:= .I]
-  a[, minOv:= min.overlap]
   # Intersect
   inter <- foverlaps(b, a, nomatch= NULL)
   inter[, maxStart:= apply(.SD, 1, max), .SDcols= c("start", "i.start")]
@@ -382,23 +380,23 @@ vl_covBed <- function(a,
 {
   # Import
   a <- vl_importBed(a)
+  a[, idx:= .I]
+  a[, minOv:= min.overlap]
   b <- vl_importBed(b)
   # Prepare foverlaps
   if(!ignore.strand && "strand" %in% names(a) && "strand" %in% names(b))
   {
-    a <- a[, .(seqnames, start, end, strand)]
+    a <- a[, .(seqnames, start, end, strand, idx, minOv)]
     b <- b[, .(seqnames, start, end, strand)]
     setkeyv(a, c("seqnames", "strand", "start", "end"))
     setkeyv(b, c("seqnames", "strand", "start", "end"))
   }else
   {
-    a <- a[, .(seqnames, start, end)]
+    a <- a[, .(seqnames, start, end, idx, minOv)]
     b <- b[, .(seqnames, start, end)]
     setkeyv(a, c("seqnames", "start", "end"))
     setkeyv(b, c("seqnames", "start", "end"))
   }
-  a[, idx:= .I]
-  a[, minOv:= min.overlap]
   # Intersect
   inter <- foverlaps(a, b)
   inter[, maxStart:= apply(.SD, 1, max), .SDcols= c("start", "i.start")]

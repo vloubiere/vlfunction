@@ -110,13 +110,13 @@ vl_screenshot <- function(bed,
   obj[type=="bed", min:= as.numeric(0)]
   obj[type=="bed", max:= as.numeric(1)]
   # Add white spaces (NA) between regions ----
-  # wsp <- data.table(seqnames= rep(as.character(NA), widths[2]),
-  #                   start= as.numeric(NA),
-  #                   end= as.numeric(NA),
-  #                   value= as.numeric(NA))
-  # obj <- obj[, {
-  #   rbind(.SD, wsp)
-  # }, .(ID, file, name, type, col, min, max, regionID, bg)]
+  wsp <- data.table(seqnames= rep(as.character(NA), widths[2]),
+                    start= as.numeric(NA),
+                    end= as.numeric(NA),
+                    value= as.numeric(NA))
+  obj <- obj[, {
+    rbind(.SD, wsp)
+  }, .(ID, file, name, type, col, min, max, regionID, bg)]
   # Compute x,y pos and color ----
   obj[, x:= rowid(ID)]
   obj <- obj[, rbindlist(rep(list(.SD), 
