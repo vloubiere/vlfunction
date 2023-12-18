@@ -323,9 +323,11 @@ vl_intersectBed <- function(a,
                             invert= F)
 {
   # Import
+  bed <- vl_importBed(a)
   a <- vl_importBed(a)
   a[, idx:= .I]
   a[, minOv:= min.overlap]
+  b <- vl_importBed(b)
   # Prepare foverlaps
   if(!ignore.strand && "strand" %in% names(a) && "strand" %in% names(b))
   {
