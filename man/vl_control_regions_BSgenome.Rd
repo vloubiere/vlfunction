@@ -4,12 +4,14 @@
 \alias{vl_control_regions_BSgenome}
 \title{Generate control regions}
 \usage{
-vl_control_regions_BSgenome(bed, genome)
+vl_control_regions_BSgenome(bed, genome, no.overlap = F)
 }
 \arguments{
 \item{bed}{Bed file used to produce similar control}
 
 \item{genome}{BSgneome object to use. ex: "dm3", "dm6"}
+
+\item{no.overlap}{If set to TRUE, avoids overlap between control sequences and the original bed file. Default= FALSE.}
 }
 \value{
 data.table containing control regions

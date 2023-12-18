@@ -4,7 +4,7 @@
 \alias{vl_covBed}
 \title{Compute bed coverage}
 \usage{
-vl_covBed(a, b, ignore.strand = T)
+vl_covBed(a, b, ignore.strand = T, min.overlap = 1L)
 }
 \arguments{
 \item{a}{Ranges for which overlaps with b should be counted. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()}
@@ -12,6 +12,8 @@ vl_covBed(a, b, ignore.strand = T)
 \item{b}{Ranges from which overlaps should be computed.}
 
 \item{ignore.strand}{Should strand be ignored? default= T, meaning all overlapping elements in 'b'  will be considered}
+
+\item{min.overlap}{A vector integer of length 1 or nrow(a) specifying the minimum overlap (bp) require to count overlaps. Default= 1L}
 }
 \value{
 For each range in 'a', reports the number of overlapping features in 'b'

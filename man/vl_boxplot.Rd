@@ -32,6 +32,7 @@ vl_boxplot(x, ...)
   at = NULL,
   frame = F,
   whisklty = ifelse(violin, 2, 1),
+  lwd = 1,
   ylim = NULL,
   xaxt = "s",
   violin = FALSE,
