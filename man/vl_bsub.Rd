@@ -6,34 +6,34 @@
 \usage{
 vl_bsub(
   cmd,
-  cores = 1L,
+  cores = 6L,
+  m = 12,
+  t = "08:00:00",
   name = "vl",
-  d = NA,
-  m = NA,
   o = NA,
   e = NA,
-  t = NA,
-  execute = T
+  execute = T,
+  d = NA
 )
 }
 \arguments{
 \item{cmd}{Command to be submitted}
 
-\item{cores}{Number of cores. default= 1L}
+\item{cores}{Number of cores. default= 12L}
+
+\item{m}{Memory in Go. Default= 12}
+
+\item{t}{Time parameter for slurm in the format hh:mm:ss. Default= '08:00:00'. For 2 days:'2-00:00:00'}
 
 \item{name}{Name of the job. Default= "vl}
-
-\item{d}{Name of te dependent job}
-
-\item{m}{Memory in Go. Example= 16}
 
 \item{o}{Std output directory}
 
 \item{e}{Std error directory}
 
-\item{t}{Time parameter for slurm in the format hh:mm:ss. Example 2 days:'2-00:00:00'}
-
 \item{execute}{If FALSE, simply returns the full command. Default= TRUE}
+
+\item{d}{Name of te dependent job}
 }
 \description{
 bsub submits to the cluster

@@ -3,25 +3,25 @@
 #' bsub submits to the cluster
 #' 
 #' @param cmd Command to be submitted
-#' @param cores Number of cores. default= 1L
+#' @param cores Number of cores. default= 12L
+#' @param m Memory in Go. Default= 12
+#' @param t Time parameter for slurm in the format hh:mm:ss. Default= '08:00:00'. For 2 days:'2-00:00:00'
 #' @param name Name of the job. Default= "vl
-#' @param d Name of te dependent job
-#' @param m Memory in Go. Example= 16
 #' @param o Std output directory
 #' @param e Std error directory
-#' @param t Time parameter for slurm in the format hh:mm:ss. Example 2 days:'2-00:00:00'
 #' @param execute If FALSE, simply returns the full command. Default= TRUE
+#' @param d Name of te dependent job
 #'
 #' @export
 vl_bsub <- function(cmd,
-                    cores= 1L,
+                    cores= 6L,
+                    m= 12,
+                    t= '08:00:00',
                     name= "vl",
-                    d= NA,
-                    m= NA,
                     o= NA,
                     e= NA,
-                    t= NA,
-                    execute= T)
+                    execute= T,
+                    d= NA)
 {
   # DO NOT MODIFY UNLESS YOU EXACTLY KNOW WHAT YOU ARE DOING (all other functions use it)
   # gen cmd

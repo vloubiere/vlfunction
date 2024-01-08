@@ -243,7 +243,7 @@ vl_resizeBed <- function(bed,
 #' Collapse ranges with a certain min dist between them
 #'
 #' @param bed bed file to be collapsed. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames','start', 'end' columns. see ?vl_importBed()
-#' @param ming.gap min gap ditance for merging. default is 1 (that is, touching coordinates)
+#' @param min.gap min gap ditance for merging. default is 1 (that is, touching coordinates)
 #' @param return.idx.only If set to T, does not collapse regions but returns idx as an extra columns. default= F
 #' @param ignore.strand Should strand be ignored? default= T
 #' @examples 
@@ -264,7 +264,7 @@ vl_resizeBed <- function(bed,
 #' @return Collapse bed data.table
 #' @export
 vl_collapseBed <- function(bed,
-                           ming.gap= 1,
+                           min.gap= 1,
                            return.idx.only= F,
                            ignore.strand= T)
 {
@@ -276,7 +276,7 @@ vl_collapseBed <- function(bed,
   
   # Compute contig idx
   DT[, ord:= .I] 
-  DT[, ext_end:= end+ming.gap] 
+  DT[, ext_end:= end+min.gap] 
   idx <- DT$ord
   if(!ignore.strand && "strand" %in% names(DT))
     DT[DT, {idx[.GRP] <<- min(idx[.I])}, .EACHI, on= c("seqnames", "ext_end>=start", "ord<=ord", "strand")] else

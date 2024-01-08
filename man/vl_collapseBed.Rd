@@ -4,12 +4,12 @@
 \alias{vl_collapseBed}
 \title{Collapse ranges with a certain min dist}
 \usage{
-vl_collapseBed(bed, ming.gap = 1, return.idx.only = F, ignore.strand = T)
+vl_collapseBed(bed, min.gap = 1, return.idx.only = F, ignore.strand = T)
 }
 \arguments{
 \item{bed}{bed file to be collapsed. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames','start', 'end' columns. see ?vl_importBed()}
 
-\item{ming.gap}{min gap ditance for merging. default is 1 (that is, touching coordinates)}
+\item{min.gap}{min gap ditance for merging. default is 1 (that is, touching coordinates)}
 
 \item{return.idx.only}{If set to T, does not collapse regions but returns idx as an extra columns. default= F}
 
