@@ -18,7 +18,7 @@ vl_binBSgenome <- function(genome,
                            steps.width= bins.width,
                            restrict.seqnames= NULL)
 {
-  dat <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome)))
+  dat <- GenomicRanges::GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome, load.only = TRUE)))
   dat <- data.table::as.data.table(dat)
   # Restrict chromosomes
   if(!is.null(restrict.seqnames))
@@ -54,7 +54,7 @@ vl_control_regions_BSgenome <- function(bed, genome, no.overlap= F)
   # Format
   regions <- data.table::copy(bed)
   regions[, width:= end-start+1]
-  BS <- data.table::as.data.table(GenomicRanges::GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))))
+  BS <- data.table::as.data.table(GenomicRanges::GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome, load.only = TRUE))))
   regions[BS, seqlength:= i.width, on= "seqnames"]
   # Random sampling
   regions[, start:= sample(seqlength-width, .N), .(seqlength, width)]
@@ -97,7 +97,7 @@ vl_random_regions_BSgenome <- function(genome,
                                        restrict.seqnames= NULL)
 {
   # Format
-  regions <- data.table::as.data.table(GenomicRanges::GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))))
+  regions <- data.table::as.data.table(GenomicRanges::GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome, load.only = TRUE))))
   setnames(regions, "width", "seqlength")
   if(!is.null(restrict.seqnames))
     regions <- regions[seqnames %in% restrict.seqnames]
@@ -131,7 +131,7 @@ vl_getSequence <- function(bed,
     message("'bed' strand set to unstranded (*)")
     bed[, strand:= "*"]
   }
-  sequences <- BSgenome::getSeq(BSgenome::getBSgenome(genome), 
+  sequences <- BSgenome::getSeq(BSgenome::getBSgenome(genome, load.only = TRUE), 
                                 names= bed$seqnames, 
                                 start= bed$start, 
                                 end= bed$end, 

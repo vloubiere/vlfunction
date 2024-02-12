@@ -27,6 +27,12 @@ vl_importBam <- function(file,
     for(i in idx)
       .c[[i]] <- as.character(.c[[i]])
   }
+  if(any(sapply(.c, class)=="PhredQuality"))
+  {
+    idx <- which(sapply(.c, class)=="PhredQuality")
+    for(i in idx)
+      .c[[i]] <- as.character(.c[[i]])
+  }
   .c <- as.data.table(.c)
   setnames(.c, col.names)
   return(.c)
