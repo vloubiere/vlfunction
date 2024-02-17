@@ -39,7 +39,7 @@ vl_upset_plot <- function(dat.list,
     stop("dat.list names should be unique!")
   
   # Format ----
-  dat <- lapply(dat, unique)
+  dat <- lapply(dat.list, unique)
   dat <- rbindlist(lapply(dat.list, as.data.table), idcol = T)
   dat[, .id:= factor(.id, names(dat.list))]
   setnames(dat, "V1", "var")
