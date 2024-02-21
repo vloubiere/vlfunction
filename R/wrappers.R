@@ -153,3 +153,18 @@ vl_Rsub_singularity <- function(R_script,
     cmd <- paste0(cmd, " ", args_v)
   return(cmd)
 }
+
+# Squeue to the system
+vl_squeue <- function()
+{
+  system("squeue -u vincent.loubiere")
+}
+
+# Scancel all jobs except Rstudio
+vl_squeue <- function()
+{
+  .c <- fread(cmd= "squeue -u vincent.loubiere")
+  .c <- .c[NAME!="[RStudio"]
+  if(nrow(.c))
+    system(paste(c("scancel", .c$JOBID), collapse= " "))
+}
