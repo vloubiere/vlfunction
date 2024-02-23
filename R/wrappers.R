@@ -111,6 +111,23 @@ vl_download_iCistarget <- function(url,
   system(cmd)
 }
 
+# Squeue to the system
+#' @export
+vl_squeue <- function()
+{
+  system("squeue -u vincent.loubiere")
+}
+
+# Scancel all jobs except Rstudio
+#' @export
+vl_squeue <- function()
+{
+  .c <- fread(cmd= "squeue -u vincent.loubiere")
+  .c <- .c[NAME!="[RStudio"]
+  if(nrow(.c))
+    system(paste(c("scancel", .c$JOBID), collapse= " "))
+}
+
 #' Import paired bam file as bedpe
 #'
 #' @param bam_path 
@@ -154,17 +171,3 @@ vl_Rsub_singularity <- function(R_script,
   return(cmd)
 }
 
-# Squeue to the system
-vl_squeue <- function()
-{
-  system("squeue -u vincent.loubiere")
-}
-
-# Scancel all jobs except Rstudio
-vl_squeue <- function()
-{
-  .c <- fread(cmd= "squeue -u vincent.loubiere")
-  .c <- .c[NAME!="[RStudio"]
-  if(nrow(.c))
-    system(paste(c("scancel", .c$JOBID), collapse= " "))
-}

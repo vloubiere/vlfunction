@@ -40,22 +40,22 @@ vl_upset_plot <- function(dat.list,
   dat.list <- lapply(dat.list, unique)
   
   # Format ----
-  dat <- rbindlist(lapply(dat.list, as.data.table), idcol = T)
+  dat <- data.table::rbindlist(lapply(dat.list, as.data.table), idcol = T)
   dat[, .id:= factor(.id, names(dat.list))]
-  setnames(dat, "V1", "var")
+  data.table::setnames(dat, "V1", "var")
   # Intersections ----
-  inter <- dcast(dat, 
-                 var~.id, 
-                 value.var = "var",
-                 fun.aggregate = function(x) ifelse(any(!is.na(x)), 1, 0),
-                 drop = !(show.empty))
+  inter <- data.table::dcast(dat, 
+                             var~.id, 
+                             value.var = "var",
+                             fun.aggregate = function(x) ifelse(any(!is.na(x)), 1, 0),
+                             drop = !(show.empty))
   inter <- inter[, .N, setdiff(names(inter), "var")]
   inter <- inter[N>=intersection.cutoff]
-  setorderv(inter, "N", -1)
+  data.table::setorderv(inter, "N", -1)
   # sets
   set <- as.data.table(table(dat$.id))
-  setnames(set, c(".id", "N"))
-  setorderv(set, "N", -1)
+  data.table::setnames(set, c(".id", "N"))
+  data.table::setorderv(set, "N", -1)
   set[, I:= .I-1]
   
   # PLOT ----
@@ -68,7 +68,7 @@ vl_upset_plot <- function(dat.list,
                       xaxt= xaxt)]
   inter[, text(mean(x), N, N[1], cex= cex.inter, pos= 3, xpd= TRUE), N]
   ## Add grid ----
-  grid <- melt(inter[, !"N"], id.vars = "x")
+  grid <- data.table::melt(inter[, !"N"], id.vars = "x")
   grid[, y:= par("usr")[3]-strheight("M", cex= grid.hex*1.25)]
   grid[set, y:= y-strheight("M", cex= grid.hex*1.25)*i.I, on= "variable==.id"]
   grid[, col:= ifelse(value==0, "lightgrey", "grey20")]

@@ -11,7 +11,7 @@ vl_motif_cl_enrich(
   control.cl = NULL,
   names = NULL,
   plot = F,
-  padj.cutoff = 0.00001,
+  padj.cutoff = 1e-05,
   top.enrich = NA,
   min.counts = 3L,
   order = "padj",
