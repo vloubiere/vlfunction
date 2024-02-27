@@ -4,12 +4,14 @@
 \alias{vl_importBamRaw}
 \title{Title}
 \usage{
-vl_importBamRaw(file, extra_arg)
+vl_importBamRaw(file, extra_arg, headN)
 }
 \arguments{
 \item{file}{bam file path}
 
 \item{extra_arg}{Extra arg to be passed to samtools view}
+
+\item{headN}{Number of starting lines to import}
 }
 \value{
 Imported bam file

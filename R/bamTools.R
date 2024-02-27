@@ -43,6 +43,7 @@ vl_importBam <- function(file,
 #' Uses samtools to import a bam file
 #' @param file bam file path
 #' @param extra_arg Extra arg to be passed to samtools view
+#' @param headN Number of starting lines to import
 #'
 #' @return Imported bam file
 #' @export
@@ -50,13 +51,23 @@ vl_importBam <- function(file,
 #' @examples
 #' vl_importBamRaw("path/to/bam/file.bam")
 vl_importBamRaw <- function(file,
-                            extra_arg)
+                            extra_arg,
+                            headN)
 {
-  cmd <- "module load build-env/2020; module load samtools/1.9-foss-2018b; samtools view"
+  cmd <- "/software/2020/software/samtools/1.9-foss-2018b/bin/samtools view"
   if(!missing(extra_arg))
     cmd <- paste(cmd,
                  extra_arg)
   cmd <- paste(cmd, file)
+  if(!missing(headN))
+  {
+    if(!is.integer(headN))
+      headN <- as.integer(headN)
+    cmd <- paste(cmd, "| head -n", headN)
+  }
+  # print(cmd)
   fread(cmd= cmd,
-        fill= T)
+        fill= T,
+        header= F,
+        sep= "\t")
 }
