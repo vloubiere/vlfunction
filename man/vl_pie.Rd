@@ -4,12 +4,19 @@
 \alias{vl_pie}
 \title{Title}
 \usage{
-vl_pie(x, col = adjustcolor(rainbow(length(unique(x))), 0.3), ...)
+vl_pie(
+  x,
+  col = adjustcolor(rainbow(length(unique(x))), 0.3),
+  labels = "r",
+  ...
+)
 }
 \arguments{
 \item{x}{Variable to be summarized}
 
 \item{col}{colors to be used}
+
+\item{labels}{Type of labels to be added. "r"= number, "p"= percentage}
 
 \item{...}{extra arguments passed to pie(x, ...)}
 }

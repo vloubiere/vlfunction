@@ -12,7 +12,7 @@ vl_plot_enh_motifs(sequences, ...)
 
 \method{vl_plot_enh_motifs}{character}(
   sequences,
-  p.cutoff = 5e-04,
+  p.cutoff = 0.0005,
   sel,
   xleft,
   ybottom,

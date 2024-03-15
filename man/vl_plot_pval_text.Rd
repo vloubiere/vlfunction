@@ -14,6 +14,7 @@ vl_plot_pval_text(
   offset = 0,
   offset.star = offset - 0.1,
   cex = 0.6,
+  digits = 1,
   ...
 )
 }

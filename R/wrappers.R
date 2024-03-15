@@ -120,7 +120,7 @@ vl_squeue <- function()
 
 # Scancel all jobs except Rstudio
 #' @export
-vl_squeue <- function()
+vl_scancel <- function()
 {
   .c <- fread(cmd= "squeue -u vincent.loubiere")
   .c <- .c[NAME!="[RStudio"]

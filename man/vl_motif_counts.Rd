@@ -15,7 +15,7 @@ vl_motif_counts(sequences, ...)
   sel,
   genome,
   bg = "genome",
-  p.cutoff = 5e-04,
+  p.cutoff = 0.0005,
   motifDB = vl_Dmel_motifs_DB_full
 )
 }

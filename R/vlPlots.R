@@ -26,6 +26,7 @@ vl_plot_pval_text <- function(x,
                               offset= 0, 
                               offset.star= offset-0.1, 
                               cex= .6,
+                              digits= 1,
                               ...)
 {
   if(length(y)==1 & length(x)>1)
@@ -45,7 +46,9 @@ vl_plot_pval_text <- function(x,
   # Index of NS values
   ns_val <- !is.na(star) & star=="N.S"
   # Values as scientific 
-  value <- formatC(pval, format = "e", digits = 1)
+  value <- formatC(pval,
+                   format = "e",
+                   digits = digits)
   if(stars.only)
     value <- rep("", length(value))
   # Plot NS values
