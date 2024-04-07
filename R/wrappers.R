@@ -41,7 +41,13 @@ vl_bsub <- function(cmd,
   {
     Sys.unsetenv("SBATCH_RESERVATION")
     Sys.unsetenv("SBATCH_WCKEY")
-    job_ID <- system(bsub_cmd, intern= T)
+    # Write command in file
+    tmp <- tempfile(fileext = ".sh")
+    writeLines(bsub_cmd, tmp)
+    # Execute file using ssh
+    job_ID <- system(paste0("ssh localhost sh ", tmp),
+                     intern = T,
+                     ignore.stderr = TRUE)
     return(unlist(data.table::tstrsplit(job_ID[2], " ", keep= 4)))
   }else
   {
@@ -115,17 +121,19 @@ vl_download_iCistarget <- function(url,
 #' @export
 vl_squeue <- function()
 {
-  system("squeue -u vincent.loubiere")
+  system("ssh localhost squeue -u vincent.loubiere",
+         ignore.stderr = T)
 }
 
 # Scancel all jobs except Rstudio
 #' @export
 vl_scancel <- function()
 {
-  .c <- fread(cmd= "squeue -u vincent.loubiere")
-  .c <- .c[NAME!="[RStudio"]
+  .c <- fread(cmd= "ssh localhost squeue -u vincent.loubiere")
+  .c <- .c[!(NAME %in% c("[RStudio", "jupyter_"))]
   if(nrow(.c))
-    system(paste(c("scancel", .c$JOBID), collapse= " "))
+    system(paste(c("ssh localhost scancel", .c$JOBID), collapse= " "),
+           ignore.stderr = T)
 }
 
 #' Import paired bam file as bedpe

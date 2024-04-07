@@ -15,7 +15,8 @@ vl_heatkey(
   ticks.cex = 0.6,
   main.cex = 1,
   main = NA,
-  border = "black"
+  border = "black",
+  show.breaks = T
 )
 }
 \arguments{
@@ -39,7 +40,9 @@ vl_heatkey(
 
 \item{main}{Title}
 
-\item{border}{Border color. default= "black"}
+\item{border}{Border color. default= "black". NA means no border}
+
+\item{show.breaks}{Should breaks be shown?}
 }
 \value{
 Plots heatkey

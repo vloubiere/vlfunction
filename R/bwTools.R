@@ -204,7 +204,7 @@ vl_bw_average_track <- function(bed,
                                 plot= T,
                                 xlab= "genomic distance",
                                 ylab= "Enrichment",
-                                ylim,
+                                ylim= NULL,
                                 col= c("#E69F00","#68B1CB","#15A390","#96C954","#77AB7A","#4F6A6F","#D26429","#C57DA5","#999999"),
                                 legend= T,
                                 legend.pos= "topleft",
@@ -253,7 +253,7 @@ plot.vl_bw_average_track <- function(obj,
                                      xlab.at= c(min(obj$bin.x), 0, max(obj$bin.x)),
                                      center.label= "Center",
                                      ylab= "Enrichment",
-                                     ylim,
+                                     ylim= NULL,
                                      legend= T,
                                      legend.pos= "topleft",
                                      legend.cex= 1,
@@ -261,7 +261,7 @@ plot.vl_bw_average_track <- function(obj,
 {
   pl <- obj[, .(mean= mean(score, na.rm= T), 
                 se= sd(score, na.rm= T)/sqrt(.N)), .(name, col, set.IDs, bin.x)]
-  if(missing(ylim))
+  if(is.null(ylim))
     ylim <- range(c(pl[, mean-se], pl[, mean+se]))
   plot(NA, 
        xlim= range(pl$bin.x),

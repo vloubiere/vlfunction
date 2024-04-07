@@ -83,7 +83,8 @@ vl_plot_pval_text <- function(x,
 #' @param ticks.cex cex expansion factor for ticks labels
 #' @param main.cex cex expansion factor for legend title
 #' @param main Title
-#' @param border Border color. default= "black"
+#' @param border Border color. default= "black". NA means no border
+#' @param show.breaks Should breaks be shown?
 #'
 #' @return Plots heatkey
 #' @export
@@ -97,7 +98,8 @@ vl_heatkey <- function(breaks,
                        ticks.cex= 0.6,
                        main.cex= 1,
                        main= NA,
-                       border= "black")
+                       border= "black",
+                       show.breaks= T)
 {
   
   mat <- if(continuous)
@@ -119,12 +121,13 @@ vl_heatkey <- function(breaks,
               ytop = top,
               interpolate = continuous,
               xpd= NA)
-  rect(xleft = left,
-       ybottom = top-height, 
-       xright = left+width, 
-       ytop = top,
-       border= border,
-       xpd= NA)
+  if(!is.na(border))
+    rect(xleft = left,
+         ybottom = top-height, 
+         xright = left+width, 
+         ytop = top,
+         border= border,
+         xpd= NA)
   # labels
   ticks <- if(continuous)
   {
@@ -138,12 +141,21 @@ vl_heatkey <- function(breaks,
     (top-height)+height*((ticks-min(breaks, na.rm= T))/diff(range(breaks, na.rm=T))) else
       (top-height)+(height/length(breaks))*(seq(breaks)-0.5)
   # Plot labels
-  text(left+width,
-       ypos,
-       ticks,
-       cex= ticks.cex,
-       pos= 4,
-       xpd= NA)
+  if(show.breaks)
+  {
+    text(left+width,
+         ypos,
+         ticks,
+         cex= ticks.cex,
+         pos= 4,
+         xpd= NA)
+    segments(left+width,
+             ypos,
+             left+width+strwidth("M")/5,
+             ypos,
+             xpd= T)
+  }
+  # Plot main
   text(left,
        top+strheight("M"),
        main,
@@ -332,4 +344,26 @@ vl_plot_coeff <- function(x= "topleft",
            bty= bty,
            ...)
   
+}
+
+
+vl_legend <- function(x= par("usr")[2],
+                      y= par("usr")[4],
+                      legend,
+                      fill,
+                      bty= "n",
+                      xpd= T,
+                      cex= 7/12,
+                      border= NA,
+                      ...)
+{
+  legend(x= x,
+         y= y,
+         legend= legend,
+         fill= fill,
+         bty= bty,
+         xpd= xpd,
+         cex= cex,
+         border= border,
+         ...)
 }
