@@ -37,6 +37,7 @@
 #' @param display.numbers.matrix Matrix of numbers to be displayed. useful for fine tuning. Default= x
 #' @param display.numbers.cex cex display numbers 
 #' @param box.lwd Line width of the box around the heatmap
+#' @param useRaster Should rasterImage be used? default= T
 #' @examples
 #' # Create test matrix
 #' set.seed(1234)
@@ -114,7 +115,8 @@ vl_heatmap.matrix <- function(x,
                               display.numbers= FALSE,
                               display.numbers.matrix,
                               display.numbers.cex= 1,
-                              box.lwd= .25)
+                              box.lwd= .25,
+                              useRaster= T)
 {
   if(is.null(rownames(x)))
     rownames(x) <- seq(nrow(x))
@@ -237,20 +239,49 @@ plot.vl_heatmap <- function(obj)
   Cc <- circlize::colorRamp2(breaks, 
                              colors= col)
   # Image
-  im <- x
-  im[!is.na(im)] <- Cc(im[!is.na(im)])
-  im[is.na(im)] <- na.col
-  plot.new()
-  plot.window(xlim = c(0.5,ncol(im)+0.5),
-              ylim = c(0.5,nrow(im)+0.5),
-              xaxs= "i",
-              yaxs= "i")
-  rasterImage(im,
-              xleft = 0.5,
-              ybottom = 0.5,
-              xright = ncol(im)+0.5,
-              ytop = nrow(im)+0.5,
-              interpolate = F)
+  if(useRaster)
+  {
+    im <- x
+    im[!is.na(im)] <- Cc(im[!is.na(im)])
+    im[is.na(im)] <- na.col
+    plot.new()
+    plot.window(xlim = c(0.5,ncol(im)+0.5),
+                ylim = c(0.5,nrow(im)+0.5),
+                xaxs= "i",
+                yaxs= "i")
+    rasterImage(im,
+                xleft = 0.5,
+                ybottom = 0.5,
+                xright = ncol(im)+0.5,
+                ytop = nrow(im)+0.5,
+                interpolate = F)
+  }else
+  {
+    rot <- t(apply(x, 2, rev))
+    rot[rot<min(breaks)] <- min(breaks)
+    rot[rot>max(breaks)] <- max(breaks)
+    bg <- apply(rot, 2, function(x) ifelse(is.na(x), 0, NA))
+    image(x= seq(nrow(bg)),
+          y= seq(ncol(bg)),
+          z= bg,
+          breaks= c(-1, 1),
+          col= na.col,
+          axes= F,
+          xlab= NA,
+          ylab= NA)
+    .br <- seq(min(breaks),
+               max(breaks),
+               length.out= 101)
+    image(seq(nrow(rot)),
+          seq(ncol(rot)),
+          rot,
+          axes= F,
+          xlab= NA,
+          ylab= NA, 
+          col= Cc(.br[-101]+diff(.br)/2),
+          breaks= .br,
+          add= T)
+  }
   box(lwd= box.lwd)
   
   # plot grid ----

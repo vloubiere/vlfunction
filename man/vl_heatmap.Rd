@@ -45,7 +45,8 @@ vl_heatmap(x, ...)
   display.numbers = FALSE,
   display.numbers.matrix,
   display.numbers.cex = 1,
-  box.lwd = 0.25
+  box.lwd = 0.25,
+  useRaster = T
 )
 }
 \arguments{
@@ -118,6 +119,8 @@ vl_heatmap(x, ...)
 \item{display.numbers.cex}{cex display numbers}
 
 \item{box.lwd}{Line width of the box around the heatmap}
+
+\item{useRaster}{Should rasterImage be used? default= T}
 }
 \value{
 An object of class vl_heatmap_obj containing clustering data and can be used for plotting using plot(obj, ...)
