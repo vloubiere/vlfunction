@@ -10,7 +10,7 @@ vl_GO_enrich(
   species,
   select = c("BP", "CC", "MF"),
   plot = F,
-  padj.cutoff = 0.00001,
+  padj.cutoff = 1e-05,
   top.enrich = Inf,
   min.counts = 3L,
   order = "padj",

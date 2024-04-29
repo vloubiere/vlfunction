@@ -13,6 +13,7 @@ vl_rasterScatterplot(
   size = 2000L,
   xlab = ifelse(is.null(y), "Index", deparse1(substitute(x))),
   ylab = ifelse(is.null(y), deparse1(substitute(x)), deparse1(substitute(y))),
+  add = F,
   ...
 )
 }

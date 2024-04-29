@@ -25,8 +25,8 @@ vl_repelScatterplot(
   box_padding_y = 0.5,
   points_padding_x = 0,
   points_padding_y = 0,
-  force_push = 0.00001,
-  force_pull = 0.00001,
+  force_push = 1e-05,
+  force_pull = 1e-05,
   add = F,
   frame = F,
   ...

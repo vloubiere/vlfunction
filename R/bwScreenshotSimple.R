@@ -118,7 +118,7 @@ vl_screenshot <- function(bed,
     if(regionID<max(obj$regionID))
       rbind(.SD, wsp) else
         .SD
-  }, .(ID, file, name, type, col, min, max, regionID, bg)]
+  }, .(ID, file, name, type, col, min, max, regionID)]
   # Compute x,y pos and color ----
   obj[, x:= rowid(ID)]
   obj <- obj[, rbindlist(rep(list(.SD), 

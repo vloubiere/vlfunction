@@ -174,11 +174,6 @@ vl_motif_enrich <- function(counts,
                         control= control.counts),
                    idcol = T)
   
-  # Append (cluster) name to motif ID ----
-  if(is.null(names))
-    names <- vl_Dmel_motifs_DB_full[names(obj)[-1], motif_cluster, on= "motif_ID"]
-  names(obj)[-1] <- paste0(names, "__", names(obj)[-1]) # Append (cluster) name to motif ID
-  
   # Melt ----
   obj <- melt(obj, 
               id.vars = ".id",
@@ -200,8 +195,11 @@ vl_motif_enrich <- function(counts,
   }, variable]
   
   # Add names
-  res[, name:= tstrsplit(variable, "__", keep= 1)]
-  res[, variable:= gsub(paste0("^", name, "__"), "", variable), name]
+  if (is.null(names)) {
+    res[vl_Dmel_motifs_DB_full, name := i.motif_cluster, on = "variable==motif_ID"]
+  } else {
+    res[, name := names]
+  }
   
   # padj...
   res[, padj:= p.adjust(pval, method = "fdr")]

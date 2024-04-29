@@ -11,7 +11,7 @@ require(data.table)
 #' @param col Colors to be used (must match number of levels in label)
 #' @param xlab x axis labels
 #' @param ylab y axis labels
-#' @param dens.lw Width of the density lines to be drawn on the top and right of the scatterplot
+#' @param useRaster Default= T
 #' @param ... Extra arguments to be passed to plot().
 #'
 #' @return A scatterplot with density lines on the side
@@ -38,6 +38,7 @@ vl_densScatterplot <- function(x,
                                ylab= deparse1(substitute(y)),
                                dens.lw= 1,
                                frame= F,
+                               useRaster= T,
                                ...)
 {
   if(!is.factor(label))
@@ -50,13 +51,29 @@ vl_densScatterplot <- function(x,
                     Cc= col[label])
   
   dat[, {
-    plot(x,
-         y,
-         col= Cc,
-         xlab= xlab,
-         ylab= ylab,
-         frame= frame,
-         ...)
+    if(useRaster)
+    {
+      vl_rasterScatterplot(x= x,
+                           y= y,
+                           col= Cc,
+                           xlab= xlab,
+                           ylab= ylab,
+                           xlim= xlim,
+                           ylim= ylim,
+                           frame= frame,
+                           ...)
+    }else
+    {
+      plot(x,
+           y,
+           col= Cc,
+           xlab= xlab,
+           ylab= ylab,
+           xlim= xlim,
+           ylim= ylim,
+           frame= frame,
+           ...)
+    }
     xlim <- par("usr")[1:2]
     ylim <- par("usr")[3:4]
     densities <- .SD[, .(dx= .(density(x, from= xlim[1], to= xlim[2])),

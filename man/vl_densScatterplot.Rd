@@ -15,6 +15,7 @@ vl_densScatterplot(
   ylab = deparse1(substitute(y)),
   dens.lw = 1,
   frame = F,
+  useRaster = T,
   ...
 )
 }
@@ -35,7 +36,7 @@ vl_densScatterplot(
 
 \item{ylab}{y axis labels}
 
-\item{dens.lw}{Width of the density lines to be drawn on the top and right of the scatterplot}
+\item{useRaster}{Default= T}
 
 \item{...}{Extra arguments to be passed to plot().}
 }

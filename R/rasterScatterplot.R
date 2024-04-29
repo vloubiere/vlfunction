@@ -21,17 +21,20 @@ vl_rasterScatterplot <- function(x,
                                  size= 2000L,
                                  xlab= ifelse(is.null(y), "Index", deparse1(substitute(x))),
                                  ylab= ifelse(is.null(y), deparse1(substitute(x)), deparse1(substitute(y))),
+                                 add= F,
                                  ...)
 {
-  # Initialize plot
-  plot(x= x,
-       y= y, 
-       frame= frame,
-       type= "n",
-       xlab= xlab,
-       ylab= ylab,
-       ...)
-  # Extract plot area in both user and physical coordinates
+  # Initialize plot ----
+  if(!add)
+    plot(x= x,
+         y= y, 
+         frame= frame,
+         type= "n",
+         xlab= xlab,
+         ylab= ylab,
+         ...)
+  
+  # Extract plot area in both user and physical coordinates ----
   coords <- par("usr")
   gx <- grconvertX(coords[1:2], "user", "inches")
   gy <- grconvertY(coords[3:4], "user", "inches")
@@ -39,7 +42,7 @@ vl_rasterScatterplot <- function(x,
   height <- diff(gy)
   ratio <- round(c(width, height)/max(c(width, height))*size)
   
-  # Save as png
+  # Save as png ----
   tmp <- tempfile(fileext = "png")
   png(tmp,
       width = ratio[1],
@@ -58,7 +61,7 @@ vl_rasterScatterplot <- function(x,
   lines(x= x, y = y, type = type, ...)
   dev.off()
   
-  # Plot png
+  # Plot png ----
   panel <- png::readPNG(tmp)
   rasterImage(panel,
               coords[1],
