@@ -244,11 +244,11 @@ vl_repelScatterplot <- function(x,
   {
     coords[(seg_length), 
            {
-             clip(clip_x1[1], clip_x2[1], clip_y1[1], clip_y2[1])
+             # clip(clip_x1[1], clip_x2[1], clip_y1[1], clip_y2[1])
              segments(x[1], y[1], x_orig[1], y_orig[1], col= seg.col[1])
            }, .(x, y, x_orig, y_orig, clip_x1, clip_x2, clip_y1, clip_y2, seg.col)]
   }
-  clip(par("usr")[1], par("usr")[2], par("usr")[3], par("usr")[4])
+  # clip(par("usr")[1], par("usr")[2], par("usr")[3], par("usr")[4])
   # Plot rectangles
   if(rect.draw)
     with(coords, rect(x1_box, y1_box, x2_box, y2_box, col = rect.col, border= NA))
