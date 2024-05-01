@@ -45,7 +45,7 @@ vl_bsub <- function(cmd,
     tmp <- tempfile(fileext = ".sh")
     writeLines(bsub_cmd, tmp)
     # Execute file using ssh
-    job_ID <- system(paste0(getwd(), "; ssh localhost sh ", tmp),
+    job_ID <- system(paste0("cd ", getwd(), "; ssh localhost sh ", tmp),
                      intern = T,
                      ignore.stderr = TRUE)
     return(unlist(data.table::tstrsplit(job_ID[2], " ", keep= 4)))
