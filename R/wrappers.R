@@ -9,6 +9,7 @@
 #' @param name Name of the job. Default= "vl
 #' @param o Std output directory
 #' @param e Std error directory
+#' @param wdir Working directory. defaults to getwd()
 #' @param execute If FALSE, simply returns the full command. Default= TRUE
 #' @param d Name of te dependent job
 #'
@@ -20,6 +21,7 @@ vl_bsub <- function(cmd,
                     name= "vl",
                     o= NA,
                     e= NA,
+                    wdir= getwd(),
                     execute= T,
                     d= NA)
 {
@@ -34,6 +36,9 @@ vl_bsub <- function(cmd,
   if(!is.na(o)){bsub_cmd <- paste0(bsub_cmd, " -o ", o)}
   if(!is.na(e)){bsub_cmd <- paste0(bsub_cmd, " -e ", e)}
   if(!is.na(t)){bsub_cmd <- paste0(bsub_cmd, " -T ", t)}
+  if(!is.na(t)){bsub_cmd <- paste0(bsub_cmd, " -T ", t)}
+  # cd to wdir
+  if(!is.na(wdir)){cmd <- paste0("cd ", wdir, "; ", cmd)}
   bsub_cmd <- paste0(bsub_cmd, " \"", cmd, "\"")
   
   # Submit
@@ -45,7 +50,7 @@ vl_bsub <- function(cmd,
     tmp <- tempfile(fileext = ".sh")
     writeLines(bsub_cmd, tmp)
     # Execute file using ssh
-    job_ID <- system(paste0("cd ", getwd(), "; ssh localhost sh ", tmp),
+    job_ID <- system(paste0("ssh localhost sh ", tmp),
                      intern = T,
                      ignore.stderr = TRUE)
     return(unlist(data.table::tstrsplit(job_ID[2], " ", keep= 4)))

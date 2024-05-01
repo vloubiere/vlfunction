@@ -12,6 +12,7 @@ vl_bsub(
   name = "vl",
   o = NA,
   e = NA,
+  wdir = getwd(),
   execute = T,
   d = NA
 )
@@ -30,6 +31,8 @@ vl_bsub(
 \item{o}{Std output directory}
 
 \item{e}{Std error directory}
+
+\item{wdir}{Working directory. defaults to getwd()}
 
 \item{execute}{If FALSE, simply returns the full command. Default= TRUE}
 
