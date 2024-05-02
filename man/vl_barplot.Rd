@@ -6,7 +6,7 @@
 \usage{
 vl_barplot(
   height,
-  sd = NULL,
+  sd = 0,
   xlim = NULL,
   ylim = NULL,
   individual.var = NULL,
@@ -14,6 +14,7 @@ vl_barplot(
   ind.col = adjustcolor("lightgrey", 0.7),
   ind.jitter = 0.2,
   compute.diff = NULL,
+  digits = 2,
   diff.cex = 0.8,
   xpd = NA,
   horiz = F,
@@ -38,6 +39,8 @@ vl_barplot(
 \item{ind.jitter}{jitter value for individual variables}
 
 \item{compute.diff}{List of pairwise bar pairs to be compared (V2/V11 ratio)}
+
+\item{digits}{Number of digits for the computed diff. Default= 2}
 
 \item{diff.cex}{cex value for pairwise comparisons}
 

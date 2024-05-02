@@ -9,6 +9,7 @@
 #' @param ind.col color value for individual variables
 #' @param ind.jitter jitter value for individual variables
 #' @param compute.diff List of pairwise bar pairs to be compared (V2/V11 ratio)
+#' @param digits Number of digits for the computed diff. Default= 2
 #' @param diff.cex cex value for pairwise comparisons
 #' @param xpd xpd value for pairwaise comparisons
 #' @param horiz Not supported atm
@@ -20,7 +21,7 @@
 #' @examples
 #' vl_barplot(1:3, rep(.2, 3))
 vl_barplot <- function(height,
-                       sd= NULL,
+                       sd= 0,
                        xlim= NULL,
                        ylim= NULL,
                        individual.var= NULL,
@@ -28,6 +29,7 @@ vl_barplot <- function(height,
                        ind.col= adjustcolor("lightgrey", .7),
                        ind.jitter= .2,
                        compute.diff= NULL,
+                       digits= 2,
                        diff.cex= .8,
                        xpd= NA,
                        horiz= F,
@@ -61,7 +63,7 @@ vl_barplot <- function(height,
   dat[, x:= bar]
   
   # Add sd arrows if specified ----
-  if(!is.null(sd))
+  if(any(sd>0, na.rm = T))
   {
     if(length(sd)!=length(height))
       stop("sd should be a vector or a of the same length as height")
@@ -110,7 +112,7 @@ vl_barplot <- function(height,
                        x1= bar[comp[,2]])
     comp[, x:= rowMeans(.SD), .SDcols= c("x0", "x1")]
     # Compute FC and max/ values (y position)
-    comp[, var:= paste0("x", formatC(var2/var1, digits = 2))]
+    comp[, var:= paste0("x", formatC(var2/var1, digits = digits, format= "f"))]
     comp[, max:= max(dat$max[V1:V2]), .(V1, V2)]
     setorderv(comp, "max")
     comp[, y:= max(dat[.BY, max, on= c("x>=x0", "x<=x1")]), .(x0, x1)] 
