@@ -133,6 +133,8 @@ vl_seqlogo <- function(pwm,
 #' @param letter "A", "T", "C" or "G"
 #' @param xleft xleft position
 #' @param ytop ytop position
+#'
+#' @export
 vl_plotLetter <- function(letter, xleft, ytop, width, height)
 {
   if(letter=="T")

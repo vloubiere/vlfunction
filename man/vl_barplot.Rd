@@ -7,12 +7,15 @@
 vl_barplot(
   height,
   sd = 0,
+  arrow.length = diff(grconvertX(c(0, (bar[2] - bar[1])/4), "user", "inches")),
+  arrow.lwd = 0.5,
   xlim = NULL,
   ylim = NULL,
   individual.var = NULL,
   ind.pch = 16,
   ind.col = adjustcolor("lightgrey", 0.7),
   ind.jitter = 0.2,
+  ind.cex = 0.5,
   compute.diff = NULL,
   digits = 2,
   diff.cex = 0.8,
@@ -26,6 +29,8 @@ vl_barplot(
 
 \item{sd}{sd values to be plotted as whiskers around bars}
 
+\item{arrow.length}{Line width of sd arrows Default= .5}
+
 \item{xlim}{}
 
 \item{ylim}{}
@@ -37,6 +42,8 @@ vl_barplot(
 \item{ind.col}{color value for individual variables}
 
 \item{ind.jitter}{jitter value for individual variables}
+
+\item{ind.cex}{cex factor for points}
 
 \item{compute.diff}{List of pairwise bar pairs to be compared (V2/V11 ratio)}
 

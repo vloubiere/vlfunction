@@ -298,11 +298,11 @@ vl_par <- function(mai= c(.9, .9, .9, .9),
 #' Plots Rsq or PCC coeff
 #'
 #' @param x 
-#' @param value Rsquare or r value
+#' @param value Rsquare or r value. If numeric, will be rounded, while characters will be printed as is
 #' @param type Type of value. one between "rsq" and "pcc"
 #' @param adjusted Is the Rsq adjusted?
 #' @param bty Box around the legend? default= F
-#' @param digits Rounding digits. Default= 2 
+#' @param digits Rounding digits. Default= 2
 #' @param ... 
 #'
 #' @return Add Rsquare value as a legend on aplot
@@ -322,25 +322,27 @@ vl_plot_coeff <- function(x= "topleft",
 {
   if(!type %in% c("pcc", "rsq"))
     stop("type has to be one of 'rsq', 'pcc'")
+  if(is.numeric(value))
+    value <- round(value, digits)
   if(type=="rsq")
   {
     if(adjusted)
     {
       legend(x, 
-             legend= bquote(Adj.~R^2 == .(round(value, digits))),
+             legend= bquote(Adj.~R^2 == .(value)),
              bty= bty,
              ...)
     }else
     {
       legend(x, 
-             legend= bquote(R^2 == .(round(value, digits))),
+             legend= bquote(R^2 == .(value)),
              bty= bty,
              ...)
     }
   }
   if(type=="pcc")
     legend(x, 
-           legend= bquote(italic(r) == .(round(value, digits))),
+           legend= bquote(italic(r) == .(value)),
            bty= bty,
            ...)
   

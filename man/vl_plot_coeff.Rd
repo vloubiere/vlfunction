@@ -17,7 +17,7 @@ vl_plot_coeff(
 \arguments{
 \item{x}{}
 
-\item{value}{Rsquare or r value}
+\item{value}{Rsquare or r value. If numeric, will be rounded, while characters will be printed as is}
 
 \item{type}{Type of value. one between "rsq" and "pcc"}
 

@@ -2,12 +2,15 @@
 #'
 #' @param height A vector of values describing the bars which make up the plot. 
 #' @param sd sd values to be plotted as whiskers around bars
+#' @param arrow.length Length of sd arrow length. defaults to 1/4 of distance between bar centers.
+#' @param arrow.length Line width of sd arrows Default= .5
 #' @param xlim 
 #' @param ylim 
 #' @param individual.var List of individual variables to be plotted as points.
 #' @param ind.pch pch value for individual variables
 #' @param ind.col color value for individual variables
 #' @param ind.jitter jitter value for individual variables
+#' @param ind.cex cex factor for points
 #' @param compute.diff List of pairwise bar pairs to be compared (V2/V11 ratio)
 #' @param digits Number of digits for the computed diff. Default= 2
 #' @param diff.cex cex value for pairwise comparisons
@@ -22,12 +25,15 @@
 #' vl_barplot(1:3, rep(.2, 3))
 vl_barplot <- function(height,
                        sd= 0,
+                       arrow.length= diff(grconvertX(c(0, (bar[2]-bar[1])/4), "user", "inches")),
+                       arrow.lwd= .5,
                        xlim= NULL,
                        ylim= NULL,
                        individual.var= NULL,
                        ind.pch= 16,
                        ind.col= adjustcolor("lightgrey", .7),
                        ind.jitter= .2,
+                       ind.cex= .5,
                        compute.diff= NULL,
                        digits= 2,
                        diff.cex= .8,
@@ -72,7 +78,8 @@ vl_barplot <- function(height,
            bar,
            height+sd,
            angle = 90,
-           length = .05,
+           length = arrow.length,
+           lwd= arrow.lwd,
            xpd= xpd)
     arrows(bar,
            height,
@@ -80,7 +87,8 @@ vl_barplot <- function(height,
            height-sd,
            xpd= T,
            angle = 90,
-           length = .05,
+           length = arrow.length,
+           lwd= arrow.lwd,
            xpd= xpd)
   }
   
@@ -96,7 +104,8 @@ vl_barplot <- function(height,
            y,
            pch= ind.pch,
            col= ind.col,
-           xpd= xpd)
+           xpd= xpd,
+           cex= ind.cex)
   }
   
   # Add mean diff if specified ----
