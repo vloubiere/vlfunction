@@ -3,6 +3,8 @@
 #' @param x list of variables to be plotted
 #' @param compute.pval list of vectors of length two containing pairwise x indexes to be compared
 #' @param pval.cex cex value for pval plotting. Default= .8.
+#' @param pval.stars Should pvalues stars be shown?
+#' @param pval.values Should pval values be shown?
 #' @param names Names to plot under boxplot. If function specified, applied to names before plotting
 #' @param tilt.names Should names be tilted (ignored if horizontal= TRUE)
 #' @param srt rotation angle for titled names
@@ -25,6 +27,8 @@ vl_boxplot.default <-
   function(x, ..., 
            compute.pval= NULL,
            pval.cex= .8,
+           pval.stars= T,
+           pval.values= F,
            tilt.names= F,
            srt= 45,
            range = 1.5,
@@ -118,11 +122,14 @@ vl_boxplot.default <-
                                     compute.pval= compute.pval,
                                     outline= outline,
                                     at= at,
-                                    horizontal= horizontal)
+                                    horizontal= horizontal,
+                                    pval.values= pval.values)
         if(nrow(pval))
           vl_plot_bxp_pval(pval = pval,
                            horizontal = horizontal,
-                           pval.cex= pval.cex)
+                           pval.cex= pval.cex,
+                           pval.stars = pval.stars,
+                           pval.values = pval.values)
       }
       # Plot tilted names
       if(tilt.names && !horizontal && xaxt!="n")
@@ -177,7 +184,7 @@ vl_boxplot.formula <- function(formula, data = NULL, ..., subset, na.action = NU
 }
 
 #' @export
-vl_compute_bxp_pval <- function(groups, box, compute.pval, outline, at, horizontal)
+vl_compute_bxp_pval <- function(groups, box, compute.pval, outline, at, horizontal, pval.values)
 {
   if(!is.list(compute.pval) | !all(lengths(compute.pval)==2))
     stop("compute.pval list of vectors of length two containing pairwise x indexes to be compared")
@@ -203,6 +210,8 @@ vl_compute_bxp_pval <- function(groups, box, compute.pval, outline, at, horizont
   adj <- if(horizontal)
     strwidth("M", units = "inch") else
       strheight("M", units = "inch")
+  if(pval.values) # More space for full p-values
+    adj <- adj*1.5
   # Overlapping boxes
   pval[, y:= max(dat[.BY, max, on= c("x>=x0", "x<=x1")]), .(x0, x1)] 
   if(horizontal)
@@ -224,7 +233,9 @@ vl_compute_bxp_pval <- function(groups, box, compute.pval, outline, at, horizont
 #' @export
 vl_plot_bxp_pval <- function(pval, 
                              horizontal,
-                             pval.cex)
+                             pval.cex,
+                             pval.stars,
+                             pval.values)
 {
   # Convert to users coordinates
   if(horizontal)
@@ -243,16 +254,13 @@ vl_plot_bxp_pval <- function(pval,
   }
   pval[, {
     segments(x0, y0, x1, y1, xpd= NA)
-    .c <- cut(wilcox,
-              c(-Inf, 0.00001, 0.001, 0.01, 0.05, Inf),
-              c("****", "***", "**", "*", "N.S"),
-              include.lowest= T)
-    text(x, 
-         y, 
-         .c,
-         cex= pval.cex*ifelse(.c=="N.S", 0.5, 1),
-         srt= ifelse(horizontal, -90, 0),
-         offset= 0,
-         xpd= NA)
+    vl_plot_pval_text(x,
+                      y,
+                      wilcox,
+                      stars = pval.stars, 
+                      values = pval.values,
+                      cex= pval.cex,
+                      offset = ifelse(!pval.values, ifelse(wilcox>0.05, -.35, -.9), -.2),
+                      srt= ifelse(horizontal, -90, 0))
   }]
 }

@@ -8,13 +8,11 @@ vl_plot_pval_text(
   x,
   y,
   pval,
-  stars.only = F,
-  show.NS = T,
+  stars = T,
+  values = F,
   pos = 3,
   offset = 0,
-  offset.star = offset - 0.1,
   cex = 0.6,
-  digits = 1,
   ...
 )
 }
@@ -25,15 +23,13 @@ vl_plot_pval_text(
 
 \item{pval}{Pval to be plotted}
 
-\item{stars.only}{If set to TRU, then only plots */N.S. Default= FALSE}
+\item{stars}{Should stars be printed?}
 
-\item{show.NS}{Should NS values be shown?}
+\item{values}{Should p values be printed?}
 
 \item{pos}{pos argument (label position). see ?text()}
 
-\item{offset}{Offset parameter passed to text to print N.S values}
-
-\item{offset.star}{Adjust star (signif) offest relative to offset (used for N.S values)}
+\item{offset}{P values offest (default= 0)}
 
 \item{cex}{cex expansion factor passed to text}
 

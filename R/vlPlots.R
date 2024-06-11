@@ -5,11 +5,10 @@
 #' @param x X position for plotting
 #' @param y Y position for plotting
 #' @param pval Pval to be plotted
-#' @param stars.only If set to TRU, then only plots */N.S. Default= FALSE
-#' @param show.NS Should NS values be shown?
+#' @param stars Should stars be printed?
+#' @param values Should p values be printed?
 #' @param pos pos argument (label position). see ?text()
-#' @param offset Offset parameter passed to text to print N.S values
-#' @param offset.star Adjust star (signif) offest relative to offset (used for N.S values)
+#' @param offset P values offest (default= 0)
 #' @param cex cex expansion factor passed to text
 #' @param ... Extra arguments passed to test function
 #' @examples 
@@ -20,54 +19,50 @@
 vl_plot_pval_text <- function(x, 
                               y, 
                               pval, 
-                              stars.only= F,
-                              show.NS= T,
+                              stars= T,
+                              values= F,
                               pos= 3,
-                              offset= 0, 
-                              offset.star= offset-0.1, 
+                              offset= 0,
                               cex= .6,
-                              digits= 1,
                               ...)
 {
-  if(length(y)==1 & length(x)>1)
-    y <- rep(y, length(x))
-  if(!show.NS)
-  {
-    check <- pval<0.05
-    x <- x[check]
-    y <- y[check]
-    pval <- pval[check]
-  }
-  # Compute stars
-  star <- cut(pval, 
-              breaks = c(-Inf, 1e-5, 1e-3, 1e-2, 5e-2, Inf), 
-              labels = c("****", "***", "**", "*", "N.S"))
+  # Compute Stars ----
+  star <- if(stars)
+    cut(pval, 
+        breaks = c(-Inf, 1e-5, 1e-3, 1e-2, 5e-2, Inf), 
+        labels = c("****", "***", "**", "*", "N.S")) else
+          rep("", length(pval))
   star <- as.character(star)
-  # Index of NS values
-  ns_val <- !is.na(star) & star=="N.S"
-  # Values as scientific 
-  value <- formatC(pval,
-                   format = "e",
-                   digits = digits)
-  if(stars.only)
-    value <- rep("", length(value))
-  # Plot NS values
-  if(any(ns_val))
-    text(x = x[ns_val], 
-         y = y[ns_val], 
-         labels= bquote(paste(.(value[ns_val]), ""^N.S)), 
+  
+  # Format pval ----
+  pval <- ifelse(pval<2e-16, 2e-16, pval)
+  lab <- if(values)
+    format(pval, scientific = TRUE) else
+      rep("", length(pval))
+  
+  # Compute labels ----
+  mapply(function(x, y, pos, offset, cex, p, l, s)
+  {
+    var <- if(values)
+    {
+      if(p>0.05)
+        bquote(italic(P) == .(l)^"N.S") else
+          bquote(italic(P) == .(l) * .(s))
+    }else
+    {
+      if(p>0.05)
+        bquote(.(l)^"N.S") else
+          bquote(.(l) * .(s))
+    }
+    text(x,
+         y,
+         labels= var,
          offset= offset,
          pos= pos,
          cex= cex,
+         xpd= NA,
          ...)
-  if(!all(ns_val))
-    text(x = x[!ns_val], 
-         y = y[!ns_val], 
-         labels= paste0(value[!ns_val], star[!ns_val]),
-         offset= offset.star,
-         pos= pos,
-         cex= cex,
-         ...)
+  }, x= x, y= y, pos= pos, offset= offset, cex= cex, p= pval, l= lab, s= star)
 }
 
 #' Plots a heatkey

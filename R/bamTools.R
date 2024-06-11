@@ -34,6 +34,7 @@ vl_importBam <- function(file,
       .c[[i]] <- as.character(.c[[i]])
   }
   .c <- as.data.table(.c)
+  setcolorder(.c, sel)
   setnames(.c, col.names)
   return(.c)
 }

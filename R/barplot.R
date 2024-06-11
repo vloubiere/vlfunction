@@ -24,12 +24,15 @@
 #' @examples
 #' vl_barplot(1:3, rep(.2, 3))
 vl_barplot <- function(height,
-                       sd= 0,
-                       arrow.length= diff(grconvertX(c(0, (bar[2]-bar[1])/4), "user", "inches")),
-                       arrow.lwd= .5,
+                       bar.labels= NULL,
+                       bar.labels.cex= .7,
                        xlim= NULL,
                        ylim= NULL,
+                       tilt.names= T,
                        individual.var= NULL,
+                       show.sd= !is.null(individual.var),
+                       arrow.lwd= .5,
+                       arrow.length= diff(grconvertX(c(0, (bar[2]-bar[1])/4), "user", "inches")),
                        ind.pch= 16,
                        ind.col= adjustcolor("lightgrey", .7),
                        ind.jitter= .2,
@@ -39,12 +42,23 @@ vl_barplot <- function(height,
                        diff.cex= .8,
                        xpd= NA,
                        horiz= F,
+                       xaxt= "s",
+                       names.arg= names(height),
                        ...)
 {
+  if(is.table(height))
+    height <- c(height)
   if(!is.vector(height))
-    stop("Only height vectors are supported for now")
+    stop("Only height tables and vectors are supported for now")
   if(horiz)
     stop("horiz not supported yet ;)")
+  if(tilt.names)
+    xaxt <- "n"
+  
+  # Compute sd if necessary ----
+  sd <- if(show.sd && !is.null(individual.var))
+    sapply(individual.var, sd) else
+      0
   
   # Create data table to keep track of all values ----
   dat <- data.table(height= height,
@@ -65,7 +79,9 @@ vl_barplot <- function(height,
   }
   
   # Initiate barplot ----
-  bar <- barplot(height, xlim= xlim, ylim= ylim, ...)
+  bar <- barplot(height, xlim= xlim, ylim= ylim, xaxt= xaxt, names.arg= names.arg, ...)
+  if(tilt.names && !is.null(names.arg))
+    vl_tilt_xaxis(bar, labels= names.arg)
   dat[, x:= bar]
   
   # Add sd arrows if specified ----
@@ -146,5 +162,17 @@ vl_barplot <- function(height,
            pos= 3)
     }]
   }
+  
+  # Add bar labels ----
+  if(!is.null(bar.labels))
+  {
+    text(bar, 
+         dat$max,
+         bar.labels,
+         pos= 3,
+         cex= bar.labels.cex,
+         xpd= NA)
+  }
+  
   invisible(bar)
 }
