@@ -22,7 +22,7 @@ vl_plot_pval_text <- function(x,
                               stars= T,
                               values= F,
                               pos= 3,
-                              offset= 0,
+                              offset= ifelse(values, -.2, -.35),
                               cex= .6,
                               ...)
 {

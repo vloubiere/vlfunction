@@ -260,7 +260,6 @@ vl_plot_bxp_pval <- function(pval,
                       stars = pval.stars, 
                       values = pval.values,
                       cex= pval.cex,
-                      offset = ifelse(!pval.values, ifelse(wilcox>0.05, -.35, -.9), -.2),
                       srt= ifelse(horizontal, -90, 0))
   }]
 }

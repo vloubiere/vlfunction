@@ -11,7 +11,7 @@ vl_plot_pval_text(
   stars = T,
   values = F,
   pos = 3,
-  offset = 0,
+  offset = ifelse(values, -0.2, -0.35),
   cex = 0.6,
   ...
 )
