@@ -35,9 +35,8 @@ vl_plot_pval_text <- function(x,
   star <- as.character(star)
   
   # Format pval ----
-  pval <- ifelse(pval<2e-16, 2e-16, pval)
   lab <- if(values)
-    format(pval, scientific = TRUE) else
+    formatC(pval, digits = 1, format= "e") else
       rep("", length(pval))
   
   # Compute labels ----
@@ -45,9 +44,10 @@ vl_plot_pval_text <- function(x,
   {
     var <- if(values)
     {
-      if(p>0.05)
-        bquote(italic(P) == .(l)^"N.S") else
-          bquote(italic(P) == .(l) * .(s))
+      if(p<2.2e-308)
+        bquote(italic(P) < "2.2e-308" * .(s)) else if(p>0.05)
+          bquote(italic(P) == .(l)^"N.S") else
+            bquote(italic(P) == .(l) * .(s))
     }else
     {
       if(p>0.05)

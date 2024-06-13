@@ -47,7 +47,8 @@ vl_bsub <- function(cmd,
     Sys.unsetenv("SBATCH_RESERVATION")
     Sys.unsetenv("SBATCH_WCKEY")
     # Write command in file
-    tmp <- tempfile(fileext = ".sh")
+    tmp <- tempfile(tmpdir = "/scratch/stark/vloubiere/",
+                    fileext = ".sh")
     writeLines(bsub_cmd, tmp)
     # Execute file using ssh
     job_ID <- system(paste0("ssh localhost sh ", tmp),

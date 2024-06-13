@@ -13,6 +13,7 @@ vl_boxplot(x, ...)
   x,
   ...,
   compute.pval = NULL,
+  pval.FUN = function(x, y) wilcox.test(x, y)$p.value,
   pval.cex = 0.8,
   pval.stars = T,
   pval.values = F,

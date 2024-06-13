@@ -26,6 +26,7 @@ vl_boxplot <- function(x, ...) UseMethod("vl_boxplot")
 vl_boxplot.default <-
   function(x, ..., 
            compute.pval= NULL,
+           pval.FUN= function(x, y) wilcox.test(x, y)$p.value,
            pval.cex= .8,
            pval.stars= T,
            pval.values= F,
@@ -123,7 +124,8 @@ vl_boxplot.default <-
                                     outline= outline,
                                     at= at,
                                     horizontal= horizontal,
-                                    pval.values= pval.values)
+                                    pval.values= pval.values,
+                                    pval.FUN= pval.FUN)
         if(nrow(pval))
           vl_plot_bxp_pval(pval = pval,
                            horizontal = horizontal,
@@ -184,7 +186,7 @@ vl_boxplot.formula <- function(formula, data = NULL, ..., subset, na.action = NU
 }
 
 #' @export
-vl_compute_bxp_pval <- function(groups, box, compute.pval, outline, at, horizontal, pval.values)
+vl_compute_bxp_pval <- function(groups, box, compute.pval, pval.FUN, outline, at, horizontal, pval.values)
 {
   if(!is.list(compute.pval) | !all(lengths(compute.pval)==2))
     stop("compute.pval list of vectors of length two containing pairwise x indexes to be compared")
@@ -203,7 +205,7 @@ vl_compute_bxp_pval <- function(groups, box, compute.pval, outline, at, horizont
                 dat[sapply(compute.pval, `[`, 2), !"max"])
   data.table::setnames(pval, c("dat0", "x0", "dat1", "x1"))
   # Compute wilcox pval
-  pval[, wilcox:= mapply(function(x, y) wilcox.test(unlist(x), unlist(y))$p.value, x= dat0, y= dat1)]
+  pval[, wilcox:= mapply(function(x, y) pval.FUN(unlist(x), unlist(y)), x= dat0, y= dat1)]
   # Compute x pos text
   pval[, x:= rowMeans(.SD), .SDcols= c("x0", "x1")]
   # Compute y pos (in inches in case axis is logged)
