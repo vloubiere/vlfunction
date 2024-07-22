@@ -92,6 +92,8 @@ plot.vl_enr_cl <- function(obj,
   
   # Import and select based on padj and mi counts
   DT <- data.table::copy(obj)
+  if(!is.factor(DT$cl))
+    DT[, cl:= factor(cl)]
   DT <- DT[set_hit>=min.counts & padj <= padj.cutoff & log2OR > 0]
   # Handle infinite (negative are irrelevant with this plot)
   if(any(is.infinite(DT$log2OR)))

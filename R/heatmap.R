@@ -165,21 +165,21 @@ vl_heatmap.matrix <- function(x,
     set.seed(3453)
     if(is.na(kmeans.k))
     {
-      if(clustering.distance.rows %in% c("pearson", "spearman"))
-        .d <- as.dist(1 - cor(t(x), 
-                              use= "pairwise.complete.obs", 
-                              method= clustering.distance.rows)) else
-                                .d <- dist(x, method = clustering.distance.rows)
-                              # Hierarchical clustering
-                              rcl <- hclust(.d, method = clustering.method) 
-                              rows[, order:= rcl$order]
-                              # Cutree
-                              rows[, cl:= cutree(rcl, cutree.rows)]
-                              # Extract dend
-                              dend <- ggdendro::dendro_data(rcl, 
-                                                            type = "rectangle", 
-                                                            rotate= T)
-                              rdend <- data.table::as.data.table(dend$segments)
+      .d <- if(clustering.distance.rows %in% c("pearson", "spearman"))
+        as.dist(1 - cor(t(x), 
+                        use= "pairwise.complete.obs", 
+                        method= clustering.distance.rows)) else
+                          dist(x, method = clustering.distance.rows)
+      # Hierarchical clustering
+      rcl <- hclust(.d, method = clustering.method) 
+      rows[, order:= rcl$order]
+      # Cutree
+      rows[, cl:= cutree(rcl, cutree.rows)]
+      # Extract dend
+      dend <- ggdendro::dendro_data(rcl, 
+                                    type = "rectangle", 
+                                    rotate= T)
+      rdend <- data.table::as.data.table(dend$segments)
     }else
     {
       # Kmeans clustering
@@ -196,21 +196,21 @@ vl_heatmap.matrix <- function(x,
   if(cluster.cols && ncol(x)>1 && length(levels(col.clusters))==1)
   {
     set.seed(3453)
-    if(clustering.distance.cols %in% c("pearson", "spearman"))
-      .d <- as.dist(1 - cor(x, 
-                            use= "pairwise.complete.obs", 
-                            method= clustering.distance.cols)) else
-                              .d <- dist(t(x), method = clustering.distance.cols)
-                            # Hierarchical clustering
-                            ccl <- hclust(.d, method = clustering.method)
-                            cols[, order:= ccl$order]
-                            # Cutree
-                            cols[, cl:= cutree(ccl, cutree.cols)]
-                            # Extract dend
-                            dend <- ggdendro::dendro_data(ccl,
-                                                          type = "rectangle", 
-                                                          rotate= T)
-                            cdend <- data.table::as.data.table(dend$segments)
+    .d <- if(clustering.distance.cols %in% c("pearson", "spearman"))
+      as.dist(1 - cor(x, 
+                      use= "pairwise.complete.obs", 
+                      method= clustering.distance.cols)) else
+                        dist(t(x), method = clustering.distance.cols)
+    # Hierarchical clustering
+    ccl <- hclust(.d, method = clustering.method)
+    cols[, order:= ccl$order]
+    # Cutree
+    cols[, cl:= cutree(ccl, cutree.cols)]
+    # Extract dend
+    dend <- ggdendro::dendro_data(ccl,
+                                  type = "rectangle", 
+                                  rotate= T)
+    cdend <- data.table::as.data.table(dend$segments)
   }
   # Add cluster color and x pos
   cols[, col:= col.clusters.col[cl]]
