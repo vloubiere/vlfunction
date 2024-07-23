@@ -80,3 +80,26 @@
 #' }
 #' @source {"https://www.thermofisher.com/at/en/home/brands/thermo-scientific/molecular-biology/thermo-scientific-restriction-modifying-enzymes/restriction-enzymes-thermo-scientific/conventional-restriction-enzymes-thermo-scientific.html"}
 "vl_thermofisher_restriction_enzymes_table"
+
+#' Example metadata ORFtag
+#'
+#' Metadata table example for the ORFtag pipeline. See ?ORFtag_pipeline() for further details
+#'
+#' @usage See ?ORFtag_pipeline()
+#' @format data.table
+#' #' \describe{
+#'   \item{user}{User name}
+#'   \item{batch}{batch}
+#'   \item{screen}{screen name}
+#'   \item{condition}{Typically one of 'sort' or 'input'}
+#'   \item{replicate}{replicate}
+#'   \item{barcodes}{Typically two barcodes, e.g. 'GCCTCTTC|ATTGATTC'}
+#'   \item{sampleID}{sampleID. Should correspond to the catenation of screen, condtion and replicate; and be unique for each biological samples: all data will be merged per sampleID}
+#'   \item{expName}{Experiment name}
+#'   \item{species}{One of 'mouse' or 'human'}
+#'   \item{layout}{'PAIRED' or 'SINGLE'. Will be used in combination with 'sequence' to know in which column barcodes should be found}
+#'   \item{sequencer}{'NextSeq or HiSeq. Will be used in combination with 'layout' to know in which column barcodes should be found'}
+#'   \item{bam_path}{The path to the VBC bam file containing the reads}
+#'   ...
+#' }
+"vl_metadata_ORFtag"
