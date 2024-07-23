@@ -1,20 +1,3 @@
-#' Convert character to bed file
-#'
-#' @param coor Character vector of genomic coordinates, e.g "chr3R:2281049-2281297:*"
-#' @examples
-#' vl_toDTranges("chr3R:2281049-2281297:*")
-#' @return DT ranges
-#' @export
-vl_toDTranges <- function(coor)
-{
-  if(!is.character(coor))
-    stop("coor should be a character vector e.g chr3RHet:2281049-2281297:*")
-  dat <- data.table::as.data.table(data.table::tstrsplit(coor, ":|-"))
-  setnames(dat, c("seqnames", "start", "end", "strand")[seq(dat)])
-  dat <- vl_importBed(dat)
-  return(dat)
-}
-
 #' Import bed file
 #'
 #' Imports bed as data.table and check formats
@@ -34,26 +17,10 @@ vl_importBed <- function(bed, ...) UseMethod("vl_importBed")
 
 #' @describeIn vl_importBed for bed paths
 #' @export
-vl_importBed.character <- function(bed, 
-                                   cols= c("seqnames", "start", "end", "name", "score", "strand"),
-                                   extraCols= "auto")
+vl_importBed.character <- function(bed)
 {
-  # Guess format if auto
-  if(extraCols=="auto")
-    extraCols <- if(grepl(".narrowPeak$", bed[1]))
-      c("signalValue", "pValue", "qValue", "peak") else if(grepl(".broadPeak$", bed[1]))
-        c("signalValue", "pValue", "qValue") else
-          NULL
-  # Columns
-  if(!is.null(extraCols))
-    cols <- c(cols, extraCols)
-  # Fread
-  bed <- rbindlist(lapply(bed, fread))
-  # Name columns
-  setnames(bed,
-           cols[1:ncol(bed)])
-  # Print warning about the base
-  bed[, start:= start+1]
+  bed <- lapply(bed, function(x) as.data.table(rtracklayer::import(x)))
+  bed <- data.table::rbindlist(bed)
   warning("+1 was added to the start column of the bed file to make it 1-based.")
   vl_importBed(bed)
 }
@@ -68,28 +35,25 @@ vl_importBed.GRanges <- function(bed)
 vl_importBed.default <- function(bed)
 {
   bed <- data.table::copy(bed)
-  if("seqnames" %in% names(bed))
-    bed[, seqnames:= as.character(seqnames)] else
-      stop("No seqnames column in bed file")
-  if("start" %in% names(bed))
-    bed[, start:= as.integer(start)] else
-      stop("No start column in bed file")
-  if("end" %in% names(bed))
-    bed[, end:= as.integer(end)]else
-      warning("No end column in bed file")
-  if("name" %in% names(bed))
-    bed[, name:= as.character(name)]
-  if("score" %in% names(bed))
-    bed[, score:= as.numeric(score)]
-  if("strand" %in% names(bed))
-  {
-    bed[, strand:= as.character(strand)]
-    bed[, strand:= ifelse(strand %in% c("+", "-"), strand, "*")]
-  }
   
-  if(any(bed[, start>end], na.rm = T))
-    warning("bed file contains ranges with start>end -> malformed!")
+  if("seqnames" %in% names(bed) && !is.character(bed$seqnames))
+    bed[, seqnames:= as.character(seqnames)]
+  if("start" %in% names(bed) && !is.integer(bed$start))
+    bed[, start:= as.integer(start)]
+  if("end" %in% names(bed) && !is.integer(bed$end))
+    bed[, end:= as.integer(end)]
+  if("name" %in% names(bed) && !is.character(bed$name))
+    bed[, name:= as.character(name)]
+  if("score" %in% names(bed) && !is.numeric(bed$score))
+    bed[, score:= as.numeric(score)]
+  if("strand" %in% names(bed) && !is.character(bed$score))
+    bed[, strand:= as.character(strand)]
    
+  if(!all(c("seqnames", "start", "end") %in% names(bed)))
+    warning("seqnames, start or end column missing. Malformed bed file?")
+  if(all(c("start", "end") %in% names(bed)) && any(bed[, start>end], na.rm = T))
+    warning("bed file contains ranges with start>end -> malformed!")
+  
   return(bed)
 }
 

@@ -8,11 +8,7 @@
 \usage{
 vl_importBed(bed, ...)
 
-\method{vl_importBed}{character}(
-  bed,
-  cols = c("seqnames", "start", "end", "name", "score", "strand"),
-  extraCols = "auto"
-)
+\method{vl_importBed}{character}(bed)
 
 \method{vl_importBed}{GRanges}(bed)
 }
