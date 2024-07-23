@@ -12,6 +12,7 @@ vl_ORFtag_pipeline(
   mem = 32,
   overwrite = F,
   submit = F,
+  wdir = getwd(),
   logs = "db/logs/ORFtag"
 )
 }
@@ -27,6 +28,10 @@ vl_ORFtag_pipeline(
 \item{mem}{Memory per job (in Go). Default= 32.}
 
 \item{overwrite}{Should existing files be overwritten?}
+
+\item{submit}{Should the command be submitted? default= G}
+
+\item{wdir}{The working directory to use. defaut= getwd().}
 
 \item{logs}{Path to save logs. Default= "db/logs"}
 }

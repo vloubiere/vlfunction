@@ -58,6 +58,7 @@ vl_screenshot <- function(bed,
                           min.symbol= 1,
                           add= F)
 {
+  # Import bed file ----
   bed <- vl_importBed(bed)
   if(!identical(bed, unique(bed)))
     stop("Non-unique regions in bed!")
@@ -74,11 +75,20 @@ vl_screenshot <- function(bed,
   if(length(min)>1 && length(max)!=sum(is_bw))
     stop("min should either be length 1 or match the number of bw tracks")
   
+  # Binning function ----
+  binFUN <- function(start, end, length_of_vector) {
+    integers <- start:end
+    n_integers <- length(integers)
+    reps <- length_of_vector %/% n_integers
+    extra <- length_of_vector %% n_integers
+    result_vector <- rep(integers, reps)
+    if (extra > 0) {result_vector <- c(result_vector, integers[1:extra])}
+    return(sort(result_vector))
+  }
+  
   # Binning and bg color ----
   bins <- bed[, {
-    coor <- round(seq(start, 
-                      end, 
-                      length.out= round(1000/nrow(bed))+1))
+    coor <- binFUN(start, end, round(1000/nrow(bed))+1)
     res <- data.table(start= coor[-length(coor)], 
                       end= coor[-1])
     res[.I>1 & end>start, start:= start+1]

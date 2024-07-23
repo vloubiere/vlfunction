@@ -52,6 +52,9 @@ vl_importBed.character <- function(bed,
   # Name columns
   setnames(bed,
            cols[1:ncol(bed)])
+  # Print warning about the base
+  bed[, start:= start+1]
+  warning("+1 was added to the start column of the bed file to make it 1-based.")
   vl_importBed(bed)
 }
 

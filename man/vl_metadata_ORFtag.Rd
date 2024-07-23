@@ -7,7 +7,7 @@
 \format{
 data.table
 #' \describe{
-  \item{use}{User name}
+  \item{user}{User name}
   \item{batch}{batch}
   \item{screen}{screen name}
   \item{condition}{Typically one of 'sort' or 'input'}

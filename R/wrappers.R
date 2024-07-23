@@ -142,25 +142,6 @@ vl_scancel <- function()
            ignore.stderr = T)
 }
 
-#' Import paired bam file as bedpe
-#'
-#' @param bam_path 
-#' @param bedpe Imports bam as BEDPE format. Requires BAM to be grouped or sorted by query.
-#' @param ed Use BAM edit distance (NM tag) for BED score. Default for BED is to use mapping quality. Default for BEDPE is to use the minimum of the two mapping qualities for the pair. When -ed is used with bedpe= T, the total edit distance from the two mates is reported.
-vl_import_bamToBed <- function(bam_path,
-                               bedpe= F,
-                               ed= F)
-{
-  cmd <- "module load build-env/2020; module load bedtools/2.17.0-foss-2018b; bamToBed -i"
-  cmd <- paste(cmd, bam_path)
-  if(bedpe)
-    cmd <- paste(cmd, "-bedpe")
-  if(ed)
-    cmd <- paste(cmd, "-ed")
-  bed <- fread(cmd= cmd)
-  return(bed)
-}
-
 #' Import bam file with all fields
 #'
 #' @param bam_path 
