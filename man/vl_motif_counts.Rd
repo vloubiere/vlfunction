@@ -12,7 +12,7 @@ vl_motif_counts(sequences, ...)
 
 \method{vl_motif_counts}{character}(
   sequences = NULL,
-  sel,
+  sel = vl_Dmel_motifs_DB_full[collection == "jaspar", motif_ID],
   genome,
   bg = "genome",
   p.cutoff = 5e-04,
@@ -26,7 +26,7 @@ vl_motif_counts(sequences, ...)
 
 \item{genome}{Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome"}
 
-\item{sel}{Vector of motif_ID to compute. see vl_Dmel_motifs_DB_full$motif_ID}
+\item{sel}{Vector of motif_ID to compute. Defaults to jaspar PWMs. See vl_Dmel_motifs_DB_full$motif_ID}
 
 \item{bg}{Background used to find motifs. Possible values include "genome" and "even". Default= "genome"}
 

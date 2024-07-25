@@ -7,7 +7,7 @@
 #' @param genome Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome"
 #' @param bg Background used to find motifs. Possible values include "genome" and "even". Default= "genome"
 #' @param p.cutoff Pval cutoff used for motif detection
-#' @param sel Vector of motif_ID to compute. see vl_Dmel_motifs_DB_full$motif_ID
+#' @param sel Vector of motif_ID to compute. Defaults to jaspar PWMs. See vl_Dmel_motifs_DB_full$motif_ID
 #' @param motifDB The motifDB object to be used. see ?vl_Dmel_motifs_DB_full and ?vl_motifs_DB_v2, Default= vl_Dmel_motifs_DB_full
 #' 
 #' @examples
@@ -66,7 +66,7 @@ vl_motif_counts.data.table <- function(bed,
 #' @describeIn vl_motif_counts Identify motifs in sequences
 #' @export
 vl_motif_counts.character <- function(sequences= NULL,
-                                      sel,
+                                      sel= vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID],
                                       genome,
                                       bg= "genome",
                                       p.cutoff= 5e-4,
@@ -335,7 +335,7 @@ vl_motif_cl_enrich <- function(counts.list,
 #'
 #' @param sequences Named character vector of sequences to analyse. If provided takes over bed argument (in the case where both are specified)
 #' @param bed Either a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns
-#' @param sel List of motifs to compute. see vl_Dmel_motifs_DB_full$motif
+#' @param sel List of motifs to compute. Defaults to jaspar PWMs. See vl_Dmel_motifs_DB_full$motif
 #' @param genome Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome"
 #' @param bg Background used to find motifs. Possible values include "genome" and "even". Default= "genome"
 #' @param p.cutoff Pval cutoff used for motif detection
@@ -361,7 +361,7 @@ vl_motif_pos.data.table <- function(bed, genome, ...)
 #' @describeIn vl_motif_pos Identify motif positions within sequences
 #' @export
 vl_motif_pos.character <- function(sequences,
-                                   sel,
+                                   sel= vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID],
                                    genome,
                                    bg= "genome",
                                    p.cutoff= 5e-4,

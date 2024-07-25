@@ -50,7 +50,7 @@ setnames(.c, c("seqnames", "strand", "start", "width"))
 setorderv(.c, c("seqnames", "start", "end"))
 # Save bed file
 .c <- GenomicRanges::GRanges(.c)
-export(.c, bed_file)
+rtracklayer::export(.c, bed_file)
 # Import non-first exons gtf file
 exons <- rtracklayer::import(exons)
 cols <- c("gene_id", "gene_name", "mgi_id", "exon_number", "exon_id")

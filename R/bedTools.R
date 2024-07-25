@@ -21,7 +21,7 @@ vl_importBed.character <- function(bed)
 {
   bed <- lapply(bed, function(x) as.data.table(rtracklayer::import(x)))
   bed <- data.table::rbindlist(bed)
-  warning("+1 was added to the start column of the bed file to make it 1-based.")
+  warning("A BED file was imported and was transformed to 1-based coordinates.")
   vl_importBed(bed)
 }
 
