@@ -108,7 +108,7 @@ vl_ORFtag_pipeline <- function(metadata,
   if(any(!dir.exists(dirs)))
   {
     dirs <- dirs[!dir.exists(dirs)]
-    # Ask the user for their name
+    # Ask the user if they want to create output folders
     ask <- readline(prompt = paste0(c("Create output directories: ", dirs, "? (yes/cancel) "), collapse = " "))
     if(ask=="yes")
       sapply(dirs, dir.create, showWarnings = F, recursive = T) else

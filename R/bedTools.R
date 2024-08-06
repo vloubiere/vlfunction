@@ -317,7 +317,8 @@ vl_intersectBed <- function(a,
   sel <- unique(inter[(V1), idx])
   if(invert)
     sel <- setdiff(a$idx, sel)
-  # Return
+  # Return, preserving original order
+  sel <- sort(sel)
   return(bed[(sel)])
 }
 
