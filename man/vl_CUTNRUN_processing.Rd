@@ -9,7 +9,7 @@ vl_CUTNRUN_processing(
   processed_metadata_output,
   scratch_folder = "/scratch/stark/vloubiere/CUTNRUN",
   cores = 8,
-  mem = 32,
+  mem = 64,
   overwrite = F,
   submit = F,
   wdir = getwd(),
