@@ -84,7 +84,7 @@ vl_ORFtag_pipeline <- function(metadata,
   if(!all(cols %in% names(meta)))
     stop(paste(c("metadata file should contain at least these 12 columns:", cols), collapse = " "))
   if(!all(meta[, sampleID==paste0(screen, "_", condition, "_rep", replicate)]))
-    stop("sampleID should be the catenation of screen, condtion and replicate. Sany samplex with the same sampleID will be collapsed!")
+    stop("sampleID should be the catenation of screen, condtion and replicate. Any samples with shared sampleID will be collapsed!")
   
   # Generate output paths ----
   meta[, fq1:= paste0("db/fastq/ORFtag/", gsub(".bam", "", basename(bam_path)), "_", make.unique(sampleID), "_1.fq.gz")]

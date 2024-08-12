@@ -20,7 +20,7 @@ vl_CUTNRUN_processing <- function(metadata,
                                   processed_metadata_output,
                                   scratch_folder= "/scratch/stark/vloubiere/CUTNRUN",
                                   cores= 8,
-                                  mem= 32,
+                                  mem= 64,
                                   overwrite= F,
                                   submit= F,
                                   wdir= getwd(),
@@ -32,15 +32,18 @@ vl_CUTNRUN_processing <- function(metadata,
   cols <- c("user","method","experiment","antibody","cell_line","treatment","replicate","condition","sampleID","barcode","i5","genome","input","layout","sequencer","bam_path")
   if(!all(cols %in% names(meta)))
     stop(paste(c("metadata file should contain at least these 12 columns:", cols), collapse = " "))
-  if(!all(meta[, sampleID==paste0(antibody, "_", cell_line, "_", treatment, "_", replicate)]))
-    stop("sampleID should be the catenation of Ab, Cell_line Treatment and replicate. Any samples with the same sampleID will be collapsed!")
   if(any(!na.omit(meta$input) %in% meta$sampleID))
     stop("Some input(s) have no correspondence in the sampleID(s) column!")
+  if(any(!meta$genome %in% c("mm10", "hg38")))
+    stop("For now, only supported genomes are mm10 and hg38!")
+  if(!all(meta[, sampleID==paste0(antibody, "_", cell_line, "_", treatment, "_", experiment, "_", replicate)]))
+    warning("sampleID should be the catenation of Ab, Cell_line, Treatment, experiment and replicate. Any samples with the same sampleID will be collapsed!")
   
   # Generate output paths ----
-  meta[, fq1:= paste0(scratch_folder, "/fq/", gsub(".bam", "", basename(bam_path)), "_", make.unique(sampleID), "_1.fq.gz")]
+  meta[(layout=="SINGLE"), fq1:= paste0(scratch_folder, "/fq/", gsub(".bam", "", basename(bam_path)), "_", make.unique(sampleID), ".fq.gz")]
+  meta[(layout=="PAIRED"), fq1:= paste0(scratch_folder, "/fq/", gsub(".bam", "", basename(bam_path)), "_", make.unique(sampleID), "_1.fq.gz")]
   meta[(layout=="PAIRED"), fq2:= gsub("_1.fq.gz$", "_2.fq.gz", fq1)]
-  meta[, fq1_trim:= gsub(".fq.gz$", "_val_1.fq.gz", fq1)]
+  meta[, fq1_trim:= gsub(".fq.gz$", ifelse(layout=="PAIRED", "_val_1.fq.gz", "_trimmed.fq.gz"), fq1), layout]
   meta[, fq2_trim:= gsub(".fq.gz$", "_val_2.fq.gz", fq2)]
   meta[, bam:= paste0(scratch_folder, "/bam/", sampleID, ".bam")] # re-sequencing are merged from this step on!
   meta[meta, bam_input:= i.bam, on= "input==sampleID"] # Input bam
@@ -48,9 +51,10 @@ vl_CUTNRUN_processing <- function(metadata,
   meta[, mapq30_stats:= gsub("_stats.txt$", "_mapq30_stats.txt", alignment_stats)]
   meta[, peaks_file:= paste0("db/peaks/CUTNRUN/replicates/", sampleID, "_peaks.narrowPeak")]
   meta[, bw_file:= paste0("db/bw/CUTNRUN/replicates/", sampleID, ".bw")]
-  meta[, merged_peaks_file:= paste0("db/peaks/CUTNRUN/merge/", condition, "_merged_peaks.narrowPeak")]
-  meta[, merged_bw_file:= paste0("db/bw/CUTNRUN/merge/", condition, "_merged.bw")]
-  meta[, confident_peaks_file:= paste0("db/peaks/CUTNRUN/confident/", condition, "_confident_peaks.narrowPeak")]
+  meta[, twoReps:= length(unique(bam))>1, condition] # Check if at least two replicates for conf. peaks
+  meta[(twoReps), merged_peaks_file:= paste0("db/peaks/CUTNRUN/merge/", condition, "_merged_peaks.narrowPeak")]
+  meta[(twoReps), merged_bw_file:= paste0("db/bw/CUTNRUN/merge/", condition, "_merged.bw")]
+  meta[(twoReps), confident_peaks_file:= paste0("db/peaks/CUTNRUN/confident/", condition, "_confident_peaks.narrowPeak")]
   
   # Save processed metadata ----
   if(!grepl(".rds$", processed_metadata_output))
@@ -66,63 +70,78 @@ vl_CUTNRUN_processing <- function(metadata,
     print("Output directories were created in db/ and scratch/!")
   }
   
-  # Load modules ----
-  meta[, load_cmd:= paste(c(paste("cd", wdir),
-                            "module load build-env/2020",
-                            "module load trim_galore/0.6.0-foss-2018b-python-2.7.15",
-                            "module load samtools/1.9-foss-2018b",
-                            "module load bowtie2/2.3.4.2-foss-2018b"), collapse = "; ")]
+  # Print conditions ----
+  print(paste(length(unique(meta$condition)), "conditions detected, of which", length(unique(meta[(twoReps), condition])), "had >1 replicates:"))
+  meta[(twoReps), print(paste(condition, "->", paste0(unique(sampleID), collapse= ", "))), condition]
+  print(paste(length(unique(meta[(!twoReps), condition])), "samples had only one replicate:"))
+  meta[(!twoReps), print(paste(condition, "->", paste0(unique(sampleID), collapse= ", "))), condition]
   
   # Demultiplex VBC bam file ----
   meta[, demultiplex_cmd:= {
     if(.N!=1)
       stop("Unique bam file should be provided!")
-    if(overwrite | !file.exists(fq1)) # fq2 is not used anyway
+    if(overwrite | !file.exists(fq1))
     {
-      fq_prefix <- gsub("_1.fq.gz$", "", fq1)
-      cmd <- paste("samtools view -@", cores-1, bam_path, 
-                   "| perl ", system.file("CUTNRUN_pipeline", "demultiplex_pe.pl", package = "vlfunctions"),
-                   # "| head -n 1000000 | perl ", "/groups/stark/vloubiere/vlfunction/inst/CUTNRUN_pipeline/demultiplex_pe.pl", # For tests
+      demultScript <- system.file("CUTNRUN_pipeline",
+                                  ifelse(layout=="PAIRED", "demultiplex_pe.pl", "demultiplex_se.pl"),
+                                  package = "vlfunctions")
+      fq_prefix <- gsub("_1.fq.gz$|.fq.gz$", "", fq1)
+      cmd <- paste("samtools view -@", cores-1, bam_path,
+                   "| perl ", demultScript,
+                   # "| head -n 1000000 | perl ", demultScript, # For tests
                    paste0("^B2:Z:", i5),
                    paste0("^BC:Z:", barcode),
                    fq_prefix,
-                   "; gzip", paste0(fq_prefix, "_1.fq"))
+                   "; gzip", gsub(".gz$", "", fq1))
       if(!is.na(fq2))
-        cmd <- paste0(cmd, "; gzip ", fq_prefix, "_2.fq")
+        cmd <- paste0(cmd, "; gzip ", gsub(".gz$", "", fq2))
       cmd
     }
-  }, .(bam_path, i5, barcode, fq1, fq2)]
+  }, .(bam_path, layout, i5, barcode, fq1, fq2)]
   
   # Trim illumina adapters ----
   meta[, trim_cmd:= {
-    if(overwrite | !file.exists(fq1_trim) | !file.exists(fq2_trim))
-      paste0("trim_galore --gzip --paired -o ", dirname(fq1_trim), "/ ", fq1, " ", fq2)
-  }, .(fq1, fq1_trim, fq2, fq2_trim)]
+    if(overwrite | !file.exists(fq1_trim) | (!is.na(fq2_trim)  && !file.exists(fq2_trim)))
+    {
+      if(layout=="SINGLE")
+        paste0("trim_galore --gzip -o ", dirname(fq1_trim), "/ ", fq1) else if(layout=="PAIRED")
+          paste0("trim_galore --gzip --paired -o ", dirname(fq1_trim), "/ ", fq1, " ", fq2)
+    }
+  }, .(layout, fq1, fq1_trim, fq2, fq2_trim)]
   
   # Alignment ----
   meta[, aln_cmd:= {
     if(overwrite | !file.exists(bam))
     {
       # BOWTIE 2 ----
+      inputFiles <- if(layout=="SINGLE")
+        paste("-U", paste0(unique(fq1_trim), collapse= ",")) else if(layout=="PAIRED")
+          paste("-1", paste0(unique(fq1_trim), collapse= ","),
+                "-2", paste0(unique(fq2_trim), collapse= ","))
       x <- switch(genome,
                   "mm10" = "/groups/stark/vloubiere/genomes/Mus_musculus/UCSC/mm10/Sequence/Bowtie2Index/genome",
                   "hg38" = "/groups/stark/vloubiere/genomes/Homo_sapiens/hg38/Bowtie2Index/genome")
       paste("bowtie2 -p", cores,
             "-x", x,
-            "-1", paste0(unique(fq1_trim), collapse= ","),
-            "-2", paste0(unique(fq2_trim), collapse= ","),
+            inputFiles,
             "2>", alignment_stats, # Return alignment statistics
             "| samtools sort -@", cores-1, # Sort
             "- | samtools view -@", cores-1, "-b -q 30 -o", bam, # Filter
-            "; samtools stats", bam, "-@", cores-1, "| grep ^SN>>", mapq30_stats) # Add filtering statistics
+            "; samtools stats", bam, "-@", cores-1, "| grep ^SN>", mapq30_stats) # Add filtering statistics
     }
-  }, .(bam, genome, alignment_stats, mapq30_stats)]
+  }, .(layout, bam, genome, alignment_stats, mapq30_stats)]
 
   # Return commands ----
-  cols <- intersect(c("load_cmd", "demultiplex_cmd", "trim_cmd", "aln_cmd"),
+  load_cmd <- paste(c(paste("cd", wdir),
+                      "module load build-env/2020",
+                      "module load trim_galore/0.6.0-foss-2018b-python-2.7.15",
+                      "module load samtools/1.9-foss-2018b",
+                      "module load bowtie2/2.3.4.2-foss-2018b"), collapse = "; ")
+  cols <- intersect(c("demultiplex_cmd", "trim_cmd", "aln_cmd"),
                     names(meta))
-  cmd <- if(length(cols)>1)
-    meta[, .(cmd= paste0(unique(na.omit(unlist(.SD))), collapse = "; ")), sampleID, .SDcols= cols] else
+  cmd <- if(length(cols))
+    meta[, .(cmd= paste0(c(load_cmd, unique(na.omit(unlist(.SD)))),
+                         collapse = "; ")), sampleID, .SDcols= cols] else
       data.table()
   
   # Submit commands ----
@@ -179,10 +198,8 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
     print(paste(logs, "directory was created!"))
   }
   
-  # Load modules ----
-  meta[, load_cmd:= paste(c(paste("cd", wdir),
-                            "module load build-env/2020",
-                            "module load macs2/2.1.2.1-foss-2018b-python-2.7.15"), collapse = "; ")]
+  # Check if at least two replicates ----
+  meta[(!twoReps), print(paste("No replicates found for sample", sampleID, "-> confident peaks calling skipped")), sampleID]
 
   # Peak calling on individual replicates ----
   meta[, peak_cmd:= {
@@ -190,7 +207,8 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
     {
       gAbb <- fcase(genome=="mm10", "mm",
                     genome=="hg38", "hg")
-      paste("macs2 callpeak -B --SPMR --keep-dup 1 -g", gAbb,
+      paste("macs2 callpeak -B --SPMR --keep-dup 1 -g", gAbb, 
+            ifelse(layout=="PAIRED", "-f BAMPE", ""),
             ifelse(is.na(extsize), "", paste("--nomodel --extsize", extsize)),
             "--outdir", paste0(dirname(peaks_file), "/"),
             "-t", bam,
@@ -199,7 +217,7 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
             # if(broad) # Broad signal (K27me3...)
             #   cmd <- paste0(cmd, " --broad")
     }
-  }, .(genome, bam, bam_input, peaks_file)]
+  }, .(layout, genome, bam, bam_input, peaks_file)]
   
   # Bedgraph to bigwig individual rep ----
   meta[, bw_cmd:= {
@@ -214,12 +232,13 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
   }, .(genome, bam, bam_input, peaks_file, bw_file)]
   
   # Merged peaks ----
-  meta[, merged_peak_cmd:= {
+  meta[(twoReps), merged_peak_cmd:= {
     if(overwrite | !file.exists(merged_peaks_file))
     {
       gAbb <- fcase(genome=="mm10", "mm",
                     genome=="hg38", "hg")
       paste("macs2 callpeak -B --SPMR --keep-dup 1 -g", gAbb,
+            ifelse(layout=="PAIRED", "-f BAMPE", ""),
             ifelse(is.na(extsize), "", paste("--nomodel --extsize", extsize)),
             "--outdir", paste0(dirname(merged_peaks_file), "/"),
             "-t", paste0(unique(bam), collapse= " "),
@@ -229,7 +248,7 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
   }, .(genome, condition, merged_peaks_file)]
   
   # Merged bigwig ----
-  meta[, merged_bw_cmd:= {
+  meta[(twoReps), merged_bw_cmd:= {
     if(overwrite | !file.exists(merged_bw_file))
     {
       # Usage: Rscript script.R input_file.bdg output_file.bw genome
@@ -241,7 +260,7 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
   }, .(genome, condition, merged_peaks_file, merged_bw_file)]
   
   # Confident peaks ----
-  meta[, conf_peak_cmd:= {
+  meta[(twoReps), conf_peak_cmd:= {
     if(overwrite | !file.exists(confident_peaks_file))
     {
       paste(Rpath, system.file("CUTNRUN_pipeline", "confident_peaks.R", package = "vlfunctions"),
@@ -252,10 +271,16 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
   }, .(condition, merged_peaks_file, confident_peaks_file)]
   
   # Return commands ----
-  cols <- intersect(c("load_cmd", "peak_cmd", "bw_cmd", "merged_peak_cmd", "merged_bw_cmd", "conf_peak_cmd"), names(meta))
-  cmd <- if(length(cols)>1)
-    meta[, .(cmd= paste0(unique(na.omit(unlist(.SD))), collapse = "; ")), condition, .SDcols= cols] else
-      data.table()
+  load_cmd <- paste(c(paste("cd", wdir),
+                      "module load build-env/2020",
+                      "module load macs2/2.1.2.1-foss-2018b-python-2.7.15"),
+                    collapse = "; ")
+  cols <- intersect(c("peak_cmd", "bw_cmd", "merged_peak_cmd", "merged_bw_cmd", "conf_peak_cmd"),
+                    names(meta))
+  cmd <- if(length(cols))
+    meta[, .(cmd= paste0(c(load_cmd, unique(na.omit(unlist(.SD)))),
+                         collapse = "; ")), condition, .SDcols= cols] else
+                           data.table()
   
   # Submit commands ----
   if(nrow(cmd))

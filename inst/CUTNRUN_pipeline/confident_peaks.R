@@ -43,15 +43,19 @@ merge[, ID:= .I]
 ov <- lapply(reps, function(x) vl_intersectBed(merge, x)[, ID])
 names(ov) <- paste("Rep", seq(ov))
 
+# Print overlap ----
 pdfDir <- "pdf/CUTNRUN/overlap_replicates"
 dir.create(pdfDir, showWarnings = F, recursive = T)
-pdf(paste0(pdfDir, "/", gsub(".narrowPeak$", ".pdf", basename(output))), 3, 3)
-par(mgp= c(0.75, 0.35, 0),
-    las= 1,
-    cex.axis= 7/12,
-    cex.lab= 8/12,
-    cex= 1,
-    mai= c(.9, .9, .9, .9))
+pdf(paste0(pdfDir, "/", gsub(".narrowPeak$", ".pdf", basename(output))), 4, 4)
+vl_par(mai= c(1.9, 1.9, .9, .9),
+       las= 1,
+       tcl= -0.1,
+       mgp= c(1.5, 0.35, 0),
+       cex= 1,
+       cex.lab= 9/12,
+       cex.axis= 7/12,
+       bty= "n",
+       lend= 2)
 if(sum(lengths(ov))==0)
 {
   plot.new()
