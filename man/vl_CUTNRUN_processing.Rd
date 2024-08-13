@@ -41,3 +41,27 @@ Return a data.table containing, for each sampleID, the concatenated commands tha
 \description{
 Takes as input a (corerectly formated) metadata file, save the processed metadata file and returns the command lines to 1/ extract reads from VBC bam file, 2/ trim the reads and align to mouse/human genome (see 'species' column of the metadata table) and return alignment statistics as well as collapsed reads and 4/ assign insertions to closest downstream genes.
 }
+\examples{
+Takes as input a .xlsx metadata sheet that should be formatted as follows:
+>>>>
+READ ME																									
+sampleID should be the concatenation of ab, cell_line, treatment, experiment and replicate; and should be unique for each sample/replicate. Samples with the same sampleID will be merged (re-sequencing...).																									
+The condition should be shared between replicates, and will be used to call peaks on the merge data.																									
+The input column should specify the replicate-matched input sampleID.																									
+user	method	experiment	antibody	cell_line	treatment	replicate	condition	sampleID	barcode	i5	genome	input	layout	sequencer	bam_path
+<<<<
+custom extra columns are tolerated						
+
+Print command lines for all samples without submitting the jobs:
+check <- vl_CUTNRUN_processing(metadata = "/groups/stark/nemcko/Hcfc1_paper/Hcfc1_new/Rdata/metadata_CutNRun.xlsx",
+                               processed_metadata_output = "Rdata/CUTNRUN_metadata_processed.rds",
+                               overwrite = T,
+                               submit = F)
+
+Run the pipeline without overwriting existing files:
+vl_CUTNRUN_processing(metadata = "/groups/stark/nemcko/Hcfc1_paper/Hcfc1_new/Rdata/metadata_CutNRun.xlsx",
+                      processed_metadata_output = "Rdata/CUTNRUN_metadata_processed.rds",
+                      overwrite = F,
+                      submit = T)
+                      
+}
