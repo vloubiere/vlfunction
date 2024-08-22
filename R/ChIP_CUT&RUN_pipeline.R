@@ -11,6 +11,7 @@
 #' @param submit Should the command be submitted? default= G
 #' @param wdir The working directory to use. defaut= getwd().
 #' @param logs Path to save logs. Default= "db/logs/CUTNRUN/processing"
+#' @param time The time required for the SLURM scheduler. Default= '1-00:00:00'
 #'
 #' @return Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data. These commands can then be submitted using ?vl_bsub().
 #' @export
@@ -46,7 +47,8 @@ vl_CUTNRUN_processing <- function(metadata,
                                   overwrite= F,
                                   submit= F,
                                   wdir= getwd(),
-                                  logs= "db/logs/CUTNRUN/processing")
+                                  logs= "db/logs/CUTNRUN/processing",
+                                  time= '1-00:00:00')
 {
   # Import metadata and check format ----
   meta <- readxl::read_xlsx(metadata, skip = 4)
@@ -147,7 +149,7 @@ vl_CUTNRUN_processing <- function(metadata,
             "-x", x,
             inputFiles,
             "2>", alignment_stats, # Return alignment statistics
-            "| samtools sort -@", cores-1, # Sort
+            "| samtools sort -@", cores-1, "-T", paste0(scratch_folder, "/bam/sorted"), # Sort with temp files in scratch folder
             "- | samtools view -@", cores-1, "-b -q 30 -o", bam, # Filter
             "; samtools stats", bam, "-@", cores-1, "| grep ^SN>", mapq30_stats) # Add filtering statistics
     }
@@ -175,7 +177,7 @@ vl_CUTNRUN_processing <- function(metadata,
                 cores= cores, 
                 m = mem, 
                 name = "CUTNRUN", 
-                t = '1-00:00:00',
+                t = time,
                 o= normalizePath(logs),
                 e= normalizePath(logs))
       }, cmd] else
@@ -195,6 +197,7 @@ vl_CUTNRUN_processing <- function(metadata,
 #' @param submit Should the command be submitted? default= G
 #' @param wdir The working directory to use. defaut= getwd().
 #' @param logs Path to save logs. Default= "db/logs/CUTNRUN/peak_calling"
+#' @param time The time required for the SLURM scheduler. Default= '1-00:00:00'
 #'
 #' @return Command lines for peak calling.
 #' @export
@@ -219,7 +222,8 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
                                    overwrite= F,
                                    submit= F,
                                    wdir= getwd(),
-                                   logs= "db/logs/CUTNRUN/peak_calling")
+                                   logs= "db/logs/CUTNRUN/peak_calling",
+                                   time= '1-00:00:00')
 {
   # Import metadata and check format ----
   meta <- readRDS(processed_metadata)[!is.na(input)]
@@ -324,7 +328,7 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
                 cores= cores, 
                 m = mem, 
                 name = "CUTNRUN", 
-                t = '1-00:00:00',
+                t = time,
                 o= normalizePath(logs),
                 e= normalizePath(logs))
       }, cmd] else

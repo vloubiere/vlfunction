@@ -13,7 +13,8 @@ vl_CUTNRUN_processing(
   overwrite = F,
   submit = F,
   wdir = getwd(),
-  logs = "db/logs/CUTNRUN/processing"
+  logs = "db/logs/CUTNRUN/processing",
+  time = "1-00:00:00"
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ vl_CUTNRUN_processing(
 \item{wdir}{The working directory to use. defaut= getwd().}
 
 \item{logs}{Path to save logs. Default= "db/logs/CUTNRUN/processing"}
+
+\item{time}{The time required for the SLURM scheduler. Default= '1-00:00:00'}
 }
 \value{
 Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data. These commands can then be submitted using ?vl_bsub().

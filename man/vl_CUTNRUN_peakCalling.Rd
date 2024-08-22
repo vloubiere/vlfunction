@@ -13,7 +13,8 @@ vl_CUTNRUN_peakCalling(
   overwrite = F,
   submit = F,
   wdir = getwd(),
-  logs = "db/logs/CUTNRUN/peak_calling"
+  logs = "db/logs/CUTNRUN/peak_calling",
+  time = "1-00:00:00"
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ vl_CUTNRUN_peakCalling(
 \item{wdir}{The working directory to use. defaut= getwd().}
 
 \item{logs}{Path to save logs. Default= "db/logs/CUTNRUN/peak_calling"}
+
+\item{time}{The time required for the SLURM scheduler. Default= '1-00:00:00'}
 
 \item{extsise}{The extsize to be used, meaning that the building of the peak model will be skipped (--nomodel). To build the model, set extize= NA. Default= 300}
 }
