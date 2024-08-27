@@ -4,14 +4,14 @@
 \alias{vl_intersectBed}
 \title{Find closestBed regions}
 \usage{
-vl_intersectBed(a, b, ignore.strand = T, min.overlap = 1L, invert = F)
+vl_intersectBed(a, b, ignore.strand = TRUE, min.overlap = 1L, invert = F)
 }
 \arguments{
 \item{a}{Granges or data.table from which regions overlapping b have to be returned}
 
 \item{b}{Set of regions of interest}
 
-\item{ignore.strand}{Should strand be ignored? default= T}
+\item{ignore.strand}{Should strand be ignored? default= TRUE}
 
 \item{min.overlap}{A vector integer of length 1 or nrow(a) specifying the minimum overlap (bp) require to count overlaps. Default= 1L}
 

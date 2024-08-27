@@ -9,20 +9,20 @@ vl_resizeBed(
   center = "center",
   upstream = 500,
   downstream = 500,
-  ignore.strand = F,
+  ignore.strand = FALSE,
   genome
 )
 }
 \arguments{
 \item{bed}{Bed file to resize. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 
-\item{center}{From where should the region be centered before extension. Either "center", "start" or "end". Default= "center".}
+\item{center}{From where should the region be centered before extension. Either "center", "start", "end" or "region" (meaning the boundaries of the whole region will be extended). Default= "center".}
 
 \item{upstream}{Upstream extension. default= 500L}
 
 \item{downstream}{Downstream extension. default= 500L}
 
-\item{ignore.strand}{Should the strand be considered when defininng start or end centering? Default= F}
+\item{ignore.strand}{Should the strand be ignored when defining start or end centering? Default= FALSE}
 
 \item{genome}{BSgenome used to check limits of extended regions. Out of limit ranges will be resized accordingly}
 }

@@ -4,7 +4,7 @@
 \alias{vl_collapseBed}
 \title{Collapse ranges with a certain min dist}
 \usage{
-vl_collapseBed(bed, min.gap = 1, return.idx.only = F, ignore.strand = T)
+vl_collapseBed(bed, min.gap = 1, return.idx.only = F, ignore.strand = TRUE)
 }
 \arguments{
 \item{bed}{bed file to be collapsed. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames','start', 'end' columns. see ?vl_importBed()}
@@ -13,7 +13,7 @@ vl_collapseBed(bed, min.gap = 1, return.idx.only = F, ignore.strand = T)
 
 \item{return.idx.only}{If set to T, does not collapse regions but returns idx as an extra columns. default= F}
 
-\item{ignore.strand}{Should strand be ignored? default= T}
+\item{ignore.strand}{Should strand be ignored for collapsing? default= TRUE}
 }
 \value{
 Collapse bed data.table

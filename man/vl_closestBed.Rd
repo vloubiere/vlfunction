@@ -4,7 +4,7 @@
 \alias{vl_closestBed}
 \title{Find closestBed regions}
 \usage{
-vl_closestBed(a, b = NULL, n = 1, min.dist = 0)
+vl_closestBed(a, b = NULL, n = 1, min.dist = 0, same.strand = FALSE)
 }
 \arguments{
 \item{a}{Granges or data.table FOR which closest features have to be found.}
@@ -14,6 +14,8 @@ vl_closestBed(a, b = NULL, n = 1, min.dist = 0)
 \item{n}{Number of closest features to be reported. Default to 1}
 
 \item{min.dist}{Min distance for closest feature}
+
+\item{same.strand}{Should only the closest region on the same strand be returned? Default= FALSE}
 }
 \value{
 Return "a" coor and closest "b" coordinates and distance in respect to A (When a is on the - strand, “upstream” means b has a higher (start,stop).)
