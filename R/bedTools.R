@@ -174,32 +174,52 @@ vl_resizeBed <- function(bed,
   bed <- vl_importBed(bed)
   
   # Check strand column
-  if(ignore.strand | !"strand" %in% names(bed))
-  {
-    bed[, strand:= "*"]
-    message("ignore.strand was set to TRUE or strand column is missing -> strand was arbitrarily set to * and will be handled as + strand")
-  }
-  if(!ignore.strand && "*" %in% bed$strand)
-    message("regions with strand '*' will be handled as +!")
+  if(!ignore.strand && "strand" %in% names(bed) && "*" %in% bed$strand)
+    message("Regions with strand '*' will be handled as +!")
+  ignore.strand <- ignore.strand | (!"strand" %in% names(bed))
   
   # Resize
   if(center=="center")
   {
     bed[, start:= (start+end)/2]
-    bed[strand!="-", c("start", "end"):= .(start-upstream, start+downstream)] # Meaning + or *
-    bed[strand=="-", c("start", "end"):= .(start-downstream, start+upstream)]
+    if(ignore.strand)
+    {
+      bed[, c("start", "end"):= .(start-upstream, start+downstream)]
+    }else
+    {
+      bed[strand!="-", c("start", "end"):= .(start-upstream, start+downstream)] # Meaning + or *
+      bed[strand=="-", c("start", "end"):= .(start-downstream, start+upstream)]
+    }
   }else if(center=="start")
   {
-    bed[strand!="-", c("start", "end"):= .(start-upstream, start+downstream)] # Meaning + or *
-    bed[strand=="-", c("start", "end"):= .(end-downstream, end+upstream)]
+    if(ignore.strand)
+    {
+      bed[, c("start", "end"):= .(start-upstream, start+downstream)] # Meaning + or *
+    }else
+    {
+      bed[strand!="-", c("start", "end"):= .(start-upstream, start+downstream)] # Meaning + or *
+      bed[strand=="-", c("start", "end"):= .(end-downstream, end+upstream)]
+    }
   }else if(center=="end")
   {
-    bed[strand!="-", c("start", "end"):= .(end-upstream, end+downstream)] # Meaning + or *
-    bed[strand=="-", c("start", "end"):= .(start-downstream, start+upstream)]
+    if(ignore.strand)
+    {
+      bed[, c("start", "end"):= .(end-upstream, end+downstream)] # Meaning + or *
+    }else
+    {
+      bed[strand!="-", c("start", "end"):= .(end-upstream, end+downstream)] # Meaning + or *
+      bed[strand=="-", c("start", "end"):= .(start-downstream, start+upstream)]
+    }
   }else if(center=="region")
   {
-    bed[strand!="-", c("start", "end"):= .(start-upstream, end+downstream)] # Meaning + or *
-    bed[strand=="-", c("start", "end"):= .(start-downstream, end+upstream)]
+    if(ignore.strand)
+    {
+      bed[, c("start", "end"):= .(start-upstream, end+downstream)]
+    }else
+    {
+      bed[strand!="-", c("start", "end"):= .(start-upstream, end+downstream)] # Meaning + or *
+      bed[strand=="-", c("start", "end"):= .(start-downstream, end+upstream)]
+    }
   }else
     stop("center should be one of center, start, end or region")
   
