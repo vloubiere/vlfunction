@@ -53,6 +53,8 @@ vl_importBed.default <- function(bed)
     warning("seqnames, start or end column missing. Malformed bed file?")
   if(all(c("start", "end") %in% names(bed)) && any(bed[, start>end], na.rm = T))
     warning("bed file contains ranges with start>end -> malformed!")
+  if(!all(bed$strand %in% c("+", "-", "*")))
+    warning("bed file contains strand information other than +/-+* -> malformed?")
   
   return(bed)
 }
@@ -66,6 +68,7 @@ vl_importBed.default <- function(bed)
 #' @param b Granges or data.table FROM which closest features have to be found. If set to NULL (default), then a is matched to itself.
 #' @param n Number of closest features to be reported. Default to 1
 #' @param min.dist Min distance for closest feature 
+#' @param same.strand Should only the closest region on the same strand be returned? Default= FALSE
 #' @examples 
 #' a <- data.table(seqnames= "chr2R",
 #'                 start= c(10000, 20000, 30000),
@@ -92,7 +95,8 @@ vl_importBed.default <- function(bed)
 vl_closestBed <- function(a, 
                           b= NULL,
                           n= 1,
-                          min.dist= 0)
+                          min.dist= 0,
+                          same.strand= FALSE)
 {
   # Import
   a <- vl_importBed(a)
@@ -105,18 +109,25 @@ vl_closestBed <- function(a,
     message("'a' does not contain strand column -> arbitrarily considered as +")else if("*" %in% a$strand)
       message("'a' strand column contains * -> arbitrarily considered as +!")
 
-  # Closest
+  # Should strand be considered?
+  .cols <- if(same.strand && "strand" %in% names(a) & "strand" %in% names(b))
+    c("seqnames", "strand") else
+      "seqnames"
+  
+  # Comput closest
   idx <- b[a, {
     dist <- fcase(x.start>i.end, as.integer(x.start-i.end),
                   x.end<i.start, as.integer(i.start-x.end),
                   default= 0L)
     sel <- between(dist, min.dist, unique(sort(dist[dist>=min.dist]))[n])
-    .(.GRP, I= .I[sel], dist= dist[sel])
-  }, .EACHI, on= "seqnames"]
+    .(.GRP,
+      I= .I[sel],
+      dist= dist[sel])
+  }, .EACHI, on= .cols]
   # idx <- na.omit(idx)
   idx[I==0, c("I", "dist"):= .(NA, NA)]
   
-  # Return
+  # Merge a and b
   setnames(b, paste0(names(b), ".b"))
   res <- data.table(a[eval(get("GRP", idx))],
                     b[eval(get("I", idx))],
@@ -128,6 +139,7 @@ vl_closestBed <- function(a,
   }else
     res[start>end.b, dist:= -dist] # In the case were no strand is provided for a, all considered as +
   
+  # Return
   return(res)
 }
 
@@ -136,10 +148,10 @@ vl_closestBed <- function(a,
 #' Resize a bed file starting from specified origin
 #'
 #' @param bed Bed file to resize. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
-#' @param center From where should the region be centered before extension. Either "center", "start" or "end". Default= "center".
+#' @param center From where should the region be centered before extension. Either "center", "start", "end" or "region" (meaning the boundaries of the whole region will be extended). Default= "center".
 #' @param upstream Upstream extension. default= 500L
 #' @param downstream Downstream extension. default= 500L
-#' @param ignore.strand Should the strand be considered when defininng start or end centering? Default= F
+#' @param ignore.strand Should the strand be ignored when defining start or end centering? Default= FALSE
 #' @param genome BSgenome used to check limits of extended regions. Out of limit ranges will be resized accordingly
 #' @examples 
 #' bed <- data.table(seqnames= "chr2L",
@@ -155,53 +167,61 @@ vl_resizeBed <- function(bed,
                          center= "center",
                          upstream= 500,
                          downstream= 500, 
-                         ignore.strand= F,
+                         ignore.strand= FALSE,
                          genome)
 {
-  # Checks
-  if(!center %in% c("center", "start", "end"))
-    stop("center should be one of center, start or end")
+  # Import Bed 
   bed <- vl_importBed(bed)
-  if(!ignore.strand)
-  {
-    if(!"strand" %in% names(bed))
-      message("'bed' does not contain strand column -> arbitrarily considered as +")else if("*" %in% bed$strand)
-        message("'bed' strand column contains * -> arbitrarily considered as +!")
-  }
   
-  # define start
-  if(center=="center") # Center does not depend on the strand
+  # Check strand column
+  addStrand <- !"strand" %in% names(bed)
+  if(addStrand)
   {
-    bed[, start:= round(rowMeans(.SD)), .SDcols= c("start", "end")]
-  }else if(!ignore.strand && "strand" %in% names(bed)) # Meaning strand should and can be considered
+    bed[, strand:= "+"]
+    if(!ignore.strand)
+      message("'bed' does not contain strand column -> arbitrarily set to +")
+  }
+  if(!ignore.strand && "*" %in% bed$strand)
+    message("'bed' strand column contains * -> arbitrarily considered as +!")
+  
+  # Resize
+  if(center=="center")
   {
-    if(center=="start")
-      bed[strand=="-", start:= end]else if(center=="end")
-        bed[strand!="-", start:= end]
-  }else if(center=="end") # Note that if center=="start" and strand is not considered, start kept unchanged
-    bed[, start:= end]
-
-  # Ext
-  if(!ignore.strand && "strand" %in% names(bed))
+    bed[, start:= (start+end)/2]
+    bed[strand!="-", c("start", "end"):= .(start-upstream, start+downstream)] # Meaning + or *
+    bed[strand=="-", c("start", "end"):= .(start-downstream, start+upstream)]
+  }else if(center=="start")
   {
-    bed[, c("start", "end"):= .(start-ifelse(strand=="-", downstream, upstream),
-                                start+ifelse(strand=="-", upstream, downstream))]
+    bed[strand!="-", c("start", "end"):= .(start-upstream, start+downstream)] # Meaning + or *
+    bed[strand=="-", c("start", "end"):= .(end-downstream, end+upstream)]
+  }else if(center=="end")
+  {
+    bed[strand!="-", c("start", "end"):= .(end-upstream, end+downstream)] # Meaning + or *
+    bed[strand=="-", c("start", "end"):= .(start-downstream, start+upstream)]
+  }else if(center=="region")
+  {
+    bed[strand!="-", c("start", "end"):= .(start-upstream, end+downstream)] # Meaning + or *
+    bed[strand=="-", c("start", "end"):= .(start-downstream, end+upstream)]
   }else
-    bed[, c("start", "end"):= .(start-upstream, start+downstream)]
-
+    stop("center should be one of center, start, end or region")
+  
   # If genome is specified, resize accordingly
   if(!missing(genome))
   {
     chrSize <- GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))
     chrSize <- GenomicRanges::GRanges(chrSize)
     chrSize <- data.table::as.data.table(chrSize)
+    
     bed[start<1, start:= 1]
     bed[end<1, end:= 1]
+    
     bed[chrSize, start:= ifelse(start>i.end, i.end, start), on= "seqnames"]
     bed[chrSize, end:= ifelse(end>i.end, i.end, end), on= "seqnames"]
   }
   
   # return
+  if(addStrand)
+    bed$strand <- NULL
   return(bed)
 }
 
@@ -212,7 +232,7 @@ vl_resizeBed <- function(bed,
 #' @param bed bed file to be collapsed. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames','start', 'end' columns. see ?vl_importBed()
 #' @param min.gap min gap ditance for merging. default is 1 (that is, touching coordinates)
 #' @param return.idx.only If set to T, does not collapse regions but returns idx as an extra columns. default= F
-#' @param ignore.strand Should strand be ignored? default= T
+#' @param ignore.strand Should strand be ignored for collapsing? default= TRUE
 #' @examples 
 #' bed <- data.table(seqnames= "chr3R",
 #'                   start= c(10e3, 11e3, 12e3, 20e3, 21e3),
@@ -233,7 +253,7 @@ vl_resizeBed <- function(bed,
 vl_collapseBed <- function(bed,
                            min.gap= 1,
                            return.idx.only= F,
-                           ignore.strand= T)
+                           ignore.strand= TRUE)
 {
   # Hard copy of bed file
   DT <- vl_importBed(bed)
@@ -269,7 +289,7 @@ vl_collapseBed <- function(bed,
 #'
 #' @param a Granges or data.table from which regions overlapping b have to be returned
 #' @param b Set of regions of interest
-#' @param ignore.strand Should strand be ignored? default= T
+#' @param ignore.strand Should strand be ignored? default= TRUE
 #' @param min.overlap A vector integer of length 1 or nrow(a) specifying the minimum overlap (bp) require to count overlaps. Default= 1L
 #' @param invert If set to true, returns non-overlapping features. Default= F
 #' @examples 
@@ -285,7 +305,7 @@ vl_collapseBed <- function(bed,
 #' @export
 vl_intersectBed <- function(a, 
                             b,
-                            ignore.strand= T,
+                            ignore.strand= TRUE,
                             min.overlap= 1L,
                             invert= F)
 {
@@ -327,7 +347,7 @@ vl_intersectBed <- function(a,
 #' For each bin, computes the number of overlapping reads from a bed file
 #' @param a Ranges for which overlaps with b should be counted. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()
 #' @param b Ranges from which overlaps should be computed.
-#' @param ignore.strand Should strand be ignored? default= T, meaning all overlapping elements in 'b'  will be considered
+#' @param ignore.strand Should strand be ignored? default= TRUE, meaning all overlapping elements in 'b'  will be considered
 #' @param min.overlap A vector integer of length 1 or nrow(a) specifying the minimum overlap (bp) require to count overlaps. Default= 1L
 #' @examples
 #' a <- data.table(seqnames= "chr2R",
@@ -345,7 +365,7 @@ vl_intersectBed <- function(a,
 #' @export
 vl_covBed <- function(a,
                       b,
-                      ignore.strand= T,
+                      ignore.strand= TRUE,
                       min.overlap= 1L)
 {
   # Import
@@ -373,4 +393,91 @@ vl_covBed <- function(a,
   inter[, minEnd:= apply(.SD, 1, min), .SDcols= c("end", "i.end")]
   # Return
   return(inter[, sum(minEnd-maxStart+1>=minOv, na.rm= T), keyby= idx]$V1)
+}
+
+#' Bin Genomic Regions
+#'
+#' This function bins genomic regions from a BED file based on either a specified number 
+#' of bins or a specified bin width and step size. It supports both fixed-width bins 
+#' and sliding window approaches and allows for handling overhanging bins based on 
+#' a specified fraction of the bin width.
+#'
+#' @param bed A data.table containing genomic ranges with columns: seqnames, start, end.
+#' @param nbins An integer specifying the number of bins to create for each genomic range. If specified, this takes precedence over bins.width.
+#' @param bins.width An intger specifying the width of each bin. This parameter is used if nbins is not specified.
+#' @param steps.width An integer specifying the step size between the start positions of consecutive bins. Default= bins.width.
+#'
+#' @return A data.table containing the binned genomic regions, with an extra column (binIDX) containing bin indexes.
+#'
+#' @details The function uses either the nbins parameter to divide each genomic region into a fixed number of bins, or the bins.width and steps.width parameters to create bins of a specific width with a defined step size between them.
+#'
+#' @examples
+#' # Example BED data
+#' library(data.table)
+#' bed <- data.table(seqnames= "chr2L",
+#' start= 101,
+#' end= c(200, 210))
+#'
+#' # Bin using a specified number of bins
+#' vl_binBed(bed, nbins = 5)
+#'
+#' # Bin using a specified bin width and step size
+#' vl_binBed(bed, bins.width = 50, steps.width = 25)
+#'
+#' @export
+vl_binBed <- function(bed,
+                      nbins = NULL,
+                      bins.width = NULL,
+                      steps.width = bins.width)
+{
+  # Import bed
+  bed <- vl_importBed(bed)
+  setnames(bed, c("start", "end"), c("bs", "be"))
+  
+  # Checks 
+  if(is.null(nbins) & is.null(bins.width))
+    stop("Either 'nbins' or 'bins.width' must be specified.")
+  if(!is.null(bins.width) && round(bins.width)!=bins.width)
+    stop("bins.width must be a round number or an integer")
+  if(!is.null(steps.width) && round(steps.width)!=steps.width)
+    stop("steps.width must be a round number or an integer")
+  
+  # Determine binning strategy
+  bins <- if(!is.null(nbins))
+  {
+    bed[, {
+      # Binning
+      .c <- round(seq(bs, be, length.out= nbins+1))
+      start <- .c[-length(.c)]
+      end <- .c[-1]-1L
+      # Correct end
+      end[length(end)] <- be
+      .(start, end)
+    }, (bed)]
+  }else if(!is.null(bins.width))
+  {
+    bed[, {
+      # Binning
+      .c <- data.table(start= seq(bs, be, steps.width))
+      .c[, end:= start+bins.width-1L]
+      # Correct end
+      .c[end>be, end:= be]
+    }, (bed)]
+  }
+  
+  # Handle cases where end<start
+  bins[end<start, end:= start]
+  
+  # Reorder columns
+  cols <- intersect(c("seqnames", "start", "end", "strand"),
+                    names(bins))
+  setcolorder(bins, cols)
+  
+  # Add binID and clean
+  binIDX <- data.table::last(make.unique(c(names(bed), "binIDX")))
+  bins[, (binIDX):= seq(.N), .(seqnames, bs, be)]
+  bins$bs <- bins$be <- NULL
+  
+  # Return
+  return(bins)
 }
