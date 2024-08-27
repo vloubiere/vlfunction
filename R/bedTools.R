@@ -174,15 +174,13 @@ vl_resizeBed <- function(bed,
   bed <- vl_importBed(bed)
   
   # Check strand column
-  addStrand <- !"strand" %in% names(bed)
-  if(addStrand)
+  if(ignore.strand | !"strand" %in% names(bed))
   {
-    bed[, strand:= "+"]
-    if(!ignore.strand)
-      message("'bed' does not contain strand column -> arbitrarily set to +")
+    bed[, strand:= "*"]
+    message("ignore.strand was set to TRUE or strand column is missing -> strand was arbitrarily set to * and will be handled as + strand")
   }
   if(!ignore.strand && "*" %in% bed$strand)
-    message("'bed' strand column contains * -> arbitrarily considered as +!")
+    message("regions with strand '*' will be handled as +!")
   
   # Resize
   if(center=="center")
