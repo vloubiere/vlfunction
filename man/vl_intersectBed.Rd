@@ -7,15 +7,15 @@
 vl_intersectBed(a, b, ignore.strand = TRUE, min.overlap = 1L, invert = F)
 }
 \arguments{
-\item{a}{Granges or data.table from which regions overlapping b have to be returned}
+\item{a}{Granges or data.table from which regions overlapping b have to be returned.}
 
-\item{b}{Set of regions of interest}
+\item{b}{Set of regions of interest.}
 
-\item{ignore.strand}{Should strand be ignored? default= TRUE}
+\item{ignore.strand}{Should strand be ignored? default= TRUE.}
 
-\item{min.overlap}{A vector integer of length 1 or nrow(a) specifying the minimum overlap (bp) require to count overlaps. Default= 1L}
+\item{min.overlap}{A vector integer of length 1 or nrow(a) specifying the minimum overlap (bp) require to count overlaps. Default= 1L.}
 
-\item{invert}{If set to true, returns non-overlapping features. Default= F}
+\item{invert}{If set to true, returns non-overlapping features. Default= FALSE.}
 }
 \value{
 Return 'a' ranges that overlap with any range in 'b'

@@ -11,7 +11,7 @@ vl_collapseBed(bed, min.gap = 1, return.idx.only = F, ignore.strand = TRUE)
 
 \item{min.gap}{min gap ditance for merging. default is 1 (that is, touching coordinates)}
 
-\item{return.idx.only}{If set to T, does not collapse regions but returns idx as an extra columns. default= F}
+\item{return.idx.only}{If set to T, does not collapse regions but returns idx as an extra columns. Default= TRUE}
 
 \item{ignore.strand}{Should strand be ignored for collapsing? default= TRUE}
 }

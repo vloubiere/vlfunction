@@ -6,35 +6,46 @@
 \usage{
 vl_bw_coverage_bins(
   bed,
-  set.IDs,
+  set.IDs = 1L,
   tracks,
-  upstream,
-  downstream,
-  ignore.strand,
-  genome,
-  nbins,
-  names
+  names = gsub(".bw$", "", basename(tracks)),
+  anchor = "center",
+  upstream = 5000L,
+  downstream = 5000L,
+  nbins = if (anchor == "center") 101L else if (anchor == "region") c(20L, 61L, 20L),
+  ignore.strand = FALSE,
+  genome
 )
 }
 \arguments{
 \item{bed}{Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 
-\item{set.IDs}{Set IDs specifying the groups as subsets of the bed file}
+\item{set.IDs}{Set IDs specifying the groups as subsets of the bed file. Default= 1L (no subsets).}
 
 \item{tracks}{Vector of bw files to plot. Use full paths to avoid pbs.}
 
-\item{upstream}{Upstream  extension of bed regions (centered on center)}
+\item{names}{Factors use for ordering and naming of plots. Defaults to the basenames of .bw files (as factors).}
 
-\item{downstream}{Downstream  extension of bed regions (centered on center)}
+\item{anchor}{Anchor point to use. Must be one of 'center' or 'region' (meaning that the whole region will be used as anchor point, and extended by upstream/downstream values). Default= 'center'.}
 
-\item{ignore.strand}{Should the strand be ignored?}
+\item{upstream}{Upstream  extension of bed regions (centered on center). Default= 5000L.}
+
+\item{downstream}{Downstream  extension of bed regions (centered on center). Default= 5000L.}
+
+\item{nbins}{A single integer value (anchor= 'center') or a vector of 3 integers (anchor= 'region') specifying the number of bins to be used. When anchor is set to 'regions', the 3 values will correspond to the number of bins before the region, the number of bins within the region and the number of bins after. Default= 101L (anchor= 'center') or c(20L, 61L, 21L) (anchor= 'region').}
+
+\item{ignore.strand}{Should the strand be ignored? Default= FALSE.}
 
 \item{genome}{BSgenome used to check limits of extended regions. Out of limit ranges will be resized accordingly}
-
-\item{nbins}{Number of bins spanning the extended regions. Default= 500}
-
-\item{names}{Track names to plot. If specified, must be the same length as bw vector. By default, bw basenames will be used.}
 }
 \description{
 Compared to vl_bw_coverage, this functions bins bed file before quantifying the signal. Useful to make heatmaps/average tracks
+}
+\examples{
+bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
+sets <- c(rep("suhw", 100), rep("STARR", 1000))
+tracks <- c("../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", "../gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
+vl_bw_coverage_bins(bed, set.IDs = sets, tracks= tracks)[]
+vl_bw_coverage_bins(bed, set.IDs = sets, tracks= tracks, anchor= "region")[]
+
 }

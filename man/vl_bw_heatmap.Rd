@@ -9,8 +9,8 @@ vl_bw_heatmap(
   bed,
   set.IDs = 1,
   tracks,
-  upstream = 5000,
-  downstream = 5000,
+  upstream = 5000L,
+  downstream = 5000L,
   ignore.strand = T,
   nbins = 101L,
   space = 20L,
@@ -32,35 +32,35 @@ vl_bw_heatmap(
 \arguments{
 \item{bed}{Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 
-\item{set.IDs}{Set IDs specifying the groups as subsets of the bed file}
+\item{set.IDs}{Set IDs specifying the groups as subsets of the bed file. Default= 1L (no subgroups).}
 
-\item{tracks}{Vector of bw files to plot. Use full paths to avoid pbs.}
+\item{tracks}{Vector of bw files to plot. Use full paths to avoid issues.}
 
-\item{upstream}{Upstream  extension of bed regions (centered on center)}
+\item{upstream}{Upstream  extension of bed regions (centered on center). Default= 5000L.}
 
-\item{downstream}{Downstream  extension of bed regions (centered on center)}
+\item{downstream}{Downstream  extension of bed regions (centered on center). Default= 5000L.}
 
-\item{ignore.strand}{Should the strande be ignored? Default= T}
+\item{ignore.strand}{Should the strand information be ignored? Default= FALSE.}
 
-\item{nbins}{Number of bins spanning the extended regions. Default= 100}
+\item{nbins}{Number of bins spanning the extended regions. Default= 101L.}
 
-\item{names}{Track names to plot. If specified, must be the same length as bw vector. By default, bw basenames will be used.}
+\item{names}{Factors used for ordering and naming of plots. By default, .bw basenames will be used (as factors).}
 
-\item{plot}{Should the average track be ploted? default= T}
+\item{plot}{Should the average track be ploted? Default= TRUE.}
 
-\item{col}{Vector of colors to be used for heatmap}
+\item{center.label}{Label center heatmap.}
 
-\item{order.col}{Index of the column(s) to be used for ordering. If set to FALSE, no ordering besides Set.IDs. Default= 1L}
+\item{col}{Vector of colors to be used for heatmap.}
+
+\item{order.col}{Index of the column(s) to be used for ordering. If set to FALSE, no ordering besides set.IDs. Default= 1L.}
 
 \item{max}{Allows to manually specify max values. Otherwise, max is computed using the fun.max function for each track.}
 
-\item{fun.order}{Function used to aggregated per region and order heatmap. default= function(x) mean(x, na.rm= T)}
+\item{fun.order}{Function used to aggregated per region and order heatmap. Default= function(x) mean(x, na.rm= T)}
 
-\item{fun.max}{Function to be used for clipping. default= function(x) quantile(x, 0.995, na.rm= T). Using max -> no clipping}
+\item{fun.max}{Function to be used for clipping. Default= function(x) quantile(x, 0.995, na.rm= T). To avoid clipping, use: function(x) max(x, na.rm= T)}
 
 \item{cex.labels}{cex paramter for labels}
-
-\item{venter_label}{Label center heatmap}
 }
 \description{
 Plots average tracks for a set bw files around (potentially) several sets of peaks
@@ -72,7 +72,7 @@ Plots average tracks for a set bw files around (potentially) several sets of pea
 }}
 \examples{
 bed <- list(suhw= vl_SUHW_top_peaks,
-             STARR= vl_STARR_DSCP_top_peaks)
+            STARR= vl_STARR_DSCP_top_peaks)
 bed <- rbindlist(bed,
                  idcol = T,
                  fill = T)

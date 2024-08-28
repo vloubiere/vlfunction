@@ -7,8 +7,8 @@
 vl_resizeBed(
   bed,
   center = "center",
-  upstream = 500,
-  downstream = 500,
+  upstream = 500L,
+  downstream = 500L,
   ignore.strand = FALSE,
   genome
 )

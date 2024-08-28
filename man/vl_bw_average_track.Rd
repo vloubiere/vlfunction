@@ -7,35 +7,39 @@
 \usage{
 vl_bw_average_track(
   bed,
-  set.IDs,
+  set.IDs = 1L,
   tracks,
-  names,
-  upstream = 5000,
-  downstream = 5000,
-  ignore.strand = T,
+  names = gsub(".bw$", "", basename(tracks)),
+  anchor = "center",
+  upstream = 5000L,
+  downstream = 5000L,
+  nbins = if (anchor == "center") 101L else if (anchor == "region") c(20L, 61L, 20L),
+  ignore.strand = FALSE,
   genome,
-  nbins = 101L,
-  center.label = "Center",
   plot = T,
-  xlab = "genomic distance",
-  ylab = "Enrichment",
-  ylim = NULL,
   col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A", "#4F6A6F", "#D26429",
     "#C57DA5", "#999999"),
-  legend = T,
+  col.adj = 0.5,
+  xlab = "Genomic distance",
+  ylab = "Enrichment",
+  ylim = NULL,
+  xlab.at = if (anchor == "center") c(min(obj$bin.x), 0, max(obj$bin.x)) else if (anchor
+    == "region") c(1, nbins[1] + 1, sum(nbins)/2, sum(nbins[1:2] + 1), sum(nbins)),
+  xlab.labs = if (anchor == "center") c(xlab.at[1], "Center", xlab.at[3]) else if (anchor
+    == "region") c(-upstream, "Start", "Region", "End", downstream),
+  legend = TRUE,
   legend.pos = "topleft",
-  legend.cex = 1,
-  col.adj = 0.5
+  legend.cex = 1
 )
 
 \method{plot}{vl_bw_average_track}(
   obj,
-  xlab = "genomic distance",
-  xlab.at = c(min(obj$bin.x), 0, max(obj$bin.x)),
-  center.label = "Center",
+  xlab = "Genomic distance",
   ylab = "Enrichment",
   ylim = NULL,
-  legend = T,
+  xlab.at = c(min(obj$bin.x), 0, max(obj$bin.x)),
+  xlab.labs = c(xlab.at[1], "Center", xlab.at[3]),
+  legend = TRUE,
   legend.pos = "topleft",
   legend.cex = 1,
   col.adj = 0.5
@@ -48,42 +52,48 @@ vl_bw_average_track(
 
 \item{tracks}{Vector of bw files to plot. Use full paths to avoid pbs.}
 
-\item{names}{Track names to plot, further used for ordering. By default, bw basenames will be used (as factors).}
+\item{names}{Factors used for ordering and naming of plots. By default, .bw basenames will be used (as factors).}
 
-\item{upstream}{Upstream  extension of bed regions (centered on center)}
+\item{anchor}{Anchor point to use. Must be one of 'center' or 'region' (meaning that the whole region will be used as anchor point, and extended by upstream/downstream values). Default= 'center'.}
 
-\item{downstream}{Downstream  extension of bed regions (centered on center)}
+\item{upstream}{Upstream  extension of bed regions (centered on center). Default= 5000L.}
 
-\item{ignore.strand}{Should the strand be ignored? Default= T}
+\item{downstream}{Downstream  extension of bed regions (centered on center). Default= 5000L.}
 
-\item{genome}{BSgenome used to check limits of extended regions. Out of limit ranges will be resized accordingly}
+\item{nbins}{A single integer value (anchor= 'center') or a vector of 3 integers (anchor= 'region') specifying the number of bins to be used. When anchor is set to 'regions', the 3 values will correspond to the number of bins upstream of the region, the number of bins within the region and the number of downstream bins. Default= 101L (anchor= 'center') or c(20L, 61L, 21L) (anchor= 'region').}
 
-\item{nbins}{Number of bins spanning the extended regions. Default= 101L}
+\item{ignore.strand}{Should the strand be ignored? Default= FALSE.}
 
-\item{plot}{Should the average track be ploted? default= T}
+\item{genome}{BSgenome used to check limits of extended regions. Out of limit ranges will be resized accordingly.}
 
-\item{xlab}{X label. default= "genomic distance"}
+\item{plot}{Should the average track be ploted? Default= TRUE.}
 
-\item{ylab}{Y labels. default= "Enrichment"}
+\item{col}{Color to be used for plotting (dataset is ordered by 1/ factorized names and 2/ set.IDs before assigning colors).}
 
-\item{ylim}{ylim for plotting. default= range(data)}
+\item{col.adj}{Opacity of polygons. default= 0.5.}
 
-\item{col}{Color to be used for plotting. Dataset is ordered using keyby= .(names, set.IDs) before assigning colors}
+\item{xlab}{X label. Default= "Genomic distance".}
 
-\item{legend}{Should the legend be plotted? default to T}
+\item{ylab}{Y labels. Default= "Enrichment".}
 
-\item{legend.pos}{Legend position. Default to "topleft"}
+\item{ylim}{ylim for plotting. Default= range(data).}
 
-\item{legend.cex}{Legend cex. defaults to 1}
+\item{xlab.at}{Position of the x labels. Default= c(-upstream, 0, downstream) when anchor= 'center' or c(1, nbins[1]+1, sum(nbins)/2, sum(nbins[1:2]+1), sum(nbins)) when anchor= 'region'.}
 
-\item{col.adj}{Opacity of polygons. default= 0.5}
+\item{xlab.labs}{Label(s) to write on the x axis. Default= c(-upstream, "Center, downstream) when anchor= 'center' or c(-upstream, "Start", "Region", "End", downstream) when anchor= "region".}
+
+\item{legend}{Should the legend be plotted? default to TRUE.}
+
+\item{legend.pos}{Legend position. Default to "topleft".}
+
+\item{legend.cex}{Legend cex. Defaults= 1.}
 }
 \description{
 Plots average tracks for a set bw files around (potentially) several sets of peaks
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{plot(vl_bw_average_track)}: Method to plot average tracks
+\item \code{plot(vl_bw_average_track)}: Method to plot average tracks.
 
 }}
 \examples{
@@ -91,4 +101,5 @@ bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
 sets <- c(rep("suhw", 100), rep("STARR", 1000))
 tracks <- c("../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", "../gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
 vl_bw_average_track(bed, tracks= tracks, plot= T, upstream = 1000, downstream = 1000, set.IDs = sets)
+vl_bw_average_track(bed, tracks= tracks, plot= T, upstream = 1000, downstream = 1000, set.IDs = sets, anchor= "region")
 }

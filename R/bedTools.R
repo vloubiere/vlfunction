@@ -165,8 +165,8 @@ vl_closestBed <- function(a,
 #' @export
 vl_resizeBed <- function(bed, 
                          center= "center",
-                         upstream= 500,
-                         downstream= 500, 
+                         upstream= 500L,
+                         downstream= 500L, 
                          ignore.strand= FALSE,
                          genome)
 {
@@ -181,7 +181,7 @@ vl_resizeBed <- function(bed,
   # Resize
   if(center=="center")
   {
-    bed[, start:= (start+end)/2]
+    bed[, start:= round((start+end)/2)] # Start moved to center
     if(ignore.strand)
     {
       bed[, c("start", "end"):= .(start-upstream, start+downstream)]
@@ -238,8 +238,6 @@ vl_resizeBed <- function(bed,
   }
   
   # return
-  if(addStrand)
-    bed$strand <- NULL
   return(bed)
 }
 
@@ -249,7 +247,7 @@ vl_resizeBed <- function(bed,
 #'
 #' @param bed bed file to be collapsed. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames','start', 'end' columns. see ?vl_importBed()
 #' @param min.gap min gap ditance for merging. default is 1 (that is, touching coordinates)
-#' @param return.idx.only If set to T, does not collapse regions but returns idx as an extra columns. default= F
+#' @param return.idx.only If set to T, does not collapse regions but returns idx as an extra columns. Default= TRUE
 #' @param ignore.strand Should strand be ignored for collapsing? default= TRUE
 #' @examples 
 #' bed <- data.table(seqnames= "chr3R",
@@ -305,11 +303,11 @@ vl_collapseBed <- function(bed,
 #'
 #' Return regions "a" overlapping with regions "b"
 #'
-#' @param a Granges or data.table from which regions overlapping b have to be returned
-#' @param b Set of regions of interest
-#' @param ignore.strand Should strand be ignored? default= TRUE
-#' @param min.overlap A vector integer of length 1 or nrow(a) specifying the minimum overlap (bp) require to count overlaps. Default= 1L
-#' @param invert If set to true, returns non-overlapping features. Default= F
+#' @param a Granges or data.table from which regions overlapping b have to be returned.
+#' @param b Set of regions of interest.
+#' @param ignore.strand Should strand be ignored? default= TRUE.
+#' @param min.overlap A vector integer of length 1 or nrow(a) specifying the minimum overlap (bp) require to count overlaps. Default= 1L.
+#' @param invert If set to true, returns non-overlapping features. Default= FALSE.
 #' @examples 
 #' a <- data.table(seqnames= "chr2L",
 #'                 start= c(1000,2000),
@@ -365,8 +363,8 @@ vl_intersectBed <- function(a,
 #' For each bin, computes the number of overlapping reads from a bed file
 #' @param a Ranges for which overlaps with b should be counted. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()
 #' @param b Ranges from which overlaps should be computed.
-#' @param ignore.strand Should strand be ignored? default= TRUE, meaning all overlapping elements in 'b'  will be considered
-#' @param min.overlap A vector integer of length 1 or nrow(a) specifying the minimum overlap (bp) require to count overlaps. Default= 1L
+#' @param ignore.strand Should strand be ignored? default= TRUE, meaning all overlapping elements in 'b'  will be considered.
+#' @param min.overlap A vector integer of length 1 or nrow(a) specifying the minimum overlap (bp) require to count overlaps. Default= 1L.
 #' @examples
 #' a <- data.table(seqnames= "chr2R",
 #'                 start= 10000,
@@ -453,8 +451,6 @@ vl_binBed <- function(bed,
   setnames(bed, c("start", "end"), c("bs", "be"))
   
   # Checks 
-  if(is.null(nbins) & is.null(bins.width))
-    stop("Either 'nbins' or 'bins.width' must be specified.")
   if(!is.null(bins.width) && round(bins.width)!=bins.width)
     stop("bins.width must be a round number or an integer")
   if(!is.null(steps.width) && round(steps.width)!=steps.width)
@@ -481,7 +477,8 @@ vl_binBed <- function(bed,
       # Correct end
       .c[end>be, end:= be]
     }, (bed)]
-  }
+  }else
+    stop("Either 'nbins' or 'bins.width' must be specified.")
   
   # Handle cases where end<start
   bins[end<start, end:= start]

@@ -11,9 +11,9 @@ vl_covBed(a, b, ignore.strand = TRUE, min.overlap = 1L)
 
 \item{b}{Ranges from which overlaps should be computed.}
 
-\item{ignore.strand}{Should strand be ignored? default= TRUE, meaning all overlapping elements in 'b'  will be considered}
+\item{ignore.strand}{Should strand be ignored? default= TRUE, meaning all overlapping elements in 'b'  will be considered.}
 
-\item{min.overlap}{A vector integer of length 1 or nrow(a) specifying the minimum overlap (bp) require to count overlaps. Default= 1L}
+\item{min.overlap}{A vector integer of length 1 or nrow(a) specifying the minimum overlap (bp) require to count overlaps. Default= 1L.}
 }
 \value{
 For each range in 'a', reports the number of overlapping features in 'b'
