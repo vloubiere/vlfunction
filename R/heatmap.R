@@ -68,8 +68,9 @@
 #'                   main= "test")
 #'
 #' # Play with plotting parameters
+#' plot(res) # Same parameters as the plot from the original function
 #' plot(res,
-#'      col= c("blue", "yellow"),
+#'      col= c("black", "blue", "yellow"),
 #'      display.numbers= T,
 #'      tilt.colnames= T,
 #'      col.clusters.colors= rainbow(9))
@@ -248,34 +249,35 @@ vl_heatmap.matrix <- function(x,
 
 #' @export
 plot.vl_heatmap <- function(obj,
-                            breaks= seq(min(obj$x, na.rm= T), max(obj$x, na.rm= TRUE), length.out= length(col)),
-                            col= c("cornflowerblue", "white", "red"),
-                            na.col= "lightgrey",
-                            useRaster= TRUE,
-                            grid= FALSE,
-                            main= NA,
-                            show.rownames= TRUE,
-                            show.colnames= TRUE,
-                            tilt.colnames= FALSE,
-                            show.row.dendrogram= TRUE,
-                            show.row.clusters= length(unique(obj$rows$cl))>1,
-                            row.clusters.pos= "right",
-                            row.clusters.colors= grDevices::gray.colors(100),
-                            row.cluster.line.color= "black",
-                            show.col.dendrogram= TRUE,
-                            show.col.clusters= length(unique(obj$cols$cl))>1,
-                            col.clusters.colors= grDevices::gray.colors(100),
-                            show.legend= TRUE,
-                            legend.title= NA,
-                            legend.cex= 1,
-                            display.numbers= FALSE,
-                            display.numbers.matrix= obj$x,
-                            display.numbers.cex= 1,
-                            display.numbers.FUN= function(x) round(x, 2), 
-                            box.lwd= .25)
+                            breaks= NULL,
+                            col= NULL,
+                            na.col= NULL,
+                            useRaster= NULL,
+                            grid= NULL,
+                            main= NULL,
+                            show.rownames= NULL,
+                            show.colnames= NULL,
+                            tilt.colnames= NULL,
+                            show.row.dendrogram= NULL,
+                            show.row.clusters= NULL,
+                            row.clusters.pos= NULL,
+                            row.clusters.colors= NULL,
+                            row.cluster.line.color= NULL,
+                            show.col.dendrogram= NULL,
+                            show.col.clusters= NULL,
+                            col.clusters.colors= NULL,
+                            show.legend= NULL,
+                            legend.title= NULL,
+                            legend.cex= NULL,
+                            display.numbers= NULL,
+                            display.numbers.matrix= NULL,
+                            display.numbers.cex= NULL,
+                            display.numbers.FUN= NULL, 
+                            box.lwd= NULL)
 {
   # Retrieve environment and update plotting variables----
   args <- intersect(ls(), names(obj))
+  args <- args[sapply(args, function(x) !is.null(get(x)))]
   for(arg in args)
   {
     if(!identical(get(arg), obj[[arg]]))

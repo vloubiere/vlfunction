@@ -215,7 +215,7 @@ vl_bw_coverage_bins <- function(bed,
 #' @param ignore.strand Should the strand be ignored? Default= FALSE.
 #' @param genome BSgenome used to check limits of extended regions. Out of limit ranges will be resized accordingly.
 #' @param plot Should the average track be ploted? Default= TRUE.
-#' @param ylim ylim for plotting. Default= range(data).
+#' @param ylim ylim for plotting. Default= NULL, meaning range(data) will be used.
 #' @param xlab X label. Default= "Genomic distance".
 #' @param ylab Y labels. Default= "Enrichment".
 #' @param col Color to be used for plotting. Note: dataset is first ordered by 1/ names and 2/ set.IDs before assigning colors.
@@ -233,12 +233,15 @@ vl_bw_coverage_bins <- function(bed,
 #' sets <- c(rep("suhw", 100), rep("STARR", 1000))
 #' tracks <- c("/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw",
 #' "/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
-#' vl_bw_average_track(bed, tracks= tracks[1], upstream = 1000, downstream = 1000)
-#' vl_bw_average_track(bed, tracks= tracks, upstream = 1000, downstream = 1000)
+#' 
+#' par(mfrow= c(2,2))
 #' vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, upstream = 1000, downstream = 1000)
-#' vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, upstream = 1000, downstream = 1000, anchor= "region")
-#' pl <- vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, plot= F, upstream = 1000, downstream = 1000, anchor= "region")
+#' pl <- vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, upstream = 1000, downstream = 1000, anchor= "region")
+#' 
+#' # Play with plotting parameters
+#' plot(pl) # Same parameters as the plot from the original function
 #' plot(pl, col= c("blue", "red"), ylim= c(0, 150), xlab.labs= c(-1000, "TSS", "Gene", "TTS", 1000))
+#' 
 #' @export
 vl_bw_average_track <- function(bed,
                                 set.IDs= 1L,
@@ -251,7 +254,7 @@ vl_bw_average_track <- function(bed,
                                 ignore.strand= FALSE,
                                 genome,
                                 plot= T,
-                                ylim,
+                                ylim= NULL,
                                 xlab= "Genomic distance",
                                 ylab= "Enrichment",
                                 col= c("#E69F00","#68B1CB","#15A390","#96C954","#77AB7A","#4F6A6F","#D26429","#C57DA5","#999999"),
@@ -322,22 +325,23 @@ vl_bw_average_track <- function(bed,
 #' @describeIn vl_bw_average_track Method to plot average tracks.
 #' @export
 plot.vl_bw_average_track <- function(obj,
-                                     ylim,
-                                     xlab= "Genomic distance",
-                                     ylab= "Enrichment",
-                                     col= c("#E69F00","#68B1CB","#15A390","#96C954","#77AB7A","#4F6A6F","#D26429","#C57DA5","#999999"),
-                                     col.adj= 0.5,
-                                     legend= TRUE,
-                                     legend.pos= "topleft",
-                                     legend.cex= 1,
-                                     xlab.labs= if(obj$anchor=="center") c(-obj$upstream[1], "Center", obj$upstream) else c(-obj$upstream, "Start", "Region", "End", obj$downstream),
-                                     abline= TRUE,
-                                     abline.col= "black",
-                                     abline.lty= 3,
-                                     abline.lwd= 1)
+                                     ylim= NULL,
+                                     xlab= NULL,
+                                     ylab= NULL,
+                                     col= NULL,
+                                     col.adj= NULL,
+                                     legend= NULL,
+                                     legend.pos= NULL,
+                                     legend.cex= NULL,
+                                     xlab.labs= NULL,
+                                     abline= NULL,
+                                     abline.col= NULL,
+                                     abline.lty= NULL,
+                                     abline.lwd= NULL)
 {
   # Retrieve environment and update plotting variables----
   args <- intersect(ls(), names(obj))
+  args <- args[sapply(args, function(x) !is.null(get(x)))]
   for(arg in args)
   {
     if(!identical(get(arg), obj[[arg]]))
@@ -359,7 +363,7 @@ plot.vl_bw_average_track <- function(obj,
                     se= sd(score, na.rm= T)/sqrt(.N)), .(name, setID, bin.x)]
   
   # Initiate plot ----
-  if(missing(ylim))
+  if(is.null(ylim))
   {
     ylim <- range(c(pl[, mean-se], pl[, mean+se]), na.rm= T)
     ylim[2] <- ylim[2]+diff(ylim)/5

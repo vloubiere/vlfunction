@@ -17,7 +17,7 @@ vl_bw_average_track(
   ignore.strand = FALSE,
   genome,
   plot = T,
-  ylim,
+  ylim = NULL,
   xlab = "Genomic distance",
   ylab = "Enrichment",
   col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A", "#4F6A6F", "#D26429",
@@ -36,21 +36,19 @@ vl_bw_average_track(
 
 \method{plot}{vl_bw_average_track}(
   obj,
-  ylim,
-  xlab = "Genomic distance",
-  ylab = "Enrichment",
-  col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A", "#4F6A6F", "#D26429",
-    "#C57DA5", "#999999"),
-  col.adj = 0.5,
-  legend = TRUE,
-  legend.pos = "topleft",
-  legend.cex = 1,
-  xlab.labs = if (obj$anchor == "center") c(-obj$upstream[1], "Center", obj$upstream)
-    else c(-obj$upstream, "Start", "Region", "End", obj$downstream),
-  abline = TRUE,
-  abline.col = "black",
-  abline.lty = 3,
-  abline.lwd = 1
+  ylim = NULL,
+  xlab = NULL,
+  ylab = NULL,
+  col = NULL,
+  col.adj = NULL,
+  legend = NULL,
+  legend.pos = NULL,
+  legend.cex = NULL,
+  xlab.labs = NULL,
+  abline = NULL,
+  abline.col = NULL,
+  abline.lty = NULL,
+  abline.lwd = NULL
 )
 }
 \arguments{
@@ -76,7 +74,7 @@ vl_bw_average_track(
 
 \item{plot}{Should the average track be ploted? Default= TRUE.}
 
-\item{ylim}{ylim for plotting. Default= range(data).}
+\item{ylim}{ylim for plotting. Default= NULL, meaning range(data) will be used.}
 
 \item{xlab}{X label. Default= "Genomic distance".}
 
@@ -115,10 +113,13 @@ bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
 sets <- c(rep("suhw", 100), rep("STARR", 1000))
 tracks <- c("/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw",
 "/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
-vl_bw_average_track(bed, tracks= tracks[1], upstream = 1000, downstream = 1000)
-vl_bw_average_track(bed, tracks= tracks, upstream = 1000, downstream = 1000)
+
+par(mfrow= c(2,2))
 vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, upstream = 1000, downstream = 1000)
-vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, upstream = 1000, downstream = 1000, anchor= "region")
-pl <- vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, plot= F, upstream = 1000, downstream = 1000, anchor= "region")
+pl <- vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, upstream = 1000, downstream = 1000, anchor= "region")
+
+# Play with plotting parameters
+plot(pl) # Same parameters as the plot from the original function
 plot(pl, col= c("blue", "red"), ylim= c(0, 150), xlab.labs= c(-1000, "TSS", "Gene", "TTS", 1000))
+
 }

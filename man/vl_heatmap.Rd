@@ -165,8 +165,9 @@ res <- vl_heatmap(test,
                   main= "test")
 
 # Play with plotting parameters
+plot(res) # Same parameters as the plot from the original function
 plot(res,
-     col= c("blue", "yellow"),
+     col= c("black", "blue", "yellow"),
      display.numbers= T,
      tilt.colnames= T,
      col.clusters.colors= rainbow(9))
