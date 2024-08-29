@@ -108,14 +108,15 @@ vl_bw_coverage <- function(bed,
 #' @param anchor Anchor point to use. Must be one of 'center' or 'region' (meaning that the whole region will be used as anchor point, and extended by upstream/downstream values). Default= 'center'.
 #' @param upstream Upstream  extension of bed regions (centered on center). Default= 5000L.
 #' @param downstream Downstream  extension of bed regions (centered on center). Default= 5000L.
-#' @param nbins A single integer value (anchor= 'center') or a vector of 3 integers (anchor= 'region') specifying the number of bins to be used. When anchor is set to 'regions', the 3 values will correspond to the number of bins before the region, the number of bins within the region and the number of bins after. Default= 101L (anchor= 'center') or c(20L, 61L, 21L) (anchor= 'region').
+#' @param nbins A single integer value (anchor= 'center') or a vector of 3 integers (anchor= 'region') specifying the number of bins to be used. When anchor is set to 'regions', the 3 values will correspond to the number of bins before the region, the number of bins within the region and the number of bins after. Default= 501L (anchor= 'center') or c(100L, 301L, 100L) (anchor= 'region').
 #' @param ignore.strand Should the strand be ignored? Default= FALSE.
 #' @param genome BSgenome used to check limits of extended regions. Out of limit ranges will be resized accordingly
 #' 
 #' @examples
 #' bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
 #' sets <- c(rep("suhw", 100), rep("STARR", 1000))
-#' tracks <- c("../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", "../gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
+#' tracks <- c("/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw",
+#' "/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
 #' vl_bw_coverage_bins(bed, set.IDs = sets, tracks= tracks)[]
 #' vl_bw_coverage_bins(bed, set.IDs = sets, tracks= tracks, anchor= "region")[]
 #' 
@@ -127,7 +128,7 @@ vl_bw_coverage_bins <- function(bed,
                                 anchor= "center",
                                 upstream= 5000L, 
                                 downstream= 5000L,
-                                nbins= if(anchor=="center") 101L else if(anchor=="region") c(20L, 61L, 20L),
+                                nbins= if(anchor=="center") 501L else if(anchor=="region") c(100L, 301L, 100L),
                                 ignore.strand= FALSE,
                                 genome)
 {
@@ -146,15 +147,17 @@ vl_bw_coverage_bins <- function(bed,
   if(!identical(unique(names), names))
     stop("names should be unique")
   
-  # Resize ----
-  if(anchor=="center")
+  # Binning ----
+  bins <- if(anchor=="center")
   {
-    bed <- vl_resizeBed(bed = bed,
+    ext <- vl_resizeBed(bed = bed,
                         center= "center",
                         upstream= upstream,
                         downstream= downstream,
                         ignore.strand = ignore.strand,
                         genome= genome)
+    .c <- vl_binBed(ext, nbins = nbins)
+    .c[, bin.x:= seq(-upstream, downstream, length.out= nbins)[rowid(regionID)]]
   }else if(anchor=="region")
   {
     up <- vl_resizeBed(bed = bed,
@@ -169,25 +172,19 @@ vl_bw_coverage_bins <- function(bed,
                          downstream= downstream,
                          ignore.strand = ignore.strand,
                          genome= genome)
+    b1 <- vl_binBed(up, nbins = nbins[1])
+    b2 <- vl_binBed(bed, nbins = nbins[2])
+    b3 <- vl_binBed(down, nbins = nbins[3])
+    .c <- rbind(b1, b2, b3)
+    # Correct binIDX
+    setorderv(.c,
+              c("regionID", "start"))
+    .c[, binIDX:= seq(.N), regionID]
+    .c[, bin.x:= binIDX]
   }else
     stop("anchor should be one of 'center' or 'region'")
   
-  # Binning ----
-  bins <- if(anchor=="center")
-  {
-    .c <- vl_binBed(bed, nbins = nbins)
-    .c[, bin.x:= seq(-upstream, downstream, length.out= nbins)[rowid(regionID)]]
-  }else if(anchor=="region")
-  {
-    b1 <- vl_binBed(up, nbins = nbins[1])
-    b2 <- vl_binBed(bed, nbins = nbins[2])
-    b2[, binIDX:= binIDX+max(b1$binIDX)]
-    b3 <- vl_binBed(down, nbins = nbins[3])
-    b3[, binIDX:= binIDX+max(b2$binIDX)]
-    .c <- rbind(b1, b2, b3)
-    setorderv(.c, c("regionID", "binIDX"))
-    .c[, bin.x:= binIDX]
-  }
+  # Correct for strand ----
   if(!ignore.strand & "strand" %in% names(bins))
     bins[strand=="-", bin.x:= rev(bin.x), regionID]
   
@@ -222,24 +219,26 @@ vl_bw_coverage_bins <- function(bed,
 #' @param xlab X label. Default= "Genomic distance".
 #' @param ylab Y labels. Default= "Enrichment".
 #' @param col Color to be used for plotting. Note: dataset is first ordered by 1/ names and 2/ set.IDs before assigning colors.
-#' @param col.adj Opacity of polygons. default= 0.5.
+#' @param col.adj Opacity of standard error polygons. default= 0.5.
 #' @param legend Should the legend be plotted? default to TRUE.
 #' @param legend.pos Legend position. Default to "topleft".
 #' @param legend.cex Legend cex. Defaults= 1.
-#' @param xlab.at Position of the x labels. Defaults to the start, center and end of extended regions (anchor= 'center') or to the upstream extension, start, center, end and dowstream extension of anchored regions (anchor= 'region').
 #' @param xlab.labs Label(s) to write on the x axis. Default= c(-upstream, "Center", downstream) when anchor= 'center' or c(-upstream, "Start", "Region", "End", downstream) when anchor= "region".
-#' @param abline.v Coordinates of the vertical ablines that should be plotted. By default, they will correspond to the center (anchor= 'center') or the start and end positions of anchored regions (anchor= 'region'). If set to NA, no lines will be plotted.
+#' @param abline Should ablines be plotted to the center (anchor= 'center') or the start and end positions of anchored regions (anchor= 'region')? Default= TRUE.
 #' @param abline.col Color of ablines. Default= "gold",
 #' @param abline.lty Line type for ablines. Default= 3.
 #' @param abline.lwd Line width of ablines. Default= 1.
 #' @examples 
 #' bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
 #' sets <- c(rep("suhw", 100), rep("STARR", 1000))
-#' tracks <- c("../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", "../gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
-#' vl_bw_average_track(bed, tracks= tracks[1], plot= T, upstream = 1000, downstream = 1000)
-#' vl_bw_average_track(bed, tracks= tracks, plot= T, upstream = 1000, downstream = 1000)
-#' vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, plot= T, upstream = 1000, downstream = 1000)
-#' vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, plot= T, upstream = 1000, downstream = 1000, anchor= "region")
+#' tracks <- c("/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw",
+#' "/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
+#' vl_bw_average_track(bed, tracks= tracks[1], upstream = 1000, downstream = 1000)
+#' vl_bw_average_track(bed, tracks= tracks, upstream = 1000, downstream = 1000)
+#' vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, upstream = 1000, downstream = 1000)
+#' vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, upstream = 1000, downstream = 1000, anchor= "region")
+#' pl <- vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, plot= F, upstream = 1000, downstream = 1000, anchor= "region")
+#' plot(pl, col= c("blue", "red"), ylim= c(0, 150), xlab.labs= c(-1000, "TSS", "Gene", "TTS", 1000))
 #' @export
 vl_bw_average_track <- function(bed,
                                 set.IDs= 1L,
@@ -252,7 +251,7 @@ vl_bw_average_track <- function(bed,
                                 ignore.strand= FALSE,
                                 genome,
                                 plot= T,
-                                ylim= NULL,
+                                ylim,
                                 xlab= "Genomic distance",
                                 ylab= "Enrichment",
                                 col= c("#E69F00","#68B1CB","#15A390","#96C954","#77AB7A","#4F6A6F","#D26429","#C57DA5","#999999"),
@@ -260,60 +259,44 @@ vl_bw_average_track <- function(bed,
                                 legend= TRUE,
                                 legend.pos= "topleft",
                                 legend.cex= 1,
-                                xlab.at,
-                                xlab.labs,
-                                abline.v,
+                                xlab.labs= if(anchor=="center") c(-upstream[1], "Center", upstream) else c(-upstream, "Start", "Region", "End", downstream),
+                                abline= TRUE,
                                 abline.col= "black",
                                 abline.lty= 3,
                                 abline.lwd= 1)
 {
-  # Checks and missing values
-  if(any(nbins<50L))
-    warning("nbin values<50L should be avoided, as resulting plots will have poor resolution. Consider using default values; see ?vl_bw_average_track")
-  if(missing(xlab.at))
-    xlab.at <- if(anchor=="center")
-      c(-upstream, 0, downstream) else if(anchor=="region") # Start, middle and end
-        c(0, nbins[1]/sum(nbins), .5, sum(nbins[1:2])/sum(nbins), 1)*(sum(nbins)-1)+1 # Upstream region, start, center and end of anchored region, downstream region
-  if(missing(xlab.labs))
-    xlab.labs <- if(anchor=="center")
-      c(xlab.at[1], "Center", xlab.at[3]) else if(anchor=="region")
-        c(-upstream, "Start", "Region", "End", downstream)
-  if(length(xlab.at) != length(xlab.labs))
-    stop("xlab.at and xlab.labs should have the same length!")
-  if(missing(abline.v))
-    abline.v <- if(anchor=="center")
-      xlab.at[2] else if(anchor=="region")
-        xlab.at[c(2,4)]
-  
   # Compute signal ----
-  obj <- vl_bw_coverage_bins(bed= bed,
-                             set.IDs= set.IDs,
-                             tracks= tracks,
-                             names= names,
-                             anchor= anchor,
-                             upstream= upstream, 
-                             downstream= downstream,
-                             nbins= nbins, 
-                             ignore.strand= ignore.strand,
-                             genome= genome)
+  quantif <- vl_bw_coverage_bins(bed= bed,
+                                 set.IDs= set.IDs,
+                                 tracks= tracks,
+                                 names= names,
+                                 anchor= anchor,
+                                 upstream= upstream, 
+                                 downstream= downstream,
+                                 nbins= nbins, 
+                                 ignore.strand= ignore.strand,
+                                 genome= genome)
   
   # Make object ----
-  if(!is.factor(obj$name) && length(unique(obj$name))>1)
+  if(!is.factor(quantif$name) && length(unique(quantif$name))>1)
   {
     message("'names' coerced to factors with levels:")
-    obj[, name:= factor(name, unique(name))]
-    print(levels(obj$name))
+    quantif[, name:= factor(name, unique(name))]
+    print(levels(quantif$name))
   }
-  if(!is.factor(obj$setID) && length(unique(obj$setID))>1)
+  if(!is.factor(quantif$setID) && length(unique(quantif$setID))>1)
   {
     message("'setID' coerced to factors with levels:")
-    obj[, setID:= factor(setID, unique(setID))]
-    print(levels(obj$setID))
+    quantif[, setID:= factor(setID, unique(setID))]
+    print(levels(quantif$setID))
   }
-  setorderv(obj, c("name", "setID"))
+  setorderv(quantif, c("name", "setID"))
+  obj <- ls()
+  obj <- mget(obj, envir = environment())
+  obj$bed <- obj$set.IDs <- NULL
   setattr(obj, 
           "class", 
-          c("vl_bw_average_track", "data.table", "data.frame"))
+          "vl_bw_average_track")
   
   # Plot ----
   if(plot)
@@ -326,19 +309,20 @@ vl_bw_average_track <- function(bed,
          legend= legend,
          legend.pos= legend.pos,
          legend.cex= legend.cex,
-         xlab.at= xlab.at,
          xlab.labs= xlab.labs,
-         abline.v= abline.v,
+         abline= abline,
          abline.col= abline.col,
          abline.lty= abline.lty,
          abline.lwd= abline.lwd)
+  
+  # Return object ----
   invisible(obj)
 }
 
 #' @describeIn vl_bw_average_track Method to plot average tracks.
 #' @export
 plot.vl_bw_average_track <- function(obj,
-                                     ylim= NULL,
+                                     ylim,
                                      xlab= "Genomic distance",
                                      ylab= "Enrichment",
                                      col= c("#E69F00","#68B1CB","#15A390","#96C954","#77AB7A","#4F6A6F","#D26429","#C57DA5","#999999"),
@@ -346,24 +330,40 @@ plot.vl_bw_average_track <- function(obj,
                                      legend= TRUE,
                                      legend.pos= "topleft",
                                      legend.cex= 1,
-                                     xlab.at= c(min(obj$bin.x), 0, max(obj$bin.x)),
-                                     xlab.labs= c(xlab.at[1], "Center", xlab.at[3]),
-                                     abline.v= abline.v,
-                                     abline.col= abline.col,
-                                     abline.lty= abline.lty,
-                                     abline.lwd= abline.lwd)
+                                     xlab.labs= if(obj$anchor=="center") c(-obj$upstream[1], "Center", obj$upstream) else c(-obj$upstream, "Start", "Region", "End", obj$downstream),
+                                     abline= TRUE,
+                                     abline.col= "black",
+                                     abline.lty= 3,
+                                     abline.lwd= 1)
 {
+  # Retrieve environment and update plotting variables----
+  args <- intersect(ls(), names(obj))
+  for(arg in args)
+  {
+    if(!identical(get(arg), obj[[arg]]))
+      obj[[arg]] <- get(arg)
+  }
+  list2env(obj, environment())
+  
+  # Check x labels and compute positions ----
+  if(anchor=="center" && length(xlab.labs)!=3)
+    stop("When anchor is set to 'center', xlabl.labs should be of length 2")
+  if(anchor=="region" && length(xlab.labs)!=5)
+    stop("When anchor is set to 'region', xlabl.labs should be of length 5")
+  xlab.at <- if(anchor=="center")
+    c(-upstream, 0, downstream) else if(anchor=="region") # Start, middle and end
+      c(0, nbins[1]/sum(nbins), .5, sum(nbins[1:2])/sum(nbins), 1)*(sum(nbins)-1)+1 # Upstream region, start, center and end of anchored region, downstream region
+  
   # Compute mean and standard error ----
-  pl <- obj[, .(mean= mean(score, na.rm= T), 
-                se= sd(score, na.rm= T)/sqrt(.N)), .(name, setID, bin.x)]
+  pl <- quantif[, .(mean= mean(score, na.rm= T), 
+                    se= sd(score, na.rm= T)/sqrt(.N)), .(name, setID, bin.x)]
   
   # Initiate plot ----
-  if(is.null(ylim))
+  if(missing(ylim))
   {
-    ylim <- range(c(pl[, mean-se], pl[, mean+se]))
+    ylim <- range(c(pl[, mean-se], pl[, mean+se]), na.rm= T)
     ylim[2] <- ylim[2]+diff(ylim)/5
   }
-    
   plot(NA, 
        xlim= range(pl$bin.x),
        ylim= ylim,
@@ -387,13 +387,26 @@ plot.vl_bw_average_track <- function(obj,
           col= .col)
     .col
   }, .(name, setID)]
-  segments(x0 = abline.v,
-           y0 = ylim[1],
-           x1 = abline.v,
-           y1 = max(pl[, mean+se])+strheight("M"),
-           lty= abline.lty,
-           col= abline.col,
-           lwd= abline.lwd)
+  
+  # Plot ablines ----
+  if(abline)
+  {
+    x <- if(length(xlab.at)==3)
+    {
+      xlab.at[2]
+    }else if(length(xlab.at)==5)
+    {
+      xlab.at[c(2,4)]
+    }
+    print(x)
+    segments(x0 = x,
+             y0 = ylim[1],
+             x1 = x,
+             y1 = max(pl[, mean+se])+strheight("M"),
+             lty= abline.lty,
+             col= abline.col,
+             lwd= abline.lwd)
+  }
   
   # Legend ----
   if(legend)

@@ -12,7 +12,7 @@ vl_bw_coverage_bins(
   anchor = "center",
   upstream = 5000L,
   downstream = 5000L,
-  nbins = if (anchor == "center") 101L else if (anchor == "region") c(20L, 61L, 20L),
+  nbins = if (anchor == "center") 501L else if (anchor == "region") c(100L, 301L, 100L),
   ignore.strand = FALSE,
   genome
 )
@@ -32,7 +32,7 @@ vl_bw_coverage_bins(
 
 \item{downstream}{Downstream  extension of bed regions (centered on center). Default= 5000L.}
 
-\item{nbins}{A single integer value (anchor= 'center') or a vector of 3 integers (anchor= 'region') specifying the number of bins to be used. When anchor is set to 'regions', the 3 values will correspond to the number of bins before the region, the number of bins within the region and the number of bins after. Default= 101L (anchor= 'center') or c(20L, 61L, 21L) (anchor= 'region').}
+\item{nbins}{A single integer value (anchor= 'center') or a vector of 3 integers (anchor= 'region') specifying the number of bins to be used. When anchor is set to 'regions', the 3 values will correspond to the number of bins before the region, the number of bins within the region and the number of bins after. Default= 501L (anchor= 'center') or c(100L, 301L, 100L) (anchor= 'region').}
 
 \item{ignore.strand}{Should the strand be ignored? Default= FALSE.}
 
@@ -44,7 +44,8 @@ Compared to vl_bw_coverage, this functions bins bed file before quantifying the 
 \examples{
 bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
 sets <- c(rep("suhw", 100), rep("STARR", 1000))
-tracks <- c("../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", "../gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
+tracks <- c("/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw",
+"/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
 vl_bw_coverage_bins(bed, set.IDs = sets, tracks= tracks)[]
 vl_bw_coverage_bins(bed, set.IDs = sets, tracks= tracks, anchor= "region")[]
 

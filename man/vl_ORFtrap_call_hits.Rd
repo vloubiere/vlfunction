@@ -10,7 +10,7 @@ vl_ORFtrap_call_hits(
   exons.start.gtf,
   name,
   output.suffix = "_vs_unsorted.txt",
-  output.folder.FC.file
+  output.folder.FC.file = ""
 )
 }
 \arguments{

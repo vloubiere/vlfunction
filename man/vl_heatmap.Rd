@@ -13,114 +13,117 @@ vl_heatmap(x, ...)
 \method{vl_heatmap}{matrix}(
   x,
   cluster.rows = TRUE,
-  row.clusters = 1,
-  row.clusters.col = NULL,
-  kmeans.k = NA,
   clustering.distance.rows = "euclidean",
-  cutree.rows = 1,
+  cutree.rows = 1L,
+  row.clusters = 1L,
+  kmeans.k = NA,
   cluster.cols = TRUE,
-  col.clusters = 1,
-  col.clusters.col = NULL,
   clustering.distance.cols = "euclidean",
   cutree.cols = 1,
+  col.clusters = 1,
   clustering.method = "complete",
   plot = TRUE,
   breaks = seq(min(x, na.rm = T), max(x, na.rm = TRUE), length.out = length(col)),
   col = c("cornflowerblue", "white", "red"),
   na.col = "lightgrey",
+  useRaster = TRUE,
   grid = FALSE,
   main = NA,
-  legend.title = NA,
-  legend.cex = 1,
   show.rownames = TRUE,
   show.colnames = TRUE,
   tilt.colnames = FALSE,
+  show.row.dendrogram = TRUE,
   show.row.clusters = length(unique(rows$cl)) > 1,
   row.clusters.pos = "right",
-  row.cluster.line.col = "black",
-  show.col.clusters = length(unique(cols$cl)) > 1,
-  show.row.dendrogram = TRUE,
+  row.clusters.colors = grDevices::gray.colors(100),
+  row.cluster.line.color = "black",
   show.col.dendrogram = TRUE,
+  show.col.clusters = length(unique(cols$cl)) > 1,
+  col.clusters.colors = grDevices::gray.colors(100),
   show.legend = TRUE,
+  legend.title = NA,
+  legend.cex = 1,
   display.numbers = FALSE,
-  display.numbers.matrix,
+  display.numbers.matrix = x,
   display.numbers.cex = 1,
-  box.lwd = 0.25,
-  useRaster = T
+  display.numbers.FUN = function(x) round(x, 2),
+  box.lwd = 0.25
 )
 }
 \arguments{
 \item{x}{Data to plot. Can be one of matrix, data.table, or formula.}
 
-\item{cluster.rows}{Should rows be clustered? Default= T}
+\item{cluster.rows}{Should rows be clustered? Default= TRUE.}
 
-\item{row.clusters}{Vector of row clusters (overwritten by clustering, Default= 1)}
+\item{clustering.distance.rows}{Method for clustering distance rows. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall".}
 
-\item{row.clusters.col}{Row clusters colors (default is to use grey palette)}
+\item{cutree.rows}{Number of cuts for rows tree. Default= 1L.}
 
-\item{kmeans.k}{Number of row kmean clusters. If specified, takes over row clustering.}
+\item{row.clusters}{Vector of row clusters (overwritten by clustering). Default= 1L (no clusters).}
 
-\item{clustering.distance.rows}{Method for clustering distance rows. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"}
+\item{kmeans.k}{Number of row kmean clusters. If specified, takes over row clustering. Default= NA.}
 
-\item{cutree.rows}{Number of cuts for rows tree. Default= 1L}
+\item{cluster.cols}{Should columns be clustered? Default= TRUE.}
 
-\item{cluster.cols}{Should columns be clustered? Default= T}
+\item{clustering.distance.cols}{Method for clustering distance cols. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall".}
 
-\item{col.clusters}{Vector of col clusters (overwritten by clustering, Default= 1)}
+\item{cutree.cols}{Number of cuts for cols tree. Default= 1L.}
 
-\item{col.clusters.col}{Col clusters colors (default is to use grey palette)}
-
-\item{clustering.distance.cols}{Method for clustering distance cols. Can be one of "euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski", "pearson", "spearman", "kendall"}
-
-\item{cutree.cols}{Number of cuts for cols tree. default= 1L}
+\item{col.clusters}{Vector of col clusters (overwritten by clustering). Default= 1L (no clusters).}
 
 \item{clustering.method}{Clustering method to use. Must be one of "ward.D", "ward.D2", "single", "complete", "average", "mcquitty", "median" or "centroid".}
 
-\item{plot}{Should the heatmap be plotted? Default= T}
+\item{plot}{Should the heatmap be plotted? Default= T.}
 
-\item{breaks}{Heatmap breaks, which should be the same length as the color vector}
+\item{breaks}{Heatmap breaks, which should be the same length as the color vector.}
 
-\item{col}{Color scale. default= c("cornflowerblue", "white", "red")}
+\item{col}{Color scale. default= c("cornflowerblue", "white", "red").}
 
-\item{na.col}{Color for na values. Default= "lightgrey"}
+\item{na.col}{Color for na values. Default= "lightgrey".}
 
-\item{grid}{Should grid be drawn? Default= F}
+\item{useRaster}{Should rasterImage be used? Default= TRUE.}
 
-\item{main}{Title. Default= NA}
+\item{grid}{Should grid be drawn? Default= FALSE.}
 
-\item{legend.title}{Character to plot as title legend}
+\item{main}{Title. Default= NA.}
 
-\item{legend.cex}{cex expansion factor applying to the whole legend}
+\item{show.rownames}{Plot row names? Default= TRUE.}
 
-\item{show.rownames}{Plot row names? Default= T}
+\item{show.colnames}{Plot col names? Default= TRUE.}
 
-\item{show.colnames}{Plot col names? Default= T}
+\item{tilt.colnames}{Should colnames be tilted? default= FALSE.}
 
-\item{tilt.colnames}{Should colnames be tilted? default= F}
+\item{show.row.dendrogram}{Plot row dendrogram? Default= TRUE.}
 
-\item{show.row.clusters}{Plot row cluster names/lines?}
+\item{show.row.clusters}{Plot row cluster names/lines? By default, they will only be showed if different clusters exist.}
 
-\item{row.clusters.pos}{One of "left" or "right"}
+\item{row.clusters.pos}{One of "left" or "right".}
 
-\item{row.cluster.line.col}{Color of the line separting row clusters}
+\item{row.clusters.colors}{Row clusters colors (default is to use grey palette).}
 
-\item{show.col.clusters}{Plot col cluster names/lines?}
+\item{row.cluster.line.color}{Color of the line separating row clusters.}
 
-\item{show.row.dendrogram}{Plot row dendrogram?}
+\item{show.col.dendrogram}{Plot columns dendrogram? Default= TRUE.}
 
-\item{show.col.dendrogram}{Plot col dendrogram?}
+\item{show.col.clusters}{Plot column cluster names/lines?  By default, they will only be showed if different clusters exist.}
+
+\item{col.clusters.colors}{Column cluster colors (default is to use grey palette).}
 
 \item{show.legend}{Should the legend be plotted?}
 
-\item{display.numbers}{Display numbers on heatmap? Default= F}
+\item{legend.title}{Title of the legend. Default= NA (no title).}
 
-\item{display.numbers.matrix}{Matrix of numbers to be displayed. useful for fine tuning. Default= x}
+\item{legend.cex}{cex expansion factor applying to the whole legend.}
 
-\item{display.numbers.cex}{cex display numbers}
+\item{display.numbers}{Display numbers on heatmap? Default= FALSE.}
 
-\item{box.lwd}{Line width of the box around the heatmap}
+\item{display.numbers.matrix}{Matrix of numbers to be displayed. By default, the x matrix will be used.}
 
-\item{useRaster}{Should rasterImage be used? default= T}
+\item{display.numbers.cex}{cex display numbers.}
+
+\item{display.numbers.FUN}{Function to be applies to display.numbers.matrix before plotting. Default= function(x) round(x, 2).}
+
+\item{box.lwd}{Line width of the box around the heatmap.}
 }
 \value{
 An object of class vl_heatmap_obj containing clustering data and can be used for plotting using plot(obj, ...)
@@ -145,18 +148,27 @@ test[15:20, seq(2, 10, 2)] = test[15:20, seq(2, 10, 2)] + 4
 colnames(test) = paste("Test", 1:10, sep = "")
 rownames(test) = paste("Gene", 1:20, sep = "")
 
+# Cluster using hierarhical clustering
 par(mfrow=c(2,2))
-res <- vl_heatmap(test,
-                  kmeans.k = 4,
-                  cutree.rows = 3,
-                  cutree.cols = 5,
-                  legend.title = "log2FoldChange",
-                  main= "test")
 vl_heatmap(test,
            cutree.rows = 3,
            cutree.cols = 2,
            show.col.clusters = F,
            legend.title = "log2FoldChange",
            main= "test")
+# Cluster using kmeans clustering
+res <- vl_heatmap(test,
+                  kmeans.k = 4,
+                  cutree.rows = 3,
+                  cutree.cols = 5,
+                  legend.title = "log2FoldChange",
+                  main= "test")
+
+# Play with plotting parameters
+plot(res,
+     col= c("blue", "yellow"),
+     display.numbers= T,
+     tilt.colnames= T,
+     col.clusters.colors= rainbow(9))
 
 }

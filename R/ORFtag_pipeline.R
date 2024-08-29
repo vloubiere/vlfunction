@@ -289,7 +289,7 @@ vl_ORFtrap_call_hits <- function(sorted.forward.counts,
                                  exons.start.gtf,
                                  name,
                                  output.suffix= "_vs_unsorted.txt",
-                                 output.folder.FC.file)
+                                 output.folder.FC.file= "")
 {
   require(rtracklayer)
   require(data.table)

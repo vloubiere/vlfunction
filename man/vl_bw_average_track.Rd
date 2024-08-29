@@ -17,7 +17,7 @@ vl_bw_average_track(
   ignore.strand = FALSE,
   genome,
   plot = T,
-  ylim = NULL,
+  ylim,
   xlab = "Genomic distance",
   ylab = "Enrichment",
   col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A", "#4F6A6F", "#D26429",
@@ -26,9 +26,9 @@ vl_bw_average_track(
   legend = TRUE,
   legend.pos = "topleft",
   legend.cex = 1,
-  xlab.at,
-  xlab.labs,
-  abline.v,
+  xlab.labs = if (anchor == "center") c(-upstream[1], "Center", upstream) else
+    c(-upstream, "Start", "Region", "End", downstream),
+  abline = TRUE,
   abline.col = "black",
   abline.lty = 3,
   abline.lwd = 1
@@ -36,7 +36,7 @@ vl_bw_average_track(
 
 \method{plot}{vl_bw_average_track}(
   obj,
-  ylim = NULL,
+  ylim,
   xlab = "Genomic distance",
   ylab = "Enrichment",
   col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A", "#4F6A6F", "#D26429",
@@ -45,12 +45,12 @@ vl_bw_average_track(
   legend = TRUE,
   legend.pos = "topleft",
   legend.cex = 1,
-  xlab.at = c(min(obj$bin.x), 0, max(obj$bin.x)),
-  xlab.labs = c(xlab.at[1], "Center", xlab.at[3]),
-  abline.v = abline.v,
-  abline.col = abline.col,
-  abline.lty = abline.lty,
-  abline.lwd = abline.lwd
+  xlab.labs = if (obj$anchor == "center") c(-obj$upstream[1], "Center", obj$upstream)
+    else c(-obj$upstream, "Start", "Region", "End", obj$downstream),
+  abline = TRUE,
+  abline.col = "black",
+  abline.lty = 3,
+  abline.lwd = 1
 )
 }
 \arguments{
@@ -84,7 +84,7 @@ vl_bw_average_track(
 
 \item{col}{Color to be used for plotting. Note: dataset is first ordered by 1/ names and 2/ set.IDs before assigning colors.}
 
-\item{col.adj}{Opacity of polygons. default= 0.5.}
+\item{col.adj}{Opacity of standard error polygons. default= 0.5.}
 
 \item{legend}{Should the legend be plotted? default to TRUE.}
 
@@ -92,11 +92,9 @@ vl_bw_average_track(
 
 \item{legend.cex}{Legend cex. Defaults= 1.}
 
-\item{xlab.at}{Position of the x labels. Defaults to the start, center and end of extended regions (anchor= 'center') or to the upstream extension, start, center, end and dowstream extension of anchored regions (anchor= 'region').}
-
 \item{xlab.labs}{Label(s) to write on the x axis. Default= c(-upstream, "Center", downstream) when anchor= 'center' or c(-upstream, "Start", "Region", "End", downstream) when anchor= "region".}
 
-\item{abline.v}{Coordinates of the vertical ablines that should be plotted. By default, they will correspond to the center (anchor= 'center') or the start and end positions of anchored regions (anchor= 'region'). If set to NA, no lines will be plotted.}
+\item{abline}{Should ablines be plotted to the center (anchor= 'center') or the start and end positions of anchored regions (anchor= 'region')? Default= TRUE.}
 
 \item{abline.col}{Color of ablines. Default= "gold",}
 
@@ -115,9 +113,12 @@ Plots average tracks for a set bw files around (potentially) several sets of pea
 \examples{
 bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
 sets <- c(rep("suhw", 100), rep("STARR", 1000))
-tracks <- c("../available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw", "../gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
-vl_bw_average_track(bed, tracks= tracks[1], plot= T, upstream = 1000, downstream = 1000)
-vl_bw_average_track(bed, tracks= tracks, plot= T, upstream = 1000, downstream = 1000)
-vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, plot= T, upstream = 1000, downstream = 1000)
-vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, plot= T, upstream = 1000, downstream = 1000, anchor= "region")
+tracks <- c("/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw",
+"/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
+vl_bw_average_track(bed, tracks= tracks[1], upstream = 1000, downstream = 1000)
+vl_bw_average_track(bed, tracks= tracks, upstream = 1000, downstream = 1000)
+vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, upstream = 1000, downstream = 1000)
+vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, upstream = 1000, downstream = 1000, anchor= "region")
+pl <- vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, plot= F, upstream = 1000, downstream = 1000, anchor= "region")
+plot(pl, col= c("blue", "red"), ylim= c(0, 150), xlab.labs= c(-1000, "TSS", "Gene", "TTS", 1000))
 }
