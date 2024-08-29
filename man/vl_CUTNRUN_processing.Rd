@@ -6,7 +6,7 @@
 \usage{
 vl_CUTNRUN_processing(
   metadata,
-  processed_metadata_output,
+  processed_metadata_output = gsub(".txt$", "_processed.rds", metadata),
   scratch_folder = "/scratch/stark/vloubiere/CUTNRUN",
   cores = 8,
   mem = 64,
@@ -20,7 +20,7 @@ vl_CUTNRUN_processing(
 \arguments{
 \item{metadata}{The path to a .txt, tab-separated metadata file containing at least 12 columns. See vlfunctions::vl_metadata_ORFtag for an example.}
 
-\item{processed_metadata_output}{An .rds path where to save the processed metadata file (containing the paths of output files).}
+\item{processed_metadata_output}{An .rds path where to save the processed metadata file (containing the paths of output files). By default, "_processed.rds" will be appended to the metadata path.}
 
 \item{scratch_folder}{Folder where intermediate bam and fastq files will be saved}
 

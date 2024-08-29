@@ -3,7 +3,7 @@
 #' Takes as input a (corerectly formated) metadata file, save the processed metadata file and returns the command lines to 1/ extract reads from VBC bam file, 2/ trim the reads and align to mouse/human genome (see 'species' column of the metadata table) and return alignment statistics as well as collapsed reads and 4/ assign insertions to closest downstream genes.
 #'
 #' @param metadata The path to a .txt, tab-separated metadata file containing at least 12 columns. See vlfunctions::vl_metadata_ORFtag for an example.
-#' @param processed_metadata_output An .rds path where to save the processed metadata file (containing the paths of output files).
+#' @param processed_metadata_output An .rds path where to save the processed metadata file (containing the paths of output files). By default, "_processed.rds" will be appended to the metadata path.
 #' @param scratch_folder Folder where intermediate bam and fastq files will be saved
 #' @param cores Number of cores per job. Default= 8
 #' @param mem Memory per job (in Go). Default= 32.
@@ -40,7 +40,7 @@
 #'                       submit = T)
 #'                       
 vl_CUTNRUN_processing <- function(metadata,
-                                  processed_metadata_output,
+                                  processed_metadata_output= gsub(".txt$", "_processed.rds", metadata),
                                   scratch_folder= "/scratch/stark/vloubiere/CUTNRUN",
                                   cores= 8,
                                   mem= 64,
@@ -95,10 +95,10 @@ vl_CUTNRUN_processing <- function(metadata,
   }
   
   # Print conditions ----
-  print(paste(length(unique(meta$condition)), "conditions detected, of which", length(unique(meta[(twoReps), condition])), "had >1 replicates:"))
-  meta[(twoReps), print(paste(condition, "->", paste0(unique(sampleID), collapse= ", "))), condition]
-  print(paste(length(unique(meta[(!twoReps), condition])), "samples had only one replicate:"))
-  meta[(!twoReps), print(paste(condition, "->", paste0(unique(sampleID), collapse= ", "))), condition]
+  cat(paste(length(unique(meta$condition)), "conditions detected, of which", length(unique(meta[(twoReps), condition])), "had >1 replicates:\n"))
+  meta[(twoReps), cat(paste0(condition, ":\n\t", paste0(unique(sampleID), collapse= "\n\t"), "\n")), condition]
+  cat(paste(length(unique(meta[(!twoReps), condition])), "samples had only one replicate:"))
+  meta[(!twoReps), cat(paste0(condition, ":\n\t", paste0(unique(sampleID), collapse= "\n\t"), "\n")), condition]
   
   # Demultiplex VBC bam file ----
   meta[, demultiplex_cmd:= {
@@ -178,9 +178,9 @@ vl_CUTNRUN_processing <- function(metadata,
                 m = mem, 
                 name = "CUTNRUN", 
                 t = time,
-                o= normalizePath(logs),
-                e= normalizePath(logs))
-      }, cmd] else
+                o= paste0(normalizePath(logs), "/", sampleID),
+                e= paste0(normalizePath(logs), "/", sampleID))
+      }, .(sampleID, cmd)] else
         return(cmd)
   }else
     warning("All output files already existed! No command submitted ;). Consider overwrite= T if convenient.")
@@ -329,9 +329,9 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
                 m = mem, 
                 name = "CUTNRUN", 
                 t = time,
-                o= normalizePath(logs),
-                e= normalizePath(logs))
-      }, cmd] else
+                o= paste0(normalizePath(logs), "/", condition),
+                e= paste0(normalizePath(logs), "/", condition))
+      }, .(condition, cmd)] else
         return(cmd)
   }else
     warning("All output files already existed! No command submitted ;). Consider overwrite= T if convenient.")

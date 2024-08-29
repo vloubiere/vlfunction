@@ -18,13 +18,13 @@ vl_bw_coverage_bins(
 )
 }
 \arguments{
-\item{bed}{Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
+\item{bed}{Regions to plot. Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns.}
 
-\item{set.IDs}{Set IDs specifying the groups as subsets of the bed file. Default= 1L (no subsets).}
+\item{set.IDs}{Set IDs specifying the groups as subsets of the bed file. Default= 1L (unique subset).}
 
 \item{tracks}{Vector of bw files to plot. Use full paths to avoid pbs.}
 
-\item{names}{Factors use for ordering and naming of plots. Defaults to the basenames of .bw files (as factors).}
+\item{names}{Track names. Defaults to the basenames of .bw files.}
 
 \item{anchor}{Anchor point to use. Must be one of 'center' or 'region' (meaning that the whole region will be used as anchor point, and extended by upstream/downstream values). Default= 'center'.}
 

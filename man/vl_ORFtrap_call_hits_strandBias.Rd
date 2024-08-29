@@ -5,32 +5,32 @@
 \title{vl_ORFtrap_call_hits_strandBias}
 \usage{
 vl_ORFtrap_call_hits_strandBias(
-  sorted_forward_counts,
-  sorted_reverse_counts,
-  unsorted_forward_counts,
-  unsorted_reverse_counts,
-  exons_start_gtf,
+  sorted.forward.counts,
+  sorted.reverse.counts,
+  unsorted.forward.counts,
+  unsorted.reverse.counts,
+  exons.start.gtf,
   name,
-  output_suffix = "_vs_revStrand",
-  output_folder_FC_file
+  output.suffix = "_vs_revStrand",
+  output.folder.FC.file
 )
 }
 \arguments{
-\item{sorted_forward_counts}{Sorted forward counts file (see bamToBed_and_assign_insertions.R function for further details)}
+\item{sorted.forward.counts}{Sorted forward counts file (see bamToBed_and_assign_insertions.R function for further details)}
 
-\item{sorted_reverse_counts}{Sorted reverse counts file (see bamToBed_and_assign_insertions.R function for further details)}
+\item{sorted.reverse.counts}{Sorted reverse counts file (see bamToBed_and_assign_insertions.R function for further details)}
 
-\item{unsorted_forward_counts}{Unsorted (input) forward counts file (see bamToBed_and_assign_insertions.R function for further details)}
+\item{unsorted.forward.counts}{Unsorted (input) forward counts file (see bamToBed_and_assign_insertions.R function for further details)}
 
-\item{unsorted_reverse_counts}{Unsorted (input) reverse counts file (see bamToBed_and_assign_insertions.R function for further details)}
+\item{unsorted.reverse.counts}{Unsorted (input) reverse counts file (see bamToBed_and_assign_insertions.R function for further details)}
 
-\item{exons_start_gtf}{gtf exon file. Used for consistent ordering of output FC table}
+\item{exons.start.gtf}{gtf exon file. Used for consistent ordering of output FC table}
 
 \item{name}{Name to be appended at the beginning of output file}
 
-\item{output_suffix}{Suffix to be appended at the end of output file. Default to "_vs_revStrand.txt"}
+\item{output.suffix}{Suffix to be appended at the end of output file. Default to "_vs_revStrand.txt"}
 
-\item{output_folder_FC_file}{Output folder for FC files}
+\item{output.folder.FC.file}{Output folder for FC files}
 }
 \value{
 Returns FC tables containing DESeq2-like columns
@@ -39,16 +39,16 @@ Returns FC tables containing DESeq2-like columns
 Function to call hits from a given screen. Receives sorted and unsorted counts as input, computes FC table
 }
 \examples{
-vl_ORFtrap_call_hits_strandBias(sorted_forward_counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
+vl_ORFtrap_call_hits_strandBias(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
                                                           "db/gene_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
-                                sorted_reverse_counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_rev_strand.txt",
+                                sorted.reverse.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_rev_strand.txt",
                                                           "db/gene_assignment/ORFtag/Activator2_sort_rep2_rev_strand.txt"),
-                                unsorted_forward_counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
+                                unsorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
                                                             "db/gene_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
-                                unsorted_reverse_counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_rev_strand.txt",
+                                unsorted.reverse.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_rev_strand.txt",
                                                             "db/gene_assignment/ORFtag/Activator2_input_rep2_rev_strand.txt"),
-                                exons_start_gtf = "/groups/stark/vloubiere/projects/ORFTRAP_1/db/gtf/exons_start_mm10.gtf",
+                                exons.start.gtf = "/groups/stark/vloubiere/projects/ORFTRAP_1/db/gtf/exons_start_mm10.gtf",
                                 name = "Activator_2",
-                                output_suffix = "_vs_input.txt",
-                                output_folder_FC_file = "db/FC_tables/ORFtag/")
+                                output.suffix = "_vs_input.txt",
+                                output.folder.FC.file = "db/FC_tables/ORFtag/")
 }
