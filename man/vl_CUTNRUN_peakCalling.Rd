@@ -45,15 +45,16 @@ Command lines for peak calling.
 Title
 }
 \examples{
-Takes as input a processed metadata file produced by ?vl_CUTNRUN_processing().
+# Peak calling example dataset ----
+library(vlfunctions)
 
-Print the commands without submitting:
-check <- vl_CUTNRUN_peakCalling(processed_metadata = "Rdata/CUTNRUN_metadata_processed.rds",
-                                overwrite = T,
-                                submit = F)
-Run the commands without overwriting existing files:
-vl_CUTNRUN_peakCalling(processed_metadata = "Rdata/CUTNRUN_metadata_processed.rds",
-                       overwrite = T,
-                       submit = T)
+check <- readRDS("Rdata/metadata_CutNRun_processed.rds") # Check all processed files exist
+
+vl_CUTNRUN_peakCalling(processed_metadata = "Rdata/metadata_CutNRun_processed.rds",
+                       extsize = 300,
+                       cores = 8,
+                       mem = 64,
+                       overwrite = FALSE,
+                       submit = TRUE)
 
 }

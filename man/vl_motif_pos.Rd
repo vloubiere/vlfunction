@@ -13,27 +13,32 @@ vl_motif_pos(sequences, ...)
 \method{vl_motif_pos}{character}(
   sequences,
   sel = vl_Dmel_motifs_DB_full[collection == "jaspar", motif_ID],
+  motifDB = vl_Dmel_motifs_DB_full,
+  pwm_log_odds = NULL,
   genome,
   bg = "genome",
   p.cutoff = 5e-04,
-  collapse.overlapping = TRUE,
-  motifDB = vl_Dmel_motifs_DB_full
+  collapse.overlapping = TRUE
 )
 }
 \arguments{
-\item{sequences}{Named character vector of sequences to analyse. If provided takes over bed argument (in the case where both are specified)}
+\item{sequences}{Named character vector of sequences to analyse. If provided takes over bed argument (in the case where both are specified).}
 
-\item{bed}{Either a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns}
+\item{bed}{Either a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start' and 'end' columns.}
 
-\item{genome}{Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome"}
+\item{genome}{Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome".}
 
-\item{sel}{List of motifs to compute. Defaults to jaspar PWMs. See vl_Dmel_motifs_DB_full$motif}
+\item{sel}{Vector of motif_ID(s) existing in motifDB (see below) and for which motif matches should be mapped Defaults to jaspar PWMs.}
+
+\item{motifDB}{The motifDB to be used (see 'sel' argument; ?vl_Dmel_motifs_DB_full and ?vl_motifs_DB_v2 for details). Default= vl_Dmel_motifs_DB_full.}
 
 \item{bg}{Background used to find motifs. Possible values include "genome" and "even". Default= "genome"}
 
-\item{p.cutoff}{Pval cutoff used for motif detection}
+\item{p.cutoff}{p.value cutoff used for motif detection. Default= 5e-4.}
 
 \item{collapse.overlapping}{Should overlapping motifs be merged? If TRUE (default), motif instances that overlap more than 70 percent of their width are collapsed.}
+
+\item{pwms_log_odds}{A PWMatrixList (in log2 odd ratio format) for which motif matches should be mapped. Overrides sel and motifDB arguments (see above).}
 }
 \value{
 A list of positions of length = length(sequences)
@@ -49,8 +54,10 @@ Compute motif positions
 
 }}
 \examples{
-vl_motif_pos.data.table(vl_SUHW_top_peaks[1:2],
-                        genome= "dm3",
-                        sel= c("cisbp__M2328", "flyfactorsurvey__suHw_FlyReg_FBgn0003567", "jaspar__MA0533.1"))
+test <- vl_motif_pos.data.table(vl_SUHW_top_peaks[1:2],
+                                genome= "dm3",
+                                sel= c("cisbp__M2328",
+                                       "flyfactorsurvey__suHw_FlyReg_FBgn0003567",
+                                       "jaspar__MA0533.1"))
                         
 }

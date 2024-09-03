@@ -7,10 +7,10 @@
 vl_ORFtrap_call_hits(
   sorted.forward.counts,
   unsorted.forward.counts,
-  exons.start.gtf,
+  genome,
   name,
   output.suffix = "_vs_unsorted.txt",
-  output.folder.FC.file = ""
+  output.folder.FC.file = "db/FC_tables/ORFtag/"
 )
 }
 \arguments{
@@ -18,13 +18,13 @@ vl_ORFtrap_call_hits(
 
 \item{unsorted.forward.counts}{Unsorted (input) forward counts file (see bamToBed_and_assign_insertions.R function for further details)}
 
-\item{exons.start.gtf}{gtf exon file. Used for consistent ordering of output FC table}
+\item{genome}{The genome annotation to use. For now, only "mm10" and "hg38" are supported, and will be used to retrieve non-first exon gtf file and sort output file. See at the bottom of the ?vl_ORFtag_pipeline help page to see how to generate custom non-first exon start gtf files.}
 
 \item{name}{Name to be appended at the beginning of output file}
 
 \item{output.suffix}{Suffix to be appended at the end of output file. Default to "_vs_unsorted.txt"}
 
-\item{output.folder.FC.file}{Output folder for FC files}
+\item{output.folder.FC.file}{Output folder for FC files. Defaults to "db/FC_tables/ORFtag"}
 }
 \value{
 Returns FC tables containing DESeq2-like columns
@@ -33,12 +33,15 @@ Returns FC tables containing DESeq2-like columns
 Function to call hits from a given screen. Receives sorted and unsorted counts as input, computes FC table
 }
 \examples{
+library(vlfunctions)
+
+# 128 hits should be identified with this dataset
 vl_ORFtrap_call_hits(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
                                                "db/gene_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
                      unsorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
                                                  "db/gene_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
-                     exons.start.gtf = "/groups/stark/vloubiere/projects/ORFTRAP_1/db/gtf/exons_start_mm10.gtf",
+                     genome = "mm10",
                      name = "Activator_2",
-                     output.suffix = "_vs_input.txt",
-                     output.folder.FC.file = "db/FC_tables/ORFtag/Activator_2")
+                     output.suffix = "_vs_input.txt")
+                     
 }

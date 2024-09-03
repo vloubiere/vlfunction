@@ -1,0 +1,271 @@
+#' PRO-seq pipeline
+#' 
+#' Takes as input a (correctly formatted) metadata file, save the processed metadata file and returns the command lines to 1/ extract reads from VBC bam file, 2/ trim the reads and align to mouse/human genome (see 'genome' column of the metadata table) and return alignment statistics as well 4/ gene counts.
+#'
+#' @param metadata The path to a .txt, tab-separated metadata file containing at least 12 columns. See vl_metadata_PROseq for an example.
+#' @param processed_metadata_output An .rds path where to save the processed metadata file (containing the paths of output files). By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.
+#' @param scratch_folder Folder where intermediate bam and fastq files will be saved
+#' @param Rpath Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript" 
+#' @param cores Number of cores per job. Default= 8
+#' @param mem Memory per job (in Go). Default= 64.
+#' @param overwrite Should existing files be overwritten?
+#' @param submit Should the command be submitted? default= FALSE.
+#' @param wdir The working directory to use. defaut= getwd().
+#' @param logs Path to save logs. Default= "db/logs/CUTNRUN/processing"
+#' @param time The time required for the SLURM scheduler. Default= '1-00:00:00'
+#'
+#' @return Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data. These commands can then be submitted using ?vl_bsub().
+#'
+#' @examples
+#' # Process example dataset ----
+#' library(vlfunctions)
+#' 
+#' meta <- vl_metadata_PROseq
+#' 
+#' vl_PROseq_processing(metadata = meta,
+#'                      processed_metadata_output = "Rdata/metadata_PROseq_processed.rds",
+#'                      cores= 8,
+#'                      mem= 64,
+#'                      overwrite= FALSE,
+#'                      submit= TRUE)
+#' check <- readRDS("Rdata/metadata_PROseq_processed.rds")
+#'
+#' @export
+vl_PROseq_processing <- function(metadata, ...) UseMethod("vl_PROseq_processing")
+
+#' @describeIn vl_PROseq_processing for excel files path
+#' @export
+vl_PROseq_processing.character <- function(metadata,
+                                            processed_metadata_output= gsub(".xlsx$", "_processed.rds", metadata),
+                                            ...)
+{
+  sheet <- readxl::read_xlsx(metadata)
+  start <- cumsum(sheet[[1]]=="user")>0
+  sheet <- sheet[(start),]
+  meta <- as.data.table(sheet[-1,])
+  names(meta) <- unlist(sheet[1,])
+  vl_PROseq_processing(metadata= meta,
+                       processed_metadata_output= processed_metadata_output,
+                       ...)
+}
+
+#' @describeIn vl_PROseq_processing default method
+#' @export
+vl_PROseq_processing.default <- function(metadata,
+                                         processed_metadata_output= gsub(".txt$", "_processed.rds", metadata),
+                                         scratch_folder= "/scratch/stark/vloubiere",
+                                         Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
+                                         cores= 8,
+                                         mem= 64,
+                                         overwrite= F,
+                                         submit= F,
+                                         wdir= getwd(),
+                                         logs= "db/logs/PROseq/processing",
+                                         time= '1-00:00:00')
+{
+  # Import metadata and check format ----
+  meta <- data.table::copy(metadata)
+  cols <- c("user", "experiment", "cell_line", "treatment", "replicate", "sampleID", "DESeq2_name", "DESeq2_condition", "DESeq2_control", "barcode", "eBC", "genome", "spikein_genome", "layout", "sequencer", "bam_path")
+  if(!all(cols %in% names(meta)))
+    stop(paste("Columns missing ->", paste(cols[!cols %in% names(meta)], collapse = "; ")))
+  if(any(!na.omit(meta$DESeq2_control) %in% meta$DESeq2_condition))
+    stop("Some DESeq2_control values have no correspondence in the DESeq2_condition column!")
+  if(!all(meta[, sampleID==paste0(cell_line, "_", treatment, "_", experiment, "_", replicate)]))
+    warning("sampleID should be the concatenation of cell_line, treatment, experiment and replicate (separated by '_'). Any samples with the same sampleID will be collapsed!")
+  if(!all(meta$layout %in% c("SINGLE", "PAIRED")))
+    stop("layout column should only contain 'SINGLE' or 'PAIRED'")
+  
+  # Check bowtie2 idx ----
+  if(any(!meta$genome %in% c("mm10", "hg38")))
+    stop("Only mm10 and hg38 are supported! For other genomes, please provide path to the corresponding bowtie 2 index.")
+  if(any(!meta$spikein_genome %in% c("dm3")))
+    stop("Only dm3 is supported for spike-in! For other genomes, please provide path to the corresponding bowtie 2 index.")
+  
+  # Generate output paths ----
+  meta[, fq1:= paste0(scratch_folder, "/PROseq/fq/", gsub(".bam", paste0("_", barcode, "_", eBC, "_1.fq.gz"), basename(bam_path))), .(bam_path, barcode, eBC)]
+  meta[, fq1_trimmed:= gsub(".fq.gz", "_trimmed.fq.gz", fq1)]
+  # re-sequencing are merged from this step on!
+  meta[, bam:= paste0(scratch_folder, "/PROseq/bam/", sampleID, "_", genome, "_aligned.bam")]
+  # Unaligned reads alignment to spike-in genome
+  meta[, fq_unaligned:= paste0(scratch_folder, "/PROseq/fq/", sampleID, "_unaligned.fq")] 
+  meta[, bamSpike:= paste0(scratch_folder, "/PROseq/bam/", sampleID, "_", spikein_genome, "_spikein_aligned.bam")]
+  # UMI-collapsed read counts (total read counts and UMI-collapsed read counts per unique genomic coordinate)
+  meta[, count:= paste0("db/counts/PROseq/", experiment, "/", sampleID, "_", genome, "_counts.txt")]
+  meta[, countSpike:= paste0("db/counts/PROseq/", experiment, "/", sampleID, "_", spikein_genome, "_spikein_counts.txt")]
+  # Aggregate read counts per gene feature (TSS, body, transcript)
+  meta[, countTables_promoter:= paste0("db/count_tables/PROseq/", experiment, "/promoter/", sampleID, "_", genome, "_counts.txt")]
+  meta[, countTables_geneBody:= paste0("db/count_tables/PROseq/", experiment, "/gene_body/", sampleID, "_", genome, "_counts.txt")]
+  meta[, countTables_transcript:= paste0("db/count_tables/PROseq/", experiment, "/transcript/", sampleID, "_", genome, "_counts.txt")]
+  # bw tracks
+  meta[, bwPS:= paste0("db/bw/PROseq/", experiment, "/", DESeq2_name, ".ps.bw")]
+  meta[, bwNS:= paste0("db/bw/PROseq/", experiment, "/", DESeq2_name, ".ns.bw")]
+  
+  # Save processed metadata ----
+  if(!grepl(".rds$", processed_metadata_output))
+    stop("processed_metadata_output should end up with a .rds extension") else
+      saveRDS(meta, processed_metadata_output)
+  
+  # Create output directories ----
+  dirs <- c(logs,
+            na.omit(unique(dirname(unlist(meta[, fq1:bwNS])))))
+  if(any(!dir.exists(dirs)))
+  {
+    sapply(dirs, dir.create, showWarnings = F, recursive = T)
+    print("Output directories were created in db/ and scratch/!")
+  }
+  
+  # Extract fastq files ----
+  meta[, extract_cmd:= {
+    if(overwrite | !file.exists(fq1))
+    {
+      fq_prefix <- normalizePath(gsub("_1.fq.gz$", "", fq1), mustWork = F)
+      paste("samtools view -@", cores-1, bam_path,
+            # "| head -n 40000", # For tests
+            "| perl",
+            fcase(layout=="PAIRED", system.file("PROseq_pipeline", "PROseq_demultiplexing_pe.pl", package = "vlfunctions"), # eBC length= 4; UMI length= 10
+                  layout=="SINGLE", system.file("PROseq_pipeline", "PROseq_demultiplexing_se.pl", package = "vlfunctions")), 
+            barcode,
+            eBC,
+            fq_prefix, "; gzip", paste0(fq_prefix, "_1.fq"))
+    }
+  }, .(fq1, bam_path, barcode, eBC, layout)]
+  
+  # Trim fq files ----
+  meta[, trim_cmd:= {
+    if(overwrite | !file.exists(fq1_trimmed))
+    {
+      paste("cutadapt -a TGGAATTCTCGGGTGCCAAGG",
+            "-m", 10, # Remove trimmed reads shorter than 10bp
+            "-o", fq1_trimmed, fq1)
+    }
+  }, .(fq1, fq1_trimmed)]
+  
+  # Align to reference genome ----
+  meta[, align_cmd:= {
+    if(overwrite | !file.exists(bam))
+    {
+      # Bowtie index reference genome
+      refIdx <- switch(genome,
+                       "mm10"= "/groups/stark/indices/bowtie/mm10/mm10",
+                       "hg38"= "/groups/stark/indices/bowtie/hg38/hg38")
+      # Command
+      paste("bowtie -q -v 2 -m 1 --best --strata --sam -p", cores,
+            refIdx,
+            paste0(fq1_trimmed, collapse = ","),
+            "| samtools view -bS -o ", bam)
+    }
+  }, .(bam, genome)]
+  
+  # Extract unmapped reads ----
+  meta[, unaligned_cmd:= {
+    if(overwrite | !file.exists(fq_unaligned))
+      paste("samtools view -f 4 -b", bam, "| samtools fastq - >", fq_unaligned)
+  }, .(bam, fq_unaligned)]
+  
+  # Align unmapped reads to spike-in genome ----
+  meta[, alignSpike_cmd:= {
+    if(overwrite | !file.exists(bamSpike))
+    {
+      # Bowtie index spike in genome
+      spikeIdx <- switch(spikein_genome,
+                         "dm3"= "/groups/stark/indices/bowtie/dm3/dm3")
+      # Command
+      paste("bowtie -q -v 2 -m 1 --best --strata --sam -p", cores,
+            spikeIdx,
+            fq_unaligned,
+            "| samtools view -bS -o ", bamSpike)
+    }
+  }, .(bamSpike, spikein_genome, fq_unaligned)]
+  
+  # UMI counts ----
+  meta[, counts_cmd:= {
+    if(overwrite | !file.exists(count))
+      paste(Rpath,
+            system.file("PROseq_pipeline", "count_UMIs.R", package = "vlfunctions"),
+            bam,
+            count)
+  }, .(bam, count)]
+  
+  # SpikeIn counts ----
+  meta[, spike_counts_cmd:= {
+    if(overwrite | !file.exists(countSpike))
+      paste(Rpath,
+            system.file("PROseq_pipeline", "count_UMIs.R", package = "vlfunctions"),
+            bamSpike,
+            countSpike)
+  }, .(bamSpike, countSpike)]
+  
+  # TSS count tables and stats ----
+  meta[, count_tables_cmd:= {
+    # Please specify:
+    # [required] 1/ PROSeq annotation file
+    # [required] 2/ Reference genome count file
+    # [required] 3/ Spike-in count file
+    # [required] 4/ Output folder
+    if(overwrite | any(!file.exists(c(countTables_promoter,
+                                      countTables_geneBody,
+                                      countTables_transcript))))
+    {
+      prom <- switch(genome,
+                     "mm10"= "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_promoters.rds")
+      geneBody <- switch(genome,
+                         "mm10"= "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_genebody.rds")
+      transcript <- switch(genome,
+                           "mm10"= "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_transcript.rds")
+      paste(Rpath,
+            system.file("PROseq_pipeline", "compute_counts_table.R", package = "vlfunctions"),
+            count, 
+            countSpike,
+            paste0("db/count_tables/PROseq/", experiment, "/"),
+            prom, 
+            geneBody,
+            transcript)
+    }
+  }, .(genome, experiment, count, countSpike,
+       countTables_promoter, countTables_geneBody, countTables_transcript)]
+  
+  # Generate bw files ----
+  meta[, bw_cmd:= {
+    # Please specify:
+    # [required] 1/ UMI counts file
+    # [required] 2/ Output prefix (.ps.bw; .ns.bw)
+    if(overwrite | any(!file.exists(c(bwPS, bwNS))))
+    {
+      paste(Rpath,
+            system.file("PROseq_pipeline", "generate_bw_files.R", package = "vlfunctions"),
+            count, 
+            gsub(".ps.bw$", "", bwPS))
+    }
+  }, .(count, bwPS, bwNS)]
+  
+  # Return commands ----
+  load_cmd <- paste(c(paste("cd", wdir),
+                      "module load build-env/2020",
+                      "module load cutadapt/1.18-foss-2018b-python-2.7.15",
+                      "module load samtools/1.9-foss-2018b",
+                      "module load bowtie/1.2.2-foss-2018b"), collapse = "; ")
+  cols <- intersect(c("extract_cmd", "trim_cmd", "align_cmd", "unaligned_cmd", "alignSpike_cmd",
+                      "counts_cmd", "spike_counts_cmd", "count_tables_cmd", "bw_cmd"),
+                    names(meta))
+  cmd <- if(length(cols))
+    meta[, .(cmd= paste0(c(load_cmd, unique(na.omit(unlist(.SD)))),
+                         collapse = "; ")), sampleID, .SDcols= cols] else
+                           data.table()
+  
+  # Submit commands ----
+  if(nrow(cmd))
+  {
+    if(submit)
+      cmd[, {
+        vl_bsub(cmd, 
+                cores= cores, 
+                m = mem, 
+                name = "PROseq", 
+                t = time,
+                o= paste0(normalizePath(logs), "/", sampleID),
+                e= paste0(normalizePath(logs), "/", sampleID))
+      }, .(sampleID, cmd)] else
+        return(cmd)
+  }else
+    warning("All output files already existed! No command submitted ;). Consider overwrite= T if convenient.")
+}

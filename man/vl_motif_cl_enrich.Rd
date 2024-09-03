@@ -9,10 +9,10 @@
 vl_motif_cl_enrich(
   counts.list,
   control.cl = NULL,
-  names = NULL,
+  names = vl_Dmel_motifs_DB_full[colnames(counts), motif_cluster, on = "motif_ID"],
   plot = F,
   padj.cutoff = 1e-05,
-  top.enrich = NA,
+  top.enrich = Inf,
   min.counts = 3L,
   order = "padj",
   x.breaks,
@@ -41,45 +41,45 @@ vl_motif_cl_enrich(
 )
 }
 \arguments{
-\item{counts.list}{List of data.table containing counts for the regions of interest and potentially control regions (see next argument)}
+\item{counts.list}{List of data.table containing counts for the regions of interest and potentially control regions (see next argument).}
 
-\item{control.cl}{IDs of clusters to be used as background. default to NULL, meaning all clusters are used except the one being tested}
+\item{control.cl}{IDs of clusters to be used as background. Default= NULL, meaning all clusters are used except the one being tested.}
 
-\item{names}{Convenient names to be used for plotting and so on... Default (NULL) returns vl_Dmel_motifs_DB_full$motif_cluster names}
+\item{names}{Convenient names to be used for aggregating and plotting. By default, returns motif_cluster matching motif_ID in vl_Dmel_motifs_DB_full.}
 
-\item{plot}{Should the result be plot using balloons plot? Default to FALSE}
+\item{plot}{Should the result be plotted using balloons plot? Default to FALSE}
 
-\item{padj.cutoff}{cutoff for ballons to be plotted}
+\item{padj.cutoff}{Cutoff for balloons to be plotted.}
 
-\item{top.enrich}{Select top enriched motifs/cluster. Default to NA (All)}
+\item{top.enrich}{Select top enriched motifs/cluster. Default= Inf (All).}
 
-\item{min.counts}{The minimum number of counts required to call a hit. Default= 3L}
+\item{min.counts}{The minimum number of counts required to call a hit. Default= 3L.}
 
-\item{order}{Value to be used for ordering before selecting top enriched. Possible values are "padj", "log2OR". defaut= "padj"}
+\item{order}{Value to be used for ordering before selecting top enriched. Possible values are "padj" (the default) and "log2OR".}
 
-\item{x.breaks}{Breaks used for ballon's sizes}
+\item{x.breaks}{Breaks used for balloon's sizes.}
 
-\item{color.breaks}{Color breaks used for coloring}
+\item{color.breaks}{Color breaks used for coloring.}
 
-\item{cex.balloons}{Expansion factor for balloons}
+\item{cex.balloons}{Expansion factor for balloons.}
 
-\item{col}{Vector of colors used for coloring}
+\item{col}{Vector of colors used for coloring.}
 
-\item{main}{Title. Default= NA}
+\item{main}{Title. Default= NA.}
 
-\item{plot.empty.clusters}{Should empty clusters be plotted? Default= TRUE}
+\item{plot.empty.clusters}{Should empty clusters be plotted? Default= TRUE.}
 
 \item{add.motifs}{Should motif pwms be plotted?}
 
-\item{cex.width}{expansion factor for motif widths}
+\item{cex.width}{Expansion factor for motif widths.}
 
-\item{cex.height}{expansion factor for motif heights}
+\item{cex.height}{Expansion factor for motif heights.}
 }
 \value{
 Fisher test data.table.
 }
 \description{
-Compute motif enrichment for the cluster in cl_columns, using all the lines as background
+Compute motif enrichment for the cluster in cl_columns, using all the lines as background.
 }
 \section{Functions}{
 \itemize{
@@ -87,13 +87,21 @@ Compute motif enrichment for the cluster in cl_columns, using all the lines as b
 
 }}
 \examples{
+# Select motifs
 sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
+
+# Resize example peaks
 top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
 top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
+
+# Count motifs
 counts <- vl_motif_counts(top_SUHW, genome= "dm3", sel= sel)
 control.counts <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
-counts.list <- list(SUHW= counts, ATAC= control.counts)
-par(mar= c(3,20,2,5), las= 1)
+counts.list <- list(SUHW= counts,
+                    ATAC= control.counts)
+
+# Enrichment and plot
+vl_par(mai= c(.9, 2, .9, .9))
 DT <- vl_motif_cl_enrich(counts.list, padj.cutoff = 1e-3, plot= T, add.motifs= T)
 DT <- plot(DT, padj.cutoff= 1e-5)
 vl_add_motifs(DT)

@@ -1,81 +1,110 @@
 #' ORFtag pipeline
 #' 
-#' Takes as input a (corerectly formated) metadata file, save the processed metadata file and returns the command lines to 1/ extract reads from VBC bam file, 2/ trim the reads and align to mouse/human genome (see 'species' column of the metadata table) and return alignment statistics as well as collapsed reads and 4/ assign insertions to closest downstream genes.
+#' Takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns the command lines to: \cr
+#' 1/ extract reads from VBC bam file \cr
+#' 2/ trim the reads and align to mouse/human genome (see 'genome' column of the metadata table) \cr
+#' 3/ and return alignment statistics as well as collapsed reads and
+#' 6/ assign insertions to closest downstream genes.
 #'
-#' @param metadata The path to a .txt, tab-separated metadata file containing at least 12 columns. See vlfunctions::vl_metadata_ORFtag for an example.
-#' @param processed_metadata_output An .rds path where to save the processed metadata file (containing the paths of output files). By default, "_processed.rds" will be appended to the metadata path.
+#' @param metadata The path to a .txt, tab-separated metadata file containing at least 12 columns. See vl_metadata_CUTNRUN for an example.
+#' @param processed_metadata_output An .rds path where to save the processed metadata file (containing the paths of output files). By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.
 #' @param scratch_folder Folder where intermediate bam and fastq files will be saved
 #' @param cores Number of cores per job. Default= 8
 #' @param mem Memory per job (in Go). Default= 32.
 #' @param overwrite Should existing files be overwritten?
-#' @param submit Should the command be submitted? default= G
+#' @param submit Should the command be submitted? default= FALSE.
 #' @param wdir The working directory to use. defaut= getwd().
 #' @param logs Path to save logs. Default= "db/logs/CUTNRUN/processing"
 #' @param time The time required for the SLURM scheduler. Default= '1-00:00:00'
 #'
 #' @return Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data. These commands can then be submitted using ?vl_bsub().
-#' @export
 #'
 #' @examples
-#' Takes as input a .xlsx metadata sheet that should be formatted as follows:
-#' >>>>
-#' READ ME																									
-#' sampleID should be the concatenation of ab, cell_line, treatment, experiment and replicate; and should be unique for each sample/replicate. Samples with the same sampleID will be merged (re-sequencing...).																									
-#' The condition should be shared between replicates, and will be used to call peaks on the merge data.																									
-#' The input column should specify the replicate-matched input sampleID.																									
-#' user	method	experiment	antibody	cell_line	treatment	replicate	condition	sampleID	barcode	i5	genome	input	layout	sequencer	bam_path
-#' <<<<
-#' custom extra columns are tolerated						
+#' # Process example dataset ----
+#' library(vlfunctions)
+#' meta <- vl_metadata_CUTNRUN
+#' vl_CUTNRUN_processing(metadata = meta,
+#'                       processed_metadata_output = "Rdata/metadata_CutNRun_processed.rds",
+#'                       cores= 8,
+#'                       mem= 64,
+#'                       overwrite= FALSE,
+#'                       submit= TRUE)
+#' check <- readRDS("Rdata/metadata_CutNRun_processed.rds")
 #' 
-#' Print command lines for all samples without submitting the jobs:
-#' check <- vl_CUTNRUN_processing(metadata = "/groups/stark/nemcko/Hcfc1_paper/Hcfc1_new/Rdata/metadata_CutNRun.xlsx",
-#'                                processed_metadata_output = "Rdata/CUTNRUN_metadata_processed.rds",
-#'                                overwrite = T,
-#'                                submit = F)
-#' 
-#' Run the pipeline without overwriting existing files:
-#' vl_CUTNRUN_processing(metadata = "/groups/stark/nemcko/Hcfc1_paper/Hcfc1_new/Rdata/metadata_CutNRun.xlsx",
-#'                       processed_metadata_output = "Rdata/CUTNRUN_metadata_processed.rds",
-#'                       overwrite = F,
-#'                       submit = T)
-#'                       
-vl_CUTNRUN_processing <- function(metadata,
-                                  processed_metadata_output= gsub(".txt$", "_processed.rds", metadata),
-                                  scratch_folder= "/scratch/stark/vloubiere/CUTNRUN",
-                                  cores= 8,
-                                  mem= 64,
-                                  overwrite= F,
-                                  submit= F,
-                                  wdir= getwd(),
-                                  logs= "db/logs/CUTNRUN/processing",
-                                  time= '1-00:00:00')
+#' # Peak calling ----
+#' vl_CUTNRUN_peakCalling(processed_metadata = "Rdata/metadata_CutNRun_processed.rds",
+#'                        extsize = 300,
+#'                        cores = 8,
+#'                        mem = 64,
+#'                        overwrite = FALSE,
+#'                        submit = TRUE)
+#'
+#' @export
+vl_CUTNRUN_processing <- function(metadata, ...) UseMethod("vl_CUTNRUN_processing")
+
+#' @describeIn vl_CUTNRUN_processing for excel files path
+#' @export
+vl_CUTNRUN_processing.character <- function(metadata,
+                                            processed_metadata_output= gsub(".xlsx$", "_processed.rds", metadata),
+                                            ...)
+{
+  sheet <- readxl::read_xlsx(metadata)
+  start <- cumsum(sheet[[1]]=="user")>0
+  sheet <- sheet[(start),]
+  meta <- as.data.table(sheet[-1,])
+  names(meta) <- unlist(sheet[1,])
+  vl_CUTNRUN_processing(metadata= meta,
+                        processed_metadata_output= processed_metadata_output,
+                        ...)
+}
+
+#' @describeIn vl_CUTNRUN_processing default method
+#' @export
+vl_CUTNRUN_processing.default <- function(metadata,
+                                          processed_metadata_output= gsub(".txt$", "_processed.rds", metadata),
+                                          scratch_folder= "/scratch/stark/vloubiere",
+                                          cores= 8,
+                                          mem= 64,
+                                          overwrite= F,
+                                          submit= F,
+                                          wdir= getwd(),
+                                          logs= "db/logs/CUTNRUN/processing",
+                                          time= '1-00:00:00')
 {
   # Import metadata and check format ----
-  meta <- readxl::read_xlsx(metadata, skip = 4)
-  meta <- as.data.table(meta)
+  meta <- data.table::copy(metadata)
   cols <- c("user","method","experiment","antibody","cell_line","treatment","replicate","condition","sampleID","barcode","i5","genome","input","layout","sequencer","bam_path")
   if(!all(cols %in% names(meta)))
-    stop(paste(c("metadata file should contain at least these 12 columns:", cols), collapse = " "))
+    stop(paste("Columns missing ->", paste(cols[!cols %in% names(meta)], collapse = "; ")))
   if(any(!na.omit(meta$input) %in% meta$sampleID))
     stop("Some input(s) have no correspondence in the sampleID(s) column!")
-  if(any(!meta$genome %in% c("mm10", "hg38")))
-    stop("For now, only supported genomes are mm10 and hg38!")
+  if(!all(meta[, condition==paste0(antibody, "_", cell_line, "_", treatment, "_", experiment)]))
+    warning("To avoid confusion between samples, it would be safer if condition was the concatenation of ab, cell_line, treatment and experiment")
   if(!all(meta[, sampleID==paste0(antibody, "_", cell_line, "_", treatment, "_", experiment, "_", replicate)]))
-    warning("sampleID should be the catenation of Ab, Cell_line, Treatment, experiment and replicate. Any samples with the same sampleID will be collapsed!")
+    warning("sampleID should be the concatenation of ab, cell_line, treatment, experiment and replicate (separated by '_'). Any samples with the same sampleID will be collapsed!")
+  if(!all(meta$layout %in% c("SINGLE", "PAIRED")))
+    stop("layout column should only contain 'SINGLE' or 'PAIRED'")
+  
+  # Check bowtie2 idx ----
+  if(any(!meta$genome %in% c("mm10", "hg38")))
+    stop("Only mm10 and hg38 are supported! For other genomes, please provide path to the corresponding bowtie 2 index.")
   
   # Generate output paths ----
-  meta[(layout=="SINGLE"), fq1:= paste0(scratch_folder, "/fq/", gsub(".bam", "", basename(bam_path)), "_", make.unique(sampleID), ".fq.gz")]
-  meta[(layout=="PAIRED"), fq1:= paste0(scratch_folder, "/fq/", gsub(".bam", "", basename(bam_path)), "_", make.unique(sampleID), "_1.fq.gz")]
-  meta[(layout=="PAIRED"), fq2:= gsub("_1.fq.gz$", "_2.fq.gz", fq1)]
+  meta[, fq1:= paste0(scratch_folder, "/CUTNRUN/fq/", gsub(".bam", "", basename(bam_path)))]
+  meta[, fq1:= paste0(fq1, "_", make.unique(sampleID), fifelse(layout=="PAIRED", "_1.fq.gz", ".fq.gz"))]
+  meta[, fq2:= fifelse(layout=="PAIRED", gsub("_1.fq.gz$", "_2.fq.gz", fq1), NA_character_)]
   meta[, fq1_trim:= gsub(".fq.gz$", ifelse(layout=="PAIRED", "_val_1.fq.gz", "_trimmed.fq.gz"), fq1), layout]
   meta[, fq2_trim:= gsub(".fq.gz$", "_val_2.fq.gz", fq2)]
-  meta[, bam:= paste0(scratch_folder, "/bam/", sampleID, ".bam")] # re-sequencing are merged from this step on!
+  # re-sequencing are merged from this step on!
+  meta[, bam:= paste0(scratch_folder, "/CUTNRUN/bam/", sampleID, ".bam")]
+  # Join to retrieve input bam
   meta[meta, bam_input:= i.bam, on= "input==sampleID"] # Input bam
   meta[, alignment_stats:= paste0("db/alignment_stats/CUTNRUN/", gsub(".bam$", "_stats.txt", basename(bam)))]
   meta[, mapq30_stats:= gsub("_stats.txt$", "_mapq30_stats.txt", alignment_stats)]
   meta[, peaks_file:= paste0("db/peaks/CUTNRUN/replicates/", sampleID, "_peaks.narrowPeak")]
   meta[, bw_file:= paste0("db/bw/CUTNRUN/replicates/", sampleID, ".bw")]
-  meta[, twoReps:= length(unique(bam))>1, condition] # Check if at least two replicates for conf. peaks
+  # Grouping per condition to check N replicates
+  meta[, twoReps:= length(unique(bam))>1, condition] 
   meta[(twoReps), merged_peaks_file:= paste0("db/peaks/CUTNRUN/merge/", condition, "_merged_peaks.narrowPeak")]
   meta[(twoReps), merged_bw_file:= paste0("db/bw/CUTNRUN/merge/", condition, "_merged.bw")]
   meta[(twoReps), confident_peaks_file:= paste0("db/peaks/CUTNRUN/confident/", condition, "_confident_peaks.narrowPeak")]
@@ -86,7 +115,9 @@ vl_CUTNRUN_processing <- function(metadata,
       saveRDS(meta, processed_metadata_output)
   
   # Create output directories ----
+  tmpSort <- paste0(scratch_folder, "/ORFtag/bam/sort/") # tmp sort bam files
   dirs <- c(logs,
+            tmpSort,
             na.omit(unique(dirname(unlist(meta[, fq1:confident_peaks_file])))))
   if(any(!dir.exists(dirs)))
   {
@@ -95,10 +126,16 @@ vl_CUTNRUN_processing <- function(metadata,
   }
   
   # Print conditions ----
-  cat(paste(length(unique(meta$condition)), "conditions detected, of which", length(unique(meta[(twoReps), condition])), "had >1 replicates:\n"))
-  meta[(twoReps), cat(paste0(condition, ":\n\t", paste0(unique(sampleID), collapse= "\n\t"), "\n")), condition]
-  cat(paste(length(unique(meta[(!twoReps), condition])), "samples had only one replicate:"))
-  meta[(!twoReps), cat(paste0(condition, ":\n\t", paste0(unique(sampleID), collapse= "\n\t"), "\n")), condition]
+  if(any(meta$twoReps))
+  {
+    cat(paste(length(unique(meta$condition)), "conditions detected, of which", length(unique(meta[(twoReps), condition])), "had >1 replicates:\n"))
+    meta[(twoReps), cat(paste0("> ", condition, " -> ", paste0(unique(sampleID), collapse= "; "), "\n")), condition]
+  }
+  if(any(!meta$twoReps))
+  {
+    cat(paste(length(unique(meta[(!twoReps), condition])), "samples had only one replicate:\n"))
+    meta[(!twoReps), cat(paste0("> ", condition, " -> ", paste0(unique(sampleID), collapse= "; "), "\n")), condition]
+  }
   
   # Demultiplex VBC bam file ----
   meta[, demultiplex_cmd:= {
@@ -149,7 +186,7 @@ vl_CUTNRUN_processing <- function(metadata,
             "-x", x,
             inputFiles,
             "2>", alignment_stats, # Return alignment statistics
-            "| samtools sort -@", cores-1, "-T", paste0(scratch_folder, "/bam/sorted"), # Sort with temp files in scratch folder
+            "| samtools sort -@", cores-1, "-T", tmpSort, # Sort with temp files in scratch folder
             "- | samtools view -@", cores-1, "-b -q 30 -o", bam, # Filter
             "; samtools stats", bam, "-@", cores-1, "| grep ^SN>", mapq30_stats) # Add filtering statistics
     }
@@ -200,20 +237,21 @@ vl_CUTNRUN_processing <- function(metadata,
 #' @param time The time required for the SLURM scheduler. Default= '1-00:00:00'
 #'
 #' @return Command lines for peak calling.
-#' @export
 #'
 #' @examples
-#' Takes as input a processed metadata file produced by ?vl_CUTNRUN_processing().
+#' # Peak calling example dataset ----
+#' library(vlfunctions)
 #' 
-#' Print the commands without submitting:
-#' check <- vl_CUTNRUN_peakCalling(processed_metadata = "Rdata/CUTNRUN_metadata_processed.rds",
-#'                                 overwrite = T,
-#'                                 submit = F)
-#' Run the commands without overwriting existing files:
-#' vl_CUTNRUN_peakCalling(processed_metadata = "Rdata/CUTNRUN_metadata_processed.rds",
-#'                        overwrite = T,
-#'                        submit = T)
+#' check <- readRDS("Rdata/metadata_CutNRun_processed.rds") # Check all processed files exist
 #' 
+#' vl_CUTNRUN_peakCalling(processed_metadata = "Rdata/metadata_CutNRun_processed.rds",
+#'                        extsize = 300,
+#'                        cores = 8,
+#'                        mem = 64,
+#'                        overwrite = FALSE,
+#'                        submit = TRUE)
+#' 
+#' @export
 vl_CUTNRUN_peakCalling <- function(processed_metadata,
                                    Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
                                    extsize= 300,
@@ -235,8 +273,13 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
     print(paste(logs, "directory was created!"))
   }
   
+  # Check bowtie2 idx ----
+  if(any(!meta$genome %in% c("mm10", "hg38")))
+    stop("Only mm10 and hg38 are supported! For other genomes, please provide path to the corresponding bowtie 2 index.")
+  
   # Check if at least two replicates ----
-  meta[(!twoReps), print(paste("No replicates found for sample", sampleID, "-> confident peaks calling skipped")), sampleID]
+  if(any(!meta$twoReps))
+    meta[(!twoReps), print(paste("No replicates found for", sampleID, "-> confident peaks calling skipped")), sampleID]
 
   # Peak calling on individual replicates ----
   meta[, peak_cmd:= {

@@ -12,6 +12,7 @@ genome <- args[[3]]
 
 # Load required packages
 library(rtracklayer)
+library(GenomeInfoDb)
 library(BSgenome)
 library(BSgenome.Mmusculus.UCSC.mm10)
 
@@ -21,9 +22,10 @@ if (!grepl("\\.bdg$", bdg_file) && grepl("\\.bw$", bw_file))
 
 # Import bedgraph
 gr <- rtracklayer::import(bdg_file, format = "bedGraph")
-if(genome=="mm10")
-  seqlengths(gr) <- seqlengths(BSgenome.Mmusculus.UCSC.mm10)[seqlevels(gr)] else
-    stop("Genome not supported")
+seqlengths(gr) <- if(genome=="mm10")
+  GenomeInfoDb::seqlengths(BSgenome.Mmusculus.UCSC.mm10)[seqlevels(gr)]else if(genome=="hg38")
+    GenomeInfoDb::seqlengths(BSgenome.Hsapiens.UCSC.hg38)[seqlevels(gr)] else
+      stop("Genome not supported")
 
 # Export to .bw file
 rtracklayer::export(gr, bw_file, format = "bigWig")

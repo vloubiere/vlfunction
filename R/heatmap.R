@@ -181,7 +181,6 @@ vl_heatmap.matrix <- function(x,
   # Add y position
   rows[(order), y:= rev(.I)]
   
-  
   # Clustering cols ----
   # Initiate cols DT
   cols <- data.table(name= colnames(x),
@@ -212,9 +211,30 @@ vl_heatmap.matrix <- function(x,
   # Add x position
   cols[(order), x:= .I]
   
+  # Make object ----
+  obj <- c("x",
+           "rows",
+           "rcl",
+           "rdend",
+           "cluster.rows",
+           "clustering.distance.rows",
+           "cutree.rows",
+           "row.clusters",
+           "kmeans.k",
+           "cols",
+           "ccl",
+           "cdend",
+           "cluster.cols",
+           "clustering.distance.cols",
+           "cutree.cols",
+           "col.clusters",
+           "clustering.method")
+  obj <- mget(obj, envir = environment())
+  setattr(obj,
+          "class",
+          c("vl_heatmap", "list"))
+  
   # PLOT ----
-  obj <- mget(ls())
-  setattr(obj, "class", c("vl_heatmap", "list"))
   if(plot)
     plot(obj,
          breaks= breaks,
@@ -250,44 +270,43 @@ vl_heatmap.matrix <- function(x,
 #' @export
 plot.vl_heatmap <- function(obj,
                             breaks= NULL,
-                            col= NULL,
-                            na.col= NULL,
-                            useRaster= NULL,
-                            grid= NULL,
-                            main= NULL,
-                            show.rownames= NULL,
-                            show.colnames= NULL,
-                            tilt.colnames= NULL,
-                            show.row.dendrogram= NULL,
+                            col= c("cornflowerblue", "white", "red"),
+                            na.col= "lightgrey",
+                            useRaster= TRUE,
+                            grid= FALSE,
+                            main= NA,
+                            show.rownames= TRUE,
+                            show.colnames= TRUE,
+                            tilt.colnames= FALSE,
+                            show.row.dendrogram= TRUE,
                             show.row.clusters= NULL,
-                            row.clusters.pos= NULL,
-                            row.clusters.colors= NULL,
-                            row.cluster.line.color= NULL,
-                            show.col.dendrogram= NULL,
+                            row.clusters.pos= "right",
+                            row.clusters.colors= grDevices::gray.colors(100),
+                            row.cluster.line.color= "black",
+                            show.col.dendrogram= TRUE,
                             show.col.clusters= NULL,
-                            col.clusters.colors= NULL,
-                            show.legend= NULL,
-                            legend.title= NULL,
-                            legend.cex= NULL,
-                            display.numbers= NULL,
-                            display.numbers.matrix= NULL,
-                            display.numbers.cex= NULL,
-                            display.numbers.FUN= NULL, 
-                            box.lwd= NULL)
+                            col.clusters.colors= grDevices::gray.colors(100),
+                            show.legend= TRUE,
+                            legend.title= NA,
+                            legend.cex= 1,
+                            display.numbers= FALSE,
+                            display.numbers.matrix= x,
+                            display.numbers.cex= 1,
+                            display.numbers.FUN= function(x) round(x, 2), 
+                            box.lwd= .25)
 {
-  # Retrieve environment and update plotting variables----
-  args <- intersect(ls(), names(obj))
-  args <- args[sapply(args, function(x) !is.null(get(x)))]
-  for(arg in args)
-  {
-    if(!identical(get(arg), obj[[arg]]))
-      obj[[arg]] <- get(arg)
-  }
+  # Retrieve environment ----
   list2env(obj, environment())
   
   # Checks ----
   if(row.clusters.pos=="left")
     show.rownames <- F
+  if(is.null(breaks))
+    breaks <- seq(min(x, na.rm= T), max(x, na.rm= TRUE), length.out= length(col))
+  if(is.null(show.row.clusters))
+    show.row.clusters <- length(unique(rows$cl))>1
+  if(is.null(show.col.clusters))
+    show.col.clusters <- length(unique(cols$cl))>1
   
   # Assign cluster colors ----
   rows[, col:= colorRampPalette(row.clusters.colors)(.NGRP)[.GRP], cl]

@@ -13,26 +13,29 @@ vl_motif_counts(sequences, ...)
 \method{vl_motif_counts}{character}(
   sequences = NULL,
   sel = vl_Dmel_motifs_DB_full[collection == "jaspar", motif_ID],
+  motifDB = vl_Dmel_motifs_DB_full,
+  pwm_log_odds = NULL,
   genome,
   bg = "genome",
-  p.cutoff = 5e-04,
-  motifDB = vl_Dmel_motifs_DB_full
+  p.cutoff = 5e-04
 )
 }
 \arguments{
 \item{sequences}{Named character vector of sequences to analyse. If provided takes over bed argument (in the case where both are specified)}
 
-\item{bed}{Either a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns}
+\item{bed}{Either a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start' and 'end' columns.}
 
-\item{genome}{Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome"}
+\item{genome}{Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome".}
 
-\item{sel}{Vector of motif_ID to compute. Defaults to jaspar PWMs. See vl_Dmel_motifs_DB_full$motif_ID}
+\item{sel}{Vector of motif_ID(s) existing in motifDB (see below) for which motif matches should be counted. Defaults to jaspar PWMs.}
+
+\item{motifDB}{The motifDB to be used (see 'sel' argument; ?vl_Dmel_motifs_DB_full and ?vl_motifs_DB_v2 for details). Default= vl_Dmel_motifs_DB_full.}
 
 \item{bg}{Background used to find motifs. Possible values include "genome" and "even". Default= "genome"}
 
-\item{p.cutoff}{Pval cutoff used for motif detection}
+\item{p.cutoff}{p.value cutoff used for motif detection. Default= 5e-4.}
 
-\item{motifDB}{The motifDB object to be used. see ?vl_Dmel_motifs_DB_full and ?vl_motifs_DB_v2, Default= vl_Dmel_motifs_DB_full}
+\item{pwms_log_odds}{A PWMatrixList (in log2 odd ratio format) for which motif matches should be counted. Overrides sel and motifDB arguments (see above).}
 }
 \value{
 Matrix of motif counts
@@ -48,10 +51,10 @@ Counts motif occurences in a set of regions
 
 }}
 \examples{
-# Example run
+# Select motifs
 sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
 
-# Regions
+# Resize example peaks
 top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks,
                          upstream = 250,
                          downstream = 250,
@@ -63,7 +66,7 @@ top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks,
 ctls_regions <- vl_control_regions_BSgenome(bed= vl_SUHW_top_peaks,
                                             genome= "dm3")
                           
-# Motif counts
+# Count motifs
 suhw <- vl_motif_counts(top_SUHW,
                         genome= "dm3",
                         sel= sel)

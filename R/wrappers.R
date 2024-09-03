@@ -54,7 +54,8 @@ vl_bsub <- function(cmd,
     job_ID <- system(paste0("ssh localhost sh ", tmp),
                      intern = T,
                      ignore.stderr = TRUE)
-    return(unlist(data.table::tstrsplit(job_ID[2], " ", keep= 4)))
+    file.remove(tmp)
+    return(gsub(".* (.*$)", "\\1", job_ID[2]))
   }else
   {
     return(bsub_cmd)

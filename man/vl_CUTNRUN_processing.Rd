@@ -2,12 +2,22 @@
 % Please edit documentation in R/ChIP_CUT&RUN_pipeline.R
 \name{vl_CUTNRUN_processing}
 \alias{vl_CUTNRUN_processing}
+\alias{vl_CUTNRUN_processing.character}
+\alias{vl_CUTNRUN_processing.default}
 \title{ORFtag pipeline}
 \usage{
-vl_CUTNRUN_processing(
+vl_CUTNRUN_processing(metadata, ...)
+
+\method{vl_CUTNRUN_processing}{character}(
+  metadata,
+  processed_metadata_output = gsub(".xlsx$", "_processed.rds", metadata),
+  ...
+)
+
+\method{vl_CUTNRUN_processing}{default}(
   metadata,
   processed_metadata_output = gsub(".txt$", "_processed.rds", metadata),
-  scratch_folder = "/scratch/stark/vloubiere/CUTNRUN",
+  scratch_folder = "/scratch/stark/vloubiere",
   cores = 8,
   mem = 64,
   overwrite = F,
@@ -18,9 +28,9 @@ vl_CUTNRUN_processing(
 )
 }
 \arguments{
-\item{metadata}{The path to a .txt, tab-separated metadata file containing at least 12 columns. See vlfunctions::vl_metadata_ORFtag for an example.}
+\item{metadata}{The path to a .txt, tab-separated metadata file containing at least 12 columns. See vl_metadata_CUTNRUN for an example.}
 
-\item{processed_metadata_output}{An .rds path where to save the processed metadata file (containing the paths of output files). By default, "_processed.rds" will be appended to the metadata path.}
+\item{processed_metadata_output}{An .rds path where to save the processed metadata file (containing the paths of output files). By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.}
 
 \item{scratch_folder}{Folder where intermediate bam and fastq files will be saved}
 
@@ -30,7 +40,7 @@ vl_CUTNRUN_processing(
 
 \item{overwrite}{Should existing files be overwritten?}
 
-\item{submit}{Should the command be submitted? default= G}
+\item{submit}{Should the command be submitted? default= FALSE.}
 
 \item{wdir}{The working directory to use. defaut= getwd().}
 
@@ -42,29 +52,37 @@ vl_CUTNRUN_processing(
 Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data. These commands can then be submitted using ?vl_bsub().
 }
 \description{
-Takes as input a (corerectly formated) metadata file, save the processed metadata file and returns the command lines to 1/ extract reads from VBC bam file, 2/ trim the reads and align to mouse/human genome (see 'species' column of the metadata table) and return alignment statistics as well as collapsed reads and 4/ assign insertions to closest downstream genes.
+Takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns the command lines to: \cr
+1/ extract reads from VBC bam file \cr
+2/ trim the reads and align to mouse/human genome (see 'genome' column of the metadata table) \cr
+3/ and return alignment statistics as well as collapsed reads and
+6/ assign insertions to closest downstream genes.
 }
+\section{Methods (by class)}{
+\itemize{
+\item \code{vl_CUTNRUN_processing(character)}: for excel files path
+
+\item \code{vl_CUTNRUN_processing(default)}: default method
+
+}}
 \examples{
-Takes as input a .xlsx metadata sheet that should be formatted as follows:
->>>>
-READ ME																									
-sampleID should be the concatenation of ab, cell_line, treatment, experiment and replicate; and should be unique for each sample/replicate. Samples with the same sampleID will be merged (re-sequencing...).																									
-The condition should be shared between replicates, and will be used to call peaks on the merge data.																									
-The input column should specify the replicate-matched input sampleID.																									
-user	method	experiment	antibody	cell_line	treatment	replicate	condition	sampleID	barcode	i5	genome	input	layout	sequencer	bam_path
-<<<<
-custom extra columns are tolerated						
+# Process example dataset ----
+library(vlfunctions)
+meta <- vl_metadata_CUTNRUN
+vl_CUTNRUN_processing(metadata = meta,
+                      processed_metadata_output = "Rdata/metadata_CutNRun_processed.rds",
+                      cores= 8,
+                      mem= 64,
+                      overwrite= FALSE,
+                      submit= TRUE)
+check <- readRDS("Rdata/metadata_CutNRun_processed.rds")
 
-Print command lines for all samples without submitting the jobs:
-check <- vl_CUTNRUN_processing(metadata = "/groups/stark/nemcko/Hcfc1_paper/Hcfc1_new/Rdata/metadata_CutNRun.xlsx",
-                               processed_metadata_output = "Rdata/CUTNRUN_metadata_processed.rds",
-                               overwrite = T,
-                               submit = F)
+# Peak calling ----
+vl_CUTNRUN_peakCalling(processed_metadata = "Rdata/metadata_CutNRun_processed.rds",
+                       extsize = 300,
+                       cores = 8,
+                       mem = 64,
+                       overwrite = FALSE,
+                       submit = TRUE)
 
-Run the pipeline without overwriting existing files:
-vl_CUTNRUN_processing(metadata = "/groups/stark/nemcko/Hcfc1_paper/Hcfc1_new/Rdata/metadata_CutNRun.xlsx",
-                      processed_metadata_output = "Rdata/CUTNRUN_metadata_processed.rds",
-                      overwrite = F,
-                      submit = T)
-                      
 }

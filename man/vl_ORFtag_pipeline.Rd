@@ -2,14 +2,22 @@
 % Please edit documentation in R/ORFtag_pipeline.R
 \name{vl_ORFtag_pipeline}
 \alias{vl_ORFtag_pipeline}
+\alias{vl_ORFtag_pipeline.character}
+\alias{vl_ORFtag_pipeline.default}
 \title{ORFtag pipeline}
 \usage{
-vl_ORFtag_pipeline(
+vl_ORFtag_pipeline(metadata, ...)
+
+\method{vl_ORFtag_pipeline}{character}(
   metadata,
-  processed_metadata_output = gsub(".txt$", "_processed.rds", metadata),
-  bowtie2.idx,
-  exons.start.gtf,
-  scratch_folder = "/scratch/stark/vloubiere/ORFtag",
+  processed_metadata_output = gsub(".xlsx$", "_processed.rds", metadata),
+  ...
+)
+
+\method{vl_ORFtag_pipeline}{default}(
+  metadata,
+  processed_metadata_output,
+  scratch_folder = "/scratch/stark/vloubiere",
   Rpath = "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
   cores = 8,
   mem = 32,
@@ -21,17 +29,9 @@ vl_ORFtag_pipeline(
 )
 }
 \arguments{
-\item{metadata}{The path to a .txt, tab-separated metadata file containing at least 12 columns. See vlfunctions::vl_metadata_ORFtag for an example.}
+\item{metadata}{The path to a correctly formated .xlsx metadata file or a data.table (see vl_metadata_ORFtag for an example).}
 
-\item{processed_metadata_output}{An .rds path where to save the processed metadata file (containing the paths of output files). By default, "_processed.rds" will be appended to the metadata path.}
-
-\item{bowtie2.idx}{bowtie2 index with prefix.\cr
-mm10: "/groups/stark/vloubiere/genomes/Mus_musculus/UCSC/mm10/Sequence/Bowtie2Index/genome"\cr
-hg38: "/groups/stark/vloubiere/genomes/Homo_sapiens/hg38/Bowtie2Index/genome"}
-
-\item{exons.start.gtf}{gtf file containing (non-first) exon start coordinates. See details on how to generate such file.\cr
-mm10: "/groups/stark/vloubiere/projects/ORFTRAP_1/db/gtf/exons_start_mm10.gtf"\cr
-hg38: "/groups/stark/vloubiere/projects/ORFTRAP_1/db/gtf/exons_start_hg38.gtf"}
+\item{processed_metadata_output}{An .rds path where to save the processed metadata file (containing the paths of output files). By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.}
 
 \item{scratch_folder}{Folder to be used for storing temporary files. Default= "/scratch/stark/vloubiere/ORFtag".}
 
@@ -43,7 +43,7 @@ hg38: "/groups/stark/vloubiere/projects/ORFTRAP_1/db/gtf/exons_start_hg38.gtf"}
 
 \item{overwrite}{Should existing files be overwritten?}
 
-\item{submit}{Should the command be submitted? default= G}
+\item{submit}{Should the command be submitted? default= FALSE.}
 
 \item{wdir}{The working directory to use. defaut= getwd().}
 
@@ -55,10 +55,78 @@ hg38: "/groups/stark/vloubiere/projects/ORFTRAP_1/db/gtf/exons_start_hg38.gtf"}
 Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data. These commands can then be submitted using ?vl_bsub().
 }
 \description{
-Takes as input a (corerectly formated) metadata file, save the processed metadata file and returns the command lines to 1/ extract reads from VBC bam file, 2/ trim the reads and align to mouse/human genome (see 'species' column of the metadata table) and return alignment statistics as well as collapsed reads and 4/ assign insertions to closest downstream genes.
+Takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns the command lines to: \cr
+ 1/ extract reads from VBC bam file \cr
+ 2/ trim the reads \cr
+ 3/ Aligns to mouse/human genome (see 'genome' column of the metadata table) and returns a bam file \cr
+ 4/ Return alignment statistics \cr
+ 5/ Collapse unique reads and stores them into a bam file \cr
+ 6/ assign insertions to closest downstream genes \cr
+ 
+By default, only the commands for which output files do not exist will be returned (overwrite= F), and the commands will not be submitted to the cluster (submit= F).
 }
+\section{Methods (by class)}{
+\itemize{
+\item \code{vl_ORFtag_pipeline(character)}: for excel files path
+
+\item \code{vl_ORFtag_pipeline(default)}: default method
+
+}}
 \examples{
-# Create .gtf files containing non-first exon start coordinates ------------------
+# Process example mouse data -----------------------------------------------------------------------------
+library(vlfunctions)
+meta <- vl_metadata_ORFtag[genome=="mm10"] # Example metadata sheet
+vl_ORFtag_pipeline(metadata= meta,
+                   processed_metadata_output = "Rdata/metadata_ORFtag_processed.rds",
+                   cores= 8,
+                   mem= 32,
+                   overwrite= F,
+                   submit= T)
+                   
+check <- readRDS("Rdata/metadata_ORFtag_processed.rds") # Check that all output files have been generated
+
+# Call hits ----------------------------------------------------------------------------------------------
+# 128 should be identified with this dataset
+vl_ORFtrap_call_hits(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
+                                               "db/gene_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
+                     unsorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
+                                                 "db/gene_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
+                     genome = "mm10",
+                     name = "Activator_2",
+                     output.suffix = "_vs_input.txt")
+
+# Call hits using revese strand (sanity check -> be cautious with the hits that are also found here!) ----
+# 89 hits should be identified with the reverse strand
+vl_ORFtrap_call_hits(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_rev_strand.txt",
+                                               "db/gene_assignment/ORFtag/Activator2_sort_rep2_rev_strand.txt"),
+                     unsorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_rev_strand.txt",
+                                                 "db/gene_assignment/ORFtag/Activator2_input_rep2_rev_strand.txt"),
+                     genome = "mm10",
+                     name = "Activator_2",
+                     output.suffix = "_vs_input_rev_strand.txt")
+
+# Diagnostic
+# 4 of the hits should be identified with the reverse strand and should be considered carefully
+hits <- fread("db/FC_tables/ORFtag/Activator_2_vs_input.txt")[(hit), gene_name]
+sanityCheck <- fread("db/FC_tables/ORFtag/Activator_2_vs_input_rev_strand.txt")[(hit), gene_name]
+print(paste(length(hits), "hits were found, out of which", sum(hits \%in\% sanityCheck),
+            "were also found using reversed strand and should be considered carefully"))
+
+# Call hits using strand bias (not used) ------------------------------------------------------------------
+# 63 hits should be called with this dataset
+vl_ORFtrap_call_hits_strandBias(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
+                                                          "db/gene_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
+                                sorted.reverse.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_rev_strand.txt",
+                                                          "db/gene_assignment/ORFtag/Activator2_sort_rep2_rev_strand.txt"),
+                                unsorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
+                                                            "db/gene_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
+                                unsorted.reverse.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_rev_strand.txt",
+                                                            "db/gene_assignment/ORFtag/Activator2_input_rep2_rev_strand.txt"),
+                                genome = "mm10",
+                                name = "Activator_2",
+                                output.suffix = "_vs_input_strandBias.txt")
+
+#' # Create .gtf files containing non-first exon start coordinates ------------------
 # Mouse (mm10):
 # gtf <- rtracklayer::import("ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M25/gencode.vM25.basic.annotation.gtf.gz")
 gtf <- rtracklayer::import("db/gtf/gencode.vM25.basic.annotation.gtf.gz")
@@ -70,71 +138,8 @@ exons$exon_id <- gsub("[.*]..*", "\\\\1", exons$exon_id)
 exons <- unique(exons)
 rtracklayer::export(exons,
                     "db/gtf/exons_start_mm10.gtf")
+                    
 # Human (hg38):
 # gtf <- rtracklayer::import("https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_43/gencode.v43.annotation.gtf.gz")
-gtf <- rtracklayer::import("db/gtf/gencode.v43.annotation.gtf.gz")
-exons <- gtf[gtf$transcript_type=="protein_coding" & gtf$type=="exon" & gtf$exon_number>1]
-exons <- GenomicRanges::resize(exons, 1, "start")
-mcols(exons) <- mcols(exons[, c("gene_id", "gene_name", "exon_number", "exon_id")])
-exons$gene_id <- gsub("[.*]..*", "\\\\1", exons$gene_id)
-exons$exon_id <- gsub("[.*]..*", "\\\\1", exons$exon_id)
-exons <- unique(exons)
-rtracklayer::export(exons, 
-                    "db/gtf/exons_start_hg38.gtf")
 
-# Process mouse data -------------------------------------------------------------
-vlfunctions::vl_metadata_ORFtag # Example metadata sheet
-path <- tempfile(fileext = ".txt")
-fwrite(vlfunctions::vl_metadata_ORFtag[species=="mouse"], path) # Mouse data
-
-vl_ORFtag_pipeline(metadata= path,
-                   processed_metadata_output = "Rdata/metadata_ORFtag_processed.rds",
-                   bowtie2.idx= "/groups/stark/vloubiere/genomes/Mus_musculus/UCSC/mm10/Sequence/Bowtie2Index/genome",
-                   exons.start.gtf= "/groups/stark/vloubiere/projects/ORFTRAP_1/db/gtf/exons_start_mm10.gtf",
-                   Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
-                   cores= 8,
-                   mem= 32,
-                   overwrite= F,
-                   submit= T,
-                   logs= "db/logs")
-
-# Call hits ----------------------------------------------------------------------
-vl_ORFtrap_call_hits(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
-                                               "db/gene_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
-                     unsorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
-                                                 "db/gene_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
-                     exons.start.gtf = "/groups/stark/vloubiere/projects/ORFTRAP_1/db/gtf/exons_start_mm10.gtf",
-                     name = "Activator_2",
-                     output.suffix = "_vs_input.txt",
-                     output.folder.FC.file = "db/FC_tables/ORFtag/")
-
-# Call hits using revese strand (sanity check -> be cautious with the hits that are also found here!) ----
-vl_ORFtrap_call_hits(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_rev_strand.txt",
-                                               "db/gene_assignment/ORFtag/Activator2_sort_rep2_rev_strand.txt"),
-                     unsorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_rev_strand.txt",
-                                                 "db/gene_assignment/ORFtag/Activator2_input_rep2_rev_strand.txt"),
-                     exons.start.gtf = "/groups/stark/vloubiere/projects/ORFTRAP_1/db/gtf/exons_start_mm10.gtf",
-                     name = "Activator_2",
-                     output.suffix = "_vs_input_rev_strand.txt",
-                     output.folder.FC.file = "db/FC_tables/ORFtag/")
-
-# Diagnostic
-hits <- fread("db/FC_tables/ORFtag/Activator_2_vs_input.txt")[(hit), gene_name]
-sanityCheck <- fread("db/FC_tables/ORFtag/Activator_2_vs_input_rev_strand.txt")[(hit), gene_name]
-print(paste(length(hits), "hits were found, out of which", sum(hits \%in\% sanityCheck),
-            "were also found using reversed strand and should be considered carefully"))
-
-# Call hits using strand bias (not used) -----------------------------------------
-vl_ORFtrap_call_hits_strandBias(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
-                                                          "db/gene_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
-                                sorted.reverse.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_rev_strand.txt",
-                                                          "db/gene_assignment/ORFtag/Activator2_sort_rep2_rev_strand.txt"),
-                                unsorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
-                                                            "db/gene_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
-                                unsorted.reverse.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_rev_strand.txt",
-                                                            "db/gene_assignment/ORFtag/Activator2_input_rep2_rev_strand.txt"),
-                                exons.start.gtf = "/groups/stark/vloubiere/projects/ORFTRAP_1/db/gtf/exons_start_mm10.gtf",
-                                name = "Activator_2",
-                                output.suffix = "_vs_input_strandBias.txt",
-                                output.folder.FC.file = "db/FC_tables/ORFtag/")
 }

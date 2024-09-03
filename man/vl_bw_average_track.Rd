@@ -26,8 +26,7 @@ vl_bw_average_track(
   legend = TRUE,
   legend.pos = "topleft",
   legend.cex = 1,
-  xlab.labs = if (anchor == "center") c(-upstream[1], "Center", upstream) else
-    c(-upstream, "Start", "Region", "End", downstream),
+  xlab.labs = NULL,
   abline = TRUE,
   abline.col = "black",
   abline.lty = 3,
@@ -37,18 +36,19 @@ vl_bw_average_track(
 \method{plot}{vl_bw_average_track}(
   obj,
   ylim = NULL,
-  xlab = NULL,
-  ylab = NULL,
-  col = NULL,
-  col.adj = NULL,
-  legend = NULL,
-  legend.pos = NULL,
-  legend.cex = NULL,
+  xlab = "Genomic distance",
+  ylab = "Enrichment",
+  col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A", "#4F6A6F", "#D26429",
+    "#C57DA5", "#999999"),
+  col.adj = 0.5,
+  legend = TRUE,
+  legend.pos = "topleft",
+  legend.cex = 1,
   xlab.labs = NULL,
-  abline = NULL,
-  abline.col = NULL,
-  abline.lty = NULL,
-  abline.lwd = NULL
+  abline = TRUE,
+  abline.col = "black",
+  abline.lty = 3,
+  abline.lwd = 1
 )
 }
 \arguments{
@@ -112,14 +112,26 @@ Plots average tracks for a set bw files around (potentially) several sets of pea
 bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
 sets <- c(rep("suhw", 100), rep("STARR", 1000))
 tracks <- c("/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw",
-"/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
+            "/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
 
 par(mfrow= c(2,2))
-vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, upstream = 1000, downstream = 1000)
-pl <- vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, upstream = 1000, downstream = 1000, anchor= "region")
+vl_bw_average_track(bed,
+                    set.IDs = sets,
+                    tracks= tracks,
+                    upstream = 1000,
+                    downstream = 1000)
+pl <- vl_bw_average_track(bed,
+                          set.IDs = sets,
+                          tracks= tracks,
+                          upstream = 1000,
+                          downstream = 1000,
+                          anchor= "region")
 
 # Play with plotting parameters
-plot(pl) # Same parameters as the plot from the original function
-plot(pl, col= c("blue", "red"), ylim= c(0, 150), xlab.labs= c(-1000, "TSS", "Gene", "TTS", 1000))
+plot(pl) # Plot with default parameters
+plot(pl,
+     col= c("blue", "red"),
+     ylim= c(0, 200),
+     xlab.labs= c(-1000, "TSS", "Gene", "TTS", 1000))
 
 }

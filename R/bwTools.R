@@ -232,15 +232,27 @@ vl_bw_coverage_bins <- function(bed,
 #' bed <- rbind(vl_SUHW_top_peaks, vl_STARR_DSCP_top_peaks, fill= T)
 #' sets <- c(rep("suhw", 100), rep("STARR", 1000))
 #' tracks <- c("/groups/stark/vloubiere/projects/available_data_dm3/db/bw/GSE41354_SuHw_rep1_uniq.bw",
-#' "/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
+#'             "/groups/stark/vloubiere/projects/gw_STARRSeq_bernardo/db/bw/DSCP_200bp_gw.UMI_cut_merged.bw")
 #' 
 #' par(mfrow= c(2,2))
-#' vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, upstream = 1000, downstream = 1000)
-#' pl <- vl_bw_average_track(bed, set.IDs = sets, tracks= tracks, upstream = 1000, downstream = 1000, anchor= "region")
+#' vl_bw_average_track(bed,
+#'                     set.IDs = sets,
+#'                     tracks= tracks,
+#'                     upstream = 1000,
+#'                     downstream = 1000)
+#' pl <- vl_bw_average_track(bed,
+#'                           set.IDs = sets,
+#'                           tracks= tracks,
+#'                           upstream = 1000,
+#'                           downstream = 1000,
+#'                           anchor= "region")
 #' 
 #' # Play with plotting parameters
-#' plot(pl) # Same parameters as the plot from the original function
-#' plot(pl, col= c("blue", "red"), ylim= c(0, 150), xlab.labs= c(-1000, "TSS", "Gene", "TTS", 1000))
+#' plot(pl) # Plot with default parameters
+#' plot(pl,
+#'      col= c("blue", "red"),
+#'      ylim= c(0, 200),
+#'      xlab.labs= c(-1000, "TSS", "Gene", "TTS", 1000))
 #' 
 #' @export
 vl_bw_average_track <- function(bed,
@@ -262,7 +274,7 @@ vl_bw_average_track <- function(bed,
                                 legend= TRUE,
                                 legend.pos= "topleft",
                                 legend.cex= 1,
-                                xlab.labs= if(anchor=="center") c(-upstream[1], "Center", upstream) else c(-upstream, "Start", "Region", "End", downstream),
+                                xlab.labs= NULL,
                                 abline= TRUE,
                                 abline.col= "black",
                                 abline.lty= 3,
@@ -294,9 +306,10 @@ vl_bw_average_track <- function(bed,
     print(levels(quantif$setID))
   }
   setorderv(quantif, c("name", "setID"))
-  obj <- ls()
+  obj <- c("quantif", "tracks", "names",
+           "anchor", "upstream", "downstream", "nbins",
+           "ignore.strand", "genome")
   obj <- mget(obj, envir = environment())
-  obj$bed <- obj$set.IDs <- NULL
   setattr(obj, 
           "class", 
           "vl_bw_average_track")
@@ -326,30 +339,26 @@ vl_bw_average_track <- function(bed,
 #' @export
 plot.vl_bw_average_track <- function(obj,
                                      ylim= NULL,
-                                     xlab= NULL,
-                                     ylab= NULL,
-                                     col= NULL,
-                                     col.adj= NULL,
-                                     legend= NULL,
-                                     legend.pos= NULL,
-                                     legend.cex= NULL,
+                                     xlab= "Genomic distance",
+                                     ylab= "Enrichment",
+                                     col= c("#E69F00","#68B1CB","#15A390","#96C954","#77AB7A","#4F6A6F","#D26429","#C57DA5","#999999"),
+                                     col.adj= 0.5,
+                                     legend= TRUE,
+                                     legend.pos= "topleft",
+                                     legend.cex= 1,
                                      xlab.labs= NULL,
-                                     abline= NULL,
-                                     abline.col= NULL,
-                                     abline.lty= NULL,
-                                     abline.lwd= NULL)
+                                     abline= TRUE,
+                                     abline.col= "black",
+                                     abline.lty= 3,
+                                     abline.lwd= 1)
 {
-  # Retrieve environment and update plotting variables----
-  args <- intersect(ls(), names(obj))
-  args <- args[sapply(args, function(x) !is.null(get(x)))]
-  for(arg in args)
-  {
-    if(!identical(get(arg), obj[[arg]]))
-      obj[[arg]] <- get(arg)
-  }
+  # Retrieve environment ----
   list2env(obj, environment())
   
   # Check x labels and compute positions ----
+  if(is.null(xlab.labs))
+    xlab.labs <- if(anchor=="center") c(-upstream, "Center", upstream) else if(anchor=="region")
+      c(-upstream, "Start", "Region", "End", downstream)
   if(anchor=="center" && length(xlab.labs)!=3)
     stop("When anchor is set to 'center', xlabl.labs should be of length 2")
   if(anchor=="region" && length(xlab.labs)!=5)

@@ -13,12 +13,13 @@ data.table
   \item{condition}{Typically one of 'sort' or 'input'}
   \item{replicate}{replicate}
   \item{barcodes}{Typically two barcodes, e.g. 'GCCTCTTC|ATTGATTC'}
-  \item{sampleID}{sampleID. Should correspond to the catenation of screen, condtion and replicate; and be unique for each biological samples: all data will be merged per sampleID}
+  \item{sampleID}{sampleID. Should correspond to the catenation of screen, condtion and replicate  (separated by '_'), and be unique for each biological sample/replicate. Samples with the same sampleID will be merged (re-sequencing...).}
   \item{expName}{Experiment name}
-  \item{species}{One of 'mouse' or 'human'}
-  \item{layout}{'PAIRED' or 'SINGLE'. Will be used in combination with 'sequence' to know in which column barcodes should be found}
-  \item{sequencer}{'NextSeq or HiSeq. Will be used in combination with 'layout' to know in which column barcodes should be found'}
+  \item{genome}{For now, only 'mm10' and 'hg38' are supported}
+  \item{layout}{'PAIRED' or 'SINGLE'. Will be used in combination with 'sequencer' to know in which column barcodes should be found}
+  \item{sequencer}{'NextSeq or HiSeq. Will be used in combination with 'layout' to know in which column barcodes should be found}
   \item{bam_path}{The path to the VBC bam file containing the reads}
+  \item{comment}{Extra columns are tolerated}
   ...
 }
 }

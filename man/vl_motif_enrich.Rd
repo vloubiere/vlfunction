@@ -9,10 +9,10 @@
 vl_motif_enrich(
   counts,
   control.counts,
-  names = NULL,
+  names = vl_Dmel_motifs_DB_full[colnames(counts), motif_cluster, on = "motif_ID"],
   plot = F,
   padj.cutoff = 0.05,
-  top.enrich = NA,
+  top.enrich = Inf,
   min.counts = 3L,
   order = "padj",
   breaks = NULL,
@@ -35,11 +35,11 @@ vl_motif_enrich(
 )
 }
 \arguments{
-\item{counts}{data.table containing counts for the regions of interest}
+\item{counts}{data.table containing counts for the regions of interest.}
 
-\item{control.counts}{data.table containing counts for control regions (data.table)}
+\item{control.counts}{data.table containing counts for control regions. Should have the same number of columns as 'counts' table.}
 
-\item{names}{Convenient names to be used for plotting and so on... Default (NULL) returns to vl_Dmel_motifs_DB_full$motif_cluster names}
+\item{names}{Convenient names to be used for aggregating and plotting. By default, returns motif_cluster matching motif_ID in vl_Dmel_motifs_DB_full.}
 
 \item{plot}{Plot result?}
 
@@ -59,9 +59,9 @@ vl_motif_enrich(
 
 \item{add.motifs}{Should motif pwms be plotted?}
 
-\item{cex.width}{expansion factor for motif widths}
+\item{cex.width}{Expansion factor for motif widths.}
 
-\item{cex.height}{expansion factor for motif heights}
+\item{cex.height}{Expansion factor for motif heights.}
 
 \item{obj}{An object of class vl_enr}
 }
@@ -77,8 +77,10 @@ Compute motif enrichment between a set of regions and control regions
 
 }}
 \examples{
-# Motif counts
+# Select motifs
 sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
+
+# Resize example peaks
 top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks,
                          upstream = 250,
                          downstream = 250,
@@ -87,6 +89,8 @@ top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks,
                           upstream = 250,
                           downstream = 250,
                           genome = "dm3")
+                          
+# Count motifs
 counts <- vl_motif_counts(top_SUHW,
                           genome= "dm3",
                           sel= sel)
@@ -102,6 +106,7 @@ DT <- vl_motif_enrich(counts,
                       plot= T)
 
 # Plot
+par(mai= c(.9, 2, .9, .9))
 DT <- plot(DT,
            padj.cutoff= 1e-7)
 vl_add_motifs(DT)

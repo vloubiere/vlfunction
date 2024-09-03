@@ -52,8 +52,6 @@ vl_barplot <- function(height,
     stop("Only height tables and vectors are supported for now")
   if(horiz)
     stop("horiz not supported yet ;)")
-  if(tilt.names)
-    xaxt <- "n"
   
   # Compute sd if necessary ----
   sd <- if(show.sd && !is.null(individual.var))
@@ -79,8 +77,8 @@ vl_barplot <- function(height,
   }
   
   # Initiate barplot ----
-  bar <- barplot(height, xlim= xlim, ylim= ylim, xaxt= xaxt, names.arg= names.arg, ...)
-  if(tilt.names && !is.null(names.arg))
+  bar <- barplot(height, xlim= xlim, ylim= ylim, xaxt= ifelse(tilt.names, "n", xaxt), names.arg= names.arg, ...)
+  if(tilt.names && !is.null(names.arg) && xaxt!="n")
     vl_tilt_xaxis(bar, labels= names.arg)
   dat[, x:= bar]
   
