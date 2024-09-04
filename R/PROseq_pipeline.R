@@ -1,9 +1,29 @@
 #' PRO-seq pipeline
 #' 
-#' Takes as input a (correctly formatted) metadata file, save the processed metadata file and returns the command lines to 1/ extract reads from VBC bam file, 2/ trim the reads and align to mouse/human genome (see 'genome' column of the metadata table) and return alignment statistics as well 4/ gene counts.
+#' To use this this pipeline, please install the vl_function package using install_github("vloubiere/vlfunction") in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R') which will be used to submit R sub-scripts.
+#' 
+#' The pipeline is split into two main parts. The first vl_PROseq_processing() aligns the reads and filters confident alignments.
+#' It takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns and/or submit the command lines to: \cr
+#' 1/ extract reads from VBC bam file \cr
+#' 2/ trim the reads \cr
+#' 3/ aligns them to mouse/human genome (see 'genome' column of the metadata table) \cr
+#' 4/ store unaligned read into a fastq file \cr
+#' 5/ align these remaining reads to spike-in genome ('dm3') \cr
+#' 6/ compute counts and statistics both for the reference genome and for spike-in \cr
+#' 7/ count the reads overlapping promoter, gene-body and transcripts \cr
+#' 8/ output .bw tracks for positive and negative strand reads.
+#' 
+#' The second function, vl_PROseq_DESeq2() can be used for differential analysis. It returns: \cr
+#' 1/ a .dds DESeq2 object for each experiment \cr
+#' 2/ the fold-change tables corresponding to the comparison of 'DESeq2_condition' versus 'DESeq2_control' conditions (see colnames of the processed_metadata file) \cr
+#' 3/ A barplot showing the statistics of each dds file \cr
+#' 4/ MA plots corresponding to each comparison \cr
 #'
-#' @param metadata The path to a .txt, tab-separated metadata file containing at least 12 columns. See vl_metadata_PROseq for an example.
-#' @param processed_metadata_output An .rds path where to save the processed metadata file (containing the paths of output files). By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.
+#' @param metadata The path to a .txt, tab-separated metadata file containing at least 12 columns. See "/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_PROseq.xlsx" and vl_metadata_PROseq for a template.
+#' @param processed_metadata_output An .rds path where to save the processed metadata file (containing the paths of output files). By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path. This processed metadata can be used to locate and manage all processed files.
+#' @param count_output_folder Folder where count files will be stored. Default= "db/counts/PROseq/".
+#' @param count_table_output_folder Folder where count tables will be stored. Default= "db/count_tables/PROseq/".
+#' @param bw_output_folder Folder where bigwig files will be store. Default= "db/bw/PROseq/".
 #' @param scratch_folder Folder where intermediate bam and fastq files will be saved
 #' @param Rpath Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript" 
 #' @param cores Number of cores per job. Default= 8
@@ -57,6 +77,9 @@ vl_PROseq_processing.character <- function(metadata,
 #' @export
 vl_PROseq_processing.default <- function(metadata,
                                          processed_metadata_output= gsub(".txt$", "_processed.rds", metadata),
+                                         count_output_folder= "db/counts/PROseq/",
+                                         count_table_output_folder= "db/count_tables/PROseq/",
+                                         bw_output_folder= "db/bw/PROseq/",
                                          scratch_folder= "/scratch/stark/vloubiere",
                                          Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
                                          cores= 8,
@@ -94,18 +117,18 @@ vl_PROseq_processing.default <- function(metadata,
   meta[, fq_unaligned:= paste0(scratch_folder, "/PROseq/fq/", sampleID, "_unaligned.fq")] 
   meta[, bamSpike:= paste0(scratch_folder, "/PROseq/bam/", sampleID, "_", spikein_genome, "_spikein_aligned.bam")]
   # UMI-collapsed read counts (total read counts and UMI-collapsed read counts per unique genomic coordinate)
-  meta[, count:= paste0("db/counts/PROseq/", experiment, "/", sampleID, "_", genome, "_counts.txt")]
-  meta[, countSpike:= paste0("db/counts/PROseq/", experiment, "/", sampleID, "_", spikein_genome, "_spikein_counts.txt")]
+  meta[, count:= paste0(count_output_folder, experiment, "/", sampleID, "_", genome, "_counts.txt")]
+  meta[, countSpike:= paste0(count_output_folder, experiment, "/", sampleID, "_", spikein_genome, "_spikein_counts.txt")]
   # reads statistics
-  meta[, read_stats:= paste0("db/count_tables/PROseq/", experiment, "/stats/", sampleID, "_", genome, "_statistics.txt")]
-  meta[, spike_stats:= paste0("db/count_tables/PROseq/", experiment, "/stats/", sampleID, "_", spikein_genome, "_spikeIn_statistics.txt")]
+  meta[, read_stats:= paste0(count_table_output_folder, experiment, "/stats/", sampleID, "_", genome, "_statistics.txt")]
+  meta[, spike_stats:= paste0(count_table_output_folder, experiment, "/stats/", sampleID, "_", spikein_genome, "_spikeIn_statistics.txt")]
   # Aggregate read counts per gene feature (TSS, body, transcript)
-  meta[, countTables_promoter:= paste0("db/count_tables/PROseq/", experiment, "/promoter/", sampleID, "_", genome, "_counts.txt")]
-  meta[, countTables_geneBody:= paste0("db/count_tables/PROseq/", experiment, "/gene_body/", sampleID, "_", genome, "_counts.txt")]
-  meta[, countTables_transcript:= paste0("db/count_tables/PROseq/", experiment, "/transcript/", sampleID, "_", genome, "_counts.txt")]
+  meta[, countTables_promoter:= paste0(count_table_output_folder, experiment, "/promoter/", sampleID, "_", genome, "_counts.txt")]
+  meta[, countTables_geneBody:= paste0(count_table_output_folder, experiment, "/gene_body/", sampleID, "_", genome, "_counts.txt")]
+  meta[, countTables_transcript:= paste0(count_table_output_folder, experiment, "/transcript/", sampleID, "_", genome, "_counts.txt")]
   # bw tracks
-  meta[, bwPS:= paste0("db/bw/PROseq/", experiment, "/", DESeq2_name, ".ps.bw")]
-  meta[, bwNS:= paste0("db/bw/PROseq/", experiment, "/", DESeq2_name, ".ns.bw")]
+  meta[, bwPS:= paste0(bw_output_folder, experiment, "/", DESeq2_name, ".ps.bw")]
+  meta[, bwNS:= paste0(bw_output_folder, experiment, "/", DESeq2_name, ".ns.bw")]
   
   # Save processed metadata ----
   if(!grepl(".rds$", processed_metadata_output))
@@ -118,7 +141,8 @@ vl_PROseq_processing.default <- function(metadata,
   if(any(!dir.exists(dirs)))
   {
     sapply(dirs, dir.create, showWarnings = F, recursive = T)
-    print("Output directories were created in db/ and scratch/!")
+    outDirs <- paste0(c(count_output_folder, count_table_output_folder, bw_output_folder, scratch_folder), collapse= ", ")
+    print(paste("Output directories were created in:", outDirs, "!"))
   }
   
   # Extract fastq files ----
@@ -304,19 +328,20 @@ vl_PROseq_processing.default <- function(metadata,
     warning("All output files already existed! No command submitted ;). Consider overwrite= T if convenient.")
 }
 
-
-#' Title
+#' DESeq2 analysis PROseq pipeline
 #'
-#' @param processed_metadata 
-#' @param Rpath 
-#' @param cores 
-#' @param mem 
-#' @param submit 
-#' @param wdir 
-#' @param logs 
-#' @param time 
+#' @param processed_metadata Path to the metadata file generated by vl_PROseq_processing, or the corresponding data.table.
+#' @param Rpath The path to the Rscript executable to use, on which the latest version of the vlfunction package should be installed. Default= /software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript
+#' @param FC_output_folder Folder where FC_table should be saved. Default= "db/FC_tables/PROseq/".
+#' @param PDF_output_folder Folder where pdf files (MA plots and stats) should be saved. Default= "pdf/PROseq/".
+#' @param cores Number of cores per job. Default= 4.
+#' @param mem Memory per job (in Go). Default= 16.
+#' @param submit Should the command be submitted? default= G
+#' @param wdir The working directory to use. defaut= getwd().
+#' @param logs Path to save logs. Default= "db/logs/CUTNRUN/peak_calling"
+#' @param time The time required for the SLURM scheduler. Default= '1-00:00:00'
 #'
-#' @return
+#' @return Differential analyses using DESeq2
 #' @export
 #'
 #' @examples
@@ -342,6 +367,8 @@ vl_PROseq_DESeq2.character <- function(processed_metadata, ...)
 #' @export
 vl_PROseq_DESeq2.default <- function(processed_metadata,
                                      Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
+                                     FC_output_folder= "db/FC_tables/PROseq/",
+                                     PDF_output_folder= "pdf/PROseq/",
                                      cores= 4,
                                      mem= 16,
                                      submit= FALSE,
@@ -363,9 +390,9 @@ vl_PROseq_DESeq2.default <- function(processed_metadata,
   
   # Create output directories/prefixes ----
   meta[, ddsPrefix:= paste0("db/dds/PROseq/", experiment, "/", feature)]
-  meta[, ddsStats:= paste0("pdf/PROseq/", experiment, "_", feature, "_reads_statistics.pdf")]
-  meta[, fcDir:= paste0("db/FC_tables/PROseq/", experiment, "/", feature, "/")]
-  meta[, MAplot_prefix:= paste0("pdf/PROseq/MA_plots/", experiment, "_", feature)]
+  meta[, ddsStats:= paste0(pdf.output.directory, experiment, "_", feature, "_reads_statistics.pdf")]
+  meta[, fcDir:= paste0(FC_output_folder, experiment, "/", feature, "/")]
+  meta[, MAplot_prefix:= paste0(PDF_output_folder, "MA_plots/", experiment, "_", feature)]
   
   # Create directories ----
   dirs <- dirname(unlist(meta[, .(ddsPrefix, ddsStats, MAplot_prefix)]))
@@ -373,7 +400,8 @@ vl_PROseq_DESeq2.default <- function(processed_metadata,
   if(any(!dir.exists(dirs)))
   {
     sapply(dirs, dir.create, showWarnings = F, recursive = T)
-    print("Output directories were created in db/ and pdf/!")
+    outDirs <- paste0(c(FC_output_folder, PDF_output_folder), collapse= ", ")
+    print(paste("Output directories were created in:", outDirs, "!"))
   }
   
   # DESeq2 commands ---- 

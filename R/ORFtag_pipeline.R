@@ -1,5 +1,7 @@
 #' ORFtag pipeline
 #' 
+#' To use this this pipeline, please install the vl_function package using install_github("vloubiere/vlfunction") in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R') which will be used to submit R sub-script.
+#' 
 #' Takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns the command lines to: \cr
 #'  1/ extract reads from VBC bam file \cr
 #'  2/ trim the reads \cr
@@ -8,16 +10,19 @@
 #'  5/ Collapse unique reads and stores them into a bam file \cr
 #'  6/ assign insertions to closest downstream genes \cr
 #'  
-#' By default, only the commands for which output files do not exist will be returned (overwrite= F), and the commands will not be submitted to the cluster (submit= F).
+#'  Then, the second function vl_ORFtrap_call_hits() can be used to call confident hits.
 #'
-#' @param metadata The path to a correctly formated .xlsx metadata file or a data.table (see vl_metadata_ORFtag for an example).
-#' @param processed_metadata_output An .rds path where to save the processed metadata file (containing the paths of output files). By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.
+#' @param metadata The path to a correctly formated .xlsx metadata file or a data.table. See "/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_ORFtag.xlsx" and vl_metadata_ORFtag for an template.
+#' @param processed_metadata_output An .rds path where to save the processed metadata file (containing the paths of output files). By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path. This processed metadata can be used to locate and manage all processed files.
+#' @param bam_unique_output_folder Folder where bam containing unique alignments should be stored. Default= "db/bam_unique/ORFtag/".
+#' @param bed_output_folder Folder where bed files containing should be stored. Default= "db/bed/ORFtag/".
+#' @param gene_assignment_output_folder Folder where gene_assignment files should be stored. Default= "db/gene_assignment/ORFtag/".
 #' @param scratch_folder Folder to be used for storing temporary files. Default= "/scratch/stark/vloubiere/ORFtag".
 #' @param Rpath Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript" 
 #' @param cores Number of cores per job. Default= 8
 #' @param mem Memory per job (in Go). Default= 32.
-#' @param overwrite Should existing files be overwritten?
-#' @param submit Should the command be submitted? default= FALSE.
+#' @param overwrite Should existing files be overwritten? Default= FALSE, meaning that only the commands for which output files do not exist will be returned and/or submitted.
+#' @param submit Should the command be submitted? Default= FALSE.
 #' @param wdir The working directory to use. defaut= getwd().
 #' @param logs Path to save logs. Default= "db/logs"
 #' @param time The time required for the SLURM scheduler. Default= '1-00:00:00'
@@ -37,7 +42,7 @@
 #'                    
 #' check <- readRDS("Rdata/metadata_ORFtag_processed.rds") # Check that all output files have been generated
 #' 
-#' # Call hits ----------------------------------------------------------------------------------------------
+#' # Call hits (see ?vl_ORFtrap_call_hits for further details) ----------------------------------------------
 #' # 128 should be identified with this dataset
 #' vl_ORFtrap_call_hits(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
 #'                                                "db/gene_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
@@ -117,6 +122,9 @@ vl_ORFtag_pipeline.character <- function(metadata,
 #' @export
 vl_ORFtag_pipeline.default <- function(metadata,
                                        processed_metadata_output,
+                                       bam_unique_output_folder= "db/bam_unique/ORFtag/",
+                                       bed_output_folder= "db/bed/ORFtag/",
+                                       gene_assignment_output_folder= "db/gene_assignment/ORFtag/",
                                        scratch_folder= "/scratch/stark/vloubiere",
                                        Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
                                        cores= 8,
@@ -148,10 +156,10 @@ vl_ORFtag_pipeline.default <- function(metadata,
   # re-sequencing are merged from this step on!
   meta[, bam:= paste0(scratch_folder, "/ORFtag/bam/", sampleID, ".bam")]
   meta[, bam_stats:= gsub(".bam$", "_stats.txt", bam)]
-  meta[, bam_unique:= paste0("db/bam_unique/ORFtag/", sampleID, "_q30_unique.bam")]
-  meta[, bed_file:= paste0("db/bed/ORFtag/", sampleID, ".bed")]
-  meta[, counts_same_strand:= paste0("db/gene_assignment/ORFtag/", sampleID, "_same_strand.txt")]
-  meta[, counts_rev_strand:= paste0("db/gene_assignment/ORFtag/", sampleID, "_rev_strand.txt")]
+  meta[, bam_unique:= paste0(bam_unique_output_folder, sampleID, "_q30_unique.bam")]
+  meta[, bed_file:= paste0(bed_output_folder, sampleID, ".bed")]
+  meta[, counts_same_strand:= paste0(gene_assignment_output_folder, sampleID, "_same_strand.txt")]
+  meta[, counts_rev_strand:= paste0(gene_assignment_output_folder, sampleID, "_rev_strand.txt")]
   
   # Save processed metadata ----
   if(!grepl(".rds$", processed_metadata_output))

@@ -1,6 +1,6 @@
 #' CUTNRUN pipeline
 #' 
-#' For this pipeline to function correctly, you will need to install the vl_function package using
+#' To use this this pipeline, please install the vl_function package using install_github("vloubiere/vlfunction") in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R') which will be used to submit R sub-scripts.
 #' 
 #' The pipeline is split into two main parts. The first vl_CUTNRUN_processing() aligns the reads and filters confident alignments.
 #' It takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns and/or submit the command lines to: \cr
@@ -17,9 +17,12 @@
 #' 4/ .bw tracks using merged replicates \cr
 #' 5/ Confident peaks that are detected using merged reads but also each individual replicate \cr
 #'
-#' @param metadata The path to a .txt, tab-separated metadata file containing at least 12 columns. See vl_metadata_CUTNRUN for an example.
+#' @param metadata The path to a .txt, tab-separated metadata file containing at least 12 columns.  See "/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_CutNRun.xlsx" and vl_metadata_CUTNRUN for an template.
 #' @param processed_metadata_output An .rds path where to save the processed metadata file (containing the paths of output files).
-#' By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.
+#' By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path. This processed metadata can be used to locate and manage all processed files.
+#' @param alignment_stats_output_folder Output folder where alignment statistics should be saved. Default= "db/alignment_stats/CUTNRUN/".
+#' @param peaks_output_folder Output folder where peak files should be saved. Default= "db/peaks/CUTNRUN/".
+#' @param bw_output_folder  Output folder where bw tracks should be saved. Default= "db/bw/CUTNRUN/".
 #' @param scratch_folder Folder where intermediate bam and fastq files will be saved
 #' @param cores Number of cores per job. Default= 8
 #' @param mem Memory per job (in Go). Default= 32.
@@ -47,7 +50,7 @@
 #' processed <- readRDS("Rdata/metadata_CutNRun_processed.rds")
 #' file.size(unlist(unique(processed[, fq1:mapq30_stats])))
 #' 
-#' # Peak calling ----
+#' # Peak calling (see ?vl_CUTNRUN_peakCalling)----
 #' vl_CUTNRUN_peakCalling(processed_metadata = processed, # You can also provide he path to the saved file
 #'                        extsize = 300,
 #'                        cores = 8,
@@ -78,6 +81,9 @@ vl_CUTNRUN_processing.character <- function(metadata,
 #' @export
 vl_CUTNRUN_processing.default <- function(metadata,
                                           processed_metadata_output= gsub(".txt$", "_processed.rds", metadata),
+                                          alignment_stats_output_folder= "db/alignment_stats/CUTNRUN/",
+                                          peaks_output_folder= "db/peaks/CUTNRUN/",
+                                          bw_output_folder= "db/bw/CUTNRUN/",
                                           scratch_folder= "/scratch/stark/vloubiere",
                                           cores= 8,
                                           mem= 64,
@@ -115,15 +121,15 @@ vl_CUTNRUN_processing.default <- function(metadata,
   meta[, bam:= paste0(scratch_folder, "/CUTNRUN/bam/", sampleID, ".bam")]
   # Join to retrieve input bam
   meta[meta, bam_input:= i.bam, on= "input==sampleID"] # Input bam
-  meta[, alignment_stats:= paste0("db/alignment_stats/CUTNRUN/", gsub(".bam$", "_stats.txt", basename(bam)))]
+  meta[, alignment_stats:= paste0(alignment_stats_output_folder, gsub(".bam$", "_stats.txt", basename(bam)))]
   meta[, mapq30_stats:= gsub("_stats.txt$", "_mapq30_stats.txt", alignment_stats)]
-  meta[, peaks_file:= paste0("db/peaks/CUTNRUN/replicates/", sampleID, "_peaks.narrowPeak")]
-  meta[, bw_file:= paste0("db/bw/CUTNRUN/replicates/", sampleID, ".bw")]
+  meta[, peaks_file:= paste0(peaks_output_folder, "replicates/", sampleID, "_peaks.narrowPeak")]
+  meta[, bw_file:= paste0(bw_output_folder, "replicates/", sampleID, ".bw")]
   # Grouping per condition to check N replicates
   meta[, twoReps:= length(unique(bam))>1, condition] 
-  meta[(twoReps), merged_peaks_file:= paste0("db/peaks/CUTNRUN/merge/", condition, "_merged_peaks.narrowPeak")]
-  meta[(twoReps), merged_bw_file:= paste0("db/bw/CUTNRUN/merge/", condition, "_merged.bw")]
-  meta[(twoReps), confident_peaks_file:= paste0("db/peaks/CUTNRUN/confident/", condition, "_confident_peaks.narrowPeak")]
+  meta[(twoReps), merged_peaks_file:= paste0(peaks_output_folder, "merge/", condition, "_merged_peaks.narrowPeak")]
+  meta[(twoReps), merged_bw_file:= paste0(bw_output_folder, "merge/", condition, "_merged.bw")]
+  meta[(twoReps), confident_peaks_file:= paste0(peaks_output_folder, "confident/", condition, "_confident_peaks.narrowPeak")]
   
   # Save processed metadata ----
   if(!grepl(".rds$", processed_metadata_output))
@@ -311,7 +317,6 @@ vl_CUTNRUN_peakCalling.default <- function(processed_metadata,
     print(paste(logs, "directory was created!"))
   }
   
-
   # Peak calling on individual replicates ----
   meta[, peak_cmd:= {
     if(overwrite | !file.exists(peaks_file))

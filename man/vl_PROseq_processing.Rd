@@ -17,6 +17,9 @@ vl_PROseq_processing(metadata, ...)
 \method{vl_PROseq_processing}{default}(
   metadata,
   processed_metadata_output = gsub(".txt$", "_processed.rds", metadata),
+  count_output_folder = "db/counts/PROseq/",
+  count_table_output_folder = "db/count_tables/PROseq/",
+  bw_output_folder = "db/bw/PROseq/",
   scratch_folder = "/scratch/stark/vloubiere",
   Rpath = "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
   cores = 8,
@@ -29,9 +32,15 @@ vl_PROseq_processing(metadata, ...)
 )
 }
 \arguments{
-\item{metadata}{The path to a .txt, tab-separated metadata file containing at least 12 columns. See vl_metadata_PROseq for an example.}
+\item{metadata}{The path to a .txt, tab-separated metadata file containing at least 12 columns. See "/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_PROseq.xlsx" and vl_metadata_PROseq for a template.}
 
-\item{processed_metadata_output}{An .rds path where to save the processed metadata file (containing the paths of output files). By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.}
+\item{processed_metadata_output}{An .rds path where to save the processed metadata file (containing the paths of output files). By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path. This processed metadata can be used to locate and manage all processed files.}
+
+\item{count_output_folder}{Folder where count files will be stored. Default= "db/counts/PROseq/".}
+
+\item{count_table_output_folder}{Folder where count tables will be stored. Default= "db/count_tables/PROseq/".}
+
+\item{bw_output_folder}{Folder where bigwig files will be store. Default= "db/bw/PROseq/".}
 
 \item{scratch_folder}{Folder where intermediate bam and fastq files will be saved}
 
@@ -55,7 +64,25 @@ vl_PROseq_processing(metadata, ...)
 Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data. These commands can then be submitted using ?vl_bsub().
 }
 \description{
-Takes as input a (correctly formatted) metadata file, save the processed metadata file and returns the command lines to 1/ extract reads from VBC bam file, 2/ trim the reads and align to mouse/human genome (see 'genome' column of the metadata table) and return alignment statistics as well 4/ gene counts.
+To use this this pipeline, please install the vl_function package using install_github("vloubiere/vlfunction") in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R') which will be used to submit R sub-scripts.
+}
+\details{
+The pipeline is split into two main parts. The first vl_PROseq_processing() aligns the reads and filters confident alignments.
+It takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns and/or submit the command lines to: \cr
+1/ extract reads from VBC bam file \cr
+2/ trim the reads \cr
+3/ aligns them to mouse/human genome (see 'genome' column of the metadata table) \cr
+4/ store unaligned read into a fastq file \cr
+5/ align these remaining reads to spike-in genome ('dm3') \cr
+6/ compute counts and statistics both for the reference genome and for spike-in \cr
+7/ count the reads overlapping promoter, gene-body and transcripts \cr
+8/ output .bw tracks for positive and negative strand reads.
+
+The second function, vl_PROseq_DESeq2() can be used for differential analysis. It returns: \cr
+1/ a .dds DESeq2 object for each experiment \cr
+2/ the fold-change tables corresponding to the comparison of 'DESeq2_condition' versus 'DESeq2_control' conditions (see colnames of the processed_metadata file) \cr
+3/ A barplot showing the statistics of each dds file \cr
+4/ MA plots corresponding to each comparison \cr
 }
 \section{Methods (by class)}{
 \itemize{
@@ -66,16 +93,20 @@ Takes as input a (correctly formatted) metadata file, save the processed metadat
 }}
 \examples{
 # Process example dataset ----
-library(vlfunctions)
-
 meta <- vl_metadata_PROseq
-
 vl_PROseq_processing(metadata = meta,
                      processed_metadata_output = "Rdata/metadata_PROseq_processed.rds",
                      cores= 8,
                      mem= 64,
                      overwrite= FALSE,
                      submit= TRUE)
-check <- readRDS("Rdata/metadata_PROseq_processed.rds")
+
+# Once the jobs have finished to work, you can check the size of output files:
+processed <- readRDS("Rdata/metadata_PROseq_processed.rds")
+file.size(na.omit(unlist(processed[, fq1:bwNS])))
+
+# Differential analysis (of note, no "overwrite" option is available in this case)
+vl_PROseq_DESeq2(processed, # Here, you could also provide the path, "Rdata/metadata_PROseq_processed.rds"
+                 submit = TRUE)
 
 }

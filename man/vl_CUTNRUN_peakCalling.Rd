@@ -45,9 +45,10 @@ Title
 # Peak calling example dataset ----
 library(vlfunctions)
 
-check <- readRDS("Rdata/metadata_CutNRun_processed.rds") # Check all processed files exist
+# Check all processed files exist
+processed <- readRDS("Rdata/metadata_CutNRun_processed.rds") 
 
-vl_CUTNRUN_peakCalling(processed_metadata = "Rdata/metadata_CutNRun_processed.rds",
+vl_CUTNRUN_peakCalling(processed_metadata = processed, # You could also just provide the path, "Rdata/metadata_CutNRun_processed.rds"
                        extsize = 300,
                        cores = 8,
                        mem = 64,

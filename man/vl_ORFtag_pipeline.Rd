@@ -17,6 +17,9 @@ vl_ORFtag_pipeline(metadata, ...)
 \method{vl_ORFtag_pipeline}{default}(
   metadata,
   processed_metadata_output,
+  bam_unique_output_folder = "db/bam_unique/ORFtag/",
+  bed_output_folder = "db/bed/ORFtag/",
+  gene_assignment_output_folder = "db/gene_assignment/ORFtag/",
   scratch_folder = "/scratch/stark/vloubiere",
   Rpath = "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
   cores = 8,
@@ -29,9 +32,15 @@ vl_ORFtag_pipeline(metadata, ...)
 )
 }
 \arguments{
-\item{metadata}{The path to a correctly formated .xlsx metadata file or a data.table (see vl_metadata_ORFtag for an example).}
+\item{metadata}{The path to a correctly formated .xlsx metadata file or a data.table. See "/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_ORFtag.xlsx" and vl_metadata_ORFtag for an template.}
 
-\item{processed_metadata_output}{An .rds path where to save the processed metadata file (containing the paths of output files). By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.}
+\item{processed_metadata_output}{An .rds path where to save the processed metadata file (containing the paths of output files). By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path. This processed metadata can be used to locate and manage all processed files.}
+
+\item{bam_unique_output_folder}{Folder where bam containing unique alignments should be stored. Default= "db/bam_unique/ORFtag/".}
+
+\item{bed_output_folder}{Folder where bed files containing should be stored. Default= "db/bed/ORFtag/".}
+
+\item{gene_assignment_output_folder}{Folder where gene_assignment files should be stored. Default= "db/gene_assignment/ORFtag/".}
 
 \item{scratch_folder}{Folder to be used for storing temporary files. Default= "/scratch/stark/vloubiere/ORFtag".}
 
@@ -41,9 +50,9 @@ vl_ORFtag_pipeline(metadata, ...)
 
 \item{mem}{Memory per job (in Go). Default= 32.}
 
-\item{overwrite}{Should existing files be overwritten?}
+\item{overwrite}{Should existing files be overwritten? Default= FALSE, meaning that only the commands for which output files do not exist will be returned and/or submitted.}
 
-\item{submit}{Should the command be submitted? default= FALSE.}
+\item{submit}{Should the command be submitted? Default= FALSE.}
 
 \item{wdir}{The working directory to use. defaut= getwd().}
 
@@ -55,6 +64,9 @@ vl_ORFtag_pipeline(metadata, ...)
 Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data. These commands can then be submitted using ?vl_bsub().
 }
 \description{
+To use this this pipeline, please install the vl_function package using install_github("vloubiere/vlfunction") in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R') which will be used to submit R sub-script.
+}
+\details{
 Takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns the command lines to: \cr
  1/ extract reads from VBC bam file \cr
  2/ trim the reads \cr
@@ -63,7 +75,7 @@ Takes as input a (correctly formatted) metadata file, saves the processed metada
  5/ Collapse unique reads and stores them into a bam file \cr
  6/ assign insertions to closest downstream genes \cr
  
-By default, only the commands for which output files do not exist will be returned (overwrite= F), and the commands will not be submitted to the cluster (submit= F).
+ Then, the second function vl_ORFtrap_call_hits() can be used to call confident hits.
 }
 \section{Methods (by class)}{
 \itemize{
@@ -85,7 +97,7 @@ vl_ORFtag_pipeline(metadata= meta,
                    
 check <- readRDS("Rdata/metadata_ORFtag_processed.rds") # Check that all output files have been generated
 
-# Call hits ----------------------------------------------------------------------------------------------
+# Call hits (see ?vl_ORFtrap_call_hits for further details) ----------------------------------------------
 # 128 should be identified with this dataset
 vl_ORFtrap_call_hits(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
                                                "db/gene_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
