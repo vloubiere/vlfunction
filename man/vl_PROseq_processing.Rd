@@ -21,8 +21,8 @@ vl_PROseq_processing(metadata, ...)
   Rpath = "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
   cores = 8,
   mem = 64,
-  overwrite = F,
-  submit = F,
+  overwrite = FALSE,
+  submit = FALSE,
   wdir = getwd(),
   logs = "db/logs/PROseq/processing",
   time = "1-00:00:00"

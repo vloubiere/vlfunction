@@ -18,17 +18,21 @@
 #'
 #' @examples
 #' # Process example dataset ----
-#' library(vlfunctions)
-#' 
 #' meta <- vl_metadata_PROseq
-#' 
 #' vl_PROseq_processing(metadata = meta,
 #'                      processed_metadata_output = "Rdata/metadata_PROseq_processed.rds",
 #'                      cores= 8,
 #'                      mem= 64,
 #'                      overwrite= FALSE,
 #'                      submit= TRUE)
-#' check <- readRDS("Rdata/metadata_PROseq_processed.rds")
+#' 
+#' # Once the jobs have finished to work, you can check the size of output files:
+#' processed <- readRDS("Rdata/metadata_PROseq_processed.rds")
+#' file.size(na.omit(unlist(processed[, fq1:bwNS])))
+#' 
+#' # Differential analysis (of note, no "overwrite" option is available in this case)
+#' vl_PROseq_DESeq2(processed, # Here, you could also provide the path, "Rdata/metadata_PROseq_processed.rds"
+#'                  submit = TRUE)
 #'
 #' @export
 vl_PROseq_processing <- function(metadata, ...) UseMethod("vl_PROseq_processing")
@@ -36,8 +40,8 @@ vl_PROseq_processing <- function(metadata, ...) UseMethod("vl_PROseq_processing"
 #' @describeIn vl_PROseq_processing for excel files path
 #' @export
 vl_PROseq_processing.character <- function(metadata,
-                                            processed_metadata_output= gsub(".xlsx$", "_processed.rds", metadata),
-                                            ...)
+                                           processed_metadata_output= gsub(".xlsx$", "_processed.rds", metadata),
+                                           ...)
 {
   sheet <- readxl::read_xlsx(metadata)
   start <- cumsum(sheet[[1]]=="user")>0
@@ -57,8 +61,8 @@ vl_PROseq_processing.default <- function(metadata,
                                          Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
                                          cores= 8,
                                          mem= 64,
-                                         overwrite= F,
-                                         submit= F,
+                                         overwrite= FALSE,
+                                         submit= FALSE,
                                          wdir= getwd(),
                                          logs= "db/logs/PROseq/processing",
                                          time= '1-00:00:00')
@@ -92,6 +96,9 @@ vl_PROseq_processing.default <- function(metadata,
   # UMI-collapsed read counts (total read counts and UMI-collapsed read counts per unique genomic coordinate)
   meta[, count:= paste0("db/counts/PROseq/", experiment, "/", sampleID, "_", genome, "_counts.txt")]
   meta[, countSpike:= paste0("db/counts/PROseq/", experiment, "/", sampleID, "_", spikein_genome, "_spikein_counts.txt")]
+  # reads statistics
+  meta[, read_stats:= paste0("db/count_tables/PROseq/", experiment, "/stats/", sampleID, "_", genome, "_statistics.txt")]
+  meta[, spike_stats:= paste0("db/count_tables/PROseq/", experiment, "/stats/", sampleID, "_", spikein_genome, "_spikeIn_statistics.txt")]
   # Aggregate read counts per gene feature (TSS, body, transcript)
   meta[, countTables_promoter:= paste0("db/count_tables/PROseq/", experiment, "/promoter/", sampleID, "_", genome, "_counts.txt")]
   meta[, countTables_geneBody:= paste0("db/count_tables/PROseq/", experiment, "/gene_body/", sampleID, "_", genome, "_counts.txt")]
@@ -198,10 +205,11 @@ vl_PROseq_processing.default <- function(metadata,
   # TSS count tables and stats ----
   meta[, count_tables_cmd:= {
     # Please specify:
-    # [required] 1/ PROSeq annotation file
-    # [required] 2/ Reference genome count file
-    # [required] 3/ Spike-in count file
-    # [required] 4/ Output folder
+    # [required] 1/ Reference genome count file
+    # [required] 2/ Output folder (in which promoter/, gene_body/ and transcript/ sub-folders will be created)
+    # [required] 3/ .rds file containing promoter annotations
+    # [required] 4/ .rds file containing gene body annotations
+    # [required] 5/ .rds file containing transcript annotations
     if(overwrite | any(!file.exists(c(countTables_promoter,
                                       countTables_geneBody,
                                       countTables_transcript))))
@@ -215,14 +223,40 @@ vl_PROseq_processing.default <- function(metadata,
       paste(Rpath,
             system.file("PROseq_pipeline", "compute_counts_table.R", package = "vlfunctions"),
             count, 
-            countSpike,
             paste0("db/count_tables/PROseq/", experiment, "/"),
             prom, 
             geneBody,
             transcript)
     }
-  }, .(genome, experiment, count, countSpike,
-       countTables_promoter, countTables_geneBody, countTables_transcript)]
+  }, .(genome, experiment, count, countTables_promoter, countTables_geneBody, countTables_transcript)]
+  
+  # Read stats reference genome ----
+  meta[, read_stats_cmd:= {
+    # Please specify:
+    # [required] 1/ Count file
+    # [required] 2/ Output file
+    if(overwrite | !file.exists(read_stats))
+    {
+      paste(Rpath,
+            system.file("PROseq_pipeline", "compute_read_statistics.R", package = "vlfunctions"),
+            count,
+            read_stats)
+    }
+  }, .(count, read_stats)]
+  
+  # Read stats spike in ----
+  meta[, spike_stats_cmd:= {
+    # Please specify:
+    # [required] 1/ Count file
+    # [required] 2/ Output file
+    if(overwrite | !file.exists(spike_stats))
+    {
+      paste(Rpath,
+            system.file("PROseq_pipeline", "compute_read_statistics.R", package = "vlfunctions"),
+            countSpike,
+            spike_stats)
+    }
+  }, .(countSpike, spike_stats)]
   
   # Generate bw files ----
   meta[, bw_cmd:= {
@@ -245,7 +279,7 @@ vl_PROseq_processing.default <- function(metadata,
                       "module load samtools/1.9-foss-2018b",
                       "module load bowtie/1.2.2-foss-2018b"), collapse = "; ")
   cols <- intersect(c("extract_cmd", "trim_cmd", "align_cmd", "unaligned_cmd", "alignSpike_cmd",
-                      "counts_cmd", "spike_counts_cmd", "count_tables_cmd", "bw_cmd"),
+                      "counts_cmd", "spike_counts_cmd", "count_tables_cmd", "read_stats_cmd", "spike_stats_cmd", "bw_cmd"),
                     names(meta))
   cmd <- if(length(cols))
     meta[, .(cmd= paste0(c(load_cmd, unique(na.omit(unlist(.SD)))),
@@ -268,4 +302,122 @@ vl_PROseq_processing.default <- function(metadata,
         return(cmd)
   }else
     warning("All output files already existed! No command submitted ;). Consider overwrite= T if convenient.")
+}
+
+
+#' Title
+#'
+#' @param processed_metadata 
+#' @param Rpath 
+#' @param cores 
+#' @param mem 
+#' @param submit 
+#' @param wdir 
+#' @param logs 
+#' @param time 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' # Make sure that all processed files exist:
+#' processed <- readRDS("Rdata/metadata_PROseq_processed.rds")
+#' all(file.exists(na.omit(unlist(processed[, fq1:bwNS]))))
+#' 
+#' # Differential analysis (of note, no "overwrite" option is available in this case)
+#' vl_PROseq_DESeq2(processed, # Here, you could also provide the path to the processed metadata table ("Rdata/metadata_PROseq_processed.rds").
+#'                  submit = TRUE)
+#'                  
+vl_PROseq_DESeq2 <- function(processed_metadata, ...) UseMethod("vl_PROseq_DESeq2")
+
+#' @describeIn vl_PROseq_DESeq2  for processed_metadata file path
+#' @export
+vl_PROseq_DESeq2.character <- function(processed_metadata, ...)
+{
+  meta <- readRDS(processed_metadata)
+  vl_PROseq_DESeq2(processed_metadata= meta, ...)
+}
+
+#' @describeIn vl_PROseq_DESeq2 default method
+#' @export
+vl_PROseq_DESeq2.default <- function(processed_metadata,
+                                     Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
+                                     cores= 4,
+                                     mem= 16,
+                                     submit= FALSE,
+                                     wdir= getwd(),
+                                     logs= "db/logs/PROseq/DESeq2",
+                                     time= '1-00:00:00')
+{
+  # Hard copy metadata ----
+  meta <- data.table::copy(processed_metadata)
+  
+  # Melt features ----
+  meta <- melt(meta,
+               id.vars = c("sampleID", "experiment", "DESeq2_name", "DESeq2_condition", "DESeq2_control", "read_stats", "spike_stats"),
+               measure.vars = patterns("countTable"),
+               value.name = "countFile",
+               variable.name = "feature")
+  meta[, feature:= gsub(".*_(.*$)", "\\1", feature)]
+  meta[feature=="geneBody", feature:= "gene_body"]
+  
+  # Create output directories/prefixes ----
+  meta[, ddsPrefix:= paste0("db/dds/PROseq/", experiment, "/", feature)]
+  meta[, ddsStats:= paste0("pdf/PROseq/", experiment, "_", feature, "_reads_statistics.pdf")]
+  meta[, fcDir:= paste0("db/FC_tables/PROseq/", experiment, "/", feature, "/")]
+  meta[, MAplot_prefix:= paste0("pdf/PROseq/MA_plots/", experiment, "_", feature)]
+  
+  # Create directories ----
+  dirs <- dirname(unlist(meta[, .(ddsPrefix, ddsStats, MAplot_prefix)]))
+  dirs <- na.omit(unique(c(meta$fcDir, dirs, logs)))
+  if(any(!dir.exists(dirs)))
+  {
+    sapply(dirs, dir.create, showWarnings = F, recursive = T)
+    print("Output directories were created in db/ and pdf/!")
+  }
+  
+  # DESeq2 commands ---- 
+  meta[, DESeq2_cmd:= {
+    # Each command produces a unique dds file and all the related FC tables/MA plots
+    # [required] 1/ A comma-separated list of count (ref genome)
+    # [required] 2/ A comma-separated list of read statistics (reference genome) 
+    # [required] 3/ A comma-separated list of spike-in statistics 
+    # [required] 4/ A comma-separated list of sample names 
+    # [required] 5/ A comma-separated list of conditions 
+    # [required] 6/ A comma-separated list of controls 
+    # [required] 7/ .dds output prefix 
+    # [required] 8/ dds statistics output 
+    # [required] 9/ FC tables output folder 
+    # [required] 10/ MAplot prefix
+    paste(Rpath,
+          system.file("PROseq_pipeline", "DESeq2_analysis.R", package = "vlfunctions"),
+          paste0(countFile, collapse = ","), 
+          paste0(read_stats, collapse = ","),
+          paste0(spike_stats, collapse = ","),
+          paste0(DESeq2_name, collapse = ","),
+          paste0(DESeq2_condition, collapse = ","),
+          paste0(DESeq2_control, collapse = ","),
+          ddsPrefix,
+          ddsStats,
+          fcDir,
+          MAplot_prefix)
+  }, .(experiment, ddsPrefix, ddsStats, fcDir, MAplot_prefix)]
+  
+  # Submit commands ----
+  cmd <- meta[, .(cmd= paste0(unique(na.omit(unlist(.SD))), collapse= "; ")), .(experiment, feature), .SDcols= patterns("_cmd$")]
+  if(nrow(cmd))
+  {
+    if(submit)
+      cmd[, {
+        vl_bsub(cmd, 
+                cores= cores, 
+                m = mem, 
+                name = "PROseq", 
+                t = time,
+                o= paste0(normalizePath(logs), "/", paste0(experiment, "_", feature)),
+                e= paste0(normalizePath(logs), "/", paste0(experiment, "_", feature)))
+      }, .(experiment, feature, cmd)] else
+        return(cmd)
+  }else
+    warning("No commands detected. Is the metadata empty?")
 }

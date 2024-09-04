@@ -4,6 +4,7 @@
 \alias{vl_CUTNRUN_processing}
 \alias{vl_CUTNRUN_processing.character}
 \alias{vl_CUTNRUN_processing.default}
+\alias{vl_CUTNRUN_peakCalling.default}
 \title{ORFtag pipeline}
 \usage{
 vl_CUTNRUN_processing(metadata, ...)
@@ -20,10 +21,23 @@ vl_CUTNRUN_processing(metadata, ...)
   scratch_folder = "/scratch/stark/vloubiere",
   cores = 8,
   mem = 64,
-  overwrite = F,
-  submit = F,
+  overwrite = FALSE,
+  submit = FALSE,
   wdir = getwd(),
   logs = "db/logs/CUTNRUN/processing",
+  time = "1-00:00:00"
+)
+
+\method{vl_CUTNRUN_peakCalling}{default}(
+  processed_metadata,
+  Rpath = "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
+  extsize = 300,
+  cores = 8,
+  mem = 64,
+  overwrite = FALSE,
+  submit = FALSE,
+  wdir = getwd(),
+  logs = "db/logs/CUTNRUN/peak_calling",
   time = "1-00:00:00"
 )
 }
@@ -63,6 +77,11 @@ Takes as input a (correctly formatted) metadata file, saves the processed metada
 \item \code{vl_CUTNRUN_processing(character)}: for excel files path
 
 \item \code{vl_CUTNRUN_processing(default)}: default method
+
+}}
+\section{Functions}{
+\itemize{
+\item \code{vl_CUTNRUN_peakCalling(default)}: default method
 
 }}
 \examples{
