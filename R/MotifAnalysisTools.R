@@ -12,41 +12,33 @@
 #' @param p.cutoff p.value cutoff used for motif detection. Default= 5e-4.
 #' 
 #' @examples
-#' # Select motifs
-#' sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
-#' 
 #' # Resize example peaks
-#' top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks,
-#'                          upstream = 250,
-#'                          downstream = 250,
-#'                          genome = "dm3")
-#' top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks,
-#'                           upstream = 250,
-#'                           downstream = 250,
-#'                           genome = "dm3")
-#' ctls_regions <- vl_control_regions_BSgenome(bed= vl_SUHW_top_peaks,
-#'                                             genome= "dm3")
-#'                           
-#' # Count motifs
-#' suhw <- vl_motif_counts(top_SUHW,
-#'                         genome= "dm3",
-#'                         sel= sel)
-#' starr <- vl_motif_counts(top_STARR,
-#'                          genome= "dm3",
-#'                          sel= sel)
-#' ctl <- vl_motif_counts(ctls_regions,
-#'                        genome= "dm3",
-#'                        sel= sel)
-#'                        
-#' # Enrichment                        
-#' pl <- vl_motif_enrich(suhw,
-#'                       ctl,
-#'                       plot= F)
-#'
-#' # Plot
-#' plot(pl,
-#'      padj.cutoff= 5e-2)
-#' vl_motif_enrich(starr, ctl)  
+#' SUHW <- vl_resizeBed(vl_SUHW_top_peaks, genome = "dm3")
+#' STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, genome = "dm3")
+#' 
+#' # Generate same number of random regions
+#' random <- vl_control_regions_BSgenome(bed= STARR, genome= "dm3")
+#' 
+#' # Count JAPSPAR motifs (see below to use custom list of PWMs)
+#' jaspar <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
+#' suhw <- vl_motif_counts(SUHW, genome= "dm3", sel= jaspar)
+#' starr <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
+#' ctl <- vl_motif_counts(random, genome= "dm3", sel= sel)
+#' 
+#' # Starting from sequence instead of bed file
+#' seq <- vl_getSequence(SUHW, genome= "dm3")
+#' seq_suhw <- vl_motif_counts(seq, genome= "dm3", sel= jaspar)
+#' identical(suhw, seq_suhw)
+#' 
+#' # Motifs can also be counted using a custom PWMatrixList, for example for promoter motifs:
+#' prom_db <- readRDS("/groups/stark/almeida/data/motifs/CP_motifs/CP_motifs_PWM.rds")
+#' prom <- prom_db$Pwms_log_odds
+#' for(i in seq(prom))
+#'   prom[[i]]@profileMatrix <- vl_pwm_perc_to_log2(prom_db$Pwms_perc[[i]]@profileMatrix)
+#' 
+#' prom_motifs <- vl_motif_counts(STARR,
+#'                                pwm_log_odds= prom,
+#'                                genome= "dm3")
 #' 
 #' @return Matrix of motif counts
 #' @export
@@ -59,20 +51,20 @@ vl_motif_counts.data.table <- function(bed,
                                        ...)
 {
   sequences <- vl_getSequence(bed, genome)
-  vl_motif_counts.character(sequences,
-                            genome= genome,
-                            ...)
+  vl_motif_counts.default(sequences,
+                          genome= genome,
+                          ...)
 }
 
 #' @describeIn vl_motif_counts Identify motifs in sequences
 #' @export
-vl_motif_counts.character <- function(sequences= NULL,
-                                      sel= vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID],
-                                      motifDB= vl_Dmel_motifs_DB_full,
-                                      pwm_log_odds= NULL,
-                                      genome,
-                                      bg= "genome",
-                                      p.cutoff= 5e-4)
+vl_motif_counts.default <- function(sequences= NULL,
+                                    sel= vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID],
+                                    motifDB= vl_Dmel_motifs_DB_full,
+                                    pwm_log_odds= NULL,
+                                    genome,
+                                    bg= "genome",
+                                    p.cutoff= 5e-4)
 {
   # Select motifs
   if(is.null(pwm_log_odds) && any(!sel %in% motifDB$motif_ID))
@@ -119,39 +111,52 @@ vl_motif_counts.character <- function(sequences= NULL,
 #' @param cex.height Expansion factor for motif heights.
 #' 
 #' @examples 
-#' # Select motifs
-#' sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
-#' 
 #' # Resize example peaks
-#' top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks,
-#'                          upstream = 250,
-#'                          downstream = 250,
-#'                          genome = "dm3")
-#' top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks,
-#'                           upstream = 250,
-#'                           downstream = 250,
-#'                           genome = "dm3")
-#'                           
-#' # Count motifs
-#' counts <- vl_motif_counts(top_SUHW,
-#'                           genome= "dm3",
-#'                           sel= sel)
-#' control.counts <- vl_motif_counts(top_STARR,
-#'                                   genome= "dm3",
-#'                                   sel= sel)
-#'                                   
-#' # Enrichment
-#' DT <- vl_motif_enrich(counts,
-#'                       control.counts,
-#'                       add.motifs= T,
-#'                       padj.cutoff= 1e-5,
-#'                       plot= T)
+#' SUHW <- vl_resizeBed(vl_SUHW_top_peaks, genome = "dm3")
+#' STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, genome = "dm3")
 #' 
+#' # Generate same number of random regions
+#' random <- vl_control_regions_BSgenome(bed= STARR, genome= "dm3")
+#' 
+#' # Count JAPSPAR motifs (see below to use custom list of PWMs)
+#' jaspar <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
+#' suhw <- vl_motif_counts(SUHW, genome= "dm3", sel= jaspar)
+#' starr <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
+#' ctl <- vl_motif_counts(random, genome= "dm3", sel= sel)
+#' 
+#' # Starting from sequence instead of bed file
+#' seq <- vl_getSequence(SUHW, genome= "dm3")
+#' seq_suhw <- vl_motif_counts(seq, genome= "dm3", sel= jaspar)
+#' identical(suhw, seq_suhw)
+#' 
+#' # Motifs can also be counted using a custom PWMatrixList, for example for promoter motifs:
+#' prom_db <- readRDS("/groups/stark/almeida/data/motifs/CP_motifs/CP_motifs_PWM.rds")
+#' prom <- prom_db$Pwms_log_odds
+#' for(i in seq(prom))
+#'   prom[[i]]@profileMatrix <- vl_pwm_perc_to_log2(prom_db$Pwms_perc[[i]]@profileMatrix)
+#' 
+#' prom_motifs <- vl_motif_counts(STARR,
+#'                                pwm_log_odds= prom,
+#'                                genome= "dm3")
+#' 
+#' # Compute enrichment at SUHW peaks, using random controls as background
+#' pl <- vl_motif_enrich(suhw,
+#'                       ctl,
+#'                       plot= F)
+#' pl[order(padj)][1:3] # Top motif is su(Hw)
 #' # Plot
-#' par(mai= c(.9, 2, .9, .9))
-#' DT <- plot(DT,
-#'            padj.cutoff= 1e-7)
-#' vl_add_motifs(DT)
+#' plot(pl,
+#'      top.enrich= 3)
+#' 
+#' 
+#' # Compute enrichment at STARR peaks and plot at the same time
+#' enr <- vl_motif_enrich(starr,
+#'                        ctl,
+#'                        plot= T,
+#'                        order= "log2OR",
+#'                        padj.cutoff= 1e-5)
+#' # Positive enrichments identify typical S2 enhancer motifs
+#' plot(enr[log2OR>.5])
 #' 
 #' @return DT of enrichment values which can be plot using ?plot.vl_GO_enr
 #' @export
@@ -236,9 +241,9 @@ vl_motif_enrich <- function(counts,
   invisible(res)
 }
 
-#' Compute motif enrichment
+#' Compute motif enrichment for several groups
 #'
-#' Compute motif enrichment for the cluster in cl_columns, using all the lines as background.
+#' Compute motif enrichment for each element of a list (clusters, groups....)
 #'
 #' @param counts.list List of data.table containing counts for the regions of interest and potentially control regions (see next argument).
 #' @param control.cl IDs of clusters to be used as background. Default= NULL, meaning all clusters are used except the one being tested.
@@ -259,24 +264,42 @@ vl_motif_enrich <- function(counts,
 #' @param cex.height Expansion factor for motif heights.
 #'
 #' @examples 
-#' # Select motifs
-#' sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
-#' 
 #' # Resize example peaks
-#' top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
-#' top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
+#' SUHW <- vl_resizeBed(vl_SUHW_top_peaks, genome = "dm3")
+#' STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, genome = "dm3")
 #' 
-#' # Count motifs
-#' counts <- vl_motif_counts(top_SUHW, genome= "dm3", sel= sel)
-#' control.counts <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
-#' counts.list <- list(SUHW= counts,
-#'                     ATAC= control.counts)
+#' # Generate same number of random regions
+#' random <- vl_control_regions_BSgenome(bed= STARR, genome= "dm3")
 #' 
-#' # Enrichment and plot
-#' vl_par(mai= c(.9, 2, .9, .9))
-#' DT <- vl_motif_cl_enrich(counts.list, padj.cutoff = 1e-3, plot= T, add.motifs= T)
-#' DT <- plot(DT, padj.cutoff= 1e-5)
-#' vl_add_motifs(DT)
+#' # Combine the three sets of regions
+#' combined <- rbindlist(list(SUHW= SUHW,
+#'                            STARR= STARR,
+#'                            random= random),
+#'                       idcol = "cluster",
+#'                       fill = T)
+#' 
+#' # Count JAPSPAR motifs
+#' jaspar <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
+#' counts <- vl_motif_counts(combined, genome= "dm3", sel= jaspar)
+#' 
+#' # Motifs can also be counted using a custom PWMatrixList, for example for promoter motifs:
+#' prom_db <- readRDS("/groups/stark/almeida/data/motifs/CP_motifs/CP_motifs_PWM.rds")
+#' prom <- prom_db$Pwms_log_odds
+#' for(i in seq(prom)) # This set needs a fix
+#'   prom[[i]]@profileMatrix <- vl_pwm_perc_to_log2(prom_db$Pwms_perc[[i]]@profileMatrix)
+#' 
+#' prom_motifs <- vl_motif_counts(combined,
+#'                                pwm_log_odds= prom,
+#'                                genome= "dm3")
+#' 
+#' # Enrichment per cluster
+#' enr <- vl_motif_cl_enrich(split(counts, combined$cluster),
+#'                           control.cl = "random")
+#' 
+#' # Plot
+#' vl_par()
+#' plot(enr,
+#'      padj.cutoff= 1e-5)
 #' 
 #' @return Fisher test data.table.
 #' @export
@@ -361,12 +384,38 @@ vl_motif_cl_enrich <- function(counts.list,
 #' @param collapse.overlapping Should overlapping motifs be merged? If TRUE (default), motif instances that overlap more than 70 percent of their width are collapsed.
 #' 
 #' @examples
-#' test <- vl_motif_pos.data.table(vl_SUHW_top_peaks[1:2],
-#'                                 genome= "dm3",
-#'                                 sel= c("cisbp__M2328",
-#'                                        "flyfactorsurvey__suHw_FlyReg_FBgn0003567",
-#'                                        "jaspar__MA0533.1"))
-#'                         
+#' # Find position of 3 different motifs within two regions
+#' pos <- vl_motif_pos(vl_SUHW_top_peaks[1:2],
+#'                     genome= "dm3",
+#'                     sel= c("cisbp__M2328",
+#'                            "flyfactorsurvey__suHw_FlyReg_FBgn0003567",
+#'                            "jaspar__MA0533.1"))
+#' 
+#' # Starting from sequence
+#' pos <- vl_motif_pos(sequence= "TGAGTTGTGTCTGAAATTGGGATTGCTGTTGCGACAATGCCTGTCTGACAGCATTGTCGATAAGAGCTTGAATCTGATTGGGGTCCATGGTAATATCTACCGTGGCACTATCTAACGGCCGACCTAATGCTTGGCCTACTTGCTCCTCCTCCCAGCTATCCTCGCTTTCGTATTCGACCTTAACCTTTCTGTAGTT#' ATGTGCCCAACTCATTGGTTGTTGGTTGGCACACCACAAATATACTGTTGCCGAGCACAATTGATCGGCTAAATGGTATGGCAAGAAAAGGTATGCAATATAATAATCTTTTATTGGGTATGCAACGAAAATTTGTTTCGTCAACGTATGCAATATTTTTTATTAAAAGAGGGTATGCAATGTATTTTATTAAAAACGGGTATGCAATATAATAATCTTTTATTGGG#' TATGCAACGAAAATTTGTTTCGTCAAAGTATGCAATATTTTTTATTAAAAGAGGGTATGCAATGTATTTTATTAAAAACGGGTATGCAATAAAAAATTATTTGGTTTCTCTAAAAAGTATGCAGCACTTATTTTTTGATAAGGTATGCAACAAAATTTTACTTTGCCGAAAATATGCAATGTTTTTGCGAATAAATTCAACGCACACTTATTACGTGGCCAGATACA#' CAACTTTTTTTTTTTTTTTTCACTCGTAAATTTCTTGATTGCGTCAAAGA",
+#'                     genome= "dm3",
+#'                     sel= c("cisbp__M2328",
+#'                            "flyfactorsurvey__suHw_FlyReg_FBgn0003567",
+#'                            "jaspar__MA0533.1"))
+#' 
+#' # Motifs can also be mapped using a custom PWMatrixList, for example for promoter motifs
+#' prom_db <- readRDS("/groups/stark/almeida/data/motifs/CP_motifs/CP_motifs_PWM.rds")
+#' prom <- prom_db$Pwms_log_odds
+#' for(i in seq(prom))
+#'   prom[[i]]@profileMatrix <- vl_pwm_perc_to_log2(prom_db$Pwms_perc[[i]]@profileMatrix)
+#' 
+#' # Select Ribo Protein gene promoters
+#' proms <- rtracklayer::import("/groups/stark/annotations/dm3/dmel-all-filtered-r5.57_genes_and_transcripts_only.gff")
+#' proms <- as.data.table(proms)
+#' proms <- vl_resizeBed(proms[grepl("ribosomal protein", fullname)], "start", 150, 50)
+#' proms[, seqnames:= paste0("chr", seqnames)]
+#' 
+#' prom_motifs <- vl_motif_pos(proms,
+#'                             pwm_log_odds= prom,
+#'                             genome= "dm3")
+#' # Many instances of TCT motif are found, as expected
+#' prom_motifs$TC_17_Zabidi
+#' 
 #' @return A list of positions of length = length(sequences) 
 #' @export
 vl_motif_pos <- function(sequences, ...) UseMethod("vl_motif_pos")
@@ -452,5 +501,5 @@ vl_motif_pos.character <- function(sequences,
 #' 
 vl_pwm_perc_to_log2 <- function(perc_pwm)
 {
-  log2(perc_pwm/matrix(0.25, nrow= 4, ncol= ncol(perc_pwm))+9.9999e-06)
+  log2(perc_pwm/matrix(0.25, nrow= 4, ncol= ncol(perc_pwm))+1e-5)
 }

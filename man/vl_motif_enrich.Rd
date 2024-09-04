@@ -77,38 +77,51 @@ Compute motif enrichment between a set of regions and control regions
 
 }}
 \examples{
-# Select motifs
-sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
-
 # Resize example peaks
-top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks,
-                         upstream = 250,
-                         downstream = 250,
-                         genome = "dm3")
-top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks,
-                          upstream = 250,
-                          downstream = 250,
-                          genome = "dm3")
-                          
-# Count motifs
-counts <- vl_motif_counts(top_SUHW,
-                          genome= "dm3",
-                          sel= sel)
-control.counts <- vl_motif_counts(top_STARR,
-                                  genome= "dm3",
-                                  sel= sel)
-                                  
-# Enrichment
-DT <- vl_motif_enrich(counts,
-                      control.counts,
-                      add.motifs= T,
-                      padj.cutoff= 1e-5,
-                      plot= T)
+SUHW <- vl_resizeBed(vl_SUHW_top_peaks, genome = "dm3")
+STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, genome = "dm3")
 
+# Generate same number of random regions
+random <- vl_control_regions_BSgenome(bed= STARR, genome= "dm3")
+
+# Count JAPSPAR motifs (see below to use custom list of PWMs)
+jaspar <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
+suhw <- vl_motif_counts(SUHW, genome= "dm3", sel= jaspar)
+starr <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
+ctl <- vl_motif_counts(random, genome= "dm3", sel= sel)
+
+# Starting from sequence instead of bed file
+seq <- vl_getSequence(SUHW, genome= "dm3")
+seq_suhw <- vl_motif_counts(seq, genome= "dm3", sel= jaspar)
+identical(suhw, seq_suhw)
+
+# Motifs can also be counted using a custom PWMatrixList, for example for promoter motifs:
+prom_db <- readRDS("/groups/stark/almeida/data/motifs/CP_motifs/CP_motifs_PWM.rds")
+prom <- prom_db$Pwms_log_odds
+for(i in seq(prom))
+  prom[[i]]@profileMatrix <- vl_pwm_perc_to_log2(prom_db$Pwms_perc[[i]]@profileMatrix)
+
+prom_motifs <- vl_motif_counts(STARR,
+                               pwm_log_odds= prom,
+                               genome= "dm3")
+
+# Compute enrichment at SUHW peaks, using random controls as background
+pl <- vl_motif_enrich(suhw,
+                      ctl,
+                      plot= F)
+pl[order(padj)][1:3] # Top motif is su(Hw)
 # Plot
-par(mai= c(.9, 2, .9, .9))
-DT <- plot(DT,
-           padj.cutoff= 1e-7)
-vl_add_motifs(DT)
+plot(pl,
+     top.enrich= 3)
+
+
+# Compute enrichment at STARR peaks and plot at the same time
+enr <- vl_motif_enrich(starr,
+                       ctl,
+                       plot= T,
+                       order= "log2OR",
+                       padj.cutoff= 1e-5)
+# Positive enrichments identify typical S2 enhancer motifs
+plot(enr[log2OR>.5])
 
 }

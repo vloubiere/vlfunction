@@ -4,7 +4,7 @@
 \name{vl_motif_cl_enrich}
 \alias{vl_motif_cl_enrich}
 \alias{plot.vl_enr_cl}
-\title{Compute motif enrichment}
+\title{Compute motif enrichment for several groups}
 \usage{
 vl_motif_cl_enrich(
   counts.list,
@@ -79,7 +79,7 @@ vl_motif_cl_enrich(
 Fisher test data.table.
 }
 \description{
-Compute motif enrichment for the cluster in cl_columns, using all the lines as background.
+Compute motif enrichment for each element of a list (clusters, groups....)
 }
 \section{Functions}{
 \itemize{
@@ -87,23 +87,41 @@ Compute motif enrichment for the cluster in cl_columns, using all the lines as b
 
 }}
 \examples{
-# Select motifs
-sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
-
 # Resize example peaks
-top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
-top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, upstream = 250, downstream = 250, genome = "dm3")
+SUHW <- vl_resizeBed(vl_SUHW_top_peaks, genome = "dm3")
+STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, genome = "dm3")
 
-# Count motifs
-counts <- vl_motif_counts(top_SUHW, genome= "dm3", sel= sel)
-control.counts <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
-counts.list <- list(SUHW= counts,
-                    ATAC= control.counts)
+# Generate same number of random regions
+random <- vl_control_regions_BSgenome(bed= STARR, genome= "dm3")
 
-# Enrichment and plot
-vl_par(mai= c(.9, 2, .9, .9))
-DT <- vl_motif_cl_enrich(counts.list, padj.cutoff = 1e-3, plot= T, add.motifs= T)
-DT <- plot(DT, padj.cutoff= 1e-5)
-vl_add_motifs(DT)
+# Combine the three sets of regions
+combined <- rbindlist(list(SUHW= SUHW,
+                           STARR= STARR,
+                           random= random),
+                      idcol = "cluster",
+                      fill = T)
+
+# Count JAPSPAR motifs
+jaspar <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
+counts <- vl_motif_counts(combined, genome= "dm3", sel= jaspar)
+
+# Motifs can also be counted using a custom PWMatrixList, for example for promoter motifs:
+prom_db <- readRDS("/groups/stark/almeida/data/motifs/CP_motifs/CP_motifs_PWM.rds")
+prom <- prom_db$Pwms_log_odds
+for(i in seq(prom)) # This set needs a fix
+  prom[[i]]@profileMatrix <- vl_pwm_perc_to_log2(prom_db$Pwms_perc[[i]]@profileMatrix)
+
+prom_motifs <- vl_motif_counts(combined,
+                               pwm_log_odds= prom,
+                               genome= "dm3")
+
+# Enrichment per cluster
+enr <- vl_motif_cl_enrich(split(counts, combined$cluster),
+                          control.cl = "random")
+
+# Plot
+vl_par()
+plot(enr,
+     padj.cutoff= 1e-5)
 
 }

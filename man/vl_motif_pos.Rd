@@ -54,10 +54,36 @@ Compute motif positions
 
 }}
 \examples{
-test <- vl_motif_pos.data.table(vl_SUHW_top_peaks[1:2],
-                                genome= "dm3",
-                                sel= c("cisbp__M2328",
-                                       "flyfactorsurvey__suHw_FlyReg_FBgn0003567",
-                                       "jaspar__MA0533.1"))
-                        
+# Find position of 3 different motifs within two regions
+pos <- vl_motif_pos(vl_SUHW_top_peaks[1:2],
+                    genome= "dm3",
+                    sel= c("cisbp__M2328",
+                           "flyfactorsurvey__suHw_FlyReg_FBgn0003567",
+                           "jaspar__MA0533.1"))
+
+# Starting from sequence
+pos <- vl_motif_pos(sequence= "TGAGTTGTGTCTGAAATTGGGATTGCTGTTGCGACAATGCCTGTCTGACAGCATTGTCGATAAGAGCTTGAATCTGATTGGGGTCCATGGTAATATCTACCGTGGCACTATCTAACGGCCGACCTAATGCTTGGCCTACTTGCTCCTCCTCCCAGCTATCCTCGCTTTCGTATTCGACCTTAACCTTTCTGTAGTT#' ATGTGCCCAACTCATTGGTTGTTGGTTGGCACACCACAAATATACTGTTGCCGAGCACAATTGATCGGCTAAATGGTATGGCAAGAAAAGGTATGCAATATAATAATCTTTTATTGGGTATGCAACGAAAATTTGTTTCGTCAACGTATGCAATATTTTTTATTAAAAGAGGGTATGCAATGTATTTTATTAAAAACGGGTATGCAATATAATAATCTTTTATTGGG#' TATGCAACGAAAATTTGTTTCGTCAAAGTATGCAATATTTTTTATTAAAAGAGGGTATGCAATGTATTTTATTAAAAACGGGTATGCAATAAAAAATTATTTGGTTTCTCTAAAAAGTATGCAGCACTTATTTTTTGATAAGGTATGCAACAAAATTTTACTTTGCCGAAAATATGCAATGTTTTTGCGAATAAATTCAACGCACACTTATTACGTGGCCAGATACA#' CAACTTTTTTTTTTTTTTTTCACTCGTAAATTTCTTGATTGCGTCAAAGA",
+                    genome= "dm3",
+                    sel= c("cisbp__M2328",
+                           "flyfactorsurvey__suHw_FlyReg_FBgn0003567",
+                           "jaspar__MA0533.1"))
+
+# Motifs can also be mapped using a custom PWMatrixList, for example for promoter motifs
+prom_db <- readRDS("/groups/stark/almeida/data/motifs/CP_motifs/CP_motifs_PWM.rds")
+prom <- prom_db$Pwms_log_odds
+for(i in seq(prom))
+  prom[[i]]@profileMatrix <- vl_pwm_perc_to_log2(prom_db$Pwms_perc[[i]]@profileMatrix)
+
+# Select Ribo Protein gene promoters
+proms <- rtracklayer::import("/groups/stark/annotations/dm3/dmel-all-filtered-r5.57_genes_and_transcripts_only.gff")
+proms <- as.data.table(proms)
+proms <- vl_resizeBed(proms[grepl("ribosomal protein", fullname)], "start", 150, 50)
+proms[, seqnames:= paste0("chr", seqnames)]
+
+prom_motifs <- vl_motif_pos(proms,
+                            pwm_log_odds= prom,
+                            genome= "dm3")
+# Many instances of TCT motif are found, as expected
+prom_motifs$TC_17_Zabidi
+
 }

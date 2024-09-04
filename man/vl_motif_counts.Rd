@@ -3,14 +3,14 @@
 \name{vl_motif_counts}
 \alias{vl_motif_counts}
 \alias{vl_motif_counts.data.table}
-\alias{vl_motif_counts.character}
+\alias{vl_motif_counts.default}
 \title{Counts motifs}
 \usage{
 vl_motif_counts(sequences, ...)
 
 \method{vl_motif_counts}{data.table}(bed, genome, ...)
 
-\method{vl_motif_counts}{character}(
+\method{vl_motif_counts}{default}(
   sequences = NULL,
   sel = vl_Dmel_motifs_DB_full[collection == "jaspar", motif_ID],
   motifDB = vl_Dmel_motifs_DB_full,
@@ -47,44 +47,36 @@ Counts motif occurences in a set of regions
 \itemize{
 \item \code{vl_motif_counts(data.table)}: Method to extract sequences from BSgenome
 
-\item \code{vl_motif_counts(character)}: Identify motifs in sequences
+\item \code{vl_motif_counts(default)}: Identify motifs in sequences
 
 }}
 \examples{
-# Select motifs
-sel <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
-
 # Resize example peaks
-top_SUHW <- vl_resizeBed(vl_SUHW_top_peaks,
-                         upstream = 250,
-                         downstream = 250,
-                         genome = "dm3")
-top_STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks,
-                          upstream = 250,
-                          downstream = 250,
-                          genome = "dm3")
-ctls_regions <- vl_control_regions_BSgenome(bed= vl_SUHW_top_peaks,
-                                            genome= "dm3")
-                          
-# Count motifs
-suhw <- vl_motif_counts(top_SUHW,
-                        genome= "dm3",
-                        sel= sel)
-starr <- vl_motif_counts(top_STARR,
-                         genome= "dm3",
-                         sel= sel)
-ctl <- vl_motif_counts(ctls_regions,
-                       genome= "dm3",
-                       sel= sel)
-                       
-# Enrichment                        
-pl <- vl_motif_enrich(suhw,
-                      ctl,
-                      plot= F)
+SUHW <- vl_resizeBed(vl_SUHW_top_peaks, genome = "dm3")
+STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, genome = "dm3")
 
-# Plot
-plot(pl,
-     padj.cutoff= 5e-2)
-vl_motif_enrich(starr, ctl)  
+# Generate same number of random regions
+random <- vl_control_regions_BSgenome(bed= STARR, genome= "dm3")
+
+# Count JAPSPAR motifs (see below to use custom list of PWMs)
+jaspar <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
+suhw <- vl_motif_counts(SUHW, genome= "dm3", sel= jaspar)
+starr <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
+ctl <- vl_motif_counts(random, genome= "dm3", sel= sel)
+
+# Starting from sequence instead of bed file
+seq <- vl_getSequence(SUHW, genome= "dm3")
+seq_suhw <- vl_motif_counts(seq, genome= "dm3", sel= jaspar)
+identical(suhw, seq_suhw)
+
+# Motifs can also be counted using a custom PWMatrixList, for example for promoter motifs:
+prom_db <- readRDS("/groups/stark/almeida/data/motifs/CP_motifs/CP_motifs_PWM.rds")
+prom <- prom_db$Pwms_log_odds
+for(i in seq(prom))
+  prom[[i]]@profileMatrix <- vl_pwm_perc_to_log2(prom_db$Pwms_perc[[i]]@profileMatrix)
+
+prom_motifs <- vl_motif_counts(STARR,
+                               pwm_log_odds= prom,
+                               genome= "dm3")
 
 }
