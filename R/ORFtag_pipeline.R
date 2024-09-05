@@ -1,8 +1,10 @@
 #' ORFtag pipeline
 #' 
-#' To use this this pipeline, please install the vl_function package using install_github("vloubiere/vlfunction") in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R') which will be used to submit R sub-script.
+#' To use this this pipeline, please install the vl_function package using install_github("vloubiere/vlfunction")
+#' in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R') 
+#' which will be used to submit R sub-script.
 #' 
-#' Takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns the command lines to: \cr
+#' Takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns and.or submit the command lines to: \cr
 #'  1/ extract reads from VBC bam file \cr
 #'  2/ trim the reads \cr
 #'  3/ Aligns to mouse/human genome (see 'genome' column of the metadata table) and returns a bam file \cr
@@ -12,52 +14,57 @@
 #'  
 #'  Then, the second function vl_ORFtrap_call_hits() can be used to call confident hits.
 #'
-#' @param metadata The path to a correctly formated .xlsx metadata file or a data.table. See "/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_ORFtag.xlsx" and vl_metadata_ORFtag for an template.
-#' @param processed_metadata_output An .rds path where to save the processed metadata file (containing the paths of output files). By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path. This processed metadata can be used to locate and manage all processed files.
-#' @param bam_unique_output_folder Folder where bam containing unique alignments should be stored. Default= "db/bam_unique/ORFtag/".
-#' @param bed_output_folder Folder where bed files containing should be stored. Default= "db/bed/ORFtag/".
-#' @param gene_assignment_output_folder Folder where gene_assignment files should be stored. Default= "db/gene_assignment/ORFtag/".
-#' @param scratch_folder Folder to be used for storing temporary files. Default= "/scratch/stark/vloubiere/ORFtag".
-#' @param Rpath Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript" 
-#' @param cores Number of cores per job. Default= 8
+#' @param metadata The path to a correctly formatted .xlsx metadata file or a data.table. See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_ORFtag.xlsx'.
+#' @param processed_metadata_output An .rds path where to save the processed metadata file, which contains the paths of all output files and will be used to manage them.
+#' By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path. 
+#' @param alignment_stats_folder Output folder for alignment statistics. Default= "db/alignment_stats/ORFtag/".
+#' @param bam_unique_output_folder Output folder for .bam files containing unique insertions. Default= "db/bam_unique/ORFtag/".
+#' @param bed_output_folder Output folder for .bed files containing unique insertions. Default= "db/bed/ORFtag/".
+#' @param exon_assignment_output_folder Output folder for counts_same_strand and counts_rev_strand files, containing exon assignment for each unique insertion. Default= "db/exon_assignment/ORFtag/".
+#' @param tmp_folder Output folder for temporary files (.fq, .bam). Default= "/scratch/stark/vloubiere/ORFtag".
+#' @param Rpath Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript".
+#' @param cores Number of cores per job. Default= 8.
 #' @param mem Memory per job (in Go). Default= 32.
 #' @param overwrite Should existing files be overwritten? Default= FALSE, meaning that only the commands for which output files do not exist will be returned and/or submitted.
 #' @param submit Should the command be submitted? Default= FALSE.
-#' @param wdir The working directory to use. defaut= getwd().
-#' @param logs Path to save logs. Default= "db/logs"
-#' @param time The time required for the SLURM scheduler. Default= '1-00:00:00'
+#' @param wdir The working directory to use. Default= getwd(), meaning current working directory will be used.
+#' @param logs Output folder for log files. Default= "db/logs".
+#' @param time The time required for the SLURM scheduler. Default= '1-00:00:00'.
 #'
-#' @return Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data. These commands can then be submitted using ?vl_bsub().
+#' @return Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data.
+#' These commands can then be submitted either directly via the function, or using vl_bsub()....
 #'
 #' @examples
 #' # Process example mouse data -----------------------------------------------------------------------------
 #' library(vlfunctions)
-#' meta <- vl_metadata_ORFtag[genome=="mm10"] # Example metadata sheet
+#' meta <- vl_metadata_ORFtag # Example metadata sheet
 #' vl_ORFtag_pipeline(metadata= meta,
 #'                    processed_metadata_output = "Rdata/metadata_ORFtag_processed.rds",
 #'                    cores= 8,
 #'                    mem= 32,
 #'                    overwrite= F,
 #'                    submit= T)
-#'                    
-#' check <- readRDS("Rdata/metadata_ORFtag_processed.rds") # Check that all output files have been generated
+#'
+#' # Once the job ran, check the size of output files
+#' processed <- readRDS("Rdata/metadata_ORFtag_processed.rds") # Check that all output files have been generated
+#' file.size(unique(unlist(processed[, fq1:counts_rev_strand])))
 #' 
 #' # Call hits (see ?vl_ORFtrap_call_hits for further details) ----------------------------------------------
 #' # 128 should be identified with this dataset
-#' vl_ORFtrap_call_hits(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
-#'                                                "db/gene_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
-#'                      unsorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
-#'                                                  "db/gene_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
+#' vl_ORFtrap_call_hits(sorted.forward.counts = c("db/exon_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
+#'                                                "db/exon_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
+#'                      unsorted.forward.counts = c("db/exon_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
+#'                                                  "db/exon_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
 #'                      genome = "mm10",
 #'                      name = "Activator_2",
 #'                      output.suffix = "_vs_input.txt")
 #' 
 #' # Call hits using revese strand (sanity check -> be cautious with the hits that are also found here!) ----
 #' # 89 hits should be identified with the reverse strand
-#' vl_ORFtrap_call_hits(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_rev_strand.txt",
-#'                                                "db/gene_assignment/ORFtag/Activator2_sort_rep2_rev_strand.txt"),
-#'                      unsorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_rev_strand.txt",
-#'                                                  "db/gene_assignment/ORFtag/Activator2_input_rep2_rev_strand.txt"),
+#' vl_ORFtrap_call_hits(sorted.forward.counts = c("db/exon_assignment/ORFtag/Activator2_sort_rep1_rev_strand.txt",
+#'                                                "db/exon_assignment/ORFtag/Activator2_sort_rep2_rev_strand.txt"),
+#'                      unsorted.forward.counts = c("db/exon_assignment/ORFtag/Activator2_input_rep1_rev_strand.txt",
+#'                                                  "db/exon_assignment/ORFtag/Activator2_input_rep2_rev_strand.txt"),
 #'                      genome = "mm10",
 #'                      name = "Activator_2",
 #'                      output.suffix = "_vs_input_rev_strand.txt")
@@ -71,14 +78,14 @@
 #' 
 #' # Call hits using strand bias (not used) ------------------------------------------------------------------
 #' # 63 hits should be called with this dataset
-#' vl_ORFtrap_call_hits_strandBias(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
-#'                                                           "db/gene_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
-#'                                 sorted.reverse.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_rev_strand.txt",
-#'                                                           "db/gene_assignment/ORFtag/Activator2_sort_rep2_rev_strand.txt"),
-#'                                 unsorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
-#'                                                             "db/gene_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
-#'                                 unsorted.reverse.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_rev_strand.txt",
-#'                                                             "db/gene_assignment/ORFtag/Activator2_input_rep2_rev_strand.txt"),
+#' vl_ORFtrap_call_hits_strandBias(sorted.forward.counts = c("db/exon_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
+#'                                                           "db/exon_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
+#'                                 sorted.reverse.counts = c("db/exon_assignment/ORFtag/Activator2_sort_rep1_rev_strand.txt",
+#'                                                           "db/exon_assignment/ORFtag/Activator2_sort_rep2_rev_strand.txt"),
+#'                                 unsorted.forward.counts = c("db/exon_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
+#'                                                             "db/exon_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
+#'                                 unsorted.reverse.counts = c("db/exon_assignment/ORFtag/Activator2_input_rep1_rev_strand.txt",
+#'                                                             "db/exon_assignment/ORFtag/Activator2_input_rep2_rev_strand.txt"),
 #'                                 genome = "mm10",
 #'                                 name = "Activator_2",
 #'                                 output.suffix = "_vs_input_strandBias.txt")
@@ -122,10 +129,11 @@ vl_ORFtag_pipeline.character <- function(metadata,
 #' @export
 vl_ORFtag_pipeline.default <- function(metadata,
                                        processed_metadata_output,
+                                       alignment_stats_folder= "db/alignment_stats/ORFtag/",
                                        bam_unique_output_folder= "db/bam_unique/ORFtag/",
                                        bed_output_folder= "db/bed/ORFtag/",
-                                       gene_assignment_output_folder= "db/gene_assignment/ORFtag/",
-                                       scratch_folder= "/scratch/stark/vloubiere",
+                                       exon_assignment_output_folder= "db/exon_assignment/ORFtag/",
+                                       tmp_folder= "/scratch/stark/vloubiere",
                                        Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
                                        cores= 8,
                                        mem= 32,
@@ -150,16 +158,17 @@ vl_ORFtag_pipeline.default <- function(metadata,
     stop("Only mm10 and hg38 are supported! Please provide corresponding bowtie 2 index and  non-first_exons.gtf file (see ?vl_ORFtag_pipeline)")
   
   # Generate output paths ----
-  meta[, fq1:= paste0(scratch_folder, "/ORFtag/fq/", gsub(".bam", "", basename(bam_path)), "_", make.unique(sampleID), "_1.fq.gz")]
+  # Temp files
+  meta[, fq1:= paste0(tmp_folder, "/ORFtag/fq/", gsub(".bam", "", basename(bam_path)), "_", make.unique(sampleID), "_1.fq.gz")]
   meta[, fq2:= fifelse(layout=="PAIRED", gsub("_1.fq.gz$", "_2.fq.gz", fq1), NA_character_)]
   meta[, fq1_trim:= gsub(".fq.gz$", "_trimmed.fq.gz", fq1)]
-  # re-sequencing are merged from this step on!
-  meta[, bam:= paste0(scratch_folder, "/ORFtag/bam/", sampleID, ".bam")]
-  meta[, bam_stats:= gsub(".bam$", "_stats.txt", bam)]
+  meta[, bam:= paste0(tmp_folder, "/ORFtag/bam/", sampleID, ".bam")] # re-sequenced samples merged from this step on!
+  # Temp files
+  meta[, bam_stats:= paste0(alignment_stats_folder, gsub(".bam$", "_stats.txt", basename(bam)))]
   meta[, bam_unique:= paste0(bam_unique_output_folder, sampleID, "_q30_unique.bam")]
   meta[, bed_file:= paste0(bed_output_folder, sampleID, ".bed")]
-  meta[, counts_same_strand:= paste0(gene_assignment_output_folder, sampleID, "_same_strand.txt")]
-  meta[, counts_rev_strand:= paste0(gene_assignment_output_folder, sampleID, "_rev_strand.txt")]
+  meta[, counts_same_strand:= paste0(exon_assignment_output_folder, sampleID, "_same_strand.txt")]
+  meta[, counts_rev_strand:= paste0(exon_assignment_output_folder, sampleID, "_rev_strand.txt")]
   
   # Save processed metadata ----
   if(!grepl(".rds$", processed_metadata_output))
@@ -167,7 +176,7 @@ vl_ORFtag_pipeline.default <- function(metadata,
       saveRDS(meta, processed_metadata_output)
   
   # Create output directories ----
-  tmpSort <- paste0(scratch_folder, "/ORFtag/bam/sort/") # tmp sort bam files
+  tmpSort <- paste0(tmp_folder, "/ORFtag/bam/sort/") # tmp sort bam files
   dirs <- c(logs,
             tmpSort,
             na.omit(unique(dirname(unlist(meta[, fq1:counts_rev_strand])))))
@@ -296,23 +305,24 @@ vl_ORFtag_pipeline.default <- function(metadata,
 #' 
 #' @description Function to call hits from a given screen. Receives sorted and unsorted counts as input, computes FC table 
 #' 
-#' @param sorted.forward.counts Sorted forward counts file (see bamToBed_and_assign_insertions.R function for further details)
-#' @param unsorted.forward.counts Unsorted (input) forward counts file (see bamToBed_and_assign_insertions.R function for further details)
-#' @param genome The genome annotation to use. For now, only "mm10" and "hg38" are supported, and will be used to retrieve non-first exon gtf file and sort output file. See at the bottom of the ?vl_ORFtag_pipeline help page to see how to generate custom non-first exon start gtf files.
-#' @param name Name to be appended at the beginning of output file
-#' @param output.suffix Suffix to be appended at the end of output file. Default to "_vs_unsorted.txt"
-#' @param output.folder.FC.file Output folder for FC files. Defaults to "db/FC_tables/ORFtag"
+#' @param sorted.forward.counts Character vector of sorted (FACSed) count file paths generated by vl_ORFtag_pipeline(). Counts from all provided files will be merged.
+#' @param unsorted.forward.counts Character vector of unsorted (input) count file paths generated by vl_ORFtag_pipeline(). Counts from all provided files will be merged.
+#' @param genome Genome annotation to be used. For now, only "mm10" and "hg38" are supported, and the corresponding non-first-exon .gtf will be used for sorting.
+#' See at the bottom of the ?vl_ORFtag_pipeline help page to see how to generate custom non-first-exon start .gtf files for other genomes.
+#' @param name Name prefix appended to output file names.
+#' @param output.suffix Name suffix appended to output file names. Default= "_vs_unsorted.txt".
+#' @param output.folder.FC.file Output folder for FC files. Default= "db/FC_tables/ORFtag".
 #'
-#' @return Returns FC tables containing DESeq2-like columns
+#' @return Returns FC tables containing DESeq2-like columns.
 #'
 #' @examples
 #' library(vlfunctions)
 #' 
 #' # 128 hits should be identified with this dataset
-#' vl_ORFtrap_call_hits(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
-#'                                                "db/gene_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
-#'                      unsorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
-#'                                                  "db/gene_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
+#' vl_ORFtrap_call_hits(sorted.forward.counts = c("db/exon_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
+#'                                                "db/exon_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
+#'                      unsorted.forward.counts = c("db/exon_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
+#'                                                  "db/exon_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
 #'                      genome = "mm10",
 #'                      name = "Activator_2",
 #'                      output.suffix = "_vs_input.txt")
@@ -396,29 +406,30 @@ vl_ORFtrap_call_hits <- function(sorted.forward.counts,
 #' 
 #' @description Function to call hits from a given screen. Receives sorted and unsorted counts as input, computes FC table 
 #' 
-#' @param sorted.forward.counts Sorted forward counts file (see bamToBed_and_assign_insertions.R function for further details)
-#' @param sorted.reverse.counts Sorted reverse counts file (see bamToBed_and_assign_insertions.R function for further details)
-#' @param unsorted.forward.counts Unsorted (input) forward counts file (see bamToBed_and_assign_insertions.R function for further details)
-#' @param unsorted.reverse.counts Unsorted (input) reverse counts file (see bamToBed_and_assign_insertions.R function for further details)
-#' @param genome The genome annotation to use. For now, only "mm10" and "hg38" are supported, and will be used to retrieve non-first exon gtf file and sort output file. See at the bottom of the ?vl_ORFtag_pipeline help page to see how to generate custom non-first exon start gtf files.
-#' @param name Name to be appended at the beginning of output file
-#' @param output.suffix Suffix to be appended at the end of output file. Default to "_vs_revStrand.txt"
-#' @param output.folder.FC.file Output folder for FC files. Defaults to "db/FC_tables/ORFtag"
+#' @param sorted.forward.counts Character vector of sorted (FACSed) count file paths generated by vl_ORFtag_pipeline(). Counts from all provided files will be merged.
+#' @param sorted.reverse.counts Character vector of sorted (FACSed), REVERSED count file paths generated by vl_ORFtag_pipeline(). Counts from all provided files will be merged.
+#' @param unsorted.forward.counts Character vector of unsorted (input) count file paths generated by vl_ORFtag_pipeline(). Counts from all provided files will be merged.
+#' @param unsorted.reverse.counts Character vector of insorted (input), REVERSED count file paths generated by vl_ORFtag_pipeline(). Counts from all provided files will be merged.
+#' @param genome Genome annotation to be used. For now, only "mm10" and "hg38" are supported, and the corresponding non-first-exon .gtf will be used for sorting.
+#' See at the bottom of the ?vl_ORFtag_pipeline help page to see how to generate custom non-first-exon start .gtf files for other genomes.
+#' @param name Name prefix appended to output file names.
+#' @param output.suffix Name suffix appended to output file names. Default= "_vs_unsorted.txt".
+#' @param output.folder.FC.file Output folder for FC files. Default= "db/FC_tables/ORFtag".
 #'
-#' @return Returns FC tables containing DESeq2-like columns
+#' @return Returns FC tables containing DESeq2-like columns.
 #'
 #' @examples
 #' library(vlfunctions)
 #' 
 #' # 63 hits should be called with this dataset
-#' vl_ORFtrap_call_hits_strandBias(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
-#'                                                           "db/gene_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
-#'                                 sorted.reverse.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_rev_strand.txt",
-#'                                                           "db/gene_assignment/ORFtag/Activator2_sort_rep2_rev_strand.txt"),
-#'                                 unsorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
-#'                                                             "db/gene_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
-#'                                 unsorted.reverse.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_rev_strand.txt",
-#'                                                             "db/gene_assignment/ORFtag/Activator2_input_rep2_rev_strand.txt"),
+#' vl_ORFtrap_call_hits_strandBias(sorted.forward.counts = c("db/exon_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
+#'                                                           "db/exon_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
+#'                                 sorted.reverse.counts = c("db/exon_assignment/ORFtag/Activator2_sort_rep1_rev_strand.txt",
+#'                                                           "db/exon_assignment/ORFtag/Activator2_sort_rep2_rev_strand.txt"),
+#'                                 unsorted.forward.counts = c("db/exon_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
+#'                                                             "db/exon_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
+#'                                 unsorted.reverse.counts = c("db/exon_assignment/ORFtag/Activator2_input_rep1_rev_strand.txt",
+#'                                                             "db/exon_assignment/ORFtag/Activator2_input_rep2_rev_strand.txt"),
 #'                                 genome = "mm10",
 #'                                 name = "Activator_2",
 #'                                 output.suffix = "_vs_input_strandBias.txt")

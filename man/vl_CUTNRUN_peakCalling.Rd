@@ -14,21 +14,21 @@ vl_CUTNRUN_peakCalling(processed_metadata, ...)
 
 \item{Rpath}{The path to the Rscript executable to use, on which the latest version of the vlfunction package should be installed. Default= /software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript}
 
-\item{extsise}{The extsize to be used, meaning that the building of the peak model will be skipped (--nomodel). To build the model, set extize= NA. Default= 300}
+\item{extsise}{The extsize to be used, meaning that the building of the peak model will be skipped (--nomodel). To build the model, set extsize= NA. Default= 300.}
 
-\item{cores}{Number of cores per job. Default= 8}
+\item{cores}{Number of cores per job. Default= 8.}
 
 \item{mem}{Memory per job (in Go). Default= 32.}
 
 \item{overwrite}{Should existing files be overwritten?}
 
-\item{submit}{Should the command be submitted? default= G}
+\item{submit}{Should the command be submitted? default= FALSE.}
 
-\item{wdir}{The working directory to use. defaut= getwd().}
+\item{wdir}{The working directory to use. Default= getwd(), meaning current working directory will be used.}
 
-\item{logs}{Path to save logs. Default= "db/logs/CUTNRUN/peak_calling"}
+\item{logs}{Output folder for log files. Default= "db/logs/CUTNRUN/peak_calling".}
 
-\item{time}{The time required for the SLURM scheduler. Default= '1-00:00:00'}
+\item{time}{The time required for the SLURM scheduler. Default= '1-00:00:00'.}
 }
 \value{
 Command lines for peak calling.
@@ -46,9 +46,10 @@ Title
 library(vlfunctions)
 
 # Check all processed files exist
-processed <- readRDS("Rdata/metadata_CutNRun_processed.rds") 
+processed <- readRDS("Rdata/metadata_CutNRun_processed.rds")
+file.exists(na.omit(unlist(processed[, fq1:mapq30_stats])))
 
-vl_CUTNRUN_peakCalling(processed_metadata = processed, # You could also just provide the path, "Rdata/metadata_CutNRun_processed.rds"
+vl_CUTNRUN_peakCalling(processed_metadata = processed, # You could also just provide the path, "Rdata/metadata_CutNRun_processed.rds".
                        extsize = 300,
                        cores = 8,
                        mem = 64,

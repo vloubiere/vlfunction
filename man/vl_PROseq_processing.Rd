@@ -16,11 +16,12 @@ vl_PROseq_processing(metadata, ...)
 
 \method{vl_PROseq_processing}{default}(
   metadata,
-  processed_metadata_output = gsub(".txt$", "_processed.rds", metadata),
+  processed_metadata_output,
   count_output_folder = "db/counts/PROseq/",
+  alignment_stats_output_folder = "db/alignment_stats/PROseq/",
   count_table_output_folder = "db/count_tables/PROseq/",
   bw_output_folder = "db/bw/PROseq/",
-  scratch_folder = "/scratch/stark/vloubiere",
+  tmp_folder = "/scratch/stark/vloubiere",
   Rpath = "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
   cores = 8,
   mem = 64,
@@ -32,42 +33,48 @@ vl_PROseq_processing(metadata, ...)
 )
 }
 \arguments{
-\item{metadata}{The path to a .txt, tab-separated metadata file containing at least 12 columns. See "/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_PROseq.xlsx" and vl_metadata_PROseq for a template.}
+\item{metadata}{The path to a correctly formatted .xlsx metadata file or a data.table. See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_PROseq.xlsx'.}
 
-\item{processed_metadata_output}{An .rds path where to save the processed metadata file (containing the paths of output files). By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path. This processed metadata can be used to locate and manage all processed files.}
+\item{processed_metadata_output}{An .rds path where to save the processed metadata file, which contains the paths of all output files and will be used to manage them.
+By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.}
 
-\item{count_output_folder}{Folder where count files will be stored. Default= "db/counts/PROseq/".}
+\item{count_output_folder}{Output folder for count files. Default= "db/counts/PROseq/".}
 
-\item{count_table_output_folder}{Folder where count tables will be stored. Default= "db/count_tables/PROseq/".}
+\item{alignment_stats_output_folder}{Output folder for alignment statistics. Default= "db/alignment_stats/PROseq/".}
 
-\item{bw_output_folder}{Folder where bigwig files will be store. Default= "db/bw/PROseq/".}
+\item{count_table_output_folder}{Output folder for count tables. Default= "db/count_tables/PROseq/".}
 
-\item{scratch_folder}{Folder where intermediate bam and fastq files will be saved}
+\item{bw_output_folder}{Output folder for .bw tracks. Default= "db/bw/PROseq/".}
 
-\item{Rpath}{Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript"}
+\item{tmp_folder}{Output folder for temporary files (.fq, .bam). Default= "/scratch/stark/vloubiere".}
 
-\item{cores}{Number of cores per job. Default= 8}
+\item{Rpath}{Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript".}
+
+\item{cores}{Number of cores per job. Default= 8.}
 
 \item{mem}{Memory per job (in Go). Default= 64.}
 
 \item{overwrite}{Should existing files be overwritten?}
 
-\item{submit}{Should the command be submitted? default= FALSE.}
+\item{submit}{Should the command be submitted? Default= FALSE.}
 
-\item{wdir}{The working directory to use. defaut= getwd().}
+\item{wdir}{The working directory to use. Default= getwd(), meaning current working directory will be used.}
 
-\item{logs}{Path to save logs. Default= "db/logs/CUTNRUN/processing"}
+\item{logs}{Output folder for log files. Default= "db/logs/CUTNRUN/processing".}
 
-\item{time}{The time required for the SLURM scheduler. Default= '1-00:00:00'}
+\item{time}{The time required for the SLURM scheduler. Default= '1-00:00:00'.}
 }
 \value{
-Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data. These commands can then be submitted using ?vl_bsub().
+Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data.
+These commands can then be submitted either directly via the function, or using vl_bsub()...
 }
 \description{
-To use this this pipeline, please install the vl_function package using install_github("vloubiere/vlfunction") in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R') which will be used to submit R sub-scripts.
+To use this this pipeline, please install the vl_function package using install_github("vloubiere/vlfunction")
+in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R') 
+which will be used to submit R sub-script.
 }
 \details{
-The pipeline is split into two main parts. The first vl_PROseq_processing() aligns the reads and filters confident alignments.
+The pipeline is split into two main function The first function vl_PROseq_processing() aligns the reads and filters confident alignments.
 It takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns and/or submit the command lines to: \cr
 1/ extract reads from VBC bam file \cr
 2/ trim the reads \cr
@@ -106,7 +113,12 @@ processed <- readRDS("Rdata/metadata_PROseq_processed.rds")
 file.size(na.omit(unlist(processed[, fq1:bwNS])))
 
 # Differential analysis (of note, no "overwrite" option is available in this case)
-vl_PROseq_DESeq2(processed, # Here, you could also provide the path, "Rdata/metadata_PROseq_processed.rds"
+vl_PROseq_DESeq2(processed, # Here, you could also provide the path to the processed metadata table ("Rdata/metadata_PROseq_processed.rds").
+                 FC_metadata_output = "Rdata/metadata_PROseq_FC_tables.rds",
                  submit = TRUE)
+                 
+# Once the commands ran, to retrieve spikein normalized FC tables:
+FC <- readRDS("Rdata/metadata_PROseq_FC_tables.rds")
+files <- FC[, list.files(fcDir, paste0(DESeq2_condition, ".*", "spike")), .(fcDir, DESeq2_condition)]$V1
 
 }

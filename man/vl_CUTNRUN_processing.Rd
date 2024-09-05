@@ -17,11 +17,11 @@ vl_CUTNRUN_processing(metadata, ...)
 
 \method{vl_CUTNRUN_processing}{default}(
   metadata,
-  processed_metadata_output = gsub(".txt$", "_processed.rds", metadata),
+  processed_metadata_output,
   alignment_stats_output_folder = "db/alignment_stats/CUTNRUN/",
   peaks_output_folder = "db/peaks/CUTNRUN/",
   bw_output_folder = "db/bw/CUTNRUN/",
-  scratch_folder = "/scratch/stark/vloubiere",
+  tmp_folder = "/scratch/stark/vloubiere",
   cores = 8,
   mem = 64,
   overwrite = FALSE,
@@ -45,50 +45,52 @@ vl_CUTNRUN_processing(metadata, ...)
 )
 }
 \arguments{
-\item{metadata}{The path to a .txt, tab-separated metadata file containing at least 12 columns.  See "/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_CutNRun.xlsx" and vl_metadata_CUTNRUN for an template.}
+\item{metadata}{The path to a correctly formatted .xlsx metadata file or a data.table. See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_CutNRun.xlsx'.}
 
-\item{processed_metadata_output}{An .rds path where to save the processed metadata file (containing the paths of output files).
-By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path. This processed metadata can be used to locate and manage all processed files.}
+\item{processed_metadata_output}{An .rds path where to save the processed metadata file, which contains the paths of all output files and will be used to manage them.
+By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.}
 
-\item{alignment_stats_output_folder}{Output folder where alignment statistics should be saved. Default= "db/alignment_stats/CUTNRUN/".}
+\item{alignment_stats_output_folder}{Output folder for alignment statistics. Default= "db/alignment_stats/CUTNRUN/".}
 
-\item{peaks_output_folder}{Output folder where peak files should be saved. Default= "db/peaks/CUTNRUN/".}
+\item{peaks_output_folder}{Output folder for peak files. Default= "db/peaks/CUTNRUN/".}
 
-\item{bw_output_folder}{Output folder where bw tracks should be saved. Default= "db/bw/CUTNRUN/".}
+\item{bw_output_folder}{Output folder for .bw tracks. Default= "db/bw/CUTNRUN/".}
 
-\item{scratch_folder}{Folder where intermediate bam and fastq files will be saved}
+\item{tmp_folder}{Output folder for temporary files (.fq, .bam). Default= "/scratch/stark/vloubiere/ORFtag".}
 
-\item{cores}{Number of cores per job. Default= 8}
+\item{cores}{Number of cores per job. Default= 8.}
 
 \item{mem}{Memory per job (in Go). Default= 32.}
 
 \item{overwrite}{Should existing files be overwritten?}
 
-\item{submit}{Should the command be submitted? default= FALSE.}
+\item{submit}{Should the command be submitted? Default= FALSE.}
 
-\item{wdir}{The working directory to use. defaut= getwd().}
+\item{wdir}{The working directory to use. Default= getwd(), meaning current working directory will be used.}
 
-\item{logs}{Path to save logs. Default= "db/logs/CUTNRUN/processing"}
+\item{logs}{Output folder for log files. Default= "db/logs/CUTNRUN/processing".}
 
-\item{time}{The time required for the SLURM scheduler. Default= '1-00:00:00'}
+\item{time}{The time required for the SLURM scheduler. Default= '1-00:00:00'.}
 }
 \value{
 Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data.
-These commands can then be submitted either directly via the function, or using ?vl_bsub()....
+These commands can then be submitted either directly via the function, or using vl_bsub()....
 }
 \description{
-To use this this pipeline, please install the vl_function package using install_github("vloubiere/vlfunction") in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R') which will be used to submit R sub-scripts.
+To use this this pipeline, please install the vl_function package using install_github("vloubiere/vlfunction")
+in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R') 
+which will be used to submit R sub-script.
 }
 \details{
-The pipeline is split into two main parts. The first vl_CUTNRUN_processing() aligns the reads and filters confident alignments.
+The pipeline is split into two main functions. The first vl_CUTNRUN_processing() function aligns the reads and filters confident alignments.
 It takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns and/or submit the command lines to: \cr
-1/ extract reads from VBC bam file \cr
+1/ extract reads from VBC .bam file \cr
 2/ trim the reads \cr
 3/ aligns them to mouse/human genome (see 'genome' column of the metadata table) \cr
 4/ return alignment statistics \cr
 5/ return mapq30_statistics (confidently aligned reads) \cr
 
-The second function, vl_CUTNRUN_peakCalling() takes care of the peak calling, and returns: \cr
+The second function, vl_CUTNRUN_peakCalling(), takes care of the peak calling, and returns and/or submit the command lines to: \cr
 1/ peaks for each replicate \cr
 2/ .bw tracks for each replicate \cr
 3/ Peaks called on the merged replicates \cr
@@ -123,7 +125,7 @@ processed <- readRDS("Rdata/metadata_CutNRun_processed.rds")
 file.size(unlist(unique(processed[, fq1:mapq30_stats])))
 
 # Peak calling (see ?vl_CUTNRUN_peakCalling)----
-vl_CUTNRUN_peakCalling(processed_metadata = processed, # You can also provide he path to the saved file
+vl_CUTNRUN_peakCalling(processed_metadata = processed, # You can also provide the path to the file.
                        extsize = 300,
                        cores = 8,
                        mem = 64,

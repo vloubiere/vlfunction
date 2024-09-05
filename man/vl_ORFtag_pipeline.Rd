@@ -17,10 +17,11 @@ vl_ORFtag_pipeline(metadata, ...)
 \method{vl_ORFtag_pipeline}{default}(
   metadata,
   processed_metadata_output,
+  alignment_stats_folder = "db/alignment_stats/ORFtag/",
   bam_unique_output_folder = "db/bam_unique/ORFtag/",
   bed_output_folder = "db/bed/ORFtag/",
-  gene_assignment_output_folder = "db/gene_assignment/ORFtag/",
-  scratch_folder = "/scratch/stark/vloubiere",
+  exon_assignment_output_folder = "db/exon_assignment/ORFtag/",
+  tmp_folder = "/scratch/stark/vloubiere",
   Rpath = "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
   cores = 8,
   mem = 32,
@@ -32,21 +33,24 @@ vl_ORFtag_pipeline(metadata, ...)
 )
 }
 \arguments{
-\item{metadata}{The path to a correctly formated .xlsx metadata file or a data.table. See "/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_ORFtag.xlsx" and vl_metadata_ORFtag for an template.}
+\item{metadata}{The path to a correctly formatted .xlsx metadata file or a data.table. See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_ORFtag.xlsx'.}
 
-\item{processed_metadata_output}{An .rds path where to save the processed metadata file (containing the paths of output files). By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path. This processed metadata can be used to locate and manage all processed files.}
+\item{processed_metadata_output}{An .rds path where to save the processed metadata file, which contains the paths of all output files and will be used to manage them.
+By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.}
 
-\item{bam_unique_output_folder}{Folder where bam containing unique alignments should be stored. Default= "db/bam_unique/ORFtag/".}
+\item{alignment_stats_folder}{Output folder for alignment statistics. Default= "db/alignment_stats/ORFtag/".}
 
-\item{bed_output_folder}{Folder where bed files containing should be stored. Default= "db/bed/ORFtag/".}
+\item{bam_unique_output_folder}{Output folder for .bam files containing unique insertions. Default= "db/bam_unique/ORFtag/".}
 
-\item{gene_assignment_output_folder}{Folder where gene_assignment files should be stored. Default= "db/gene_assignment/ORFtag/".}
+\item{bed_output_folder}{Output folder for .bed files containing unique insertions. Default= "db/bed/ORFtag/".}
 
-\item{scratch_folder}{Folder to be used for storing temporary files. Default= "/scratch/stark/vloubiere/ORFtag".}
+\item{exon_assignment_output_folder}{Output folder for counts_same_strand and counts_rev_strand files, containing exon assignment for each unique insertion. Default= "db/exon_assignment/ORFtag/".}
 
-\item{Rpath}{Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript"}
+\item{tmp_folder}{Output folder for temporary files (.fq, .bam). Default= "/scratch/stark/vloubiere/ORFtag".}
 
-\item{cores}{Number of cores per job. Default= 8}
+\item{Rpath}{Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript".}
+
+\item{cores}{Number of cores per job. Default= 8.}
 
 \item{mem}{Memory per job (in Go). Default= 32.}
 
@@ -54,20 +58,23 @@ vl_ORFtag_pipeline(metadata, ...)
 
 \item{submit}{Should the command be submitted? Default= FALSE.}
 
-\item{wdir}{The working directory to use. defaut= getwd().}
+\item{wdir}{The working directory to use. Default= getwd(), meaning current working directory will be used.}
 
-\item{logs}{Path to save logs. Default= "db/logs"}
+\item{logs}{Output folder for log files. Default= "db/logs".}
 
-\item{time}{The time required for the SLURM scheduler. Default= '1-00:00:00'}
+\item{time}{The time required for the SLURM scheduler. Default= '1-00:00:00'.}
 }
 \value{
-Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data. These commands can then be submitted using ?vl_bsub().
+Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data.
+These commands can then be submitted either directly via the function, or using vl_bsub()....
 }
 \description{
-To use this this pipeline, please install the vl_function package using install_github("vloubiere/vlfunction") in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R') which will be used to submit R sub-script.
+To use this this pipeline, please install the vl_function package using install_github("vloubiere/vlfunction")
+in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R') 
+which will be used to submit R sub-script.
 }
 \details{
-Takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns the command lines to: \cr
+Takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns and.or submit the command lines to: \cr
  1/ extract reads from VBC bam file \cr
  2/ trim the reads \cr
  3/ Aligns to mouse/human genome (see 'genome' column of the metadata table) and returns a bam file \cr
@@ -87,32 +94,34 @@ Takes as input a (correctly formatted) metadata file, saves the processed metada
 \examples{
 # Process example mouse data -----------------------------------------------------------------------------
 library(vlfunctions)
-meta <- vl_metadata_ORFtag[genome=="mm10"] # Example metadata sheet
+meta <- vl_metadata_ORFtag # Example metadata sheet
 vl_ORFtag_pipeline(metadata= meta,
                    processed_metadata_output = "Rdata/metadata_ORFtag_processed.rds",
                    cores= 8,
                    mem= 32,
                    overwrite= F,
                    submit= T)
-                   
-check <- readRDS("Rdata/metadata_ORFtag_processed.rds") # Check that all output files have been generated
+
+# Once the job ran, check the size of output files
+processed <- readRDS("Rdata/metadata_ORFtag_processed.rds") # Check that all output files have been generated
+file.size(unique(unlist(processed[, fq1:counts_rev_strand])))
 
 # Call hits (see ?vl_ORFtrap_call_hits for further details) ----------------------------------------------
 # 128 should be identified with this dataset
-vl_ORFtrap_call_hits(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
-                                               "db/gene_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
-                     unsorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
-                                                 "db/gene_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
+vl_ORFtrap_call_hits(sorted.forward.counts = c("db/exon_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
+                                               "db/exon_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
+                     unsorted.forward.counts = c("db/exon_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
+                                                 "db/exon_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
                      genome = "mm10",
                      name = "Activator_2",
                      output.suffix = "_vs_input.txt")
 
 # Call hits using revese strand (sanity check -> be cautious with the hits that are also found here!) ----
 # 89 hits should be identified with the reverse strand
-vl_ORFtrap_call_hits(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_rev_strand.txt",
-                                               "db/gene_assignment/ORFtag/Activator2_sort_rep2_rev_strand.txt"),
-                     unsorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_rev_strand.txt",
-                                                 "db/gene_assignment/ORFtag/Activator2_input_rep2_rev_strand.txt"),
+vl_ORFtrap_call_hits(sorted.forward.counts = c("db/exon_assignment/ORFtag/Activator2_sort_rep1_rev_strand.txt",
+                                               "db/exon_assignment/ORFtag/Activator2_sort_rep2_rev_strand.txt"),
+                     unsorted.forward.counts = c("db/exon_assignment/ORFtag/Activator2_input_rep1_rev_strand.txt",
+                                                 "db/exon_assignment/ORFtag/Activator2_input_rep2_rev_strand.txt"),
                      genome = "mm10",
                      name = "Activator_2",
                      output.suffix = "_vs_input_rev_strand.txt")
@@ -126,14 +135,14 @@ print(paste(length(hits), "hits were found, out of which", sum(hits \%in\% sanit
 
 # Call hits using strand bias (not used) ------------------------------------------------------------------
 # 63 hits should be called with this dataset
-vl_ORFtrap_call_hits_strandBias(sorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
-                                                          "db/gene_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
-                                sorted.reverse.counts = c("db/gene_assignment/ORFtag/Activator2_sort_rep1_rev_strand.txt",
-                                                          "db/gene_assignment/ORFtag/Activator2_sort_rep2_rev_strand.txt"),
-                                unsorted.forward.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
-                                                            "db/gene_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
-                                unsorted.reverse.counts = c("db/gene_assignment/ORFtag/Activator2_input_rep1_rev_strand.txt",
-                                                            "db/gene_assignment/ORFtag/Activator2_input_rep2_rev_strand.txt"),
+vl_ORFtrap_call_hits_strandBias(sorted.forward.counts = c("db/exon_assignment/ORFtag/Activator2_sort_rep1_same_strand.txt",
+                                                          "db/exon_assignment/ORFtag/Activator2_sort_rep2_same_strand.txt"),
+                                sorted.reverse.counts = c("db/exon_assignment/ORFtag/Activator2_sort_rep1_rev_strand.txt",
+                                                          "db/exon_assignment/ORFtag/Activator2_sort_rep2_rev_strand.txt"),
+                                unsorted.forward.counts = c("db/exon_assignment/ORFtag/Activator2_input_rep1_same_strand.txt",
+                                                            "db/exon_assignment/ORFtag/Activator2_input_rep2_same_strand.txt"),
+                                unsorted.reverse.counts = c("db/exon_assignment/ORFtag/Activator2_input_rep1_rev_strand.txt",
+                                                            "db/exon_assignment/ORFtag/Activator2_input_rep2_rev_strand.txt"),
                                 genome = "mm10",
                                 name = "Activator_2",
                                 output.suffix = "_vs_input_strandBias.txt")
