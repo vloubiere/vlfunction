@@ -61,6 +61,7 @@
 
 #' # Cluster using kmeans clustering
 #' res <- vl_heatmap(test,
+#'                   col= c("black", "blue", "yellow"),
 #'                   kmeans.k = 4,
 #'                   cutree.rows = 3,
 #'                   cutree.cols = 5,
@@ -70,7 +71,7 @@
 #' # Play with plotting parameters
 #' plot(res) # Same parameters as the plot from the original function
 #' plot(res,
-#'      col= c("black", "blue", "yellow"),
+#'      col= c("cornflowerblue", "white", "tomato"),
 #'      display.numbers= T,
 #'      tilt.colnames= T,
 #'      col.clusters.colors= rainbow(9))
@@ -212,24 +213,7 @@ vl_heatmap.matrix <- function(x,
   cols[(order), x:= .I]
   
   # Make object ----
-  obj <- c("x",
-           "rows",
-           "rcl",
-           "rdend",
-           "cluster.rows",
-           "clustering.distance.rows",
-           "cutree.rows",
-           "row.clusters",
-           "kmeans.k",
-           "cols",
-           "ccl",
-           "cdend",
-           "cluster.cols",
-           "clustering.distance.cols",
-           "cutree.cols",
-           "col.clusters",
-           "clustering.method")
-  obj <- mget(obj, envir = environment())
+  obj <- mget(ls(), envir = environment())
   setattr(obj,
           "class",
           c("vl_heatmap", "list"))
@@ -269,34 +253,38 @@ vl_heatmap.matrix <- function(x,
 
 #' @export
 plot.vl_heatmap <- function(obj,
-                            breaks= NULL,
-                            col= c("cornflowerblue", "white", "red"),
-                            na.col= "lightgrey",
-                            useRaster= TRUE,
-                            grid= FALSE,
-                            main= NA,
-                            show.rownames= TRUE,
-                            show.colnames= TRUE,
-                            tilt.colnames= FALSE,
-                            show.row.dendrogram= TRUE,
-                            show.row.clusters= NULL,
-                            row.clusters.pos= "right",
-                            row.clusters.colors= grDevices::gray.colors(100),
-                            row.cluster.line.color= "black",
-                            show.col.dendrogram= TRUE,
-                            show.col.clusters= NULL,
-                            col.clusters.colors= grDevices::gray.colors(100),
-                            show.legend= TRUE,
-                            legend.title= NA,
-                            legend.cex= 1,
-                            display.numbers= FALSE,
-                            display.numbers.matrix= x,
-                            display.numbers.cex= 1,
-                            display.numbers.FUN= function(x) round(x, 2), 
-                            box.lwd= .25)
+                            breaks= obj$breaks,
+                            col= obj$col,
+                            na.col= obj$na.col,
+                            useRaster= obj$useRaster,
+                            grid= obj$grid,
+                            main= obj$main,
+                            show.rownames= obj$show.rownames,
+                            show.colnames= obj$show.colnames,
+                            tilt.colnames= obj$tilt.colnames,
+                            show.row.dendrogram= obj$show.row.dendrogram,
+                            show.row.clusters= obj$show.row.clusters,
+                            row.clusters.pos= obj$row.clusters.pos,
+                            row.clusters.colors= obj$row.clusters.colors,
+                            row.cluster.line.color= obj$row.cluster.line.color,
+                            show.col.dendrogram= obj$show.col.dendrogram,
+                            show.col.clusters= obj$show.col.clusters,
+                            col.clusters.colors= obj$col.clusters.colors,
+                            show.legend= obj$show.legend,
+                            legend.title= obj$legend.title,
+                            legend.cex= obj$legend.cex,
+                            display.numbers= obj$display.numbers,
+                            display.numbers.matrix= obj$display.numbers.matrix,
+                            display.numbers.cex= obj$display.numbers.cex,
+                            display.numbers.FUN= obj$display.numbers.FUN,
+                            box.lwd= obj$box.lwd)
 {
   # Retrieve environment ----
-  list2env(obj, environment())
+  x <- obj$x
+  rows <- obj$rows
+  cols <- obj$cols
+  rdend <- obj$rdend
+  cdend <- obj$cdend
   
   # Checks ----
   if(row.clusters.pos=="left")

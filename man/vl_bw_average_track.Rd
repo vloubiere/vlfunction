@@ -35,20 +35,19 @@ vl_bw_average_track(
 
 \method{plot}{vl_bw_average_track}(
   obj,
-  ylim = NULL,
-  xlab = "Genomic distance",
-  ylab = "Enrichment",
-  col = c("#E69F00", "#68B1CB", "#15A390", "#96C954", "#77AB7A", "#4F6A6F", "#D26429",
-    "#C57DA5", "#999999"),
-  col.adj = 0.5,
-  legend = TRUE,
-  legend.pos = "topleft",
-  legend.cex = 1,
-  xlab.labs = NULL,
-  abline = TRUE,
-  abline.col = "black",
-  abline.lty = 3,
-  abline.lwd = 1
+  ylim = obj$ylim,
+  xlab = obj$xlab,
+  ylab = obj$ylab,
+  col = obj$col,
+  col.adj = obj$col.adj,
+  legend = obj$legend,
+  legend.pos = obj$legend.pos,
+  legend.cex = obj$legend.cex,
+  xlab.labs = obj$xlab.labs,
+  abline = obj$abline,
+  abline.col = obj$abline.col,
+  abline.lty = obj$abline.lty,
+  abline.lwd = obj$abline.lwd
 )
 }
 \arguments{
@@ -121,6 +120,7 @@ vl_bw_average_track(bed,
                     upstream = 1000,
                     downstream = 1000)
 pl <- vl_bw_average_track(bed,
+                          col= c("blue", "red"),
                           set.IDs = sets,
                           tracks= tracks,
                           upstream = 1000,
@@ -128,9 +128,9 @@ pl <- vl_bw_average_track(bed,
                           anchor= "region")
 
 # Play with plotting parameters
-plot(pl) # Plot with default parameters
+plot(pl) # Plot with the parameters of the initial call
 plot(pl,
-     col= c("blue", "red"),
+     col= c("#E69F00","#68B1CB","#15A390","#96C954","#77AB7A","#4F6A6F","#D26429","#C57DA5","#999999"),
      ylim= c(0, 200),
      xlab.labs= c(-1000, "TSS", "Gene", "TTS", 1000))
 

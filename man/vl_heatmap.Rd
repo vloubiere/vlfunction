@@ -158,6 +158,7 @@ vl_heatmap(test,
            main= "test")
 # Cluster using kmeans clustering
 res <- vl_heatmap(test,
+                  col= c("black", "blue", "yellow"),
                   kmeans.k = 4,
                   cutree.rows = 3,
                   cutree.cols = 5,
@@ -167,7 +168,7 @@ res <- vl_heatmap(test,
 # Play with plotting parameters
 plot(res) # Same parameters as the plot from the original function
 plot(res,
-     col= c("black", "blue", "yellow"),
+     col= c("cornflowerblue", "white", "tomato"),
      display.numbers= T,
      tilt.colnames= T,
      col.clusters.colors= rainbow(9))
