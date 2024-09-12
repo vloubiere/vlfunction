@@ -8,7 +8,8 @@
 data.table
 #' \describe{
   \item{user}{User name}
-  \item{experiment}{HCFC1, HCFC1_rescue, ...}
+  \item{batch}{1, 2, 3, ...}
+  \item{experiment}{Each experiment will end up in a separate .dds DESeq2 object!! HCFC1, HCFC1_rescue, ...}
   \item{cell_line}{AID-Hcfc1-cl4, AID-Hcfc1-cl17, ...}
   \item{treatment}{0hrIAA, 3hrIAA, ...}
   \item{replicate}{rep1, rep2, ...}

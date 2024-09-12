@@ -103,7 +103,9 @@ vl_PROseq_processing.default <- function(metadata,
 {
   # Import metadata and check format ----
   meta <- data.table::copy(metadata)
-  cols <- c("user", "experiment", "cell_line", "treatment", "replicate", "sampleID", "DESeq2_name", "DESeq2_condition", "DESeq2_control", "barcode", "eBC", "genome", "spikein_genome", "layout", "sequencer", "bam_path")
+  cols <- c("user", "batch", "experiment", "cell_line", "treatment", "replicate", "sampleID",
+            "DESeq2_name", "DESeq2_condition", "DESeq2_control", "barcode", "eBC", "genome",
+            "spikein_genome", "layout", "sequencer", "bam_path")
   if(!all(cols %in% names(meta)))
     stop(paste("Columns missing ->", paste(cols[!cols %in% names(meta)], collapse = "; ")))
   if(any(!na.omit(meta$DESeq2_control) %in% meta$DESeq2_condition))
