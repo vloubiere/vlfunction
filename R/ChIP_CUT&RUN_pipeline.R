@@ -112,6 +112,8 @@ vl_CUTNRUN_processing.default <- function(metadata,
   # Check bowtie2 idx ----
   if(any(!meta$genome %in% c("mm10", "hg38")))
     stop("Only mm10 and hg38 are supported! For other genomes, please provide path to the corresponding bowtie 2 index.")
+  
+  # Check fq files ----
   if("fq1" %in% names(meta) && any(grepl(".fq.gz$", na.omit(meta$fq1))))
     stop("If provided, fq1 files should be gzipped and their names should end with '.fq.gz'")
   if("fq2" %in% names(meta) && any(grepl(".fq.gz$", na.omit(meta$fq2))))
@@ -120,8 +122,8 @@ vl_CUTNRUN_processing.default <- function(metadata,
   # Generate output paths ----
   meta[is.na(fq1) & !is.na(bam_path), fq1:= paste0(tmp_folder, "/CUTNRUN/fq/", gsub(".bam", "", basename(bam_path)))]
   meta[is.na(fq1) & !is.na(bam_path), fq1:= paste0(fq1, "_", make.unique(sampleID), fifelse(layout=="PAIRED", "_1.fq.gz", ".fq.gz"))]
-  meta[is.na(fq2) & !is.na(bam_path), fq2:= fifelse(layout=="PAIRED", gsub("_1.fq.gz$", "_2.fq.gz", fq1), NA_character_)]
-  meta[, fq1_trim:= gsub(".fq.gz$", ifelse(layout=="PAIRED", "_val_1.fq.gz", "_trimmed.fq.gz"), fq1), layout]
+  meta[is.na(fq2) & layout=="PAIRED", fq2:= gsub("_1.fq.gz$", "_2.fq.gz", fq1)]
+  meta[, fq1_trim:= gsub(".fq.gz$", fifelse(layout=="PAIRED", "_val_1.fq.gz", "_trimmed.fq.gz"), fq1), layout]
   meta[, fq2_trim:= gsub(".fq.gz$", "_val_2.fq.gz", fq2)]
   # re-sequencing are merged from this step on!
   meta[, bam:= paste0(tmp_folder, "/CUTNRUN/bam/", sampleID, ".bam")]
