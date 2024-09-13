@@ -25,7 +25,7 @@ counts <- counts[coor!="NA:NA:NA"]
 counts[, c("seqnames", "start", "strand"):= tstrsplit(coor, ":", type.convert = T)]
 
 # Expand counts ----
-counts <- counts[, .SD[rep(seq(.N), each= umi_counts)], umi_counts, .SDcols= c("seqnames", "start", "strand")]
+counts <- counts[rep(seq(.N), umi_counts), .(seqnames, start, strand)]
 counts[, end:= start]
 counts <- vl_resizeBed(counts, "start", 0, 9) # Resize to improve visualization
 setorderv(counts, c("seqnames", "start", "end"))

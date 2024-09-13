@@ -196,14 +196,14 @@ vl_PROseq_processing.default <- function(metadata,
       paste("bowtie -q -v 2 -m 1 --best --strata --sam -p", cores,
             refIdx,
             paste0(fq1_trimmed, collapse = ","),
-            "| samtools view -bS -o ", bam)
+            "| samtools view -@", cores-1, "-bS -o", bam)
     }
   }, .(bam, genome)]
   
   # Extract unmapped reads ----
   meta[, unaligned_cmd:= {
     if(overwrite | !file.exists(fq_unaligned))
-      paste("samtools view -f 4 -b", bam, "| samtools fastq - >", fq_unaligned)
+      paste("samtools view -@", cores-1, "-f 4 -b", bam, "| samtools fastq - >", fq_unaligned)
   }, .(bam, fq_unaligned)]
   
   # Align unmapped reads to spike-in genome ----
@@ -217,7 +217,7 @@ vl_PROseq_processing.default <- function(metadata,
       paste("bowtie -q -v 2 -m 1 --best --strata --sam -p", cores,
             spikeIdx,
             fq_unaligned,
-            "| samtools view -bS -o ", bamSpike)
+            "| samtools view -@", cores-1, "-bS -o", bamSpike)
     }
   }, .(bamSpike, spikein_genome, fq_unaligned)]
   
