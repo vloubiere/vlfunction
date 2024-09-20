@@ -55,7 +55,7 @@ vl_barplot <- function(height,
   
   # Compute sd if necessary ----
   sd <- if(show.sd && !is.null(individual.var))
-    sapply(individual.var, sd) else
+    sapply(individual.var, sd, na.rm= T) else
       0
   
   # Create data table to keep track of all values ----

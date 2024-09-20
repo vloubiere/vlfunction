@@ -29,7 +29,6 @@ annotations <-  args[3:5]
 dir.create(paste0(outputFolder, "/promoter/"), showWarnings = F)
 dir.create(paste0(outputFolder, "/gene_body/"), showWarnings = F)
 dir.create(paste0(outputFolder, "/transcript/"), showWarnings = F)
-dir.create(paste0(outputFolder, "/stats/"), showWarnings = F)
 
 # Import annotations ----
 annots <- data.table(feature= c("promoter", "gene_body", "transcript"),
