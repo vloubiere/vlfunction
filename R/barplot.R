@@ -2,8 +2,8 @@
 #'
 #' @param height A vector of values describing the bars which make up the plot. 
 #' @param sd sd values to be plotted as whiskers around bars
-#' @param arrow.length Length of sd arrow length. defaults to 1/4 of distance between bar centers.
-#' @param arrow.length Line width of sd arrows Default= .5
+#' @param arrow.length Length of sd arrow length. defaults to 1/8 of distance between bar centers.
+#' @param arrow.lwd Line width of sd arrows Default= .5.
 #' @param xlim 
 #' @param ylim 
 #' @param individual.var List of individual variables to be plotted as points.
@@ -32,7 +32,7 @@ vl_barplot <- function(height,
                        individual.var= NULL,
                        show.sd= !is.null(individual.var),
                        arrow.lwd= .5,
-                       arrow.length= fifelse(length(height)>1, diff(grconvertX(c(0, (bar[2]-bar[1])/4), "user", "inches")), .2),
+                       arrow.length= ifelse(length(height)>1, diff(bar[c(1,2)])/8, .2),
                        ind.pch= 16,
                        ind.col= adjustcolor("lightgrey", .7),
                        ind.jitter= .2,
@@ -54,9 +54,8 @@ vl_barplot <- function(height,
     stop("horiz not supported yet ;)")
   
   # Compute sd if necessary ----
-  sd <- if(show.sd && !is.null(individual.var))
-    sapply(individual.var, sd, na.rm= T) else
-      0
+  if(show.sd && !is.null(individual.var))
+    sd <- sapply(individual.var, sd, na.rm= T)
   
   # Create data table to keep track of all values ----
   dat <- data.table(height= height,
@@ -83,27 +82,11 @@ vl_barplot <- function(height,
   dat[, x:= bar]
   
   # Add sd arrows if specified ----
-  if(any(sd>0, na.rm = T))
+  if(show.sd)
   {
-    if(length(sd)!=length(height))
-      stop("sd should be a vector or a of the same length as height")
-    arrows(bar,
-           height,
-           bar,
-           height+sd,
-           angle = 90,
-           length = arrow.length,
-           lwd= arrow.lwd,
-           xpd= xpd)
-    arrows(bar,
-           height,
-           bar,
-           height-sd,
-           xpd= T,
-           angle = 90,
-           length = arrow.length,
-           lwd= arrow.lwd,
-           xpd= xpd)
+    segments(bar, height-sd, bar, height+sd, lwd= arrow.lwd, xpd= xpd)
+    segments(bar-arrow.length, height+sd, bar+arrow.length, height+sd, lwd= arrow.lwd, xpd= xpd)
+    segments(bar-arrow.length, height-sd, bar+arrow.length, height-sd, lwd= arrow.lwd, xpd= xpd)
   }
   
   # Add individual measurements if specified ----
@@ -117,7 +100,7 @@ vl_barplot <- function(height,
     points(jitter(x, amount = ind.jitter),
            y,
            pch= ind.pch,
-           col= ind.col,
+           col= unlist(ind.col),
            xpd= xpd,
            cex= ind.cex)
   }

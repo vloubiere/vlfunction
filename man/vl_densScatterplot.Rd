@@ -2,7 +2,7 @@
 % Please edit documentation in R/scatterplot_density.R
 \name{vl_densScatterplot}
 \alias{vl_densScatterplot}
-\title{Title}
+\title{Scatterplot with density lines on top and on the right}
 \usage{
 vl_densScatterplot(
   x,
@@ -14,8 +14,12 @@ vl_densScatterplot(
   xlab = deparse1(substitute(x)),
   ylab = deparse1(substitute(y)),
   dens.lw = 1,
-  frame = F,
-  useRaster = T,
+  plot.legend = TRUE,
+  legend.x = par("usr")[2],
+  legend.y = par("usr")[4] + strheight("M") * 5 * dens.lw,
+  legend.cex = 0.7,
+  frame = FALSE,
+  useRaster = FALSE,
   ...
 )
 }
@@ -36,6 +40,16 @@ vl_densScatterplot(
 
 \item{ylab}{y axis labels}
 
+\item{dens.lw}{densities width in lines. Default= 1L.}
+
+\item{plot.legend}{Should the legend be plotted?}
+
+\item{legend.x}{x position for the legend. Default= par("usr")[2].}
+
+\item{legend.y}{y position for the legend. Default= par("usr")[4]+strheight("M")*5*dens.lw.}
+
+\item{legend.cex}{Expansion factor for the legend. Default= .7.}
+
 \item{useRaster}{Default= T}
 
 \item{...}{Extra arguments to be passed to plot().}
@@ -44,7 +58,7 @@ vl_densScatterplot(
 A scatterplot with density lines on the side
 }
 \description{
-Title
+Scatterplot with density lines on top and on the right
 }
 \examples{
 set.seed(1)

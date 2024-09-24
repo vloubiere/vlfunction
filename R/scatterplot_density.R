@@ -1,7 +1,7 @@
 require(data.table)
 
 
-#' Title
+#' Scatterplot with density lines on top and on the right
 #'
 #' @param x x variable
 #' @param y y variable
@@ -11,6 +11,11 @@ require(data.table)
 #' @param col Colors to be used (must match number of levels in label)
 #' @param xlab x axis labels
 #' @param ylab y axis labels
+#' @param dens.lw densities width in lines. Default= 1L.
+#' @param plot.legend Should the legend be plotted?
+#' @param legend.x x position for the legend. Default= par("usr")[2].
+#' @param legend.y y position for the legend. Default= par("usr")[4]+strheight("M")*5*dens.lw.
+#' @param legend.cex Expansion factor for the legend. Default= .7.
 #' @param useRaster Default= T
 #' @param ... Extra arguments to be passed to plot().
 #'
@@ -37,19 +42,29 @@ vl_densScatterplot <- function(x,
                                xlab= deparse1(substitute(x)),
                                ylab= deparse1(substitute(y)),
                                dens.lw= 1,
-                               frame= F,
-                               useRaster= T,
+                               plot.legend= TRUE,
+                               legend.x= par("usr")[2],
+                               legend.y= par("usr")[4]+strheight("M")*5*dens.lw,
+                               legend.cex= .7,
+                               frame= FALSE,
+                               useRaster= FALSE,
                                ...)
 {
+  # Checks
   if(!is.factor(label))
-    label <- factor(label)
-  if(length(col) != length(levels(label)))
-    stop("Number of colors and label levels should be equal")
+  {
+    label <- factor(label, unique(label))
+    message("label converted to factor")
+  }
+  if(length(col)==length(levels(label)))
+    col <- col[label]
+  
+  # Make data.table
   dat <- data.table(x= x,
                     y= y,
                     label= label,
-                    Cc= col[label])
-  
+                    Cc= col)
+  # Scatterplot
   dat[, {
     if(useRaster)
     {
@@ -74,10 +89,11 @@ vl_densScatterplot <- function(x,
            frame= frame,
            ...)
     }
+    # Densities
     xlim <- par("usr")[1:2]
     ylim <- par("usr")[3:4]
-    densities <- .SD[, .(dx= .(density(x, from= xlim[1], to= xlim[2])),
-                         dy= .(density(y, from= ylim[1], to= ylim[2]))), .(label, Cc)]
+    densities <- .SD[, .(dx= .(density(x, from= xlim[1], to= xlim[2], na.rm= TRUE)),
+                         dy= .(density(y, from= ylim[1], to= ylim[2], na.rm= TRUE))), .(label, Cc)]
     
     densities[, {
       # x
@@ -97,10 +113,13 @@ vl_densScatterplot <- function(x,
       .SD
     }, .(Cc, label)]
   }, ]
-  legend(par("usr")[2],
-         par("usr")[4]+strheight("M")*5*dens.lw,
-         fill= col,
-         legend = levels(label),
-         xpd= T,
-         bty= "n")
+  # Legend
+  if(plot.legend)
+    legend(par("usr")[2],
+           par("usr")[4]+strheight("M")*5*dens.lw,
+           fill= unique(col[order(label)]),
+           legend = levels(label),
+           xpd= T,
+           bty= "n",
+           border= NA)
 }

@@ -14,8 +14,7 @@ vl_barplot(
   individual.var = NULL,
   show.sd = !is.null(individual.var),
   arrow.lwd = 0.5,
-  arrow.length = fifelse(length(height) > 1, diff(grconvertX(c(0, (bar[2] - bar[1])/4),
-    "user", "inches")), 0.2),
+  arrow.length = ifelse(length(height) > 1, diff(bar[c(1, 2)])/8, 0.2),
   ind.pch = 16,
   ind.col = adjustcolor("lightgrey", 0.7),
   ind.jitter = 0.2,
@@ -39,7 +38,9 @@ vl_barplot(
 
 \item{individual.var}{List of individual variables to be plotted as points.}
 
-\item{arrow.length}{Line width of sd arrows Default= .5}
+\item{arrow.lwd}{Line width of sd arrows Default= .5.}
+
+\item{arrow.length}{Length of sd arrow length. defaults to 1/8 of distance between bar centers.}
 
 \item{ind.pch}{pch value for individual variables}
 
