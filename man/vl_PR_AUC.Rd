@@ -32,6 +32,9 @@ vl_PR_AUC(
 
 \item{...}{Extra arguments to be passed to plot (when add= FALSE) or lines (when add= TRUE).}
 }
+\value{
+PR AUC
+}
 \description{
 PR AUC
 }

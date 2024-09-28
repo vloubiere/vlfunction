@@ -459,13 +459,19 @@ vl_binBed <- function(bed,
   # Determine binning strategy
   bins <- if(!is.null(nbins))
   {
+    # Check regions are big enough
+    check <- min(bed[, be-bs+1])
+    if(check<nbins)
+      stop(paste("Some ranges are", check, "nt long, shorter than nbins"))
+    # Binning
     bed[, {
       # Binning
-      .c <- round(seq(bs, be, length.out= nbins+1))
-      start <- .c[-length(.c)]
-      end <- .c[-1]-1L
-      # Correct end
+      .c <- seq(bs, be, length.out= nbins+1)
+      # Compute end
+      end <- ceiling(.c[-1]-1L)
       end[length(end)] <- be
+      # Compute start
+      start <- c(.c[1], end[-length(end)]+1L)
       .(start, end)
     }, (bed)]
   }else if(!is.null(bins.width))

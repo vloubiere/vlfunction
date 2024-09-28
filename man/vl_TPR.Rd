@@ -56,6 +56,9 @@ vl_TPR(
 
 \item{...}{Extra arguments to be passed to lines}
 }
+\value{
+TPR plot
+}
 \description{
 TRUE positive rate curve
 }

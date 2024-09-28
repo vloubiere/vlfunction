@@ -11,6 +11,9 @@ vl_mPCC(predicted, label)
 
 \item{label}{A vector of logical labels (or that can be coerced to logical).}
 }
+\value{
+Mathhew's correlation coef
+}
 \description{
 Compute Matthew's PCC
 }

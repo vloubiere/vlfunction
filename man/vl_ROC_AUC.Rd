@@ -32,6 +32,9 @@ vl_ROC_AUC(
 
 \item{...}{Extra arguments to be passed to plot (when add= FALSE) or lines (when add= TRUE).}
 }
+\value{
+ROC AUC
+}
 \description{
 ROC AUC
 }

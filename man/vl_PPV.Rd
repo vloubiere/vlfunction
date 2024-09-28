@@ -56,6 +56,9 @@ vl_PPV(
 
 \item{...}{Extra arguments to be passed to lines}
 }
+\value{
+PPV plot
+}
 \description{
 Positive Predicted Value curve
 }

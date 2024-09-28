@@ -60,8 +60,7 @@ vl_barplot <- function(height,
   # Create data table to keep track of all values ----
   dat <- data.table(height= height,
                     sd.min= height-sd,
-                    sd.max= height+sd,
-                    individual.var= individual.var)
+                    sd.max= height+sd)
   dat[, min:= apply(.SD, 1, function(x) min(unlist(x), na.rm= T))]
   dat[, max:= apply(.SD, 1, function(x) max(unlist(x), na.rm= T))]
   
@@ -92,7 +91,8 @@ vl_barplot <- function(height,
   # Add individual measurements if specified ----
   if(!is.null(individual.var))
   {
-    individual.var <- as.list(individual.var)
+    if(!is.list(individual.var))
+      individual.var <- as.list(individual.var)
     if(length(individual.var)!=length(height))
       stop("individual.var should be a vector or a list of the same length as height")
     x <- rep(bar, lengths(individual.var))
