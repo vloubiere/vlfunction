@@ -140,8 +140,8 @@ vl_PROseq_processing.default <- function(metadata,
   meta[, read_stats:= paste0(alignment_stats_output_folder, experiment, "/", sampleID, "_", genome, "_statistics.txt")]
   meta[, spike_stats:= paste0(alignment_stats_output_folder, experiment, "/", sampleID, "_", spikein_genome, "_spikeIn_statistics.txt")]
   # bw tracks
-  meta[, bwPS:= paste0(bw_output_folder, experiment, "/", DESeq2_name, ".ps.bw")]
-  meta[, bwNS:= paste0(bw_output_folder, experiment, "/", DESeq2_name, ".ns.bw")]
+  meta[, bwPS:= paste0(bw_output_folder, experiment, "/", sampleID, ".ps.bw")]
+  meta[, bwNS:= paste0(bw_output_folder, experiment, "/", sampleID, ".ns.bw")]
   
   # Save processed metadata ----
   if(!grepl(".rds$", processed_metadata_output))
