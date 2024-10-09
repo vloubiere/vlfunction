@@ -29,7 +29,7 @@ vl_PROseq_processing(metadata, ...)
   submit = FALSE,
   wdir = getwd(),
   logs = "db/logs/PROseq/processing",
-  time = "1-00:00:00"
+  time = "2-00:00:00"
 )
 }
 \arguments{
@@ -62,7 +62,7 @@ By default, when importing the metadata from an excel sheet, "_processed.rds" wi
 
 \item{logs}{Output folder for log files. Default= "db/logs/CUTNRUN/processing".}
 
-\item{time}{The time required for the SLURM scheduler. Default= '1-00:00:00'.}
+\item{time}{The time required for the SLURM scheduler. Default= '2-00:00:00'.}
 }
 \value{
 Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data.
@@ -102,13 +102,15 @@ The second function, vl_PROseq_DESeq2() can be used for differential analysis. I
 # Before starting:
 # Update the local version of the vlfunctions package
 devtools::install_github("vloubiere/vlfunction")
-# Chose which local R executable to use and make sure that the last version of the vlfunctions package is installed
+
+# Chose which local R executable to use
 localRPath <- "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript"
+# Make sure that the last version of the vlfunctions package is installed
 system(paste(localRPath, system.file("update_package_from_git.R", package = "vlfunctions")))
 
 # Process example dataset ----
-meta <- vl_metadata_PROseq
-vl_PROseq_processing(metadata = meta,
+example <- vl_metadata_PROseq
+vl_PROseq_processing(metadata = example,
                      processed_metadata_output = "Rdata/metadata_PROseq_processed.rds",
                      Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript", 
                      cores= 8,
@@ -121,20 +123,6 @@ processed <- readRDS("Rdata/metadata_PROseq_processed.rds")
 file.size(na.omit(unlist(processed[, fq1:bwNS])))
 
 # Differential analysis
-test <- vl_PROseq_DESeq2(processed,
-                         FC_metadata_output = "Rdata/metadata_PROseq_FC_tables.rds",
-                         annotation.files= data.table(genome= "mm10",
-                                                      feature= c("promoter", "gene_body", "transcript"),
-                                                      annotation.file= c("/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_promoters.rds",
-                                                                         "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_genebody.rds",
-                                                                         "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_transcript.rds")),
-                         overwrite = FALSE,
-                         submit = TRUE)
-
-# Once the commands ran, you can use the FC metadata to retrieve the corresponding files:
-FC <- readRDS("Rdata/metadata_PROseq_FC_tables.rds")
-file.exists(na.omit(FC$fcTable))
-file.exists(na.omit(FC$MAplot))
-file.exists(na.omit(FC$ddsStats))
+See ?vl_PROseq_DESeq2()
 
 }

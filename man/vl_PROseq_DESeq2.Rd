@@ -59,9 +59,9 @@ By default, when the processed_metadata is a path to a processed_metadata files,
 
 \item{mem}{Memory per job (in Go). Default= 16.}
 
-\item{overwrite}{Should the count tables be overwritten? Default= FALSE}
+\item{overwrite}{Should the count tables be overwritten? Note that FC tables will always be overwritten. Default= FALSE}
 
-\item{submit}{Should the command be submitted? default= FALSE.}
+\item{submit}{Should the command be submitted? Default= FALSE.}
 
 \item{wdir}{The working directory to use. Default= getwd(), meaning current working directory will be used.}
 
@@ -83,28 +83,30 @@ DESeq2 analysis PROseq pipeline
 
 }}
 \examples{
-# Make sure that all processed files exist:
+# List annotation files for features of interest
+annot <- data.table(genome= "mm10",
+                    feature= c("promoter", "gene_body", "transcript"),
+.                    annotation.file= c("/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_promoters.rds",
+                                       "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_genebody.rds",
+                                       "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_transcript.rds"))
+
+# Import processed metadata file output by vl_PROseq_processing()
 processed <- readRDS("Rdata/metadata_PROseq_processed.rds")
-file.exists(na.omit(unlist(processed[, fq1:bwNS])))
 
 # Differential analysis
-test <- vl_PROseq_DESeq2(processed,
-                         FC_metadata_output = "Rdata/metadata_PROseq_FC_tables.rds",
-                         annotation.files= data.table(genome= "mm10",
-                                                      feature= c("promoter", "gene_body", "transcript"),
-                                                      annotation.file= c("/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_promoters.rds",
-                                                                         "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_genebody.rds",
-                                                                         "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_transcript.rds")),
-                         overwrite = FALSE,
-                         submit = TRUE)
+vl_PROseq_DESeq2(processed,
+                 FC_metadata_output = "Rdata/metadata_PROseq_FC_tables.rds",
+                 annotation.files= annot,
+                 overwrite = FALSE,
+                 submit = TRUE)
 
 # Once the commands ran, you can use the FC metadata to retrieve the corresponding files:
 FC <- readRDS("Rdata/metadata_PROseq_FC_tables.rds")
-file.exists(na.omit(FC$fcTable))
-file.exists(na.omit(FC$MAplot))
-file.exists(na.omit(FC$ddsStats))
 
 # For example, to retrieve spikeIn normalized files
 FC[norm=="spikeIn"]
+
+# Or for a specific feature
+FC[feature=="promoter"]
                  
 }

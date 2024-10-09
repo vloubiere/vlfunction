@@ -38,7 +38,7 @@ vl_PPV(
 
 \item{xlab}{x label. Default= "Prediction score".}
 
-\item{ylab}{y label. Default= "Positive pred. value (%)".}
+\item{ylab}{y label. Default= "Positive pred. value (percentage)".}
 
 \item{lty.1}{Line type before Nleft. Default= 1.}
 

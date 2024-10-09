@@ -36,7 +36,7 @@
 #' @param submit Should the command be submitted? Default= FALSE.
 #' @param wdir The working directory to use. Default= getwd(), meaning current working directory will be used.
 #' @param logs Output folder for log files. Default= "db/logs/CUTNRUN/processing".
-#' @param time The time required for the SLURM scheduler. Default= '1-00:00:00'.
+#' @param time The time required for the SLURM scheduler. Default= '2-00:00:00'.
 #'
 #' @return Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data.
 #' These commands can then be submitted either directly via the function, or using vl_bsub()...
@@ -45,13 +45,15 @@
 #' # Before starting:
 #' # Update the local version of the vlfunctions package
 #' devtools::install_github("vloubiere/vlfunction")
-#' # Chose which local R executable to use and make sure that the last version of the vlfunctions package is installed
+#' 
+#' # Chose which local R executable to use
 #' localRPath <- "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript"
+#' # Make sure that the last version of the vlfunctions package is installed
 #' system(paste(localRPath, system.file("update_package_from_git.R", package = "vlfunctions")))
 #' 
 #' # Process example dataset ----
-#' meta <- vl_metadata_PROseq
-#' vl_PROseq_processing(metadata = meta,
+#' example <- vl_metadata_PROseq
+#' vl_PROseq_processing(metadata = example,
 #'                      processed_metadata_output = "Rdata/metadata_PROseq_processed.rds",
 #'                      Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript", 
 #'                      cores= 8,
@@ -64,21 +66,7 @@
 #' file.size(na.omit(unlist(processed[, fq1:bwNS])))
 #' 
 #' # Differential analysis
-#' test <- vl_PROseq_DESeq2(processed,
-#'                          FC_metadata_output = "Rdata/metadata_PROseq_FC_tables.rds",
-#'                          annotation.files= data.table(genome= "mm10",
-#'                                                       feature= c("promoter", "gene_body", "transcript"),
-#'                                                       annotation.file= c("/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_promoters.rds",
-#'                                                                          "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_genebody.rds",
-#'                                                                          "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_transcript.rds")),
-#'                          overwrite = FALSE,
-#'                          submit = TRUE)
-#' 
-#' # Once the commands ran, you can use the FC metadata to retrieve the corresponding files:
-#' FC <- readRDS("Rdata/metadata_PROseq_FC_tables.rds")
-#' file.exists(na.omit(FC$fcTable))
-#' file.exists(na.omit(FC$MAplot))
-#' file.exists(na.omit(FC$ddsStats))
+#' See ?vl_PROseq_DESeq2()
 #'
 #' @export
 vl_PROseq_processing <- function(metadata, ...) UseMethod("vl_PROseq_processing")
@@ -115,7 +103,7 @@ vl_PROseq_processing.default <- function(metadata,
                                          submit= FALSE,
                                          wdir= getwd(),
                                          logs= "db/logs/PROseq/processing",
-                                         time= '1-00:00:00')
+                                         time= '2-00:00:00')
 {
   # Import metadata and check format ----
   meta <- data.table::copy(metadata)
@@ -339,8 +327,8 @@ vl_PROseq_processing.default <- function(metadata,
 #' @param PDF_output_folder Output folder for .pdf files of MA plots and statistics. Default= "pdf/PROseq/".
 #' @param cores Number of cores per job. Default= 4.
 #' @param mem Memory per job (in Go). Default= 16.
-#' @param overwrite Should the count tables be overwritten? Default= FALSE
-#' @param submit Should the command be submitted? default= FALSE.
+#' @param overwrite Should the count tables be overwritten? Note that FC tables will always be overwritten. Default= FALSE
+#' @param submit Should the command be submitted? Default= FALSE.
 #' @param wdir The working directory to use. Default= getwd(), meaning current working directory will be used.
 #' @param logs Output folder for log files. Default= "db/logs/CUTNRUN/peak_calling".
 #' @param time The time required for the SLURM scheduler. Default= '1-00:00:00'.
@@ -349,29 +337,31 @@ vl_PROseq_processing.default <- function(metadata,
 #' @export
 #'
 #' @examples
-#' # Make sure that all processed files exist:
+#' # List annotation files for features of interest
+#' annot <- data.table(genome= "mm10",
+#'                     feature= c("promoter", "gene_body", "transcript"),
+#'.                    annotation.file= c("/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_promoters.rds",
+#'                                        "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_genebody.rds",
+#'                                        "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_transcript.rds"))
+#' 
+#' # Import processed metadata file output by vl_PROseq_processing()
 #' processed <- readRDS("Rdata/metadata_PROseq_processed.rds")
-#' file.exists(na.omit(unlist(processed[, fq1:bwNS])))
 #' 
 #' # Differential analysis
-#' test <- vl_PROseq_DESeq2(processed,
-#'                          FC_metadata_output = "Rdata/metadata_PROseq_FC_tables.rds",
-#'                          annotation.files= data.table(genome= "mm10",
-#'                                                       feature= c("promoter", "gene_body", "transcript"),
-#'                                                       annotation.file= c("/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_promoters.rds",
-#'                                                                          "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_genebody.rds",
-#'                                                                          "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_transcript.rds")),
-#'                          overwrite = FALSE,
-#'                          submit = TRUE)
+#' vl_PROseq_DESeq2(processed,
+#'                  FC_metadata_output = "Rdata/metadata_PROseq_FC_tables.rds",
+#'                  annotation.files= annot,
+#'                  overwrite = FALSE,
+#'                  submit = TRUE)
 #' 
 #' # Once the commands ran, you can use the FC metadata to retrieve the corresponding files:
 #' FC <- readRDS("Rdata/metadata_PROseq_FC_tables.rds")
-#' file.exists(na.omit(FC$fcTable))
-#' file.exists(na.omit(FC$MAplot))
-#' file.exists(na.omit(FC$ddsStats))
 #' 
 #' # For example, to retrieve spikeIn normalized files
 #' FC[norm=="spikeIn"]
+#' 
+#' # Or for a specific feature
+#' FC[feature=="promoter"]
 #'                  
 vl_PROseq_DESeq2 <- function(processed_metadata, ...) UseMethod("vl_PROseq_DESeq2")
 
@@ -392,11 +382,12 @@ vl_PROseq_DESeq2.character <- function(processed_metadata,
 vl_PROseq_DESeq2.default <- function(processed_metadata,
                                      FC_metadata_output,
                                      Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
-                                     annotation.files= data.table(genome= "mm10",
-                                                                  feature= c("promoter", "gene_body", "transcript"),
-                                                                  annotation.file= c("/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_promoters.rds",
-                                                                                     "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_genebody.rds",
-                                                                                     "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_transcript.rds")),
+                                     annotation.files= data.table(
+                                       genome= "mm10",
+                                       feature= c("promoter", "gene_body", "transcript"),
+                                       annotation.file= c("/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_promoters.rds",
+                                                          "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_genebody.rds",
+                                                          "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_transcript.rds")),
                                      count_table_output_folder= "db/count_tables/PROseq/",
                                      normalization= c("libSize", "spikeIn"),
                                      dds_output_folder= "db/dds/PROseq/",
@@ -415,30 +406,39 @@ vl_PROseq_DESeq2.default <- function(processed_metadata,
   meta$barcode <- meta$eBC <- meta$layout <- meta$sequencer <- NULL
   meta$fq1 <- meta$fq1_trimmed <- meta$bam <- meta$fq_unaligned <- meta$bamSpike <- NULL
   meta$bwPS <- meta$bwNS <- NULL
+  meta <- unique(meta)
   
-  # Create output count files for each feature ----
-  meta <- merge(unique(meta),
+  # Check if annotations exist ----
+  genomeMissing <- meta[!genome %in% annotation.files$genome]
+  if(nrow(genomeMissing))
+    stop(paste0("No features for genome: ", unique(genomeMissing$genome)))
+  # Merge metadata and annotation files
+  meta <- merge(meta,
                 annotation.files,
                 by= "genome",
-                allow.cartesian= T,
-                all.x= TRUE)
-  if(anyNA(meta$annotation.file))
-  {
-    noMatch <- unique(meta[is.na(annotation.file), .(genome, feature)])
-    print("The following genome features had no match in the annotation data.table:")
-    print(noMatch)
-    stop("Error. Stopping.")
-  }
+                allow.cartesian= T)
   
   # Different normalization approaches ----
   meta <- meta[, .(norm= normalization), (meta)]
   
   # Create output file names for count tables and dds ----
+  # Count tables
   meta[, countTable:= paste0(count_table_output_folder, experiment, "/", feature, "/", sampleID, "_", genome, "_", feature, "_counts.txt")]
-  meta[, ddsFile:= paste0(dds_output_folder, experiment, "/", experiment, "_", feature, "_", norm, "_norm_DESeq2.dds")]
-  meta[DESeq2_condition!=DESeq2_control, fcTable:= paste0(FC_output_folder, experiment, "/", feature, "/", norm, "/", DESeq2_condition, "_vs_", DESeq2_control, "_", feature, "_", norm, "_norm_DESeq2.txt")]
-  meta[, ddsStats:= paste0(PDF_output_folder, experiment, "/", feature, "/", norm, "/statistics/", experiment, "_", feature, "_", norm, "_norm_reads_statistics.pdf")]
-  meta[!is.na(fcTable), MAplot:= paste0(PDF_output_folder, experiment, "/", feature, "/", norm, "/MA_plots/", experiment, "_", feature, "_", norm, "_norm_DESeq2_MA_plot.pdf")]
+  # Subfolder and contrast
+  meta[, subFolder:= paste0(experiment, "/", feature, "/", norm, "/")]
+  meta[, contrast:= paste0("_", DESeq2_condition, "_vs_", DESeq2_control, "_")]
+  # dds files
+  meta[, ddsFile:= paste0(dds_output_folder, subFolder, experiment, "_", feature, "_", norm, "_norm_DESeq2.dds")]
+  # FC tables
+  meta[DESeq2_condition!=DESeq2_control, fcTable:= paste0(FC_output_folder, subFolder, experiment)]
+  meta[DESeq2_condition!=DESeq2_control, fcTable:= paste0(fcTable, contrast, feature, "_", norm, "_norm_DESeq2.txt")]
+  # PDF stats
+  meta[, ddsStats:= paste0(PDF_output_folder, subFolder, "statistics/", experiment, "_reads_statistics_", feature, "_", norm, "_norm.pdf")]
+  # PDF MA plots
+  meta[!is.na(fcTable), MAplot:= paste0(PDF_output_folder, subFolder, "MA_plots/", experiment)]
+  meta[!is.na(fcTable), MAplot:= paste0(MAplot, contrast, feature, "_", norm, "_norm_DESeq2_MA_plot.pdf")]
+  # Clean
+  meta$subFolder <- meta$contrast <- NULL
   
   # Save processed FC metadata ----
   if(!grepl(".rds$", FC_metadata_output))
@@ -446,11 +446,11 @@ vl_PROseq_DESeq2.default <- function(processed_metadata,
       saveRDS(meta, FC_metadata_output)
   
   # Create directories ----
-  dirs <- unique(dirname(na.omit(unlist(meta[, countTable:MAplot]))))
+  dirs <- c(unique(dirname(na.omit(unlist(meta[, countTable:MAplot])))), logs)
   if(any(!dir.exists(dirs)))
   {
     sapply(dirs, dir.create, showWarnings = F, recursive = T)
-    outDirs <- paste0(c(count_table_output_folder, FC_output_folder, PDF_output_folder), collapse= ", ")
+    outDirs <- paste0(c(count_table_output_folder, FC_output_folder, PDF_output_folder, logs), collapse= ", ")
     print(paste("Output directories were created in:", outDirs, "!"))
   }
   
@@ -475,9 +475,20 @@ vl_PROseq_DESeq2.default <- function(processed_metadata,
   
   # DESeq2 commands ---- 
   meta[, DESeq2_cmd:= {
+    # [required] 1/ A comma-separated list of count (ref genome)
+    # [required] 2/ A comma-separated list of read statistics (reference genome)
+    # [required] 3/ A comma-separated list of spike-in statistics
+    # [required] 4/ A comma-separated list of sample names
+    # [required] 5/ A comma-separated list of conditions
+    # [required] 6/ A comma-separated list of controls
+    # [required] 7/ dds output folder
+    # [required] 8/ FC tables output folder
+    # [required] 9/ PDF output folder
+    # [required] 10/ Experiment
+    # [required] 11/ feature
+    # [required] 12/ Normalization method. Possible values are 'default' (DESeq2 default), 'libSize', 'spikeIn', 'combined'
     paste(Rpath,
           system.file("PROseq_pipeline", "DESeq2_analysis.R", package = "vlfunctions"),
-          norm,
           paste0(countTable, collapse = ","), 
           paste0(read_stats, collapse = ","),
           paste0(spike_stats, collapse = ","),
@@ -488,7 +499,8 @@ vl_PROseq_DESeq2.default <- function(processed_metadata,
           FC_output_folder,
           PDF_output_folder,
           experiment,
-          feature)
+          feature,
+          norm)
   }, .(experiment, feature, norm)]
   
   # Return commands and submit ----

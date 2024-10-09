@@ -11,8 +11,6 @@
 #'
 #' @return ROC AUC
 #' @export
-#'
-#' @examples
 vl_ROC_AUC <- function(predicted,
                        label,
                        plot= FALSE,
@@ -76,8 +74,6 @@ vl_ROC_AUC <- function(predicted,
 #'
 #' @return PR AUC
 #' @export
-#'
-#' @examples
 vl_PR_AUC <- function(predicted,
                       label,
                       plot= FALSE,
@@ -138,7 +134,7 @@ vl_PR_AUC <- function(predicted,
 #' @param xlim x limits for plotting. Default= NULL.
 #' @param ylim y limits for plotting. Default= NULL.
 #' @param xlab x label. Default= "Prediction score".
-#' @param ylab y label. Default= "Positive pred. value (%)".
+#' @param ylab y label. Default= "Positive pred. value (percentage)".
 #' @param lty.1 Line type before Nleft. Default= 1.
 #' @param lty.2 Line type after Nleft. Default= 3.
 #' @param col Color.
@@ -150,8 +146,6 @@ vl_PR_AUC <- function(predicted,
 #'
 #' @return PPV plot
 #' @export
-#'
-#' @examples
 vl_PPV <- function(predicted,
                    label,
                    Nleft= 100,
@@ -296,8 +290,6 @@ vl_PPV <- function(predicted,
 #'
 #' @return Mathhew's correlation coef
 #' @export
-#'
-#' @examples
 vl_mPCC <- function(predicted,
                    label)
 {
@@ -328,7 +320,7 @@ vl_mPCC <- function(predicted,
 #' @param xlim x limits for plotting. Default= NULL.
 #' @param ylim y limits for plotting. Default= NULL.
 #' @param xlab x label. Default= "Prediction score".
-#' @param ylab y label. Default= "Positive pred. value (%)".
+#' @param ylab y label. Default= "Positive pred. value (percentage)".
 #' @param lty.1 Line type before Nleft. Default= 1.
 #' @param lty.2 Line type after Nleft. Default= 3.
 #' @param col Color.
@@ -340,8 +332,6 @@ vl_mPCC <- function(predicted,
 #'
 #' @return TPR plot
 #' @export
-#'
-#' @examples
 vl_TPR <- function(predicted,
                    label,
                    Nleft= 100,
