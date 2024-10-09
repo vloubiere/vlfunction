@@ -100,9 +100,11 @@ The second function, vl_PROseq_DESeq2() can be used for differential analysis. I
 }}
 \examples{
 # Before starting:
+# Update the local version of the vlfunctions package
+devtools::install_github("vloubiere/vlfunction")
 # Chose which local R executable to use and make sure that the last version of the vlfunctions package is installed
 localRPath <- "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript"
-system(paste(localRPath, system.file("update_package_devtools.R", package = "vlfunctions")))
+system(paste(localRPath, system.file("update_package_from_git.R", package = "vlfunctions")))
 
 # Process example dataset ----
 meta <- vl_metadata_PROseq

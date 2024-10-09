@@ -43,9 +43,11 @@
 #'
 #' @examples
 #' # Before starting:
+#' # Update the local version of the vlfunctions package
+#' devtools::install_github("vloubiere/vlfunction")
 #' # Chose which local R executable to use and make sure that the last version of the vlfunctions package is installed
 #' localRPath <- "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript"
-#' system(paste(localRPath, system.file("update_package_devtools.R", package = "vlfunctions")))
+#' system(paste(localRPath, system.file("update_package_from_git.R", package = "vlfunctions")))
 #' 
 #' # Process example dataset ----
 #' meta <- vl_metadata_PROseq
@@ -460,8 +462,9 @@ vl_PROseq_DESeq2.default <- function(processed_metadata,
     # [required] 3/ A comma-separated list of corresponding output file names.
     if(overwrite | any(!file.exists(countTable)))
     {
+      .annot <- unique(.SD)
       if(!overwrite)
-        .annot <- unique(.SD[!file.exists(countTable)])
+        .annot <- .annot[!file.exists(countTable)]
       paste(Rpath,
             system.file("PROseq_pipeline", "compute_counts_table.R", package = "vlfunctions"),
             count, 

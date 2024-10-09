@@ -103,5 +103,8 @@ FC <- readRDS("Rdata/metadata_PROseq_FC_tables.rds")
 file.exists(na.omit(FC$fcTable))
 file.exists(na.omit(FC$MAplot))
 file.exists(na.omit(FC$ddsStats))
+
+# For example, to retrieve spikeIn normalized files
+FC[norm=="spikeIn"]
                  
 }
