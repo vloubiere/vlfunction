@@ -19,13 +19,13 @@ vl_PROseq_processing(metadata, ...)
   processed_metadata_output,
   count_output_folder = "db/counts/PROseq/",
   alignment_stats_output_folder = "db/alignment_stats/PROseq/",
-  count_table_output_folder = "db/count_tables/PROseq/",
   bw_output_folder = "db/bw/PROseq/",
   tmp_folder = "/scratch/stark/vloubiere",
   Rpath = "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
   cores = 8,
   mem = 64,
   overwrite = FALSE,
+  counts.exists = TRUE,
   submit = FALSE,
   wdir = getwd(),
   logs = "db/logs/PROseq/processing",
@@ -42,8 +42,6 @@ By default, when importing the metadata from an excel sheet, "_processed.rds" wi
 
 \item{alignment_stats_output_folder}{Output folder for alignment statistics. Default= "db/alignment_stats/PROseq/".}
 
-\item{count_table_output_folder}{Output folder for count tables. Default= "db/count_tables/PROseq/".}
-
 \item{bw_output_folder}{Output folder for .bw tracks. Default= "db/bw/PROseq/".}
 
 \item{tmp_folder}{Output folder for temporary files (.fq, .bam). Default= "/scratch/stark/vloubiere".}
@@ -55,6 +53,8 @@ By default, when importing the metadata from an excel sheet, "_processed.rds" wi
 \item{mem}{Memory per job (in Go). Default= 64.}
 
 \item{overwrite}{Should existing files be overwritten?}
+
+\item{counts.exists}{If the output umi file already exists and overwrite is set to FALSE, skips demultiplexing and alignment. Default= TRUE.}
 
 \item{submit}{Should the command be submitted? Default= FALSE.}
 
@@ -82,14 +82,14 @@ It takes as input a (correctly formatted) metadata file, saves the processed met
 4/ store unaligned read into a fastq file \cr
 5/ align these remaining reads to spike-in genome ('dm3') \cr
 6/ compute counts and statistics both for the reference genome and for spike-in \cr
-7/ count the reads overlapping promoter, gene-body and transcripts \cr
-8/ output .bw tracks for positive and negative strand reads.
+7/ output .bw tracks for positive and negative strand reads.
 
 The second function, vl_PROseq_DESeq2() can be used for differential analysis. It returns: \cr
-1/ a .dds DESeq2 object for each experiment \cr
-2/ the fold-change tables corresponding to the comparison of 'DESeq2_condition' versus 'DESeq2_control' conditions (see colnames of the processed_metadata file) \cr
-3/ A barplot showing the statistics of each dds file \cr
-4/ MA plots corresponding to each comparison \cr
+1/ The umi counts overlapping the features provided in the annotation.files argument \cr \cr
+2/ a .dds DESeq2 object for each experiment \cr
+3/ the fold-change tables corresponding to the comparison of 'DESeq2_condition' versus 'DESeq2_control' conditions (see colnames of the processed_metadata file) \cr
+4/ A barplot showing the statistics of each dds file \cr
+5/ MA plots corresponding to each comparison \cr
 }
 \section{Methods (by class)}{
 \itemize{
@@ -99,26 +99,40 @@ The second function, vl_PROseq_DESeq2() can be used for differential analysis. I
 
 }}
 \examples{
+# Before starting:
+# Chose which local R executable to use and make sure that the last version of the vlfunctions package is installed
+localRPath <- "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript"
+system(paste(localRPath, system.file("update_package_devtools.R", package = "vlfunctions")))
+
 # Process example dataset ----
 meta <- vl_metadata_PROseq
 vl_PROseq_processing(metadata = meta,
                      processed_metadata_output = "Rdata/metadata_PROseq_processed.rds",
+                     Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript", 
                      cores= 8,
                      mem= 64,
                      overwrite= FALSE,
-                     submit= TRUE)
+                     submit= FALSE)
 
 # Once the jobs have finished to work, you can check the size of output files:
 processed <- readRDS("Rdata/metadata_PROseq_processed.rds")
 file.size(na.omit(unlist(processed[, fq1:bwNS])))
 
-# Differential analysis (of note, no "overwrite" option is available in this case)
-vl_PROseq_DESeq2(processed, # Here, you could also provide the path to the processed metadata table ("Rdata/metadata_PROseq_processed.rds").
-                 FC_metadata_output = "Rdata/metadata_PROseq_FC_tables.rds",
-                 submit = TRUE)
-                 
-# Once the commands ran, to retrieve spikein normalized FC tables:
+# Differential analysis
+test <- vl_PROseq_DESeq2(processed,
+                         FC_metadata_output = "Rdata/metadata_PROseq_FC_tables.rds",
+                         annotation.files= data.table(genome= "mm10",
+                                                      feature= c("promoter", "gene_body", "transcript"),
+                                                      annotation.file= c("/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_promoters.rds",
+                                                                         "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_genebody.rds",
+                                                                         "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_transcript.rds")),
+                         overwrite = FALSE,
+                         submit = TRUE)
+
+# Once the commands ran, you can use the FC metadata to retrieve the corresponding files:
 FC <- readRDS("Rdata/metadata_PROseq_FC_tables.rds")
-files <- FC[, list.files(fcDir, paste0(DESeq2_condition, ".*", "spike")), .(fcDir, DESeq2_condition)]$V1
+file.exists(na.omit(FC$fcTable))
+file.exists(na.omit(FC$MAplot))
+file.exists(na.omit(FC$ddsStats))
 
 }

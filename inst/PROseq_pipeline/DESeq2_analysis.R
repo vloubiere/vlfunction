@@ -4,62 +4,61 @@ library(vlfunctions)
 library(DESeq2)
 
 # Test if there are 10 args: if not, return an error
-if (length(args)!=10) {
+if (length(args)!=12) {
   stop("Please specify:\n
-       [required] 1/ A comma-separated list of count (ref genome)\n
-       [required] 2/ A comma-separated list of read statistics (reference genome) \n
-       [required] 3/ A comma-separated list of spike-in statistics \n
-       [required] 4/ A comma-separated list of sample names \n
-       [required] 5/ A comma-separated list of conditions \n
-       [required] 6/ A comma-separated list of controls \n
-       [required] 7/ .dds output prefix \n
-       [required] 8/ dds statistics output \n
+       [required] 1/ A comma-separated list of normlization methods. Possible values: 'default' (DESeq2 default), 'libSize', 'spikeIn', 'combined' (Vanja's method: note that changing the control sample will change the outcome)\n
+       [required] 2/ A comma-separated list of count (ref genome)\n
+       [required] 3/ A comma-separated list of read statistics (reference genome) \n
+       [required] 4/ A comma-separated list of spike-in statistics \n
+       [required] 5/ A comma-separated list of sample names \n
+       [required] 6/ A comma-separated list of conditions \n
+       [required] 7/ A comma-separated list of controls \n
+       [required] 8/ dds output folder \n
        [required] 9/ FC tables output folder \n
-       [required] 10/ MAplot prefix \n")
+       [required] 10/ PDF output folder \n
+       [required] 11/ Experiment \n
+       [required] 12/ feature \n")
 }
 
-# # Tests ----
-# counts <- c("db/count_tables/PROseq/HCFC1/transcript/AID-Hcfc1-cl4_0hrIAA_HCFC1_rep1_mm10_counts.txt",
-#             "db/count_tables/PROseq/HCFC1/transcript/AID-Hcfc1-cl4_3hrIAA_HCFC1_rep1_mm10_counts.txt",
-#             "db/count_tables/PROseq/HCFC1/transcript/AID-Hcfc1-cl17_0hrIAA_HCFC1_rep1_mm10_counts.txt",
-#             "db/count_tables/PROseq/HCFC1/transcript/AID-Hcfc1-cl17_3hrIAA_HCFC1_rep1_mm10_counts.txt")
-# refStats <- c("db/count_tables/PROseq/HCFC1/stats/AID-Hcfc1-cl4_0hrIAA_HCFC1_rep1_mm10_statistics.txt",
-#               "db/count_tables/PROseq/HCFC1/stats/AID-Hcfc1-cl4_3hrIAA_HCFC1_rep1_mm10_statistics.txt",
-#               "db/count_tables/PROseq/HCFC1/stats/AID-Hcfc1-cl17_0hrIAA_HCFC1_rep1_mm10_statistics.txt",
-#               "db/count_tables/PROseq/HCFC1/stats/AID-Hcfc1-cl17_3hrIAA_HCFC1_rep1_mm10_statistics.txt")
-# spikeStats <- c("db/count_tables/PROseq/HCFC1/stats/AID-Hcfc1-cl4_0hrIAA_HCFC1_rep1_dm3_spikeIn_statistics.txt",
-#                 "db/count_tables/PROseq/HCFC1/stats/AID-Hcfc1-cl4_3hrIAA_HCFC1_rep1_dm3_spikeIn_statistics.txt",
-#                 "db/count_tables/PROseq/HCFC1/stats/AID-Hcfc1-cl17_0hrIAA_HCFC1_rep1_dm3_spikeIn_statistics.txt",
-#                 "db/count_tables/PROseq/HCFC1/stats/AID-Hcfc1-cl17_3hrIAA_HCFC1_rep1_dm3_spikeIn_statistics.txt")
-# names <- c("control_rep1",
-#            "IAA_3h_rep1",
-#            "control_rep2",
-#            "IAA_3h_rep2")
-# conditions <- c("control",
-#                 "IAA_3h",
-#                 "control",
-#                 "IAA_3h")
-# controls <- c("control",
-#               "control",
-#               "control",
-#               "control")
-# ddsPrefix <- "db/dds/PROseq/HCFC1/transcript"
-# fcOutDir <- "db/FC_tables/PROseq/HCFC1/transcript/"
+# Tests ----
+# norm <- "libSize"
+# counts <- c("db/count_tables/PROseq/HCFC1/promoter/AID-Hcfc1-cl4_0hrIAA_HCFC1_rep1_mm10_promoter_counts.txt",
+#             "db/count_tables/PROseq/HCFC1/promoter/AID-Hcfc1-cl17_0hrIAA_HCFC1_rep1_mm10_promoter_counts.txt",
+#             "db/count_tables/PROseq/HCFC1/promoter/AID-Hcfc1-cl4_3hrIAA_HCFC1_rep1_mm10_promoter_counts.txt",
+#             "db/count_tables/PROseq/HCFC1/promoter/AID-Hcfc1-cl17_3hrIAA_HCFC1_rep1_mm10_promoter_counts.txt")
+# refStats <- c("db/alignment_stats/PROseq/HCFC1/AID-Hcfc1-cl4_0hrIAA_HCFC1_rep1_mm10_statistics.txt",
+#               "db/alignment_stats/PROseq/HCFC1/AID-Hcfc1-cl17_0hrIAA_HCFC1_rep1_mm10_statistics.txt",
+#               "db/alignment_stats/PROseq/HCFC1/AID-Hcfc1-cl4_3hrIAA_HCFC1_rep1_mm10_statistics.txt",
+#               "db/alignment_stats/PROseq/HCFC1/AID-Hcfc1-cl17_3hrIAA_HCFC1_rep1_mm10_statistics.txt")
+# spikeStats <- c("db/alignment_stats/PROseq/HCFC1/AID-Hcfc1-cl4_0hrIAA_HCFC1_rep1_dm3_spikeIn_statistics.txt",
+#                 "db/alignment_stats/PROseq/HCFC1/AID-Hcfc1-cl17_0hrIAA_HCFC1_rep1_dm3_spikeIn_statistics.txt",
+#                 "db/alignment_stats/PROseq/HCFC1/AID-Hcfc1-cl4_3hrIAA_HCFC1_rep1_dm3_spikeIn_statistics.txt",
+#                 "db/alignment_stats/PROseq/HCFC1/AID-Hcfc1-cl17_3hrIAA_HCFC1_rep1_dm3_spikeIn_statistics.txt")
+# names <- c("control_rep1","control_rep2","IAA_3h_rep1","IAA_3h_rep2")
+# conditions <- c("control","control","IAA_3h","IAA_3h")
+# controls <- c("control","control","control","control")
+# dds_output_folder <- "db/dds/PROseq/"
+# FC_output_folder <- "db/FC_tables/PROseq/"
+# PDF_output_folder <- "pdf/PROseq/"
+# experiment <- "HCFC1"
+# feature <- "promoter"
 
 # Parse variables ----
-counts <- unlist(tstrsplit(args[1], ","))
-refStats <- unlist(tstrsplit(args[2], ","))
-spikeStats <- unlist(tstrsplit(args[3], ","))
-names <- unlist(tstrsplit(args[4], ","))
+norm <- args[1]
+counts <- unlist(tstrsplit(args[2], ","))
+refStats <- unlist(tstrsplit(args[3], ","))
+spikeStats <- unlist(tstrsplit(args[4], ","))
+names <- unlist(tstrsplit(args[5], ","))
 names <- gsub("-", ".", names) # Names and conditions do not tolerate "-"
-conditions <- unlist(tstrsplit(args[5], ","))
+conditions <- unlist(tstrsplit(args[6], ","))
 conditions <- gsub("-", ".", conditions) # Names and conditions do not tolerate "-"
-controls <- unlist(tstrsplit(args[6], ","))
+controls <- unlist(tstrsplit(args[7], ","))
 controls <- gsub("-", ".", controls) # Names and conditions do not tolerate "-"
-ddsPrefix <- args[7]
-ddsStats <- args[8]
-fcOutDir <- args[9]
-MAprefix <- args[10]
+dds_output_folder <- args[8]
+FC_output_folder <- args[9]
+PDF_output_folder <- args[10]
+experiment <- args[11]
+feature <- args[12]
 
 # Import data ----
 dat <- lapply(counts, fread)
@@ -105,73 +104,72 @@ if(all(stats[, length(unique(ctl)), cdition]$V1==1))
 }
 
 # DESeq2 analysis ----
-# Possible normalization values are "default" (DESeq2 default), "libSize", "spikeIn", "combined" (Vanja's method: note that changing the control sample will change the outcome)
-for(normalization in c("libSize", "spikeIn"))
-{
-  print(paste("Start", normalization, "normalization"))
-  # Create DESeq2 object ----
-  dds <- DESeqDataSetFromMatrix(countData = DF,
-                                colData = sampleTable,
-                                design = ~ condition)
-  # SizeFactors ----
-  if(normalization=="libSize")
-    sizeFactors(dds) <- stats$libSizeNorm
-  if(normalization=="spikeIn")
-    sizeFactors(dds) <- stats$spikeInNorm
-  if(normalization=="combined")
-    if("combinedNorm" %in% names(stats))
-      sizeFactors(dds) <- stats$combinedNorm else
-        warning("Provided cdition/control combinations are not unique -> Vanja's combined normalization will be skipped.")
+print(paste("Start", norm, "normalization"))
+# Create DESeq2 object ----
+dds <- DESeqDataSetFromMatrix(countData = DF,
+                              colData = sampleTable,
+                              design = ~ condition)
+# SizeFactors ----
+if(!norm %in% c("default", "libSize", "spikeIn", "combined"))
+  stop("Possible normalization values are 'default' (DESeq2 default), 'libSize', 'spikeIn', 'combined' (Vanja's method: note that changing the control sample will change the outcome)")
+if(norm=="libSize")
+  sizeFactors(dds) <- stats$libSizeNorm
+if(norm=="spikeIn")
+  sizeFactors(dds) <- stats$spikeInNorm
+if(norm=="combined")
+  if("combinedNorm" %in% names(stats))
+    sizeFactors(dds) <- stats$combinedNorm else
+      warning("Provided cdition/control combinations are not unique -> Vanja's combined normalization will be skipped.")
+
+# Compute model and save object ----
+dds <- DESeq(dds)
+saveRDS(dds,
+        paste0(dds_output_folder, experiment, "/", experiment, "_", feature, "_", norm, "_norm_DESeq2.dds"))
+
+# Import combinations ----
+cmb <- data.table(V1= conditions,
+                  V2= controls)
+cmb <- unique(cmb[V1!=V2])
+cmb[, {
+  res <- results(dds,
+                 contrast = c("condition", V1, V2))
+  res <- as.data.frame(res)
+  res <- as.data.table(res, keep.rownames = T)
+  res[, diff:= fcase(padj<0.05 & log2FoldChange>log2(1.5), "Up-regulated",
+                     padj<0.05 & log2FoldChange<(-log2(1.5)), "Down-regulated",
+                     default = "Unaffected")]
+  outputFile <- paste0(FC_output_folder, experiment, "/", feature, "/", norm, "/", V1, "_vs_", V2, "_", feature, "_", norm, "_norm_DESeq2.txt")
+  fwrite(res,
+         outputFile,
+         sep="\t",
+         na = NA)
+  print(paste(outputFile, "saved"))
+  sumup <- table(res$diff)
+  print(paste(names(sumup), "= ", sumup, collapse = " | "))
   
-  # Compute model and save object ----
-  dds <- DESeq(dds)
-  saveRDS(dds,
-          paste0(ddsPrefix, "_DESeq2_", normalization, "_norm.dds"))
-  
-  # Import combinations ----
-  cmb <- data.table(V1= conditions,
-                    V2= controls)
-  cmb <- unique(cmb[V1!=V2])
-  cmb[, {
-    res <- results(dds,
-                   contrast = c("condition", V1, V2))
-    res <- as.data.frame(res)
-    res <- as.data.table(res, keep.rownames = T)
-    res[, diff:= fcase(padj<0.05 & log2FoldChange>log2(1.5), "Up-regulated",
-                       padj<0.05 & log2FoldChange<(-log2(1.5)), "Down-regulated",
-                       default = "Unaffected")]
-    outputFile <- paste0(fcOutDir, V1, "_vs_", V2, "_DESeq2_", normalization, "_norm.txt")
-    fwrite(res,
-           outputFile,
-           sep="\t",
-           na = NA)
-    print(paste(outputFile, "saved"))
-    sumup <- table(res$diff)
-    print(paste(names(sumup), "= ", sumup, collapse = " | "))
-    
-    # MA plot ----
-    outputPdf <- paste0(MAprefix, "_", V1, "_vs_", V2, "_MA_plot_",  normalization, "_norm.pdf")
-    pdf(outputPdf, 4, 3)
-    par(mai= c(.9,1.5,.9,1.3),
-        cex.axis= 6/12,
-        cex.lab= 7/12,
-        las= 1,
-        tcl= -0.1,
-        mgp= c(.8, 0.25, 0),
-        font.main= 1,
-        cex.main= 9/12)
-    vl_MAplot(DESeq2_dat= res,
-              padj.cutoff = 0.05,
-              log2FC.cutoff = log2(1.5),
-              main= paste(V1, "vs.", V2, "\n", normalization, " norm."))
-    dev.off()
-    print(paste(outputPdf, "saved"))
-  }, .(V1, V2)]
-}
+  # MA plot ----
+  outputPdf <- paste0(PDF_output_folder, experiment, "/", feature, "/", norm, "/MA_plots/", experiment, "_", feature, "_", norm, "_norm_DESeq2_MA_plot.pdf")
+  pdf(outputPdf, 4, 3)
+  par(mai= c(.9,1.5,.9,1.3),
+      cex.axis= 6/12,
+      cex.lab= 7/12,
+      las= 1,
+      tcl= -0.1,
+      mgp= c(.8, 0.25, 0),
+      font.main= 1,
+      cex.main= 9/12)
+  vl_MAplot(DESeq2_dat= res,
+            padj.cutoff = 0.05,
+            log2FC.cutoff = log2(1.5),
+            main= paste(V1, "vs.", V2, "\n", norm, " norm."))
+  dev.off()
+  print(paste(outputPdf, "saved"))
+}, .(V1, V2)]
 
 # Plot reads statistics ----
 Cc <- c("grey80", "grey60", "grey40", "grey20")
-pdf(ddsStats, width = 9)
+outputPDF <- paste0(PDF_output_folder, experiment, "/", feature, "/", norm, "/statistics/", experiment, "_", feature, "_", norm, "_norm_reads_statistics.pdf")
+pdf(outputPDF, width = 9)
 par(las= 1,
     mai= c(.9,5,.9,2),
     tcl= -0.1,
@@ -208,4 +206,4 @@ stats[, {
          bty= "n")
 }]
 dev.off()
-print(paste(ddsStats, "printed! Done!"))
+print(paste(outputPDF, "printed! Done!"))

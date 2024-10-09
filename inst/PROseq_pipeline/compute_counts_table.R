@@ -2,56 +2,43 @@
 args = commandArgs(trailingOnly=TRUE)
 
 # test if there is at least 2 args: if not, return an error
-if (length(args)!=5) {
+if (length(args)!=3) {
   stop("Please specify:\n
-       [required] 1/ Reference genome count file \n
-       [required] 2/ Output folder \n
-       [required] 3/ .rds file containing promoter annotations \n
-       [required] 4/ .rds file containing gene body annotations \n
-       [required] 5/ .rds file containing transcript annotations \n")
+       [required] 1/ Reference genome umi count file \n
+       [required] 2/ A comma-separated list of annotation files \n
+       [required] 3/ A comma-separated list of output file names \n")
 }
 
 require(data.table)
 
 # Tests ----
-# umi_count <- "db/umi_counts/AID-Hcfc1-cl4_0hrIAA_rep1_mm10_counts.txt"
-# outputFolder <- "db/count_tables/HCFC1/"
+# umi_count <- "db/counts/PROseq/HCFC1/AID-Hcfc1-cl4_0hrIAA_HCFC1_rep1_mm10_counts.txt"
 # annotations <- c("/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_promoters.rds",
 #                  "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_genebody.rds",
 #                  "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_transcript.rds")
+# outputFiles <- c("db/count_tables/PROseq/HCFC1/promoter/AID-Hcfc1-cl4_0hrIAA_HCFC1_rep1_mm10_promoter_counts.txt",
+#                 "db/count_tables/PROseq/HCFC1/gene_body/AID-Hcfc1-cl4_0hrIAA_HCFC1_rep1_mm10_gene_body_counts.txt",
+#                 "db/count_tables/PROseq/HCFC1/transcript/AID-Hcfc1-cl4_0hrIAA_HCFC1_rep1_mm10_transcript_counts.txt")
 
 # Args ----
 umi_count <- args[1]
-outputFolder <- args[2]
-annotations <-  args[3:5]
+annotations <- unlist(tstrsplit(args[2], ","))
+outputFiles <- unlist(tstrsplit(args[3], ","))
 
-# Create sub-directories ----
-dir.create(paste0(outputFolder, "/promoter/"), showWarnings = F)
-dir.create(paste0(outputFolder, "/gene_body/"), showWarnings = F)
-dir.create(paste0(outputFolder, "/transcript/"), showWarnings = F)
-
-# Import annotations ----
-annots <- data.table(feature= c("promoter", "gene_body", "transcript"),
-                     file= annotations)
-annots <- annots[, readRDS(file), feature]
-annots[, seqnames:= as.character(seqnames)]
-annots[, start:= as.integer(start)]
-annots[, end:= as.integer(end)]
-annots[, strand:= as.character(strand)]
+# Import annotation ----
+annot <- data.table(file= annotations,
+                    output= outputFiles)
+annot <- annot[, readRDS(file), output]
 
 # Import UMI ----
 dat <- fread(umi_count)
 dat[, c("seqnames", "start", "strand"):= tstrsplit(coor, ":", type.convert = T)]
 
 # Compute counts ----
-annots[, {
-  .c <- .SD[, .(seqnames, start, end, strand)]
-  .c <- data.table(ID= cluster.id,
-                   count= dat[.c, sum(umi_counts, na.rm= T), on= c("seqnames", "start>=start", "start<=end", "strand"), .EACHI]$V1)
-  outputFile <- paste0(outputFolder, "/", feature, "/", basename(umi_count))
-  fwrite(.c,
-         outputFile,
+annot$count <- dat[annot, sum(umi_counts, na.rm= T), on= c("seqnames", "start>=start", "start<=end", "strand"), .EACHI]$V1
+annot[, {
+  fwrite(.SD[, .(ID= cluster.id, count)],
+         output,
          sep= "\t",
          na= NA)
-  print(outputFile)
-}, feature]
+}, output]

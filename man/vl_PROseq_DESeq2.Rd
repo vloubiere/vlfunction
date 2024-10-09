@@ -18,11 +18,19 @@ vl_PROseq_DESeq2(processed_metadata, ...)
   processed_metadata,
   FC_metadata_output,
   Rpath = "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
+  annotation.files = data.table(genome = "mm10", feature = c("promoter", "gene_body",
+    "transcript"), annotation.file =
+    c("/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_promoters.rds",
+    "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_genebody.rds",
+    "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_transcript.rds")),
+  count_table_output_folder = "db/count_tables/PROseq/",
+  normalization = c("libSize", "spikeIn"),
   dds_output_folder = "db/dds/PROseq/",
   FC_output_folder = "db/FC_tables/PROseq/",
   PDF_output_folder = "pdf/PROseq/",
   cores = 4,
   mem = 16,
+  overwrite = FALSE,
   submit = FALSE,
   wdir = getwd(),
   logs = "db/logs/PROseq/DESeq2",
@@ -37,6 +45,10 @@ By default, when the processed_metadata is a path to a processed_metadata files,
 
 \item{Rpath}{Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript".}
 
+\item{count_table_output_folder}{Output folder for count tables. Default= "db/count_tables/PROseq/".}
+
+\item{normalization}{A vector of normalization approaches to be used. Possible values are are "default" (DESeq2 default), "libSize", "spikeIn" and "combined" (Vanja's method: note that changing the control sample will change the outcome). Default= c("libSize", "spikeIn").}
+
 \item{dds_output_folder}{Output folder for .dds files (DESeq2 objects). Default= "db/dds/PROseq/".}
 
 \item{FC_output_folder}{Output folder for FC tables. Default= "db/FC_tables/PROseq/".}
@@ -46,6 +58,8 @@ By default, when the processed_metadata is a path to a processed_metadata files,
 \item{cores}{Number of cores per job. Default= 4.}
 
 \item{mem}{Memory per job (in Go). Default= 16.}
+
+\item{overwrite}{Should the count tables be overwritten? Default= FALSE}
 
 \item{submit}{Should the command be submitted? default= FALSE.}
 
@@ -73,15 +87,21 @@ DESeq2 analysis PROseq pipeline
 processed <- readRDS("Rdata/metadata_PROseq_processed.rds")
 file.exists(na.omit(unlist(processed[, fq1:bwNS])))
 
-# Differential analysis (of note, no "overwrite" option is available in this case)
-vl_PROseq_DESeq2(processed, # Here, you could also provide the path to the processed metadata table ("Rdata/metadata_PROseq_processed.rds").
-                 FC_metadata_output = "Rdata/metadata_PROseq_FC_tables.rds",
-                 submit = TRUE)
-                 
-# Once the commands ran, you can retrieve output folder using
-FC <- readRDS("Rdata/metadata_PROseq_FC_tables.rds")
+# Differential analysis
+test <- vl_PROseq_DESeq2(processed,
+                         FC_metadata_output = "Rdata/metadata_PROseq_FC_tables.rds",
+                         annotation.files= data.table(genome= "mm10",
+                                                      feature= c("promoter", "gene_body", "transcript"),
+                                                      annotation.file= c("/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_promoters.rds",
+                                                                         "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_genebody.rds",
+                                                                         "/groups/stark/vloubiere/projects/PROseq_pipeline/db/annotations/mm10_transcript.rds")),
+                         overwrite = FALSE,
+                         submit = TRUE)
 
-# For example, to retrieve spikein normalized FC tables:
-files <- FC[, list.files(fcDir, paste0(DESeq2_condition, ".*", "spike")), .(fcDir, DESeq2_condition)]$V1
+# Once the commands ran, you can use the FC metadata to retrieve the corresponding files:
+FC <- readRDS("Rdata/metadata_PROseq_FC_tables.rds")
+file.exists(na.omit(FC$fcTable))
+file.exists(na.omit(FC$MAplot))
+file.exists(na.omit(FC$ddsStats))
                  
 }
