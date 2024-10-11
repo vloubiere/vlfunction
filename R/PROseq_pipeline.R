@@ -403,10 +403,10 @@ vl_PROseq_DESeq2.default <- function(processed_metadata,
 {
   # Hard copy metadata ----
   meta <- data.table::copy(processed_metadata)
-  meta$barcode <- meta$eBC <- meta$layout <- meta$sequencer <- NULL
+  meta$bam_path <- meta$barcode <- meta$eBC <- meta$layout <- meta$sequencer <- NULL
   meta$fq1 <- meta$fq1_trimmed <- meta$bam <- meta$fq_unaligned <- meta$bamSpike <- NULL
   meta$bwPS <- meta$bwNS <- NULL
-  meta <- unique(meta)
+  meta <- unique(meta) # Collapse re-sequencing
   
   # Check if annotations exist ----
   genomeMissing <- meta[!genome %in% annotation.files$genome]
