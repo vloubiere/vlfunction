@@ -408,6 +408,28 @@ vl_PROseq_DESeq2.default <- function(processed_metadata,
   meta$bwPS <- meta$bwNS <- NULL
   meta <- unique(meta) # Collapse re-sequencing
   
+  # Check Number of replicates ----
+  reps <- meta[, .N, .(experiment, DESeq2_condition)][N<2]
+  if(nrow(reps))
+  {
+    reps[, {
+      err <- paste0("Error: In experiment ", experiment, ", some condtions have less than 2 replicates -> ", DESeq2_condition)
+      print(err)
+    }, .(experiment, DESeq2_condition)]
+    stop("DESeq2 needs at least two replicates to function. EXIT")
+  }
+  
+  # Check all sample names are unique (within experiment) ----
+  dups <- meta[, .(.N, count= paste0(count, collapse = "; ")), .(experiment, DESeq2_name)][N>1]
+  if(nrow(dups))
+  {
+    dups[, {
+      err <- paste0("Error: In experiment ", experiment, ", some sample names are associated to >1 count file: ", DESeq2_name, " -> ", count, "")
+      print(err)
+    }, .(experiment, DESeq2_name)]
+    stop("Please update your metadata to avoid such conflict. EXIT")
+  }
+  
   # Check if annotations exist ----
   genomeMissing <- meta[!genome %in% annotation.files$genome]
   if(nrow(genomeMissing))
@@ -417,6 +439,12 @@ vl_PROseq_DESeq2.default <- function(processed_metadata,
                 annotation.files,
                 by= "genome",
                 allow.cartesian= T)
+  
+  # Print quick sum-up ----
+  print(paste(length(unique(meta$experiment)), "distinct experiments were detected and will be analyzed in parallel:"))
+  meta[, {
+    print(paste0(experiment, " -> ", paste0(DESeq2_name, collapse = "; ")))
+  }, experiment]
   
   # Different normalization approaches ----
   meta <- meta[, .(norm= normalization), (meta)]
