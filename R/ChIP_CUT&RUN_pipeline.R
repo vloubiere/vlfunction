@@ -6,18 +6,18 @@
 #' 
 #' The pipeline is split into two main functions. The first vl_CUTNRUN_processing() function aligns the reads and filters confident alignments.
 #' It takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns and/or submit the command lines to: \cr
-#' 1/ extract reads from VBC .bam file \cr
-#' 2/ trim the reads \cr
-#' 3/ aligns them to mouse/human genome (see 'genome' column of the metadata table) \cr
-#' 4/ return alignment statistics \cr
-#' 5/ return mapq30_statistics (confidently aligned reads) \cr
+#' 1/ extract reads from VBC .bam file. Output .fq files are saved tmp_folder/fq/\cr
+#' 2/ trim the reads. Output .fq files are saved in tmp_folder/fq/ \cr
+#' 3/ aligns them to mouse/human genome (see 'genome' column of the metadata table). Output .bam files are saved in tmp_folder/bam/ \cr
+#' 4/ return alignment statistics. Output .txt files are saved in alignment_stats_output_folder/ \cr
+#' 5/ return mapq30_statistics (confidently aligned reads). Output .txt files are saved in alignment_stats_output_folder/ \cr
 #' 
 #' The second function, vl_CUTNRUN_peakCalling(), takes care of the peak calling, and returns and/or submit the command lines to: \cr
-#' 1/ peaks for each replicate \cr
-#' 2/ .bw tracks for each replicate \cr
-#' 3/ Peaks called on the merged replicates \cr
-#' 4/ .bw tracks using merged replicates \cr
-#' 5/ Confident peaks that are detected using merged reads but also each individual replicate \cr
+#' 1/ peaks for each replicate. Output .narrowpeak files are saved in peaks_output_folder/ \cr
+#' 2/ .bw tracks for each replicate. Output .bw files are saved in bw_output_folder/ \cr
+#' 3/ Peaks called on the merged replicates. Output .narrowpeak files are saved in peaks_output_folder/ \cr
+#' 4/ .bw tracks using merged replicates. Output .bw files are saved in bw_output_folder/ \cr
+#' 5/ Confident peaks that are detected using merged reads but also each individual replicate. Output .narrowpeak files are saved in peaks_output_folder/ \cr
 #'
 #' @param metadata The path to a correctly formatted .xlsx metadata file or a data.table. See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_CutNRun.xlsx'.
 #' @param processed_metadata_output An .rds path where to save the processed metadata file, which contains the paths of all output files and will be used to manage them.

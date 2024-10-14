@@ -6,20 +6,20 @@
 #' 
 #' The pipeline is split into two main function The first function vl_PROseq_processing() aligns the reads and filters confident alignments.
 #' It takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns and/or submit the command lines to: \cr
-#' 1/ extract reads from VBC bam file \cr
-#' 2/ trim the reads \cr
-#' 3/ aligns them to mouse/human genome (see 'genome' column of the metadata table) \cr
-#' 4/ store unaligned read into a fastq file \cr
-#' 5/ align these remaining reads to spike-in genome ('dm3') \cr
-#' 6/ compute counts and statistics both for the reference genome and for spike-in \cr
-#' 7/ output .bw tracks for positive and negative strand reads.
+#' 1/ extract reads from VBC bam file. Output .fq files are saved in tmp_folder/fq/ \cr
+#' 2/ trim the reads. Output .fq files are saved in tmp_folder/fq/ \cr
+#' 3/ aligns them to mouse/human genome (see 'genome' column of the metadata table). Output .bam files are saved in tmp_folder/bam/ \cr
+#' 4/ store unaligned read into a .fq file. Output .fq files are saved in tmp_folder/fq/ \cr
+#' 5/ align these remaining reads to spike-in genome ('dm3'). Output .bam files are saved in tmp_folder/bam/ \cr
+#' 6/ compute counts and statistics both for the reference genome and for spike-in. Output .txt files are stored in alignment_stats_output_folder/  \cr
+#' 7/ output .bw tracks for positive and negative strand reads. Output .bw files are stored in bw_output_folder/
 #' 
 #' The second function, vl_PROseq_DESeq2() can be used for differential analysis. It returns: \cr
-#' 1/ The umi counts overlapping the features provided in the annotation.files argument \cr \cr
-#' 2/ a .dds DESeq2 object for each experiment \cr
-#' 3/ the fold-change tables corresponding to the comparison of 'DESeq2_condition' versus 'DESeq2_control' conditions (see colnames of the processed_metadata file) \cr
-#' 4/ A barplot showing the statistics of each dds file \cr
-#' 5/ MA plots corresponding to each comparison \cr
+#' 1/ The umi counts overlapping the features provided in the annotation.files argument. Output .txt files are stored in count_output_folder/ \cr
+#' 2/ a .dds DESeq2 object for each experiment. Output .dds (rds) files are stored in the dds_output_folder/ \cr
+#' 3/ the fold-change tables corresponding to the comparison of 'DESeq2_condition' versus 'DESeq2_control' conditions (see colnames of the processed_metadata file). Output .txt files are stored in the FC_output_folder/ \cr
+#' 4/ A barplot showing the statistics of each dds file, which will be saved in the PDF_output_folder. \cr
+#' 5/ MA plots corresponding to each comparison, which will be saved in the PDF_output_folder. \cr
 #'
 #' @param metadata The path to a correctly formatted .xlsx metadata file or a data.table. See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_PROseq.xlsx'.
 #' @param processed_metadata_output An .rds path where to save the processed metadata file, which contains the paths of all output files and will be used to manage them.
