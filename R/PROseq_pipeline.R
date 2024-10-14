@@ -461,7 +461,7 @@ vl_PROseq_DESeq2.default <- function(processed_metadata,
   meta[DESeq2_condition!=DESeq2_control, fcTable:= paste0(FC_output_folder, subFolder, experiment)]
   meta[DESeq2_condition!=DESeq2_control, fcTable:= paste0(fcTable, contrast, feature, "_", norm, "_norm_DESeq2.txt")]
   # PDF stats
-  meta[, ddsStats:= paste0(PDF_output_folder, subFolder, "statistics/", experiment, "_reads_statistics_", feature, "_", norm, "_norm.pdf")]
+  meta[, ddsStats:= paste0(PDF_output_folder, subFolder, "statistics/", experiment, "_", feature, "_", norm, "_norm_reads_statistics.pdf")]
   # PDF MA plots
   meta[!is.na(fcTable), MAplot:= paste0(PDF_output_folder, subFolder, "MA_plots/", experiment)]
   meta[!is.na(fcTable), MAplot:= paste0(MAplot, contrast, feature, "_", norm, "_norm_DESeq2_MA_plot.pdf")]

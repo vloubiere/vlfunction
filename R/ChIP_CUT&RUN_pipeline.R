@@ -120,8 +120,9 @@ vl_CUTNRUN_processing.default <- function(metadata,
     stop("If provided, fq2 files should be gzipped and their names should end with '.fq.gz'")
   
   # Generate output paths ----
-  meta[is.na(fq1) & !is.na(bam_path), fq1:= paste0(tmp_folder, "/CUTNRUN/fq/", gsub(".bam", "", basename(bam_path)))]
-  meta[is.na(fq1) & !is.na(bam_path), fq1:= paste0(fq1, "_", make.unique(sampleID), fifelse(layout=="PAIRED", "_1.fq.gz", ".fq.gz"))]
+  meta[is.na(fq1) & !is.na(bam_path), fq1:=
+         paste0(tmp_folder, "/CUTNRUN/fq/", gsub(".bam", "", basename(bam_path)), "_", make.unique(sampleID),
+                fifelse(layout=="PAIRED", "_1.fq.gz", ".fq.gz"))]
   meta[is.na(fq2) & layout=="PAIRED", fq2:= gsub("_1.fq.gz$", "_2.fq.gz", fq1)]
   meta[, fq1_trim:= gsub(".fq.gz$", fifelse(layout=="PAIRED", "_val_1.fq.gz", "_trimmed.fq.gz"), fq1), layout]
   meta[, fq2_trim:= gsub(".fq.gz$", "_val_2.fq.gz", fq2)]
