@@ -2,29 +2,46 @@
 use strict;
 use warnings;
 
+# Check if the correct number of arguments are provided
 if ($#ARGV != 1) {
-	print "Args should specify 1/ regexpr and 2/ output file prefix\n";
-	exit;
+    die "Usage: $0 <regular expression> <output file prefix>\n";
 }
 
-my $output1= "$ARGV[1]\_1.fq";
+# Get the output file prefix
+my $output1 = "$ARGV[1]_1.fq";
 
-if (-e $output1) 
-{
-    unlink($output1);
+# Remove existing output file if it exists
+if (-e $output1) {
+    unlink($output1) or die "Cannot delete existing output file: $!";
 }
 
-open(my $out1, ">>", $output1) or die "...";
+# Open output file for writing
+open(my $out1, ">>", $output1) or die "Cannot open output file $output1: $!";
 
-while(<STDIN>)
-{
-    my @cur = split(/\t/, $_);
-    if($cur[11] =~ $ARGV[0])
-    {
-      say $out1 "@" . $cur[0];
-      say $out1 $cur[9];
-      say $out1 "+";
-      say $out1 $cur[10];
+# Process the SAM file from standard input
+while (<STDIN>) {
+    chomp;
+    my @fields = split(/\t/, $_);
+
+    # Skip header lines
+    next if ($fields[0] =~ /^\@/);
+
+    my $flag = $fields[1];
+
+    # Only process single-end reads (not part of a pair)
+    if (!($flag & 0x1)) {  # Flag 0x1 indicates the read is paired
+        # Check if the read matches the regular expression in the 12th column
+        if ($fields[11] =~ /$ARGV[0]/) {
+            # Write the read to the output file in FASTQ format
+            say $out1 "@" . $fields[0];
+            say $out1 $fields[9];
+            say $out1 "+";
+            say $out1 $fields[10];
+        }
     }
 }
+
+# Close the output file
 close($out1);
+
+print "Processing complete.\n";

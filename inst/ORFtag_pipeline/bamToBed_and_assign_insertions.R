@@ -17,10 +17,10 @@ if (length(args)!=4) {
        [required] 4/ Output assignment_table basename\n")
 }
 
-library(Rsamtools, warn.conflicts = FALSE)
-library(rtracklayer, warn.conflicts = FALSE)
-library(GenomicRanges, warn.conflicts = FALSE)
-library(data.table, warn.conflicts = FALSE)
+suppressMessages(library(Rsamtools, warn.conflicts = FALSE))
+suppressMessages(library(rtracklayer, warn.conflicts = FALSE))
+suppressMessages(library(GenomicRanges, warn.conflicts = FALSE))
+suppressMessages(library(data.table, warn.conflicts = FALSE))
 
 # For tests
 # bam <- "db/bam_unique/Repressor1_input_rep1_q30_unique.bam"

@@ -1,7 +1,5 @@
 #!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE)
-library(vlfunctions)
-library(DESeq2)
 
 # Test if there are 12 args: if not, return an error
 if (length(args)!=12) {
@@ -19,6 +17,11 @@ if (length(args)!=12) {
        [required] 11/ feature \n
        [required] 12/ Normalization method. Possible values are 'default' (DESeq2 default), 'libSize', 'spikeIn', 'combined' (Vanja's method, for whichchanging the control sample will change the outcome)\n")
 }
+
+# Load libraries
+suppressMessages(library(vlfunctions, warn.conflicts = FALSE))
+suppressMessages(library(DESeq2, warn.conflicts = FALSE))
+
 
 # Tests ----
 # counts <- c("db/count_tables/PROseq/HCFC1/transcript/AID-Hcfc1-cl4_0hrIAA_HCFC1_rep1_mm10_transcript_counts.txt",

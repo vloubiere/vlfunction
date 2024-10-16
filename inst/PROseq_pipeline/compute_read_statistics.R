@@ -7,7 +7,8 @@ if (length(args)!=2) {
        [required] 1/ Count file \n
        [required] 2/ Output stat file")
 }
-require(data.table)
+
+suppressMessages(library(data.table))
 
 # Compute statistics and spikein sizeFactor ----
 dat <- fread(args[1])

@@ -11,10 +11,10 @@ bw_file <- args[[2]]
 genome <- args[[3]]
 
 # Load required packages
-library(rtracklayer)
-library(GenomeInfoDb)
-library(BSgenome)
-library(BSgenome.Mmusculus.UCSC.mm10)
+suppressMessages(library(rtracklayer, warn.conflicts = FALSE))
+suppressMessages(library(GenomeInfoDb, warn.conflicts = FALSE))
+suppressMessages(library(BSgenome, warn.conflicts = FALSE))
+suppressMessages(library(BSgenome.Mmusculus.UCSC.mm10, warn.conflicts = FALSE))
 
 # Check file extensions
 if (!grepl("\\.bdg$", bdg_file) && grepl("\\.bw$", bw_file)) 

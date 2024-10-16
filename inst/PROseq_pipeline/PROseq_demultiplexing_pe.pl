@@ -25,12 +25,18 @@ if (-e $output1) {
 # Open the output file for writing
 open(my $out1, ">>", $output1) or die "Cannot open output file: $!";
 
+# Variable to track if any paired-end reads are found
+my $paired_reads_found = 0;
+
 # Process the input from stdin
 while (<STDIN>) {
     my @cur = split(/\t/, $_);
 
     # Check if the read is the first in a pair and unmapped (FLAG = 77)
     if ($cur[1] == 77 && $cur[13] =~ /$regex_14th_col/ && $cur[9] =~ /^$ARGV[1]/) {
+        # Mark that we have found at least one paired read
+        $paired_reads_found = 1;
+
         # Trim the second regular expression from the start of the read
         $cur[9] =~ s/^$ARGV[1]//;
 
@@ -53,4 +59,11 @@ while (<STDIN>) {
         print $out1 $cur[10] . "\n";
     }
 }
+
+# Close the output file
 close($out1);
+
+# Check if no paired reads were found and print a warning
+if (!$paired_reads_found) {
+    die "No paired-end reads found in the BAM file. Please check if the BAM file is single-ended.";
+}

@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
-require(vlfunctions)
-require(rtracklayer)
+suppressMessages(library(vlfunctions, warn.conflicts = FALSE))
+suppressMessages(library(rtracklayer, warn.conflicts = FALSE))
 
 # Check arguments
 args <- commandArgs(trailingOnly = TRUE)

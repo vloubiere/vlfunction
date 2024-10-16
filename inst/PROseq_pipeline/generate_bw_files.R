@@ -8,9 +8,9 @@ if (length(args)!=2) {
        [required] 2/ Output prefix (.ps.bw; .ns.bw)\n")
 }
 
-require(vlfunctions)
-require(rtracklayer)
-require(GenomicRanges)
+suppressMessages(library(vlfunctions, warn.conflicts = FALSE))
+suppressMessages(library(rtracklayer, warn.conflicts = FALSE))
+suppressMessages(library(GenomicRanges, warn.conflicts = FALSE))
 
 # Variables test
 # countsFile <- "db/umi_counts/HCFC1/AID-Hcfc1-cl17_0hrIAA_rep1_mm10_counts.txt"

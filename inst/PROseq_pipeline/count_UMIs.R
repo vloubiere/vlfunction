@@ -8,11 +8,11 @@ if (length(args)!=2) {
        [required] 2/ Output count file (.txt)\n")
 }
 
-require(vlfunctions)
-require(Rsamtools)
-require(rtracklayer)
-require(GenomicRanges)
-require(stringdist)
+suppressMessages(library(vlfunctions, warn.conflicts = FALSE))
+suppressMessages(library(Rsamtools, warn.conflicts = FALSE))
+suppressMessages(library(rtracklayer, warn.conflicts = FALSE))
+suppressMessages(library(GenomicRanges, warn.conflicts = FALSE))
+suppressMessages(library(stringdist, warn.conflicts = FALSE))
 
 # Variables ----
 # bam <- "/scratch/stark/vloubiere/PROSeq_pipeline/bam/truncated.bam"

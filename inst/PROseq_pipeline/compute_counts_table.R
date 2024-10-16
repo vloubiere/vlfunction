@@ -9,7 +9,7 @@ if (length(args)!=3) {
        [required] 3/ A comma-separated list of output file names \n")
 }
 
-require(data.table)
+suppressMessages(library(data.table))
 
 # Tests ----
 # umi_count <- "db/counts/PROseq/HCFC1/AID-Hcfc1-cl4_0hrIAA_HCFC1_rep1_mm10_counts.txt"
