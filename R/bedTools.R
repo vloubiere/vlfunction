@@ -457,7 +457,7 @@ vl_binBed <- function(bed,
     stop("steps.width must be a round number or an integer")
   
   # Determine binning strategy
-  if(!is.null(nbins))
+  bins <- if(!is.null(nbins))
   {
     # Check regions are big enough
     if(min(bed[, be-bs+1])<nbins)
