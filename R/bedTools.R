@@ -464,9 +464,8 @@ vl_binBed <- function(bed,
       stop(paste("Some ranges are shorter than nbins. STOP."))
     
     # Binning
-    bed[, step:= (end-start+1)/nbins]
-    bed[, .(start= bs+c(0, round(cumsum(rep(step, nbins-1L)))),
-            end= bs+round(cumsum(rep(step, nbins)))-1L), (bed)]
+    bed[, .(start= bs+c(0, round(cumsum(rep((be-bs+1)/nbins, nbins-1L)))),
+            end= bs+round(cumsum(rep((be-bs+1)/nbins, nbins)))-1L), (bed)]
   }else if(!is.null(bins.width))
   {
     bed[, .(start= seq(bs, be, steps.width),
