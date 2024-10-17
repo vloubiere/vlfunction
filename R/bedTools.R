@@ -457,36 +457,25 @@ vl_binBed <- function(bed,
     stop("steps.width must be a round number or an integer")
   
   # Determine binning strategy
-  bins <- if(!is.null(nbins))
+  if(!is.null(nbins))
   {
     # Check regions are big enough
-    check <- min(bed[, be-bs+1])
-    if(check<nbins)
-      stop(paste("Some ranges are", check, "nt long, shorter than nbins"))
+    if(min(bed[, be-bs+1])<nbins)
+      stop(paste("Some ranges are shorter than nbins. STOP."))
+    
     # Binning
-    bed[, {
-      # Binning
-      .c <- seq(bs, be, length.out= nbins+1)
-      # Compute end
-      end <- ceiling(.c[-1]-1L)
-      end[length(end)] <- be
-      # Compute start
-      start <- c(.c[1], end[-length(end)]+1L)
-      .(start, end)
-    }, (bed)]
+    bed[, step:= (end-start+1)/nbins]
+    bed[, .(start= bs+c(0, round(cumsum(rep(step, nbins-1L)))),
+            end= bs+round(cumsum(rep(step, nbins)))-1L), (bed)]
   }else if(!is.null(bins.width))
   {
-    bed[, {
-      # Binning
-      .c <- data.table(start= seq(bs, be, steps.width))
-      .c[, end:= start+bins.width-1L]
-      # Correct end
-      .c[end>be, end:= be]
-    }, (bed)]
+    bed[, .(start= seq(bs, be, steps.width),
+            end= seq(bs, be, steps.width)+bins.width-1L), (bed)]
   }else
     stop("Either 'nbins' or 'bins.width' must be specified.")
   
-  # Handle cases where end<start
+  # Handle edges
+  bins[end>be, end:= be]
   bins[end<start, end:= start]
   
   # Reorder columns
