@@ -184,9 +184,9 @@ vl_CUTNRUN_processing.default <- function(metadata,
                    paste0("^B2:Z:", i5),
                    paste0("^BC:Z:", barcode),
                    fq_prefix,
-                   "; gzip", gsub(".gz$", "", fq1))
+                   "; gzip -f", gsub(".gz$", "", fq1))
       if(!is.na(fq2))
-        cmd <- paste0(cmd, "; gzip ", gsub(".gz$", "", fq2))
+        cmd <- paste0(cmd, "; gzip -f ", gsub(".gz$", "", fq2))
       cmd
     }
   }, .(bam_path, layout, i5, barcode, fq1, fq2)]

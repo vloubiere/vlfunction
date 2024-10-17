@@ -208,9 +208,9 @@ vl_ORFtag_pipeline.default <- function(metadata,
                          system.file("ORFtag_pipeline", "demultiplex_se_14.pl", package = "vlfunctions")),
                    BC,
                    fq_prefix,
-                   "; gzip", paste0(fq_prefix, "_1.fq"))
+                   "; gzip -f", paste0(fq_prefix, "_1.fq"))
       if(!is.na(fq2))
-        cmd <- paste0(cmd, "; gzip ", fq_prefix, "_2.fq")
+        cmd <- paste0(cmd, "; gzip -f ", fq_prefix, "_2.fq")
       cmd
     }
   }, .(layout, barcodes, fq1, fq2)]

@@ -170,7 +170,7 @@ vl_PROseq_processing.default <- function(metadata,
                   layout=="SINGLE", system.file("PROseq_pipeline", "PROseq_demultiplexing_se.pl", package = "vlfunctions")), 
             barcode,
             eBC,
-            fq_prefix, "; gzip", paste0(fq_prefix, "_1.fq"))
+            fq_prefix, "; gzip -f ", paste0(fq_prefix, "_1.fq"))
     }
   }, .(fq1, bam_path, barcode, eBC, layout, count)]
   
