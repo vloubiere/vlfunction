@@ -26,7 +26,7 @@ dat <- vl_importBam(bam,
                     col.names = c("read", "seqnames", "start", "strand", "width", "mapq"))
 dat[, strand:= as.character(strand)]
 dat[!is.na(strand), start:= ifelse(strand=="+", start, start+width-1)]
-dat[!is.na(strand), strand:= ifelse(strand=="+", "-", "+")]
+dat[!is.na(strand), strand:= ifelse(strand=="+", "-", "+")] # Invert strand
 dat[, coor:= paste0(seqnames, ":", start, ":", strand)]
 
 # Extract UMIs ----
