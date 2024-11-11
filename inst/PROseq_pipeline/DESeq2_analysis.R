@@ -22,7 +22,6 @@ if (length(args)!=12) {
 suppressMessages(library(vlfunctions, warn.conflicts = FALSE))
 suppressMessages(library(DESeq2, warn.conflicts = FALSE))
 
-
 # Tests ----
 # counts <- c("db/count_tables/PROseq/HCFC1/transcript/AID-Hcfc1-cl4_0hrIAA_HCFC1_rep1_mm10_transcript_counts.txt",
 #             "db/count_tables/PROseq/HCFC1/transcript/AID-Hcfc1-cl17_0hrIAA_HCFC1_rep1_mm10_transcript_counts.txt",
@@ -72,7 +71,7 @@ DF <- dcast(dat, ID~condition, value.var = "count")
 DF <- data.frame(DF[, -1], row.names = DF$ID)
 
 # Remove low count reads ----
-DF <- DF[rowSums(DF >= 10) >= 2,]
+DF <- DF[rowSums(DF >= 3) >= 2,]
 
 # SampleTable ----
 sampleTable <- data.frame(condition = conditions,

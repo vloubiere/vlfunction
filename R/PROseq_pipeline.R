@@ -158,9 +158,12 @@ vl_PROseq_processing.default <- function(metadata,
     print(paste("Output directories were created in:", outDirs, "!"))
   }
   
+  # Check whether demultiplexing and alignment should be performed ----
+  meta[, preProcess:= ifelse(counts.exists, !file.exists(count), TRUE)] # Check if demultiplex/alignment should be performed
+  
   # Extract fastq files ----
   meta[, extract_cmd:= {
-    if(overwrite | ifelse(counts.exists, !file.exists(count), !file.exists(fq1)))
+    if(overwrite | (preProcess & !file.exists(fq1)))
     {
       fq_prefix <- normalizePath(gsub("_1.fq.gz$", "", fq1), mustWork = F)
       paste("samtools view -@", cores-1, bam_path,
@@ -172,11 +175,11 @@ vl_PROseq_processing.default <- function(metadata,
             eBC,
             fq_prefix, "; gzip -f ", paste0(fq_prefix, "_1.fq"))
     }
-  }, .(fq1, bam_path, barcode, eBC, layout, count)]
+  }, .(fq1, bam_path, barcode, eBC, layout, preProcess)]
   
   # Trim fq files ----
   meta[, trim_cmd:= {
-    if(overwrite | ifelse(counts.exists, !file.exists(count), !file.exists(fq1_trimmed)))
+    if(overwrite | (preProcess & !file.exists(fq1_trimmed)))
     {
       paste("cutadapt -a TGGAATTCTCGGGTGCCAAGG",
             "-m", 10, # Remove trimmed reads shorter than 10bp
@@ -186,7 +189,7 @@ vl_PROseq_processing.default <- function(metadata,
   
   # Align to reference genome ----
   meta[, align_cmd:= {
-    if(overwrite | ifelse(counts.exists, !file.exists(count), !file.exists(bam)))
+    if(overwrite | (preProcess & !file.exists(bam)))
     {
       # Bowtie index reference genome
       refIdx <- switch(genome,
@@ -202,13 +205,13 @@ vl_PROseq_processing.default <- function(metadata,
   
   # Extract unmapped reads ----
   meta[, unaligned_cmd:= {
-    if(overwrite | ifelse(counts.exists, !file.exists(count), !file.exists(fq_unaligned)))
+    if(overwrite | (preProcess & !file.exists(fq_unaligned)))
       paste("samtools view -@", cores-1, "-f 4 -b", bam, "| samtools fastq - >", fq_unaligned)
   }, .(bam, fq_unaligned)]
   
   # Align unmapped reads to spike-in genome ----
   meta[, alignSpike_cmd:= {
-    if(overwrite | ifelse(counts.exists, !file.exists(count), !file.exists(bamSpike)))
+    if(overwrite | (preProcess & !file.exists(bamSpike)))
     {
       # Bowtie index spike in genome
       spikeIdx <- switch(spikein_genome,
