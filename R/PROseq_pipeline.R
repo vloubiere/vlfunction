@@ -185,7 +185,7 @@ vl_PROseq_processing.default <- function(metadata,
             "-m", 10, # Remove trimmed reads shorter than 10bp
             "-o", fq1_trimmed, fq1)
     }
-  }, .(fq1, fq1_trimmed)]
+  }, .(fq1, fq1_trimmed, preProcess)]
   
   # Align to reference genome ----
   meta[, align_cmd:= {
@@ -201,13 +201,13 @@ vl_PROseq_processing.default <- function(metadata,
             paste0(fq1_trimmed, collapse = ","),
             "| samtools view -@", cores-1, "-bS -o", bam)
     }
-  }, .(bam, genome)]
+  }, .(bam, genome, preProcess)]
   
   # Extract unmapped reads ----
   meta[, unaligned_cmd:= {
     if(overwrite | (preProcess & !file.exists(fq_unaligned)))
       paste("samtools view -@", cores-1, "-f 4 -b", bam, "| samtools fastq - >", fq_unaligned)
-  }, .(bam, fq_unaligned)]
+  }, .(bam, fq_unaligned, preProcess)]
   
   # Align unmapped reads to spike-in genome ----
   meta[, alignSpike_cmd:= {
@@ -222,7 +222,7 @@ vl_PROseq_processing.default <- function(metadata,
             fq_unaligned,
             "| samtools view -@", cores-1, "-bS -o", bamSpike)
     }
-  }, .(bamSpike, spikein_genome, fq_unaligned)]
+  }, .(bamSpike, spikein_genome, fq_unaligned, preProcess)]
   
   # UMI counts ----
   meta[, counts_cmd:= {

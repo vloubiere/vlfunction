@@ -310,6 +310,9 @@ vl_ORFtag_pipeline.default <- function(metadata,
 #' @param genome Genome annotation to be used. For now, only "mm10" and "hg38" are supported, and the corresponding non-first-exon .gtf will be used for sorting.
 #' See at the bottom of the ?vl_ORFtag_pipeline help page to see how to generate custom non-first-exon start .gtf files for other genomes.
 #' @param name Name prefix appended to output file names.
+#' @param padj.cutoff The p.adjust cutoff to be used to call hits (>=). Default= 0.001
+#' @param log2OR.cutoff The log2OR cutoff to be used to call hits (>=). Default= 1
+#' @param log2OR.pseudocount The pseudocount to be added to avoid infinite values. Note that only the log2OR will be affected, not the fisher p.values. Default= 1
 #' @param output.suffix Name suffix appended to output file names. Default= "_vs_unsorted.txt".
 #' @param output.folder.FC.file Output folder for FC files. Default= "db/FC_tables/ORFtag".
 #'
@@ -332,6 +335,9 @@ vl_ORFtrap_call_hits <- function(sorted.forward.counts,
                                  unsorted.forward.counts,
                                  genome,
                                  name,
+                                 padj.cutoff= 0.001,
+                                 log2OR.cutoff= 1,
+                                 log2OR.pseudocount= 1,
                                  output.suffix= "_vs_unsorted.txt",
                                  output.folder.FC.file= "db/FC_tables/ORFtag/")
 {
@@ -376,16 +382,17 @@ vl_ORFtrap_call_hits <- function(sorted.forward.counts,
   
   # Fisher test sample vs input
   dat[count.sample>=3, c("OR", "pval"):= {
-    .t <- matrix(c(total.input-count.input+1,
-                   count.input+1,
-                   total.sample-count.sample+1,
-                   count.sample+1),
+    .t <- matrix(c(total.input-count.input,
+                   count.input,
+                   total.sample-count.sample,
+                   count.sample),
                  ncol= 2)
-    fisher.test(.t, alternative = "greater")[c("estimate", "p.value")]
+    .(fisher.test(.t, alternative = "greater")$p.value,
+      fisher.test(.t+log2OR.pseudocount, alternative = "greater")$estimate)
   }, .(count.input, total.input, count.sample, total.sample)]
   dat[count.sample>=3, log2OR:= log2(OR)]
   dat[count.sample>=3, padj:= p.adjust(pval, "fdr")]
-  dat[, hit:= padj<0.001 & log2OR>=1]
+  dat[, hit:= padj<=padj.cutoff & log2OR>=log2OR.cutoff]
   
   # Clean and save
   dat <- genes[dat, on= c("gene_id", "gene_name")]

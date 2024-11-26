@@ -4,12 +4,24 @@
 \alias{vl_plot_table}
 \title{Table plot}
 \usage{
-vl_plot_table(DT, wrap.text = 20)
+vl_plot_table(
+  DT,
+  cex = 1,
+  wrap.text = 20,
+  header.col = "grey50",
+  row.cols = c("grey70", "grey90")
+)
 }
 \arguments{
 \item{DT}{data.table}
 
+\item{cex}{Expansion factor for the table}
+
 \item{wrap.text}{Number of characters after which text can be wrapped}
+
+\item{header.col}{Color for header row}
+
+\item{row.cols}{Colors for non-header rows}
 }
 \value{
 Plots table

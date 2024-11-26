@@ -9,6 +9,9 @@ vl_ORFtrap_call_hits(
   unsorted.forward.counts,
   genome,
   name,
+  padj.cutoff = 0.001,
+  log2OR.cutoff = 1,
+  log2OR.pseudocount = 1,
   output.suffix = "_vs_unsorted.txt",
   output.folder.FC.file = "db/FC_tables/ORFtag/"
 )
@@ -22,6 +25,12 @@ vl_ORFtrap_call_hits(
 See at the bottom of the ?vl_ORFtag_pipeline help page to see how to generate custom non-first-exon start .gtf files for other genomes.}
 
 \item{name}{Name prefix appended to output file names.}
+
+\item{padj.cutoff}{The p.adjust cutoff to be used to call hits (>=). Default= 0.001}
+
+\item{log2OR.cutoff}{The log2OR cutoff to be used to call hits (>=). Default= 1}
+
+\item{log2OR.pseudocount}{The pseudocount to be added to avoid infinite values. Note that only the log2OR will be affected, not the fisher p.values. Default= 1}
 
 \item{output.suffix}{Name suffix appended to output file names. Default= "_vs_unsorted.txt".}
 
