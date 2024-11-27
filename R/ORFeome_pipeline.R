@@ -1,5 +1,64 @@
 #' ORFeome pipeline
 #' 
+#' To use this this pipeline, please install the vl_function package using install_github("vloubiere/vlfunction")
+#' in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R') 
+#' which will be used to submit R sub-script.
+#' 
+#' The pipeline is split into two main functions. The first function vl_ORFeome_processing() aligns the reads and filters confident alignments.
+#' It takes as input a (correctly formatted) metadata file, saves the processed_metadata file and returns and/or submit the command lines to: \cr
+#' 1/ extract reads from VBC bam file. Output .fq files are saved in fq_output_folder/ \cr
+#' 2/ trim the reads. Output .fq files are saved in fq_output_folder/ \cr
+#' 3/ aligns them to the library BCs (see 'library' column of the metadata table). Output .bam files are saved in bam_output_folder/ \cr
+#' 4/ Compute BC counts and save the output files in BC_count_output_folder/ \cr
+#' 
+#' The second function, ?vl_ORFeome_MAGeCK() can be used for differential analysis. Output files are all saved in the provided output_folder/: \cr
+#' 1/ Raw counts table  \cr
+#' 2/ Filtered counts table  \cr
+#' 3/ MAGeCK output \cr
+#' 4/ MA plot .pdf \cr
+#'
+#' @param metadata The path to a correctly formatted .xlsx metadata file or a data.table. See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_PROseq.xlsx'.
+#' @param processed_metadata_output An .rds path where to save the processed metadata file, which contains the paths of all output files and will be used to manage them.
+#' By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path. 
+#' @param fq_output_folder Output folder for .fq files. Default= "/scratch/stark/vloubiere/ORFeome/fq/".
+#' @param bam_output_folder Output folder for aligne bam files Default= "/scratch/stark/vloubiere/ORFeome/bam/".
+#' @param alignment_stats_output_folder Output folder for alignment statistics. Default= "db/alignment_stats/ORFeome/".
+#' @param BC_count_output_folder Output folder for count files. Default= "db/counts/ORFeome/".
+#' @param Rpath Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript".
+#' @param cores Number of cores per job. Default= 6.
+#' @param mem Memory per job (in Go). Default= 32.
+#' @param overwrite Should existing files be overwritten?
+#' @param counts.exists If the output umi file already exists and overwrite is set to FALSE, skips demultiplexing and alignment. Default= TRUE.
+#' @param submit Should the command be submitted? Default= FALSE.
+#' @param wdir The working directory to use. Default= getwd(), meaning current working directory will be used.
+#' @param logs Output folder for log files. Default= "db/logs/ORFeome/processing".
+#' @param time The time required for the SLURM scheduler. Default= '12:00:00'.
+#'
+#' @return Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data.
+#' These commands can then be submitted either directly via the function, or using vl_bsub()...
+#'
+#' @examples
+#' # Before starting:
+#' # Update the local version of the vlfunctions package
+#' devtools::install_github("vloubiere/vlfunction")
+#' 
+#' # Chose which local R executable to use
+#' localRPath <- "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript"
+#' # Make sure that the last version of the vlfunctions package is installed
+#' system(paste(localRPath, system.file("update_package_from_git.R", package = "vlfunctions")))
+#' 
+#' # Process data ----
+#' vl_ORFeome_processing(metadata = "Rdata/metadata_ORFeome.xlsx",
+#'                       processed_metadata_output = "Rdata/metadata_ORFeome_processed.rds",
+#'                       Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
+#'                       cores= 8,
+#'                       mem= 64,
+#'                       overwrite= FALSE,
+#'                       submit= TRUE)
+#' 
+#' # Differential analysis
+#' See ?vl_ORFeome_MAGeCK()
+#' 
 #' @export
 vl_ORFeome_processing <- function(metadata, ...) UseMethod("vl_ORFeome_processing")
 
@@ -173,124 +232,34 @@ vl_ORFeome_processing.default <- function(metadata,
 
 #' MAGeCK analysis ORFeome screen
 #'
-#' @export
-vl_ORFeome_MAGeCK_auto <- function(processed_metadata, ...) UseMethod("vl_ORFeome_MAGeCK_auto")
-
-#' @describeIn vl_ORFeome_MAGeCK_auto  for processed_metadata file path
-#' @export
-vl_ORFeome_MAGeCK_auto.character <- function(processed_metadata,
-                                             ...)
-{
-  meta <- readRDS(processed_metadata)
-  vl_ORFeome_MAGeCK_auto(processed_metadata= meta,
-                         ...)
-}
-
-#' @describeIn vl_ORFeome_MAGeCK_auto default method
-#' @export
-vl_ORFeome_MAGeCK_auto.default <- function(processed_metadata,
-                                           FC_metadata_output= gsub("_processed.rds", "_FC_tables.rds"),
-                                           screen_group_columns= c("screen", "cell_line"),
-                                           condition_group_columns= c("condition", "sort"),
-                                           output_folder= "db/FC_tables/ORFeome/",
-                                           input.cutoff.FUN= function(x) sum(x)>=0,
-                                           sample.cutoff.FUN= function(x) sum(x)>=3,
-                                           row.cutoff.FUN= function(x) sum(x)>=0,
-                                           input.pseudocount= 0,
-                                           sample.pseudocount= 0,
-                                           logFC.cutoff= 1,
-                                           FDR.cutoff= 0.05,
-                                           Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
-                                           cores= 2,
-                                           mem= 8,
-                                           overwrite= FALSE,
-                                           submit= FALSE,
-                                           wdir= getwd(),
-                                           logs= "db/logs/ORFeome/MAGeCK",
-                                           time= '01:00:00')
-{
-  # Hard copy metadata ----
-  meta <- data.table::copy(processed_metadata)
-  meta[, screen_name:= paste0(unlist(.BY), collapse = "_"), screen_group_columns]
-  meta[, cdition_name:= paste0(unlist(.BY), collapse = "_"), condition_group_columns]
-  
-  # Check columns ----
-  if(!"dictionary" %in% names(meta))
-    stop("'dictionary' column is missing from the metadata, while required for sanity check.")
-  if(!"MAGeCK_sort" %in% names(meta))
-    stop("'MAGeCK_sort' column is missing from the metadata, while used to set MAGeCK 'sort' parameter ('pos' or 'neg').")
-  
-  # Collapse re-sequencing ----
-  meta <- unique(meta[, .(screen_name, cdition_name, sampleID, count, MAGeCK_sort)])
-  
-  # Check comparisons ----
-  .sample <- meta[!grepl("input", cdition_name), .(ID= .(sampleID), count= .(count)), .(screen_name, cdition_name, MAGeCK_sort)]
-  setnames(.sample, c("ID", "count"), c("sample.names", "sample.counts"))
-  .input <- meta[grepl("input", cdition_name), .(ID= .(sampleID), count= .(count)), .(screen_name, cdition_name)]
-  setnames(.input, c("ID", "count"), c("input.names", "input.counts"))
-  cmb <- merge(x = .sample,
-               y = .input[, !"cdition_name"],
-               by= "screen_name")
-  
-  # Check if analyses can be paired ----
-  cmb[, paired:= lengths(sample.names)==lengths(input.names)] # Samples can be paired if 
-  
-  # Print report ----
-  message(paste(uniqueN(cmb[, screen_name]), "screen were detected and will be analyzed in parallel:"))
-  cmb[, {
-    message(paste0("--------------------\nScreen ", .GRP, " --> ", .N, " comparisons : "))
-    .SD[, {
-      .s <- paste0(unlist(sample.names), collapse = " ")
-      .i <- paste0(unlist(input.names), collapse = " ")
-      message(paste0(.s, " vs. ", .i))
-    }, cdition_name]
-  }, screen_name]
-  
-  # Generate output paths ----
-  cmb[, raw_counts_table:= paste0(output_folder, "/", screen_name, "/", screen_name, "_", cdition_name, "_raw_counts.txt")]
-  cmb[, filtered_counts_table:= gsub("_raw_counts.txt", "_filtered_counts.txt", raw_counts_table)]
-  cmb[, FC_table:= gsub("_raw_counts.txt", ".gene_summary.txt", raw_counts_table)]
-  cmb[, MA_plot_pdf:= gsub("_MA_plot.pdf", ".gene_summary.txt", raw_counts_table)]
-  
-  # Save metadata table ----
-  message(paste("Metadata saved in", FC_metadata_output))
-  saveRDS(cmb,
-          FC_metadata_output)
-  
-  # Compute comparisons ----
-  cmb[, {
-    .sc <- unlist(sample.counts)
-    .ic <- unlist(input.counts)
-    .sn <- unlist(sample.names)
-    .in <- unlist(input.names)
-    vl_ORFeome_MAGeCK(sample.counts= .sc,
-                      input.counts=  .ic,
-                      sample.names=  .sn,
-                      input.names=   .in,
-                      screen_name= screen_name,
-                      cdition_name= cdition_name,
-                      output_folder= output_folder,
-                      sort= MAGeCK_sort,
-                      input.cutoff.FUN= input.cutoff.FUN,
-                      sample.cutoff.FUN= sample.cutoff.FUN,
-                      row.cutoff.FUN= row.cutoff.FUN,
-                      input.pseudocount= input.pseudocount,
-                      sample.pseudocount= sample.pseudocount,
-                      paired= paired,
-                      logFC.cutoff= logFC.cutoff,
-                      FDR.cutoff= FDR.cutoff,
-                      Rpath= Rpath,
-                      cores= cores,
-                      mem= mem,
-                      overwrite= overwrite,
-                      submit= submit,
-                      wdir= wdir,
-                      logs= logs,
-                      time= time)
-  }, .(screen_name, cdition_name, MAGeCK_sort, paired)]
-}
-
-#' test
+#' This function uses the provided metadata file to run MAGeCK comparisons, which can be automatized using ?vl_ORFeome_MAGeCK_auto().
+#'
+#' @param sample.counts Vector of sample count files.
+#' @param input.counts Vector of input count files.
+#' @param screen_name Screen name (for example 'ISRE_A549'), which will be used to create a subfolder in output_folder.
+#' @param cdition_name Condition name (for example 'IFN_dim'), which will be used to create sample output name.
+#' @param sample.names Sample names, for example c("sort_rep1", "sort_rep2").
+#' @param input.names Sample names, for example c("input_rep1", "input_rep2").
+#' @param output_folder Output folder where all output files should be saved. Default= "db/FC_tables/ORFeome/"
+#' @param sort Sort parameter of the screen, either 'pos' or 'neg'. Default= 'pos'.
+#' @param sample.cutoff.FUN Function to be applied to filter sample columns. Default= function(x) sum(x)>=3
+#' @param input.cutoff.FUN Function to be applied to filter input columns. Default= function(x) sum(x)>=0
+#' @param row.cutoff.FUN Function to be applied to filter all columns. Default= function(x) sum(x)>=3
+#' @param sample.pseudocount The pseudocount to be added to 0 values (only!) in input columns. Default= 0 
+#' @param input.pseudocount The pseudocount to be added to 0 values (only!) in input columns. Default= 0
+#' @param paired Should samples be analyzed as paired? Default= FALSE.
+#' @param logFC.cutoff logFC cutoff to call hits for the MA plot. Default= 1
+#' @param FDR.cutoff FDR cutoff to call hits for the MA plot. Default= 0.05
+#' @param Rpath Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript".
+#' @param cores Number of cores per job. Default= 2.
+#' @param mem Memory per job (in Go). Default= 8.
+#' @param overwrite Should existing files be overwritten?
+#' @param submit Should the command be submitted? Default= FALSE.
+#' @param wdir The working directory to use. Default= getwd(), meaning current working directory will be used.
+#' @param logs Output folder for log files. Default= "db/logs/ORFeome/MAGeCK".
+#' @param time The time required for the SLURM scheduler. Default= '1:00:00'.
+#'
+#' @return Command lines to run MAGeCK for a single screen.
 #' @export
 vl_ORFeome_MAGeCK <- function(sample.counts,
                               input.counts,
@@ -300,12 +269,12 @@ vl_ORFeome_MAGeCK <- function(sample.counts,
                               input.names= gsub("^(.*?_rep\\d+).*", "\\1", basename(input.counts)),
                               output_folder= "db/FC_tables/ORFeome/",
                               sort= "pos",
-                              input.cutoff.FUN= function(x) sum(x)>=0,
                               sample.cutoff.FUN= function(x) sum(x)>=3,
-                              row.cutoff.FUN= function(x) sum(x)>=0,
-                              input.pseudocount= 0,
+                              input.cutoff.FUN= function(x) sum(x)>=0,
+                              row.cutoff.FUN= function(x) sum(x)>=3,
                               sample.pseudocount= 0,
-                              paired= length(sample.names)==length(input.names),
+                              input.pseudocount= 0,
+                              paired= FALSE,
                               logFC.cutoff= 1,
                               FDR.cutoff= 0.05,
                               Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
@@ -331,10 +300,10 @@ vl_ORFeome_MAGeCK <- function(sample.counts,
   message("===================\n")
   
   # Generate output files paths ----
-  raw_counts_table <- paste0(output_folder, screen_name, "_", cdition_name, "_raw_counts.txt")
-  filtered_counts_table <- gsub("_raw_counts.txt", "_filtered_counts.txt", raw_counts_table)
-  FC_table <- gsub("_raw_counts.txt", ".gene_summary.txt", raw_counts_table)
-  MA_plot_pdf <- gsub("_MA_plot.pdf", ".gene_summary.txt", raw_counts_table)
+  raw_counts_table <- paste0(output_folder, screen_name, "_", cdition_name, ".", sort, ".raw_counts.txt")
+  filtered_counts_table <- gsub(".raw_counts.txt$", ".filtered_counts.txt", raw_counts_table)
+  FC_table <- gsub(".raw_counts.txt$", ".gene_summary.txt", raw_counts_table)
+  MA_plot_pdf <- gsub(".raw_counts.txt$", ".MA_plot.pdf", raw_counts_table)
   
   # Create output directories
   dirs <- c(logs, output_folder)
@@ -426,3 +395,164 @@ vl_ORFeome_MAGeCK <- function(sample.counts,
   }else
     print("All files already exist!")
 }
+
+#' Autmoatic wrapper MAGeCK analysis ORFeome screen
+#'
+#' This function is a wrapper around ?vl_ORFeome_MAGeCK() that used the provided metadata to run all comparisons.
+#' @param processed_metadata Path to the metadata file generated by vl_ORFeome_processing (in .rds or .txt format), or the corresponding data.table.
+#' @param FC_metadata_output An .rds path where to save the FC metadata file, which contains the path to MAGeCK output files. By default, when the processed_metadata is a path to a processed_metadata files, "_FC_tables.rds" will be appended processed_metadata file path. 
+#' @param screen_group_columns Columns to be used to identify individual screens. Default= c("screen", "cell_line"),
+#' @param condition_group_columns Columns to be used to identify individual conditions. Default= c("screen", "cell_line"),
+#' @param paired Should samples be analyzee as paired? Possible value are "auto" (which will consider samples paired if the number of sample count files matches the number of input count files), TRUE or FALSE. Default= 'auto'.
+#' @param sort_column The name of the column containing sort options ('pos' or 'neg'). Default= 'MAGeCK_sort'.
+#' @param output_folder Output folder where all output files should be saved. Default= "db/FC_tables/ORFeome/"
+#' @param sample.cutoff.FUN Function to be applied to filter sample columns. Default= function(x) sum(x)>=3
+#' @param input.cutoff.FUN Function to be applied to filter input columns. Default= function(x) sum(x)>=0
+#' @param row.cutoff.FUN Function to be applied to filter all columns. Default= function(x) sum(x)>=3
+#' @param sample.pseudocount The pseudocount to be added to 0 values (only!) in input columns. Default= 0 
+#' @param input.pseudocount The pseudocount to be added to 0 values (only!) in input columns. Default= 0
+#' @param logFC.cutoff logFC cutoff to call hits for the MA plot. Default= 1
+#' @param FDR.cutoff FDR cutoff to call hits for the MA plot. Default= 0.05
+#' @param Rpath Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript".
+#' @param cores Number of cores per job. Default= 2.
+#' @param mem Memory per job (in Go). Default= 8.
+#' @param overwrite Should existing files be overwritten?
+#' @param submit Should the command be submitted? Default= FALSE.
+#' @param wdir The working directory to use. Default= getwd(), meaning current working directory will be used.
+#' @param logs Output folder for log files. Default= "db/logs/ORFeome/MAGeCK".
+#' @param time The time required for the SLURM scheduler. Default= '1:00:00'.
+#'
+#' @return Command lines to run MAGeCK for a single screen.
+#' @export
+vl_ORFeome_MAGeCK_auto <- function(processed_metadata, ...) UseMethod("vl_ORFeome_MAGeCK_auto")
+
+#' @describeIn vl_ORFeome_MAGeCK_auto  for processed_metadata file path
+#' @export
+vl_ORFeome_MAGeCK_auto.character <- function(processed_metadata,
+                                             ...)
+{
+  meta <- if(grepl(".rds$", processed_metadata))
+    readRDS(processed_metadata) else if(grepl(".txt$", processed_metadata))
+      fread(processed_metadata) else
+        stop("processed_metadata should be in .rds or in .txt format")
+  vl_ORFeome_MAGeCK_auto(processed_metadata= meta,
+                         ...)
+}
+
+#' @describeIn vl_ORFeome_MAGeCK_auto default method
+#' @export
+vl_ORFeome_MAGeCK_auto.default <- function(processed_metadata,
+                                           FC_metadata_output= gsub("_processed.rds", "_FC_tables.rds"),
+                                           screen_group_columns= c("screen", "cell_line"),
+                                           condition_group_columns= c("condition", "sort"),
+                                           paired= "auto",
+                                           sort_column= "MAGeCK_sort",
+                                           output_folder= "db/FC_tables/ORFeome/",
+                                           input.cutoff.FUN= function(x) sum(x)>=0,
+                                           sample.cutoff.FUN= function(x) sum(x)>=3,
+                                           row.cutoff.FUN= function(x) sum(x)>=0,
+                                           input.pseudocount= 0,
+                                           sample.pseudocount= 0,
+                                           logFC.cutoff= 1,
+                                           FDR.cutoff= 0.05,
+                                           Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
+                                           cores= 2,
+                                           mem= 8,
+                                           overwrite= FALSE,
+                                           submit= FALSE,
+                                           wdir= getwd(),
+                                           logs= "db/logs/ORFeome/MAGeCK",
+                                           time= '01:00:00')
+{
+  # Hard copy metadata ----
+  meta <- data.table::copy(processed_metadata)
+  meta[, screen_name:= paste0(unlist(.BY), collapse = "_"), screen_group_columns]
+  meta[, cdition_name:= paste0(unlist(.BY), collapse = "_"), condition_group_columns]
+  
+  # Check columns ----
+  if(!"dictionary" %in% names(meta))
+    stop("'dictionary' column is missing from the metadata, while required for sanity check.")
+  if(sort_column!="MAGeCK_sort")
+  {
+    message(paste0("MAGeCK_sort column was replaced by ", sort_column))
+    meta$MAGeCK_sort <- meta[[sort_column]]
+  }
+  if(!all(meta[!grepl("input", cdition_name), MAGeCK_sort] %in% c("pos", "neg")))
+    stop("For sorted (non-input) samples, 'MAGeCK_sort' column should either be set to 'pos' or 'neg'.")
+  
+  # Make sure that replicates will be in the same order ----
+  setorderv(meta, "replicate")
+  
+  # Collapse re-sequencing ----
+  meta <- unique(meta[, .(screen_name, cdition_name, sampleID, count, MAGeCK_sort)])
+  
+  # Check comparisons ----
+  .sample <- meta[!grepl("input", cdition_name), .(ID= .(sampleID), count= .(count)), .(screen_name, cdition_name, MAGeCK_sort)]
+  setnames(.sample, c("ID", "count"), c("sample.names", "sample.counts"))
+  .input <- meta[grepl("input", cdition_name), .(ID= .(sampleID), count= .(count)), .(screen_name, cdition_name)]
+  setnames(.input, c("ID", "count"), c("input.names", "input.counts"))
+  cmb <- merge(x = .sample,
+               y = .input[, !"cdition_name"],
+               by= "screen_name")
+  
+  # Check if analyses can be paired ----
+  if(paired=="auto")
+    cmb[, paired:= lengths(sample.names)==lengths(input.names)] else if(is.logical(paired))
+      cmb$paired <- paired else
+        stop("paired should be set to 'auto' or a logical value")
+  
+  # Print report ----
+  message(paste(uniqueN(cmb[, screen_name]), "screen were detected and will be analyzed in parallel:"))
+  cmb[, {
+    message(paste0("--------------------\nScreen ", .GRP, " --> ", .N, " comparisons : "))
+    .SD[, {
+      .s <- paste0(unlist(sample.names), collapse = " ")
+      .i <- paste0(unlist(input.names), collapse = " ")
+      message(paste0(.s, " vs. ", .i))
+    }, cdition_name]
+  }, screen_name]
+  
+  # Generate output paths ----
+  cmb[, raw_counts_table:= paste0(output_folder, "/", screen_name, "/", screen_name, "_", cdition_name, ".", MAGeCK_sort, ".raw_counts.txt"), MAGeCK_sort]
+  cmb[, filtered_counts_table:= gsub(".raw_counts.txt$", ".filtered_counts.txt", raw_counts_table)]
+  cmb[, FC_table:= gsub(".raw_counts.txt$", ".gene_summary.txt", raw_counts_table)]
+  cmb[, MA_plot_pdf:= gsub(".raw_counts.txt$", ".MA_plot.pdf", raw_counts_table)]
+
+  # Save metadata table ----
+  message(paste("Metadata saved in", FC_metadata_output))
+  saveRDS(cmb,
+          FC_metadata_output)
+  
+  # Compute comparisons ----
+  cmb[, {
+    .sc <- unlist(sample.counts)
+    .ic <- unlist(input.counts)
+    .sn <- unlist(sample.names)
+    .in <- unlist(input.names)
+    vl_ORFeome_MAGeCK(sample.counts= .sc,
+                      input.counts=  .ic,
+                      sample.names=  .sn,
+                      input.names=   .in,
+                      screen_name= screen_name,
+                      cdition_name= cdition_name,
+                      output_folder= output_folder,
+                      sort= MAGeCK_sort,
+                      input.cutoff.FUN= input.cutoff.FUN,
+                      sample.cutoff.FUN= sample.cutoff.FUN,
+                      row.cutoff.FUN= row.cutoff.FUN,
+                      input.pseudocount= input.pseudocount,
+                      sample.pseudocount= sample.pseudocount,
+                      paired= paired,
+                      logFC.cutoff= logFC.cutoff,
+                      FDR.cutoff= FDR.cutoff,
+                      Rpath= Rpath,
+                      cores= cores,
+                      mem= mem,
+                      overwrite= overwrite,
+                      submit= submit,
+                      wdir= wdir,
+                      logs= logs,
+                      time= time)
+  }, .(screen_name, cdition_name, MAGeCK_sort, paired)]
+}
+

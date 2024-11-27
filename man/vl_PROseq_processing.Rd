@@ -74,15 +74,15 @@ in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/
 which will be used to submit R sub-script.
 }
 \details{
-The pipeline is split into two main function The first function vl_PROseq_processing() aligns the reads and filters confident alignments.
-It takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns and/or submit the command lines to: \cr
+The pipeline is split into two main functions. The first function vl_PROseq_processing() aligns the reads and filters confident alignments.
+It takes as input a (correctly formatted) metadata file, saves the processed_metadata file and returns and/or submit the command lines to: \cr
 1/ extract reads from VBC bam file. Output .fq files are saved in tmp_folder/fq/ \cr
 2/ trim the reads. Output .fq files are saved in tmp_folder/fq/ \cr
 3/ aligns them to mouse/human genome (see 'genome' column of the metadata table). Output .bam files are saved in tmp_folder/bam/ \cr
 4/ store unaligned read into a .fq file. Output .fq files are saved in tmp_folder/fq/ \cr
 5/ align these remaining reads to spike-in genome ('dm3'). Output .bam files are saved in tmp_folder/bam/ \cr
 6/ compute counts and statistics both for the reference genome and for spike-in. Output .txt files are stored in alignment_stats_output_folder/  \cr
-7/ output .bw tracks for positive and negative strand reads. Output .bw files are stored in bw_output_folder/
+7/ output .bw tracks for positive and negative strand reads. Output .bw files are stored in bw_output_folder/  \cr
 
 The second function, vl_PROseq_DESeq2() can be used for differential analysis. It returns: \cr
 1/ The umi counts overlapping the features provided in the annotation.files argument. Output .txt files are stored in count_output_folder/ \cr
@@ -118,7 +118,7 @@ vl_PROseq_processing(metadata = example,
                      overwrite= FALSE,
                      submit= FALSE)
 
-# Once the jobs have finished to work, you can check the size of output files:
+# Once the jobs are finished, you can check the size of output files:
 processed <- readRDS("Rdata/metadata_PROseq_processed.rds")
 file.size(na.omit(unlist(processed[, fq1:bwNS])))
 

@@ -74,13 +74,13 @@ in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/
 which will be used to submit R sub-scripts.
 }
 \details{
-The pipeline is split into two main function The first function vl_RNAseq_processing() demultiplexes tar files, aligns the reads and filters confident alignments.
-It takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns and/or submit the command lines to: \cr
+The pipeline is split into two main functions. The first function vl_RNAseq_processing() demultiplexes tar files, aligns the reads and filters confident alignments.
+It takes as input a (correctly formatted) metadata file, saves the processed_metadata file and returns and/or submit the command lines to: \cr
 1/ extract reads from VBC .tar.gz file. Output .fq.gz files are saved in tmp_folder/fq/ \cr
 2/ trim the reads. Output .fq.gz files are saved in tmp_folder/fq/ \cr
 3/ align the reads to the provided genome (see 'genome' column of the metadata table, only mm10 is supported for now). Output .bam files are saved in tmp_folder/bam/ and alignment statistics in the alignment_stats_output_folder/ \cr
 4/ compute read counts per exon, and returns the total number of reads per gene_id. Counts statistics will be save in alignment_stats_output_folder/ (together with alignment stats) and count_tables in count_table_output_folder/  \cr
-5/ output .bw tracks that are stored in bw_output_folder/
+5/ output .bw tracks that are stored in bw_output_folder/  \cr
 
 The second function, vl_RNAseq_DESeq2() can be used for differential analysis. It returns: \cr
 1/ a .dds DESeq2 object for each experiment. Output .dds (rds) files are stored in the dds_output_folder/ \cr
@@ -115,7 +115,7 @@ vl_PROseq_processing(metadata = example,
                      overwrite= FALSE,
                      submit= FALSE)
 
-# Once the jobs have finished to work, you can check the size of output files:
+# Once the jobs are finished, you can check the size of output files:
 processed <- readRDS("Rdata/metadata_PROseq_processed.rds")
 file.size(na.omit(unlist(processed[, fq1:bw])))
 

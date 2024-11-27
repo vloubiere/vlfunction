@@ -2,7 +2,7 @@
 % Please edit documentation in R/ORFeome_pipeline.R
 \name{vl_ORFeome_MAGeCK}
 \alias{vl_ORFeome_MAGeCK}
-\title{test}
+\title{MAGeCK analysis ORFeome screen}
 \usage{
 vl_ORFeome_MAGeCK(
   sample.counts,
@@ -13,12 +13,12 @@ vl_ORFeome_MAGeCK(
   input.names = gsub("^(.*?_rep\\\\d+).*", "\\\\1", basename(input.counts)),
   output_folder = "db/FC_tables/ORFeome/",
   sort = "pos",
-  input.cutoff.FUN = function(x) sum(x) >= 0,
   sample.cutoff.FUN = function(x) sum(x) >= 3,
-  row.cutoff.FUN = function(x) sum(x) >= 0,
-  input.pseudocount = 0,
+  input.cutoff.FUN = function(x) sum(x) >= 0,
+  row.cutoff.FUN = function(x) sum(x) >= 3,
   sample.pseudocount = 0,
-  paired = length(sample.names) == length(input.names),
+  input.pseudocount = 0,
+  paired = FALSE,
   logFC.cutoff = 1,
   FDR.cutoff = 0.05,
   Rpath = "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
@@ -31,6 +31,58 @@ vl_ORFeome_MAGeCK(
   time = "01:00:00"
 )
 }
+\arguments{
+\item{sample.counts}{Vector of sample count files.}
+
+\item{input.counts}{Vector of input count files.}
+
+\item{screen_name}{Screen name (for example 'ISRE_A549'), which will be used to create a subfolder in output_folder.}
+
+\item{cdition_name}{Condition name (for example 'IFN_dim'), which will be used to create sample output name.}
+
+\item{sample.names}{Sample names, for example c("sort_rep1", "sort_rep2").}
+
+\item{input.names}{Sample names, for example c("input_rep1", "input_rep2").}
+
+\item{output_folder}{Output folder where all output files should be saved. Default= "db/FC_tables/ORFeome/"}
+
+\item{sort}{Sort parameter of the screen, either 'pos' or 'neg'. Default= 'pos'.}
+
+\item{sample.cutoff.FUN}{Function to be applied to filter sample columns. Default= function(x) sum(x)>=3}
+
+\item{input.cutoff.FUN}{Function to be applied to filter input columns. Default= function(x) sum(x)>=0}
+
+\item{row.cutoff.FUN}{Function to be applied to filter all columns. Default= function(x) sum(x)>=3}
+
+\item{sample.pseudocount}{The pseudocount to be added to 0 values (only!) in input columns. Default= 0}
+
+\item{input.pseudocount}{The pseudocount to be added to 0 values (only!) in input columns. Default= 0}
+
+\item{paired}{Should samples be analyzed as paired? Default= FALSE.}
+
+\item{logFC.cutoff}{logFC cutoff to call hits for the MA plot. Default= 1}
+
+\item{FDR.cutoff}{FDR cutoff to call hits for the MA plot. Default= 0.05}
+
+\item{Rpath}{Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript".}
+
+\item{cores}{Number of cores per job. Default= 2.}
+
+\item{mem}{Memory per job (in Go). Default= 8.}
+
+\item{overwrite}{Should existing files be overwritten?}
+
+\item{submit}{Should the command be submitted? Default= FALSE.}
+
+\item{wdir}{The working directory to use. Default= getwd(), meaning current working directory will be used.}
+
+\item{logs}{Output folder for log files. Default= "db/logs/ORFeome/MAGeCK".}
+
+\item{time}{The time required for the SLURM scheduler. Default= '1:00:00'.}
+}
+\value{
+Command lines to run MAGeCK for a single screen.
+}
 \description{
-test
+This function uses the provided metadata file to run MAGeCK comparisons, which can be automatized using ?vl_ORFeome_MAGeCK_auto().
 }

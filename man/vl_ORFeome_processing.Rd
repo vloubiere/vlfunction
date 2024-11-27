@@ -32,8 +32,60 @@ vl_ORFeome_processing(metadata, ...)
   time = "12:00:00"
 )
 }
+\arguments{
+\item{metadata}{The path to a correctly formatted .xlsx metadata file or a data.table. See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_PROseq.xlsx'.}
+
+\item{processed_metadata_output}{An .rds path where to save the processed metadata file, which contains the paths of all output files and will be used to manage them.
+By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.}
+
+\item{fq_output_folder}{Output folder for .fq files. Default= "/scratch/stark/vloubiere/ORFeome/fq/".}
+
+\item{bam_output_folder}{Output folder for aligne bam files Default= "/scratch/stark/vloubiere/ORFeome/bam/".}
+
+\item{alignment_stats_output_folder}{Output folder for alignment statistics. Default= "db/alignment_stats/ORFeome/".}
+
+\item{BC_count_output_folder}{Output folder for count files. Default= "db/counts/ORFeome/".}
+
+\item{Rpath}{Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript".}
+
+\item{cores}{Number of cores per job. Default= 6.}
+
+\item{mem}{Memory per job (in Go). Default= 32.}
+
+\item{overwrite}{Should existing files be overwritten?}
+
+\item{counts.exists}{If the output umi file already exists and overwrite is set to FALSE, skips demultiplexing and alignment. Default= TRUE.}
+
+\item{submit}{Should the command be submitted? Default= FALSE.}
+
+\item{wdir}{The working directory to use. Default= getwd(), meaning current working directory will be used.}
+
+\item{logs}{Output folder for log files. Default= "db/logs/ORFeome/processing".}
+
+\item{time}{The time required for the SLURM scheduler. Default= '12:00:00'.}
+}
+\value{
+Return a data.table containing, for each sampleID, the concatenated commands that are required to process the data.
+These commands can then be submitted either directly via the function, or using vl_bsub()...
+}
 \description{
-ORFeome pipeline
+To use this this pipeline, please install the vl_function package using install_github("vloubiere/vlfunction")
+in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R') 
+which will be used to submit R sub-script.
+}
+\details{
+The pipeline is split into two main functions. The first function vl_ORFeome_processing() aligns the reads and filters confident alignments.
+It takes as input a (correctly formatted) metadata file, saves the processed_metadata file and returns and/or submit the command lines to: \cr
+1/ extract reads from VBC bam file. Output .fq files are saved in fq_output_folder/ \cr
+2/ trim the reads. Output .fq files are saved in fq_output_folder/ \cr
+3/ aligns them to the library BCs (see 'library' column of the metadata table). Output .bam files are saved in bam_output_folder/ \cr
+4/ Compute BC counts and save the output files in BC_count_output_folder/ \cr
+
+The second function, ?vl_ORFeome_MAGeCK() can be used for differential analysis. Output files are all saved in the provided output_folder/: \cr
+1/ Raw counts table  \cr
+2/ Filtered counts table  \cr
+3/ MAGeCK output \cr
+4/ MA plot .pdf \cr
 }
 \section{Methods (by class)}{
 \itemize{
@@ -42,3 +94,26 @@ ORFeome pipeline
 \item \code{vl_ORFeome_processing(default)}: default method
 
 }}
+\examples{
+# Before starting:
+# Update the local version of the vlfunctions package
+devtools::install_github("vloubiere/vlfunction")
+
+# Chose which local R executable to use
+localRPath <- "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript"
+# Make sure that the last version of the vlfunctions package is installed
+system(paste(localRPath, system.file("update_package_from_git.R", package = "vlfunctions")))
+
+# Process data ----
+vl_ORFeome_processing(metadata = "Rdata/metadata_ORFeome.xlsx",
+                      processed_metadata_output = "Rdata/metadata_ORFeome_processed.rds",
+                      Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
+                      cores= 8,
+                      mem= 64,
+                      overwrite= FALSE,
+                      submit= TRUE)
+
+# Differential analysis
+See ?vl_ORFeome_MAGeCK()
+
+}
