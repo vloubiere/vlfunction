@@ -86,7 +86,7 @@ vl_upset_plot <- function(dat.list,
                           xpd= TRUE,
                           lwd= lwd*par("lwd")), x]
   # Sets names ----
-  set[grid, y:= i.y, on= ".id==variable", mult= "first"]
+  set[grid, y:= i.y, on= ".id==variable"]
   prev <- par("cex.axis")
   par(cex.axis= par("cex.lab"))
   axis(2,
