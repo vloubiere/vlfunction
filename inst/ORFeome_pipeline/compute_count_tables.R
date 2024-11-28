@@ -3,7 +3,7 @@ args = commandArgs(trailingOnly=TRUE)
 
 # print(args)
 # Check provided arguments ----
-if (length(args)!=11) {
+if (length(args)!=10) {
   stop("Please specify:\n
        [required] 1/ A comma-separated list of sample count files\n
        [required] 2/ A comma-separated list of input count files\n
@@ -12,24 +12,22 @@ if (length(args)!=11) {
        [required] 5/ Function to be applied to input columns for filtering\n
        [required] 6/ Function to be applied to sample columns for filtering\n
        [required] 7/ Function to be applied to all columns for filtering\n
-       [required] 8/ Pseudocount to be added to sample columns\n
-       [required] 9/ Pseudocount to be added to input columns\n
-       [required] 10/ Raw counts output file\n
-       [required] 11/ Filtered counts output file\n")
+       [required] 8/ Pseudocount to be added to input and sample columns (which will be further normalized for sequencing depth) \n
+       [required] 9/ Raw counts output file\n
+       [required] 10/ Filtered counts output file\n")
 }
 
 require(data.table)
 
 # Test arguments ----
-# sample_files <- c("db/counts/ORFeome//p53_nutlin_dim_A549_rep1_lib200_counts.txt", "db/counts/ORFeome//p53_nutlin_dim_A549_rep2_lib200_counts.txt")
-# input_files <- c("db/counts/ORFeome//p53_input_NA_A549_rep1_lib200_counts.txt", "db/counts/ORFeome//p53_input_NA_A549_rep2_lib200_counts.txt")
+# sample_files <- c("db/counts/ORFeome/p53_nutlin_dim_A549_rep1_lib200_counts.txt", "db/counts/ORFeome//p53_nutlin_dim_A549_rep2_lib200_counts.txt")
+# input_files <- c("db/counts/ORFeome/p53_input_NA_A549_rep1_lib200_counts.txt", "db/counts/ORFeome//p53_input_NA_A549_rep2_lib200_counts.txt")
 # sample_names <- c("p53_nutlin_dim_A549_rep1", "p53_nutlin_dim_A549_rep2")
 # input_names <- c("p53_input_NA_A549_rep1", "p53_input_NA_A549_rep2")
 # sample.cutoff.FUN <- function (x)  sum(x) >= 0
 # input.cutoff.FUN <- function (x)  sum(x) >= 0
 # row.cutoff.FUN <- function (x)  sum(x) >= 1
-# sample.pseudocount <- 0
-# input.pseudocount <- 0
+# pseudocount <- 0
 # raw_output <- "db/FC_tables/ORFeome//p53_nutlin_dim_A549/p53_nutlin_dim_A549_raw_counts.txt"
 # filtered_output <- "db/FC_tables/ORFeome//p53_nutlin_dim_A549/p53_nutlin_dim_A549_filtered_counts.txt"
 
@@ -41,10 +39,9 @@ input_names <- unlist(tstrsplit(args[4], ","))
 sample.cutoff.FUN <- eval(parse(text= args[5]))
 input.cutoff.FUN <- eval(parse(text= args[6]))
 row.cutoff.FUN <- eval(parse(text= args[7]))
-sample.pseudocount <- as.numeric(args[8])
-input.pseudocount <- as.numeric(args[9])
-raw_output <- args[10]
-filtered_output <- args[11]
+pseudocount <- as.numeric(args[8])
+raw_output <- args[9]
+filtered_output <- args[10]
 
 # Import counts ----
 counts <- lapply(c(sample_files, input_files), fread)
@@ -75,9 +72,13 @@ counts <- counts[sample.sel & input.sel & row.sel]
 fil <- nrow(counts)
 print(paste0(formatC(fil, big.mark = ","), " / ", formatC(total, big.mark = ","), " reads (", round(fil/total*100, 1), "%) passed sample/input cutoffs"))
 
-# Apply user-defined pseudocounts ----
-counts[, (sample_names):= lapply(.SD, function(x) ifelse(x==0, x+sample.pseudocount, x)) , .SDcols= sample_names]
-counts[, (input_names):= lapply(.SD, function(x) ifelse(x==0, x+input.pseudocount, x)) , .SDcols= input_names]
+# Apply user-defined pseudocount ----
+cols <- c(sample_names, input_names)
+readDepth <- apply(counts[, (cols), with= F], 2, sum)
+normPseudo <- readDepth/min(readDepth)*pseudocount
+normPseudo <- round(normPseudo, 3)
+print(paste("Normalized pseudocounts:", paste0(normPseudo, collapse = ", ")))
+counts[, (cols):= lapply(seq(.SD), function(i) ifelse(.SD[[i]]==0, .SD[[i]]+normPseudo[i], .SD[[i]])) , .SDcols= cols]
 
 # Save filtered counts file ----
 fwrite(counts,

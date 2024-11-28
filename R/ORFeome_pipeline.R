@@ -245,8 +245,7 @@ vl_ORFeome_processing.default <- function(metadata,
 #' @param sample.cutoff.FUN Function to be applied to filter sample columns. Default= function(x) sum(x)>=3
 #' @param input.cutoff.FUN Function to be applied to filter input columns. Default= function(x) sum(x)>=0
 #' @param row.cutoff.FUN Function to be applied to filter all columns. Default= function(x) sum(x)>=3
-#' @param sample.pseudocount The pseudocount to be added to 0 values (only!) in input columns. Default= 0 
-#' @param input.pseudocount The pseudocount to be added to 0 values (only!) in input columns. Default= 0
+#' @param pseudocount The pseudocount to be added to 0 values (only!) in sample and input count columns (note that this value will be further normalized for sequencing depth). Default= 0 
 #' @param paired Should samples be analyzed as paired? Default= FALSE.
 #' @param logFC.cutoff logFC cutoff to call hits for the MA plot. Default= 1
 #' @param FDR.cutoff FDR cutoff to call hits for the MA plot. Default= 0.05
@@ -272,8 +271,7 @@ vl_ORFeome_MAGeCK <- function(sample.counts,
                               sample.cutoff.FUN= function(x) sum(x)>=3,
                               input.cutoff.FUN= function(x) sum(x)>=0,
                               row.cutoff.FUN= function(x) sum(x)>=3,
-                              sample.pseudocount= 0,
-                              input.pseudocount= 0,
+                              pseudocount= 0,
                               paired= FALSE,
                               logFC.cutoff= 1,
                               FDR.cutoff= 0.05,
@@ -304,6 +302,7 @@ vl_ORFeome_MAGeCK <- function(sample.counts,
   filtered_counts_table <- gsub(".raw_counts.txt$", ".filtered_counts.txt", raw_counts_table)
   FC_table <- gsub(".raw_counts.txt$", ".gene_summary.txt", raw_counts_table)
   MA_plot_pdf <- gsub(".raw_counts.txt$", ".MA_plot.pdf", raw_counts_table)
+  master_table <- gsub("gene_summary.txt$", "gene_summary_master.csv", FC_table)
   
   # Create output directories
   dirs <- c(logs, output_folder)
@@ -323,12 +322,9 @@ vl_ORFeome_MAGeCK <- function(sample.counts,
     # 5/ Function to be applied to input columns for filtering
     # 6/ Function to be applied to sample columns for filtering
     # 7/ Function to be applied to all columns for filtering
-    # 8/ Pseudocount to be added to sample columns
-    # 9/ Pseudocount to be added to input columns
-    # 10/ Raw counts output file
-    # 11/ Filtered counts output file"
-    # Convert the functions to string form
-    # Convert the function definitions to strings
+    # 8/ Pseudocount to be added to sample and input columns (will be further normalized for sequencing depth)
+    # 9/ Raw counts output file
+    # 10/ Filtered counts output file
     
     # Deparse functions
     sample_fun_string <- paste(deparse(sample.cutoff.FUN), collapse = " ")
@@ -345,8 +341,7 @@ vl_ORFeome_MAGeCK <- function(sample.counts,
           shQuote(sample_fun_string),
           shQuote(input_fun_string),
           shQuote(row_fun_string),
-          sample.pseudocount,
-          input.pseudocount,
+          pseudocount,
           raw_counts_table,
           filtered_counts_table)
   }else
@@ -366,7 +361,7 @@ vl_ORFeome_MAGeCK <- function(sample.counts,
                    "--remove-zero none"))
   }
   
-  # MA plot ----
+  # MA plot and merged table ----
   if(overwrite | !file.exists(MA_plot_pdf))
   {
     cmd <- c(cmd,
@@ -375,6 +370,15 @@ vl_ORFeome_MAGeCK <- function(sample.counts,
                    logFC.cutoff,
                    FDR.cutoff, 
                    MA_plot_pdf))
+  }
+  
+  # Merge master table plot ----
+  if(overwrite | !file.exists(master_table))
+  {
+    cmd <- c(cmd,
+             paste(Rpath, system.file("ORFeome_pipeline", "merge_gene_summary_to_master_table.R", package = "vlfunctions"),
+                   FC_table,
+                   master_table))
   }
   
   # Return commands and submit ----
@@ -409,8 +413,7 @@ vl_ORFeome_MAGeCK <- function(sample.counts,
 #' @param sample.cutoff.FUN Function to be applied to filter sample columns. Default= function(x) sum(x)>=3
 #' @param input.cutoff.FUN Function to be applied to filter input columns. Default= function(x) sum(x)>=0
 #' @param row.cutoff.FUN Function to be applied to filter all columns. Default= function(x) sum(x)>=3
-#' @param sample.pseudocount The pseudocount to be added to 0 values (only!) in input columns. Default= 0 
-#' @param input.pseudocount The pseudocount to be added to 0 values (only!) in input columns. Default= 0
+#' @param pseudocount The pseudocount to be added to 0 values (only!) in sample and input count columns (note that this value will be further normalized for sequencing depth). Default= 0 
 #' @param logFC.cutoff logFC cutoff to call hits for the MA plot. Default= 1
 #' @param FDR.cutoff FDR cutoff to call hits for the MA plot. Default= 0.05
 #' @param Rpath Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript".
@@ -451,8 +454,7 @@ vl_ORFeome_MAGeCK_auto.default <- function(processed_metadata,
                                            input.cutoff.FUN= function(x) sum(x)>=0,
                                            sample.cutoff.FUN= function(x) sum(x)>=3,
                                            row.cutoff.FUN= function(x) sum(x)>=0,
-                                           input.pseudocount= 0,
-                                           sample.pseudocount= 0,
+                                           pseudocount= 0,
                                            logFC.cutoff= 1,
                                            FDR.cutoff= 0.05,
                                            Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
@@ -517,6 +519,7 @@ vl_ORFeome_MAGeCK_auto.default <- function(processed_metadata,
   cmb[, filtered_counts_table:= gsub(".raw_counts.txt$", ".filtered_counts.txt", raw_counts_table)]
   cmb[, FC_table:= gsub(".raw_counts.txt$", ".gene_summary.txt", raw_counts_table)]
   cmb[, MA_plot_pdf:= gsub(".raw_counts.txt$", ".MA_plot.pdf", raw_counts_table)]
+  cmb[, master_table:= gsub("gene_summary.txt$", "gene_summary_master.csv", FC_table)]
 
   # Save metadata table ----
   message(paste("Metadata saved in", FC_metadata_output))
@@ -540,8 +543,7 @@ vl_ORFeome_MAGeCK_auto.default <- function(processed_metadata,
                       input.cutoff.FUN= input.cutoff.FUN,
                       sample.cutoff.FUN= sample.cutoff.FUN,
                       row.cutoff.FUN= row.cutoff.FUN,
-                      input.pseudocount= input.pseudocount,
-                      sample.pseudocount= sample.pseudocount,
+                      pseudocount= pseudocount,
                       paired= paired,
                       logFC.cutoff= logFC.cutoff,
                       FDR.cutoff= FDR.cutoff,

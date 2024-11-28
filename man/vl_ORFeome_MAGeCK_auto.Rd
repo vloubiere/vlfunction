@@ -21,8 +21,7 @@ vl_ORFeome_MAGeCK_auto(processed_metadata, ...)
   input.cutoff.FUN = function(x) sum(x) >= 0,
   sample.cutoff.FUN = function(x) sum(x) >= 3,
   row.cutoff.FUN = function(x) sum(x) >= 0,
-  input.pseudocount = 0,
-  sample.pseudocount = 0,
+  pseudocount = 0,
   logFC.cutoff = 1,
   FDR.cutoff = 0.05,
   Rpath = "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
@@ -56,9 +55,7 @@ vl_ORFeome_MAGeCK_auto(processed_metadata, ...)
 
 \item{row.cutoff.FUN}{Function to be applied to filter all columns. Default= function(x) sum(x)>=3}
 
-\item{input.pseudocount}{The pseudocount to be added to 0 values (only!) in input columns. Default= 0}
-
-\item{sample.pseudocount}{The pseudocount to be added to 0 values (only!) in input columns. Default= 0}
+\item{pseudocount}{The pseudocount to be added to 0 values (only!) in sample and input count columns (note that this value will be further normalized for sequencing depth). Default= 0}
 
 \item{logFC.cutoff}{logFC cutoff to call hits for the MA plot. Default= 1}
 

@@ -16,8 +16,7 @@ vl_ORFeome_MAGeCK(
   sample.cutoff.FUN = function(x) sum(x) >= 3,
   input.cutoff.FUN = function(x) sum(x) >= 0,
   row.cutoff.FUN = function(x) sum(x) >= 3,
-  sample.pseudocount = 0,
-  input.pseudocount = 0,
+  pseudocount = 0,
   paired = FALSE,
   logFC.cutoff = 1,
   FDR.cutoff = 0.05,
@@ -54,9 +53,7 @@ vl_ORFeome_MAGeCK(
 
 \item{row.cutoff.FUN}{Function to be applied to filter all columns. Default= function(x) sum(x)>=3}
 
-\item{sample.pseudocount}{The pseudocount to be added to 0 values (only!) in input columns. Default= 0}
-
-\item{input.pseudocount}{The pseudocount to be added to 0 values (only!) in input columns. Default= 0}
+\item{pseudocount}{The pseudocount to be added to 0 values (only!) in sample and input count columns (note that this value will be further normalized for sequencing depth). Default= 0}
 
 \item{paired}{Should samples be analyzed as paired? Default= FALSE.}
 
