@@ -302,7 +302,7 @@ vl_ORFeome_MAGeCK <- function(sample.counts,
   filtered_counts_table <- gsub(".raw_counts.txt$", ".filtered_counts.txt", raw_counts_table)
   FC_table <- gsub(".raw_counts.txt$", ".gene_summary.txt", raw_counts_table)
   MA_plot_pdf <- gsub(".raw_counts.txt$", ".MA_plot.pdf", raw_counts_table)
-  master_table <- gsub("gene_summary.txt$", "gene_summary_master.csv", FC_table)
+  master_table_prefix <- gsub("gene_summary.txt$", "gene_summary_master", FC_table)
   
   # Create output directories
   dirs <- c(logs, output_folder)
@@ -365,21 +365,21 @@ vl_ORFeome_MAGeCK <- function(sample.counts,
   if(overwrite | !file.exists(MA_plot_pdf))
   {
     cmd <- c(cmd,
-             paste(Rpath, system.file("ORFeome_pipeline", "volcano_plots_MAgECK.R", package = "vlfunctions"),
+             paste(Rpath,
+                   system.file("ORFeome_pipeline", "volcano_plots_MAgECK.R", package = "vlfunctions"),
                    FC_table,
                    logFC.cutoff,
                    FDR.cutoff, 
                    MA_plot_pdf))
   }
   
-  # Merge master table plot ----
-  if(overwrite | !file.exists(master_table))
-  {
-    cmd <- c(cmd,
-             paste(Rpath, system.file("ORFeome_pipeline", "merge_gene_summary_to_master_table.R", package = "vlfunctions"),
-                   FC_table,
-                   master_table))
-  }
+  # Merge master table plot (always overwrite cause very fast) ----
+  cmd <- c(cmd,
+           paste(Rpath,
+                 system.file("ORFeome_pipeline", "merge_gene_summary_to_master_table.R", package = "vlfunctions"),
+                 FC_table,
+                 master_table_prefix,
+                 sort))
   
   # Return commands and submit ----
   cmd <- paste0(na.omit(cmd), collapse= "; ")
@@ -479,8 +479,8 @@ vl_ORFeome_MAGeCK_auto.default <- function(processed_metadata,
     message(paste0("MAGeCK_sort column was replaced by ", sort_column))
     meta$MAGeCK_sort <- meta[[sort_column]]
   }
-  if(!all(meta[!grepl("input", cdition_name), MAGeCK_sort] %in% c("pos", "neg")))
-    stop("For sorted (non-input) samples, 'MAGeCK_sort' column should either be set to 'pos' or 'neg'.")
+  if(!all(meta[!grepl("input", cdition_name), MAGeCK_sort] %in% c("pos", "neg",  "both")))
+    stop("For sorted (non-input) samples, 'MAGeCK_sort' column should either be set to 'pos' or 'neg' or 'both'.")
   
   # Make sure that replicates will be in the same order ----
   setorderv(meta, "replicate")
@@ -519,7 +519,7 @@ vl_ORFeome_MAGeCK_auto.default <- function(processed_metadata,
   cmb[, filtered_counts_table:= gsub(".raw_counts.txt$", ".filtered_counts.txt", raw_counts_table)]
   cmb[, FC_table:= gsub(".raw_counts.txt$", ".gene_summary.txt", raw_counts_table)]
   cmb[, MA_plot_pdf:= gsub(".raw_counts.txt$", ".MA_plot.pdf", raw_counts_table)]
-  cmb[, master_table:= gsub("gene_summary.txt$", "gene_summary_master.csv", FC_table)]
+  cmb[, master_table_prefix:= gsub("gene_summary.txt$", "gene_summary_master", FC_table)]
 
   # Save metadata table ----
   message(paste("Metadata saved in", FC_metadata_output))
