@@ -49,7 +49,7 @@ vl_merge_GS_MS <- function(master= "/groups/stark/pachano/projects/eORFeome/Rdat
                all.x= TRUE)
   # Return
   fwrite(res,
-         output_path,
+         output_path_csv,
          col.names = T,
          row.names = F,
          na= NA,
