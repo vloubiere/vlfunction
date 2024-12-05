@@ -13,7 +13,7 @@ suppressMessages(library(rtracklayer, warn.conflicts = FALSE))
 suppressMessages(library(GenomicRanges, warn.conflicts = FALSE))
 
 # Variables test
-# countsFile <- "db/umi_counts/HCFC1/AID-Hcfc1-cl17_0hrIAA_rep1_mm10_counts.txt"
+# countsFile <- "/groups/stark/vloubiere/projects/vl_pipelines/db/counts/PROseq/HCFC1/AID-Hcfc1-cl17_0hrIAA_HCFC1_rep1_mm10_counts.txt"
 
 # Variables ----
 countsFile <- args[1]

@@ -5,7 +5,7 @@ if (length(args)!=3) {
   stop("Please specify:\n
        [required] 1/ Gene summary output file from mageck\n
        [required] 2/ Output file prefix (output_file+'_sort.txt') \n
-       [required] 3/ sort. can be one of 'pos', 'neg' or 'both' .csv \n")
+       [required] 3/ sort. can be one of 'pos' or 'neg'. \n")
 }
 
 require(data.table)
@@ -25,8 +25,8 @@ master_table <- "/groups/stark/pachano/projects/eORFeome/Rdata/Master_eORFeome_M
 # Checks ----
 if(!grepl(".txt$", gene_summary))
   stop("gene_summary should be a path to a .txt file outputed by MAGeCK")
-if(!sort %in% c("pos", "neg", "both"))
-  stop("sort should be one of pos, neg or both!")
+if(!sort %in% c("pos", "neg"))
+  stop("sort should be one of pos or neg!")
 if(!grepl(".csv$", master_table))
   stop("master should be a path to a .csv file")
 
@@ -47,40 +47,27 @@ if(!"id" %in% names(FC))
 FC[, first_id:= tstrsplit(id, "_", keep= 1)]
 
 # Merge tables ----
-if(sort!="neg")
-{
-  # Merge ----
-  res <- merge(FC[, c("first_id", "id", "num", "pos|rank", "pos|goodsgrna", "pos|score", "pos|lfc", "pos|fdr")],
-               master,
-               by.x= "first_id",
-               by.y= "id",
-               all.x= TRUE)
-  setnames(res, function(x) gsub("pos|", "", fixed = TRUE, x))
-  
-  # Save ----
-  fwrite(res,
-         paste0(output_prefix, "_posFC.txt"),
-         col.names = T,
-         row.names = F,
-         na= NA,
-         sep = "\t",
-         quote=F)
-}else if(sort!="pos"){
-  # Merge ----
-  res <- merge(FC[, c("first_id", "id", "num", "neg|rank", "neg|goodsgrna", "neg|score", "neg|lfc", "neg|fdr")],
-               master,
-               by.x= "first_id",
-               by.y= "id",
-               all.x= TRUE)
-  setnames(res, function(x) gsub("neg|", "", fixed = TRUE, x))
-  
-  # Save ----
-  fwrite(res,
-         paste0(output_prefix, "_negFC.txt"),
-         col.names = T,
-         row.names = F,
-         na= NA,
-         sep = "\t",
-         quote=F)
-}
+# Cols of interest
+cols <- c("first_id", "id", "num")
+cols <- if(sort=="pos")
+  c(cols, "pos|rank", "pos|goodsgrna", "pos|score", "pos|lfc", "pos|fdr") else
+    c(cols, "neg|rank", "neg|goodsgrna", "neg|score", "neg|lfc", "neg|fdr")
+# merge
+res <- merge(FC[, c("first_id", "id", "num", "pos|rank", "pos|goodsgrna", "pos|score", "pos|lfc", "pos|fdr")],
+             master,
+             by.x= "first_id",
+             by.y= "id",
+             all.x= TRUE)
+# simplify names
+if(sort=="pos")
+  setnames(res, function(x) gsub("pos|", "", fixed = TRUE, x)) else
+    setnames(res, function(x) gsub("neg|", "", fixed = TRUE, x))
 
+# Save ----
+fwrite(res,
+       paste0(output_prefix, "_", sort, "FC.txt"),
+       col.names = T,
+       row.names = F,
+       na= NA,
+       sep = "\t",
+       quote=F)

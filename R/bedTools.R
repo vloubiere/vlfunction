@@ -21,7 +21,7 @@ vl_importBed.character <- function(bed)
 {
   bed <- lapply(bed, function(x) as.data.table(rtracklayer::import(x)))
   bed <- data.table::rbindlist(bed)
-  warning("A BED file was imported and was transformed to 1-based coordinates.")
+  message("A BED file was imported and was transformed to 1-based coordinates.")
   vl_importBed(bed)
 }
 
@@ -50,11 +50,11 @@ vl_importBed.default <- function(bed)
     bed[, strand:= as.character(strand)]
    
   if(!all(c("seqnames", "start", "end") %in% names(bed)))
-    warning("seqnames, start or end column missing. Malformed bed file?")
+    message("seqnames, start or end column missing. Malformed bed file?")
   if(all(c("start", "end") %in% names(bed)) && any(bed[, start>end], na.rm = T))
-    warning("bed file contains ranges with start>end -> malformed!")
+    message("bed file contains ranges with start>end -> malformed!")
   if(!all(bed$strand %in% c("+", "-", "*")))
-    warning("bed file contains strand information other than +/-+* -> malformed?")
+    message("bed file contains strand information other than +/-+* -> malformed?")
   
   return(bed)
 }
@@ -489,4 +489,38 @@ vl_binBed <- function(bed,
   
   # Return
   return(bins)
+}
+
+#' Subtract bed coverage
+#'
+#' For each bin, computes the number of overlapping reads from a bed file
+#' @param a Ranges for which overlaps with b have to be removed. 
+#' @param b Regions to subtract from a.
+#' 
+#' @examples
+#' a <- data.table(seqnames= "chr3R", start= 1, end= 1000)
+#' b <- data.table(seqnames= c("chr3R", "chr3R", "chrX"),
+#'                 start= c(100, 500, 100),
+#'                 end= c(200, 600, 200))
+#'
+#' vl_subtractBed(a, b)
+#' 
+#' @return For each range in 'a', reports the number of overlapping features in 'b'
+#' @export
+vl_subtractBed <- function(a, b)
+{
+  # Import
+  a <- vl_importBed(a)
+  b <- vl_importBed(b)
+  
+  # Key
+  setkeyv(a, c("seqnames", "start", "end"))
+  setkeyv(b, c("seqnames", "start", "end"))
+  
+  # Overlap
+  ov <- foverlaps(a, b)
+  ov <- ov[, .(start= c(i.start, end+1), end= c(start-1, i.end)), .(seqnames, i.start, i.end)]
+  
+  # Return
+  return(ov[, .(seqnames, start, end)])
 }

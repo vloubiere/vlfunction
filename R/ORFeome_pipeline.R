@@ -289,6 +289,8 @@ vl_ORFeome_MAGeCK <- function(sample.counts,
     stop("Some sample.names are duplicated. Make sure that sample.counts files are unique and provide unique sample.names.")
   if(any(duplicated(input.names)))
     stop("Some input.names are duplicated. Make sure that input.counts files are unique and provide unique sample.names.")
+  if(!sort %in% c("pos", "neg"))
+    stop("sort should either be set to 'pos' or 'neg'.")
   
   # Print report ----
   output_folder <- paste0(output_folder, "/", screen_name, "/")
@@ -479,8 +481,8 @@ vl_ORFeome_MAGeCK_auto.default <- function(processed_metadata,
     message(paste0("MAGeCK_sort column was replaced by ", sort_column))
     meta$MAGeCK_sort <- meta[[sort_column]]
   }
-  if(!all(meta[!grepl("input", cdition_name), MAGeCK_sort] %in% c("pos", "neg",  "both")))
-    stop("For sorted (non-input) samples, 'MAGeCK_sort' column should either be set to 'pos' or 'neg' or 'both'.")
+  if(!all(meta[!grepl("input", cdition_name), MAGeCK_sort] %in% c("pos", "neg")))
+    stop("For sorted (non-input) samples, 'MAGeCK_sort' column should either be set to 'pos' or 'neg'.")
   
   # Make sure that replicates will be in the same order ----
   setorderv(meta, "replicate")
@@ -510,8 +512,8 @@ vl_ORFeome_MAGeCK_auto.default <- function(processed_metadata,
     .SD[, {
       .s <- paste0(unlist(sample.names), collapse = " ")
       .i <- paste0(unlist(input.names), collapse = " ")
-      message(paste0(.s, " vs. ", .i))
-    }, cdition_name]
+      message(paste0("Sort: ", MAGeCK_sort, " -> ", .s, " vs. ", .i))
+    }, .(MAGeCK_sort, cdition_name)]
   }, screen_name]
   
   # Generate output paths ----
