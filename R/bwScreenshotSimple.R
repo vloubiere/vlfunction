@@ -120,10 +120,11 @@ vl_screenshot <- function(bed,
   obj[type=="bed", min:= as.numeric(0)]
   obj[type=="bed", max:= as.numeric(1)]
   # Add white spaces (NA) between regions ----
-  wsp <- data.table(seqnames= rep(as.character(NA), space),
-                    start= as.numeric(NA),
-                    end= as.numeric(NA),
-                    value= as.numeric(NA))
+  wsp <- data.table(seqnames= rep(NA_character_, space),
+                    start= NA_integer_,
+                    end= NA_integer_,
+                    bg= NA_character_,
+                    value= NA_real_)
   obj <- obj[, {
     if(regionID<max(obj$regionID))
       rbind(.SD, wsp) else
