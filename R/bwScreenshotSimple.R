@@ -5,6 +5,7 @@
 #' @param space space between regions. Default is 30 px
 #' @param widths Length 2 integer vector specifying the width of bw and bed tracks, respectively. Default= c(100L, 20L)
 #' @param highlight.bed Regions to be highlighted
+#' @param nBins The total number of bins to be used (will be divided by the number of rows in bed)
 #' @param col Track colors
 #' @param highlight.col Color used for highlighted region
 #' @param bg.col Color used for background. default= "white"
@@ -44,6 +45,7 @@
 vl_screenshot <- function(bed,
                           tracks,
                           highlight.bed= NULL,
+                          nBins= 1000,
                           col= "black",
                           highlight.col= "lightgrey",
                           bg.col= "white",
@@ -59,7 +61,7 @@ vl_screenshot <- function(bed,
                           add= F)
 {
   # Import bed file ----
-  bed <- vl_importBed(bed)
+  bed <- vl_importBed(bed)[, .(seqnames, start, end, regionID= .I)]
   if(!identical(bed, unique(bed)))
     stop("Non-unique regions in bed!")
   if(is.null(names))
@@ -75,27 +77,10 @@ vl_screenshot <- function(bed,
   if(length(min)>1 && length(max)!=sum(is_bw))
     stop("min should either be length 1 or match the number of bw tracks")
   
-  # Binning function ----
-  binFUN <- function(start, end, length_of_vector) {
-    integers <- start:end
-    n_integers <- length(integers)
-    reps <- length_of_vector %/% n_integers
-    extra <- length_of_vector %% n_integers
-    result_vector <- rep(integers, reps)
-    if (extra > 0) {result_vector <- c(result_vector, integers[1:extra])}
-    return(sort(result_vector))
-  }
-  
   # Binning and bg color ----
-  bins <- bed[, {
-    coor <- binFUN(start, end, round(1000/nrow(bed))+1)
-    res <- data.table(start= coor[-length(coor)], 
-                      end= coor[-1])
-    res[.I>1 & end>start, start:= start+1]
-    # Return
-    res
-  }, .(seqnames, 
-       regionID= rleid(seqnames, start, end))]
+  nBins <- round(nBins/nrow(bed))
+  bins <- vl_binBed(bed, nbins = nBins)
+  bins$binIDX <- NULL
   bins[, bg:= bg.col]
   if(!is.null(highlight.bed))
     bins[vl_covBed(bins, highlight.bed)>0, bg:= highlight.col]

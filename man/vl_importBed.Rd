@@ -13,9 +13,7 @@ vl_importBed(bed, ...)
 \method{vl_importBed}{GRanges}(bed)
 }
 \arguments{
-\item{bed}{Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
-
-\item{extraCols}{Colnames for extra, non-canonical bed columns. "auto" tries to guess whether narrowPeak/broadPeak formats are used}
+\item{bed}{Either a vector of bed file paths, a character vector corresponding to ranges (chr:start, chr:start:strand, chr:start-end or chr:start-end:strand), a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns}
 }
 \value{
 DT ranges
@@ -25,7 +23,7 @@ Imports bed as data.table and check formats
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{vl_importBed(character)}: for bed paths
+\item \code{vl_importBed(character)}: for bed paths or character ranges
 
 \item \code{vl_importBed(GRanges)}: for GRanges
 
@@ -36,5 +34,9 @@ test <- data.table(seqnames= "chr3R",
                    start= 100000,
                    end= 110000)
 bed <- vl_importBed(test)
+vl_importBed("chrX:17470075")
+vl_importBed("chrX:17470075:+")
+vl_importBed("chrX:17470075-17870970")
+vl_importBed("chrX:17470075-17870970:-")
 
 }

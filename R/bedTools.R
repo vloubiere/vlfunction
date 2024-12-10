@@ -2,26 +2,55 @@
 #'
 #' Imports bed as data.table and check formats
 #'
-#' @param bed Either a vector of bed file paths, a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
-#' @param extraCols Colnames for extra, non-canonical bed columns. "auto" tries to guess whether narrowPeak/broadPeak formats are used
+#' @param bed Either a vector of bed file paths, a character vector corresponding to ranges (chr:start, chr:start:strand, chr:start-end or chr:start-end:strand), a GRanges object or a data.table containing 'seqnames', 'start', 'end' columns
 #' @examples
 #' bed <- vl_importBed("/path/to/file.bed")
 #' test <- data.table(seqnames= "chr3R",
 #'                    start= 100000,
 #'                    end= 110000)
 #' bed <- vl_importBed(test)
+#' vl_importBed("chrX:17470075")
+#' vl_importBed("chrX:17470075:+")
+#' vl_importBed("chrX:17470075-17870970")
+#' vl_importBed("chrX:17470075-17870970:-")
 #' 
 #' @return DT ranges
 #' @export
 vl_importBed <- function(bed, ...) UseMethod("vl_importBed")
 
-#' @describeIn vl_importBed for bed paths
+#' @describeIn vl_importBed for bed paths or character ranges
 #' @export
 vl_importBed.character <- function(bed)
 {
-  bed <- lapply(bed, function(x) as.data.table(rtracklayer::import(x)))
-  bed <- data.table::rbindlist(bed)
-  message("A BED file was imported and was transformed to 1-based coordinates.")
+  # Method if input bed are path(s) to existing bed files
+  if(all(sapply(bed, file.exists)))
+  {
+    
+    bed <- lapply(bed, function(x) as.data.table(rtracklayer::import(x)))
+    bed <- data.table::rbindlist(bed)
+    message("A BED file was imported and was transformed to 1-based coordinates.")
+  }else if(all(grepl(":", bed))) # Method if input bed is a vector of regions (e.g. "chrX:17470075-17870970:-")
+  {
+    bed <- data.table(name= bed)
+    if(any(grepl(":.*:", bed$name))) # Check format
+      bed[, c("seqnames", "range", "strand"):= tstrsplit(name, ":", type.convert = TRUE)] else
+        bed[, c("seqnames", "range"):= tstrsplit(name, ":", type.convert = TRUE)]
+    # Fix strand when missing
+    if("strand" %in% names(bed))
+      bed[is.na(strand), strand:= "*"]
+    # Ranges
+    if(any(grepl("-", bed$name))) # Start and end or end only?
+      bed[, c("start", "end"):= tstrsplit(range, "-", type.convert = TRUE)] else
+        bed[, start:= as.integer(range)]
+    # Clean
+    bed$range <- NULL
+    setcolorder(bed,
+                intersect(c("seqnames", "start", "end", "strand", "name"),
+                          names(bed)))
+    message("Input vector of ranges will be converted to data.table.")
+  }else # Error handling
+    stop("Input not recognized as path to bed file or range of shape chrX:1000-2000:+")
+  # Return
   vl_importBed(bed)
 }
 
@@ -46,13 +75,15 @@ vl_importBed.default <- function(bed)
     bed[, name:= as.character(name)]
   if("score" %in% names(bed) && !is.numeric(bed$score))
     bed[, score:= as.numeric(score)]
-  if("strand" %in% names(bed) && !is.character(bed$score))
+  if("strand" %in% names(bed) && !is.character(bed$strand))
     bed[, strand:= as.character(strand)]
    
-  if(!all(c("seqnames", "start", "end") %in% names(bed)))
-    message("seqnames, start or end column missing. Malformed bed file?")
+  if(!all(c("seqnames", "start") %in% names(bed)))
+    message("seqnames or start column missing. Malformed bed file?")
+  
   if(all(c("start", "end") %in% names(bed)) && any(bed[, start>end], na.rm = T))
     message("bed file contains ranges with start>end -> malformed!")
+  
   if(!all(bed$strand %in% c("+", "-", "*")))
     message("bed file contains strand information other than +/-+* -> malformed?")
   
@@ -459,13 +490,17 @@ vl_binBed <- function(bed,
   # Determine binning strategy
   bins <- if(!is.null(nbins))
   {
-    # Check regions are big enough
-    if(min(bed[, be-bs+1])<nbins)
-      stop(paste("Some ranges are shorter than nbins. STOP."))
-    
-    # Binning
-    bed[, .(start= bs+c(0, round(cumsum(rep((be-bs+1)/nbins, nbins-1L)))),
-            end= bs+round(cumsum(rep((be-bs+1)/nbins, nbins)))-1L), (bed)]
+    # Check regions are bigger then nbins enough
+    if(min(bed[, be-bs+1])>=nbins)
+    {
+      # Binning
+      bed[, .(start= bs+c(0, round(cumsum(rep((be-bs+1)/nbins, nbins-1L)))),
+              end= bs+round(cumsum(rep((be-bs+1)/nbins, nbins)))-1L), (bed)]
+    }else
+    {
+      message("Some ranges are shorter than nbins and will contain duplicated ranges")
+      bed[, .(start= sort(rep(bs:be, length.out= nbins))), (bed)][, end:= start]
+    }
   }else if(!is.null(bins.width))
   {
     bed[, .(start= seq(bs, be, steps.width),

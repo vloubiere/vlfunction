@@ -8,6 +8,7 @@ vl_screenshot(
   bed,
   tracks,
   highlight.bed = NULL,
+  nBins = 1000,
   col = "black",
   highlight.col = "lightgrey",
   bg.col = "white",
@@ -30,6 +31,8 @@ vl_screenshot(
 \item{tracks}{bw or bed (peaks) files.}
 
 \item{highlight.bed}{Regions to be highlighted}
+
+\item{nBins}{The total number of bins to be used (will be divided by the number of rows in bed)}
 
 \item{col}{Track colors}
 
