@@ -41,7 +41,7 @@ vl_importBed.character <- function(bed)
     # Ranges
     if(any(grepl("-", bed$name))) # Start and end or end only?
       bed[, c("start", "end"):= tstrsplit(range, "-", type.convert = TRUE)] else
-        bed[, start:= as.integer(range)]
+        bed[, c("start", "end"):= .(as.integer(range), as.integer(range))]
     # Clean
     bed$range <- NULL
     setcolorder(bed,
@@ -78,8 +78,8 @@ vl_importBed.default <- function(bed)
   if("strand" %in% names(bed) && !is.character(bed$strand))
     bed[, strand:= as.character(strand)]
    
-  if(!all(c("seqnames", "start") %in% names(bed)))
-    message("seqnames or start column missing. Malformed bed file?")
+  if(!all(c("seqnames", "start", "end") %in% names(bed)))
+    message("seqnames start or end column missing. Malformed bed file?")
   
   if(all(c("start", "end") %in% names(bed)) && any(bed[, start>end], na.rm = T))
     message("bed file contains ranges with start>end -> malformed!")
