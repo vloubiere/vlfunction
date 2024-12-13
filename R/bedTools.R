@@ -509,6 +509,7 @@ vl_binBed <- function(bed,
     if(!ignore.strand && "strand" %in% names(bed)) # ignore.strand= FALSE
     {
       bed[, c("start", "end"):= {
+        browser()
         if((be-bs+1)>=nbins) # Bins > 1 nt
         {
           if(strand=="-") # Minus strand
@@ -535,7 +536,7 @@ vl_binBed <- function(bed,
       }, .(bs, be, strand)]
     }else # Ignore strand
     {
-      bed[(be-bs+1)>=nbins, c("start", "end"):= {
+      bed[, c("start", "end"):= {
         if((be-bs+1)>=nbins) # Bins > 1 nt
         {
           .(.(bs+c(0, round(cumsum(rep((be-bs+1)/nbins, nbins-1L))))),
@@ -569,7 +570,7 @@ vl_binBed <- function(bed,
     stop("Either 'nbins' or 'bins.width' must be specified.")
 
   # Uncompress ----
-  bins <- bed[, lapply(.SD, unlist), setdiff(names(bed), c("start", "end"))]
+  bins <- bed[, lapply(.SD, function(x) as.integer(unlist(x))), setdiff(names(bed), c("start", "end"))]
   
   # Handle edges ----
   bins[end>be, end:= be]
@@ -584,9 +585,13 @@ vl_binBed <- function(bed,
   
   # Add binIDX and clean ----
   binIDX <- data.table::last(make.unique(c(names(bed), "binIDX")))
-  if("strand" %in% names(bed))
-    bins[, (binIDX):= if(!ignore.strand && strand=="-") rev(seq(.N)) else seq(.N), .(seqnames, bs, be, strand)] else
-      bins[, (binIDX):= seq(.N), .(seqnames, bs, be)]
+  if("strand" %in% names(bins))
+  {
+    bins[, (binIDX):= if(!ignore.strand && strand=="-") rev(seq(.N)) else seq(.N), .(seqnames, bs, be, strand)]
+  }else
+  {
+    bins[, (binIDX):= seq(.N), .(seqnames, bs, be)]
+  }
   bins$bs <- bins$be <- NULL
   
   # Return ----

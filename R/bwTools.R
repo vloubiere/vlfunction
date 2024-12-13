@@ -156,7 +156,10 @@ vl_bw_coverage_bins <- function(bed,
                         downstream= downstream,
                         ignore.strand = ignore.strand,
                         genome= genome)
-    .c <- vl_binBed(ext, nbins = nbins, ignore.strand = TRUE)
+    .c <- vl_binBed(ext,
+                    nbins = nbins,
+                    ignore.strand = ignore.strand)
+    # Bin x position
     .c[, bin.x:= seq(-upstream, downstream, length.out= nbins)[rowid(regionID)]]
   }else if(anchor=="region")
   {
@@ -172,15 +175,15 @@ vl_bw_coverage_bins <- function(bed,
                          downstream= downstream,
                          ignore.strand = ignore.strand,
                          genome= genome)
-    b1 <- vl_binBed(up, nbins = nbins[1], ignore.strand = TRUE)
-    b2 <- vl_binBed(bed, nbins = nbins[2], ignore.strand = TRUE)
-    b3 <- vl_binBed(down, nbins = nbins[3], ignore.strand = TRUE)
+    # Binning
+    b1 <- vl_binBed(up, nbins = nbins[1], ignore.strand = ignore.strand)
+    b2 <- vl_binBed(bed, nbins = nbins[2], ignore.strand = ignore.strand)
+    b3 <- vl_binBed(down, nbins = nbins[3], ignore.strand = ignore.strand)
     .c <- rbind(b1, b2, b3)
-    # Correct binIDX
+    # Bin x position
     setorderv(.c,
               c("regionID", "start"))
-    .c[, binIDX:= seq(.N), regionID]
-    .c[, bin.x:= binIDX]
+    .c[, bin.x:= seq(.N), regionID]
   }else
     stop("anchor should be one of 'center' or 'region'")
   
@@ -270,7 +273,15 @@ vl_bw_average_track <- function(bed,
                                 ylim= NULL,
                                 xlab= "Genomic distance",
                                 ylab= "Enrichment",
-                                col= c("#E69F00","#68B1CB","#15A390","#96C954","#77AB7A","#4F6A6F","#D26429","#C57DA5","#999999"),
+                                col= c("#E69F00",
+                                       "#68B1CB",
+                                       "#15A390",
+                                       "#96C954",
+                                       "#77AB7A",
+                                       "#4F6A6F",
+                                       "#D26429",
+                                       "#C57DA5",
+                                       "#999999"),
                                 col.adj= 0.5,
                                 legend= TRUE,
                                 legend.pos= "topleft",
@@ -500,7 +511,16 @@ vl_bw_heatmap <- function(bed,
                           names= gsub(".bw$", "", basename(tracks)),
                           plot= T,
                           center.label= "Center",
-                          col= c("#440154FF", "#482878FF", "#3E4A89FF", "#31688EFF", "#26828EFF", "#1F9E89FF", "#35B779FF", "#6DCD59FF", "#B4DE2CFF", "#FDE725FF"),
+                          col= c("#440154FF",
+                                 "#482878FF",
+                                 "#3E4A89FF",
+                                 "#31688EFF",
+                                 "#26828EFF",
+                                 "#1F9E89FF",
+                                 "#35B779FF",
+                                 "#6DCD59FF",
+                                 "#B4DE2CFF",
+                                 "#FDE725FF"),
                           order.col= 1,
                           max= NULL,
                           fun.order= function(x) mean(x, na.rm= T),
