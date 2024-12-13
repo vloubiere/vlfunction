@@ -9,7 +9,7 @@
 #' @param pwms_log_odds A PWMatrixList (in log2 odd ratio format) for which motif matches should be counted. Overrides sel and motifDB arguments (see above).
 #' @param genome Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome".
 #' @param bg Background used to find motifs. Possible values include "genome" and "even". Default= "genome"
-#' @param p.cutoff p.value cutoff used for motif detection. Default= 5e-4.
+#' @param p.cutoff p.value cutoff used for motif detection. For enrichment analyses based on presence/absence of a motif, high cutoff might perform better (1e-4 or 5e-5) while for regression analyses, lower cutoffs might be prefered (5e-4). Default= 5e-5 (stringent).
 #' 
 #' @examples
 #' # Resize example peaks
@@ -64,7 +64,7 @@ vl_motif_counts.default <- function(sequences= NULL,
                                     pwm_log_odds= NULL,
                                     genome,
                                     bg= "genome",
-                                    p.cutoff= 5e-4)
+                                    p.cutoff= 5e-5)
 {
   # Select motifs
   if(is.null(pwm_log_odds) && any(!sel %in% motifDB$motif_ID))
@@ -380,7 +380,7 @@ vl_motif_cl_enrich <- function(counts.list,
 #' @param pwms_log_odds A PWMatrixList (in log2 odd ratio format) for which motif matches should be mapped. Overrides sel and motifDB arguments (see above).
 #' @param genome Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome".
 #' @param bg Background used to find motifs. Possible values include "genome" and "even". Default= "genome"
-#' @param p.cutoff p.value cutoff used for motif detection. Default= 5e-4.
+#' @param p.cutoff p.value cutoff used for motif detection. For enrichment analyses based on presence/absence of a motif, high cutoff might perform better (1e-4 or 5e-5) while for regression analyses, lower cutoffs might be prefered (5e-4). Default= 5e-5 (stringent).
 #' @param collapse.overlapping Should overlapping motifs be merged? If TRUE (default), motif instances that overlap more than 70 percent of their width are collapsed.
 #' 
 #' @examples
@@ -436,7 +436,7 @@ vl_motif_pos.character <- function(sequences,
                                    pwm_log_odds= NULL,
                                    genome,
                                    bg= "genome",
-                                   p.cutoff= 5e-4,
+                                   p.cutoff= 5e-5,
                                    collapse.overlapping= TRUE)
 {
   # Checks

@@ -1,431 +1,182 @@
-#' ROC AUC
+
+#' Title
 #'
-#' @param predicted Predicted values from the model (ranging from 0 to 1).
-#' @param label A vector of logical labels (or that can be coerced to logical).
-#' @param plot Should the ROC be plotted? Default= FALSE.
-#' @param xlab xlab. Default= "FALSE positive rate".
-#' @param ylab ylab. Default= "TRUE positive rate".
-#' @param type The type of plot, when add= FALSE. Default= "l".
-#' @param add When plot is set to TRUE, should only the line be added to an existing plot?
-#' @param ... Extra arguments to be passed to plot (when add= FALSE) or lines (when add= TRUE).
+#' @param h5 Path to an h5 file containing the contribution scores.
+#' @param bed Bed file containing the regions for which contributions were computed. By default, the file is searched in the same folder as the h5 file.
+#' @param selection An optional bed file containing a selected set of regions. If specified, only the regions in bed overlapping with the selection will be returned
 #'
-#' @return ROC AUC
+#' @return A contribution data.table containing, for each nucleotide, the corresponding base and its associated contribution score.
 #' @export
-vl_ROC_AUC <- function(predicted,
-                       label,
-                       plot= FALSE,
-                       xlab= "False Positive Rate",
-                       ylab= "True Positive Rate",
-                       type= "l",
-                       add= FALSE, ...)
+#'
+#' @examples
+vl_importContrib <- function(h5,
+                             bed= list.files(dirname(h5), ".bed$", full.names = TRUE),
+                             selection)
 {
-  if(!is.logical(label))
-    label <- as.logical(label)
-  if(sum(label)==0)
-    warning(paste0(length(label), "/", length(label), " labels are set to FALSE"))
+  # Import contributions ----
+  dat <- rhdf5::h5read(h5, "contrib_scores/class")
   
-  # Make data table ----
-  dat <- data.table(label= label,
-                    predicted= predicted)
+  # Import coordinates ----
+  bed <- vl_importBed(bed)
+  if(!"strand" %in% names(bed))
+    bed[strand:= "*"]
+
+  # Check if compatible ----
+  if(nrow(bed) != dim(dat)[3])
+    stop("Number of regions in bed file do not match the number of regions in the h5 contribution file.
+         Please provide the path to the bed file containing the regions for which contributions were computed")
   
-  # Order ----
-  setorderv(dat, "predicted", -1)
-  
-  # Compute AUC ----
-  dat[, FPR:= cumsum(!label)/sum(!label)]
-  dat[, TPR:= cumsum(label)/sum(label)]
-  dat[, ROC_AUC:= c(0, sapply(seq(.N)[-1], function(i) (FPR[i] - FPR[i-1]) * (TPR[i] + TPR[i-1]) / 2))]
-  
-  # Plot ----
-  if(plot)
+  # Restrict to bins of interest ----
+  if(!missing(selection))
   {
-    if(add)
+    selRegions <- vl_importBed(selection)
+    keep <- vl_covBed(bed, selRegions, ignore.strand = FALSE)>0
+    bed <- bed[(keep)]
+    dat <- dat[, , (keep), drop= FALSE]
+  }
+  # If no overlaps with selection, return empty result ----
+  res <- if(!nrow(bed))
+  {
+    data.table(binIDX= NULL,
+               seqnames= NULL,
+               start= NULL,
+               end= NULL,
+               strand= NULL,
+               score= NULL)
+  }else
+  {
+    # Expand bins back to single nt ----
+    bed[, binIDX:= .I]
+    contrib <- if("strand" %in% names(bed))
     {
-      lines(dat$FPR,
-            dat$TPR,
-            ...)
+      bed[, {
+        # Coordinates (depending on strand)
+        coor <- if(strand=="-") seq(end, start) else seq(start, end)
+        .(seqnames,
+          start= coor,
+          end= coor,
+          strand= strand)
+      }, binIDX]
     }else
-    {
-      lines(dat$FPR,
-            dat$TPR,
-            xlab= xlab,
-            ylab= ylab,
-            type= type,
-            ...)
-    }
-  }
-  
-  # AUC function
-  # AUC <- pROC::roc(AUC$label, AUC$score)$auc
-  
-  return(round(sum(dat$ROC_AUC), 2))
-}
+      bed[, {
+        # Coordinates (no strand)
+        coor <- seq(start, end)
+        .(seqnames,
+          start= coor,
+          end= coor)
+      }, binIDX]
 
-#' PR AUC
-#'
-#' @param predicted Predicted values from the model (ranging from 0 to 1).
-#' @param label A vector of logical labels (or that can be coerced to logical).
-#' @param plot Should the ROC be plotted? Default= FALSE.
-#' @param xlab xlab. Default= "FALSE positive rate".
-#' @param ylab ylab. Default= "TRUE positive rate".
-#' @param type The type of plot, when add= FALSE. Default= "l".
-#' @param add When plot is set to TRUE, should only the line be added to an existing plot?
-#' @param ... Extra arguments to be passed to plot (when add= FALSE) or lines (when add= TRUE).
-#'
-#' @return PR AUC
-#' @export
-vl_PR_AUC <- function(predicted,
-                      label,
-                      plot= FALSE,
-                      xlab= "True Positive Rate",
-                      ylab= "Positive Predictive Value",
-                      type= "l",
-                      add= FALSE, ...)
-{
-  if(!is.logical(label))
-    label <- as.logical(label)
-  if(sum(label)==0)
-    warning(paste0(length(label), "/", length(label), " labels are set to FALSE"))
-  
-  # Make data table ----
-  dat <- data.table(label= label,
-                    pred= predicted)
-  
-  # Order ----
-  setorderv(dat, "pred", -1)
-  
-  # Compute AUC ----
-  dat[, TPR:= cumsum(label)/sum(label)]
-  dat[, PPV:= cumsum(label)/seq(.N)]
-  dat[, PR_AUC:= c(0, sapply(seq(.N)[-1], function(i) (TPR[i] - TPR[i-1]) * (PPV[i] + PPV[i-1]) / 2))]
-  
-  # Plot ----
-  if(plot)
-  {
-    if(add)
-    {
-      lines(dat$TPR,
-            dat$PPV,
-            ...)
-    }else
-    {
-      plot(dat$TPR,
-           dat$PPV,
-           xlab= xlab,
-           ylab= ylab,
-           type= type,
-           ...)
-    }
-  }
-  
-  # AUC function
-  # AUC <- pROC::roc(AUC$label, AUC$score)$auc
-  
-  return(round(sum(dat$PR_AUC), 2))
-}
-
-
-#' Positive Predicted Value curve
-#'
-#' @param predicted Predicted values from the model (ranging from 0 to 1).
-#' @param label A vector of logical labels (or that can be coerced to logical).
-#' @param Nleft Number of enhancers left before cutoff. Default= 100.
-#' @param plot Should the PPV be plotted?
-#' @param xlim x limits for plotting. Default= NULL.
-#' @param ylim y limits for plotting. Default= NULL.
-#' @param xlab x label. Default= "Prediction score".
-#' @param ylab y label. Default= "Positive pred. value (percentage)".
-#' @param lty.1 Line type before Nleft. Default= 1.
-#' @param lty.2 Line type after Nleft. Default= 3.
-#' @param col Color.
-#' @param cex.max cex for the max PPV text label.
-#' @param pos.max pos for the PPV text label Default= 3.
-#' @param offset.max Offset for plotting the PPV text label. Default= .5.
-#' @param add When plot is set to TRUE, should only the lines/label be added to an existing plot?
-#' @param ... Extra arguments to be passed to lines
-#'
-#' @return PPV plot
-#' @export
-vl_PPV <- function(predicted,
-                   label,
-                   Nleft= 100,
-                   plot= FALSE,
-                   xlim= NULL,
-                   ylim= NULL,
-                   xlab= "Prediction score",
-                   ylab= "Positive pred. value (%)",
-                   lty.1= 1,
-                   lty.2= 3,
-                   col= "black",
-                   cex.max= .7,
-                   pos.max= 3,
-                   offset.max= .5,
-                   add= FALSE,
-                   ...)
-{
-  if(!is.logical(label))
-    label <- as.logical(label)
-  if(sum(label)==0)
-    warning(paste0(length(label), "/", length(label), " labels are set to FALSE"))
-  
-  # Create a data table with observed and predicted values
-  dat <- data.table(label = label,
-                    pred = predicted)
-  
-  # Sort the data table by the predicted values in descending order
-  setorderv(dat, cols = "pred", order = -1)
-  
-  # Calculate the cumulative percentage of actually positive values
-  dat[, TP:= cumsum(label)] # TRUE positive
-  dat[, FP:= cumsum(!label)] # FALSE positive
-  dat[, PPV:= TP/(TP+FP)*100]
-  setorderv(dat,
-            cols = "pred")
-  
-  # Fit a smooth spline and find peaks
-  x <- dat[1:(.N-Nleft), pred]
-  y <- dat[1:(.N-Nleft), PPV]
-  spline_fit <- smooth.spline(x, y)
-  spline_derivative <- predict(spline_fit, deriv = 1)
-  
-  # Find peaks
-  peaks <- which(diff(sign(spline_derivative$y)) == -2) + 1
-  peak_x_values <- spline_derivative$x[peaks]
-  peak_y_values <- predict(spline_fit, x = peak_x_values)$y
-  peak_x_values <- c(peak_x_values, last(x)) # value at .N-Nleft
-  peak_y_values <- c(peak_y_values, last(y)) # value at .N-Nleft 
-  
-  # Select ideal cutoff
-  sel <- min(which(peak_y_values>max(0.95*peak_y_values)))
-  x_cutoff <- peak_x_values[sel]
-  y_cutoff <- peak_y_values[sel]
-  
-  # Compute limits
-  if(is.null(xlim))
-    xlim <- range(dat$pred)
-  if(is.null(ylim))
-    ylim <- c(0, min(c(100, max(dat$PPV)*1.1)))
-
-  # Plot PPV and cutoffs
-  if(plot)
-  {
-    # Initiate plot
-    if(!add)
-    {
-      
-      plot(NA,
-           NA,
-           type = "n",
-           xlab = xlab,
-           ylab = ylab,
-           xlim= xlim,
-           ylim= ylim,
-           ...)
-    }
+    # Add score ----
+    contrib$score <- unlist(lapply(seq(dim(dat)[3]), function(i) rowSums(dat[,,i])))
     
-    # Plot PPV lines
-    dat[,{
-      # PPV
-      lines(pred[1:(.N-Nleft)],
-            PPV[1:(.N-Nleft)],
-            lty= lty.1,
-            col= col,
-            ...)
-      lines(pred[(.N-Nleft):.N],
-            PPV[(.N-Nleft):.N],
-            lty = lty.2,
-            col= col,
-            ...)
-      
-      # Plot the smooth spline
-      # lines(spline_fit, col = "blue", lwd = 2)
-      
-      # Plot top PPV point
-      points(x_cutoff,
-             y_cutoff,
-             col = adjustcolor(col, .7),
-             pch = 19)
-      text(x_cutoff,
-           y_cutoff,
-           paste0(round(y_cutoff, 1), "%"),
-           pos= pos.max,
-           offset= offset.max,
-           col= col,
-           cex= cex.max)
-      
-      # Add segments
-      # segments(x_cutoff,
-      #          0,
-      #          x_cutoff,
-      #          y_cutoff,
-      #          lty= "33")
-      # segments(0,
-      #          y_cutoff,
-      #          x_cutoff,
-      #          y_cutoff,
-      #          lty= "33")
-      # text(x_cutoff,
-      #      y_cutoff/2,
-      #      round(x_cutoff, 2),
-      #      pos= 4,
-      #      offset= 1)
-      # text(x_cutoff/2,
-      #      y_cutoff,
-      #      paste0(round(y_cutoff, 1), "%"),
-      #      pos= 3,
-      #      offset= 1)
-    }]
-  }
-  
-  # Return cutoffs
-  return(list(min_PPV= dat$PPV[1],
-              predict_cutoff= x_cutoff,
-              PPV_at_cutoff= y_cutoff))
-}
-
-#' Compute Matthew's PCC
-#'
-#' @param predicted Predicted values from the model (ranging from 0 to 1).
-#' @param label A vector of logical labels (or that can be coerced to logical).
-#'
-#' @return Mathhew's correlation coef
-#' @export
-vl_mPCC <- function(predicted,
-                   label)
-{
-  if(!is.logical(label))
-    label <- as.logical(label)
-  if(sum(label)==0)
-    warning(paste0(length(label), "/", length(label), " labels are set to FALSE"))
-  
-  # Make table
-  conf_matrix <- table(pred= factor(predicted>0.5, c(FALSE, TRUE)),
-                       obs= factor(as.logical(label), c(FALSE, TRUE)))
-  TP <- as.numeric(conf_matrix[2, 2])
-  TN <- as.numeric(conf_matrix[1, 1])
-  FP <- as.numeric(conf_matrix[2, 1])
-  FN <- as.numeric(conf_matrix[1, 2])
-  # Compute
-  mcPCC <- (TP * TN - FP * FN) / sqrt((TP + FP) * (TP + FN) * (TN + FP) * (TN + FN))
-  # Return
-  return(mcPCC)
-}
-
-#' TRUE positive rate curve
-#'
-#' @param predicted Predicted values from the model (ranging from 0 to 1).
-#' @param label A vector of logical labels (or that can be coerced to logical).
-#' @param Nleft Number of enhancers left before cutoff. Default= 100.
-#' @param plot Should the TPR be plotted?
-#' @param xlim x limits for plotting. Default= NULL.
-#' @param ylim y limits for plotting. Default= NULL.
-#' @param xlab x label. Default= "Prediction score".
-#' @param ylab y label. Default= "Positive pred. value (percentage)".
-#' @param lty.1 Line type before Nleft. Default= 1.
-#' @param lty.2 Line type after Nleft. Default= 3.
-#' @param col Color.
-#' @param cex.max cex for the max TPR text label.
-#' @param pos.max pos for the TPR text label Default= 3.
-#' @param offset.max Offset for plotting the TPR text label. Default= .5.
-#' @param add When plot is set to TRUE, should only the lines/label be added to an existing plot?
-#' @param ... Extra arguments to be passed to lines
-#'
-#' @return TPR plot
-#' @export
-vl_TPR <- function(predicted,
-                   label,
-                   Nleft= 100,
-                   plot= FALSE,
-                   xlim= NULL,
-                   ylim= NULL,
-                   xlab= "Prediction score",
-                   ylab= "TRUE positive rate (%)",
-                   lty.1= 1,
-                   lty.2= 3,
-                   col= "black",
-                   cex.max= .7,
-                   pos.max= 3,
-                   offset.max= .5,
-                   add= FALSE,
-                   ...)
-{
-  if(!is.logical(label))
-    label <- as.logical(label)
-  if(sum(label)==0)
-    warning(paste0(length(label), "/", length(label), " labels are set to FALSE"))
-  
-  # Create a data table with observed and predicted values
-  dat <- data.table(label = label,
-                    pred = predicted)
-  
-  # Calculate the cumulative percentage of actually positive values
-  setorderv(dat, cols = "pred") # Sort predicted values in ascending order
-  dat[, FN:= cumsum(label)] # FALSE negative
-  setorderv(dat, cols = "pred", order = -1) # Sort predicted values in descending order
-  dat[, TP:= cumsum(label)] # TRUE positive
-  dat[, TPR:= TP/(TP+FN)*100]
-  setorderv(dat,
-            cols = "pred")
-  
-  # Fit a smooth spline and find peaks
-  x <- dat[1:(.N-Nleft), pred]
-  y <- dat[1:(.N-Nleft), TPR]
-  spline_fit <- smooth.spline(x, y)
-  spline_derivative <- predict(spline_fit, deriv = 1)
-  
-  # Find peaks
-  peaks <- which(diff(sign(spline_derivative$y)) == -2) + 1
-  peak_x_values <- spline_derivative$x[peaks]
-  peak_y_values <- predict(spline_fit, x = peak_x_values)$y
-  peak_x_values <- c(peak_x_values, last(x)) # value at .N-Nleft
-  peak_y_values <- c(peak_y_values, last(y)) # value at .N-Nleft 
-  
-  # Select ideal cutoff
-  sel <- min(which(peak_y_values>max(0.95*peak_y_values)))
-  x_cutoff <- peak_x_values[sel]
-  y_cutoff <- peak_y_values[sel]
-  
-  # Compute limits
-  if(is.null(xlim))
-    xlim <- range(dat$pred)
-  if(is.null(ylim))
-    ylim <- c(0, min(c(100, max(dat$TPR)*1.1)))
-  
-  # Plot TPR and cutoffs
-  if(plot)
-  {
-    # Initiate plot
-    if(!add)
-    {
-      
-      plot(NA,
-           NA,
-           type = "n",
-           xlab = xlab,
-           ylab = ylab,
-           xlim= xlim,
-           ylim= ylim,
-           ...)
-    }
+    # Refine for the precise overlaps with selection ----
+    if(!missing(selection))
+      contrib <- vl_intersectBed(contrib, selRegions, ignore.strand = FALSE)
     
-    # Plot TPR lines
-    dat[,{
-      # TPR
-      lines(pred[1:(.N-Nleft)],
-            TPR[1:(.N-Nleft)],
-            lty= lty.1,
-            col= col,
-            ...)
-      lines(pred[(.N-Nleft):.N],
-            TPR[(.N-Nleft):.N],
-            lty = lty.2,
-            col= col,
-            ...)
-    }]
+    # Clean ----
+    contrib[, .(binIDX, seqnames, start, end, strand, score)]
   }
   
-  # Return cutoffs
-  return(list(min_TPR= dat$TPR[1],
-              predict_cutoff= x_cutoff,
-              TPR_at_cutoff= y_cutoff))
+  # Return object ----
+  return(res)
 }
+
+#' Plot contribution scores matrix
+#'
+#' @param bed A bed file containing a unique region for which contrib scores will be plotted.
+#' @param h5 Path(s) to h5 files containing the contribution scores.
+#' @param h5.bed Bed files containing the coordinates of the regions corresponding to provided h5 files.
+#' @param genome The genome to be used.
+#' @param agg.FUN In the case were several contribution scores would be found for a single nt, how should they be aggregated? Default= function(x) mean(x)
+#' @param mot An optional bed file containing motifs to be added.
+#' @param mot.name.column Name of the column containing the motif name.
+#' @param xlab Default= "nt"
+#' @param ylab Default= "Contribution"
+#' @param xlim Default= sequence length
+#' @param ylim Default= range(contrib)
+#'
+#' @return contrib plot
+#' @export
+vl_plot_contrib_logo <- function(bed,
+                                 h5,
+                                 h5.bed= sapply(dirname(h5), function(x) list.files(x, ".bed$", recursive = T, full.names = T)),
+                                 genome,
+                                 agg.FUN= function(x) mean(x),
+                                 mot,
+                                 mot.name.column= "motif_ID",
+                                 xlab= "nt",
+                                 ylab= "Contribution",
+                                 xlim,
+                                 ylim)
+{
+  # Import Bed
+  bed <- vl_importBed(bed) # Very important!
+  if(nrow(bed)>1)
+    stop("Unique reigon should be specified")
+  # Metadata ----
+  meta <- data.table(h5= h5,
+                     h5.bed= h5.bed)
+  
+  # Import contribution scores ----
+  dat <- meta[, {
+    vl_importContrib(h5,
+                     bed = h5.bed,
+                     selection= bed)
+  }, .(h5, h5.bed)]
+  
+  # Aggregate if necessary ----
+  if(uniqueN(dat[, .(seqnames, start)]) != nrow(dat))
+  {
+    message("Some nucleotides had >1 contribution score assigned to it, which will be aggregated using agg.FUN")
+    dat <- dat[, .(score= agg.FUN(score)), .(seqnames, start, end)]
+  }
+  
+  # Get sequence ----
+  dat$base <- strsplit(vl_getSequence(bed, genome), "")[[1]]
+  
+  # Plotting vars ----
+  dat[, xleft:= .I-1]
+  if(missing(xlim))
+    xlim <- c(0, nrow(dat))
+  if(missing(ylim))
+    ylim <- range(dat$score)
+
+  # Plotting ----
+  plot(NA,
+       xlim= xlim,
+       ylim= ylim,
+       xlab= xlab,
+       ylab= ylab,
+       frame= FALSE)
+  
+  dat[, {
+    vl_plotLetter(base,
+                  xleft = xleft,
+                  ytop= score,
+                  width = 1,
+                  height = score)
+  }, (dat)]
+  
+  # Add motif boxes ----
+  if(!missing(mot))
+  {
+    mot <- vl_importBed(mot)
+    mot <- vl_intersectBed(mot, bed, ignore.strand= TRUE)
+    if(nrow(mot))
+      mot[, {
+        xl <- start-bed$start
+        xr <- end-bed$start
+        rect(xleft = xl,
+             ybottom = ylim[1],
+             xright = xr,
+             ytop = ylim[2])
+        text((xl+xr)/2,
+             ylim[2],
+             get(mot.name.column)[1],
+             pos= 3,
+             xpd= T)
+      }, (mot)]
+  }
+}
+
+

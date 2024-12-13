@@ -156,7 +156,7 @@ vl_bw_coverage_bins <- function(bed,
                         downstream= downstream,
                         ignore.strand = ignore.strand,
                         genome= genome)
-    .c <- vl_binBed(ext, nbins = nbins)
+    .c <- vl_binBed(ext, nbins = nbins, ignore.strand = TRUE)
     .c[, bin.x:= seq(-upstream, downstream, length.out= nbins)[rowid(regionID)]]
   }else if(anchor=="region")
   {
@@ -172,9 +172,9 @@ vl_bw_coverage_bins <- function(bed,
                          downstream= downstream,
                          ignore.strand = ignore.strand,
                          genome= genome)
-    b1 <- vl_binBed(up, nbins = nbins[1])
-    b2 <- vl_binBed(bed, nbins = nbins[2])
-    b3 <- vl_binBed(down, nbins = nbins[3])
+    b1 <- vl_binBed(up, nbins = nbins[1], ignore.strand = TRUE)
+    b2 <- vl_binBed(bed, nbins = nbins[2], ignore.strand = TRUE)
+    b3 <- vl_binBed(down, nbins = nbins[3], ignore.strand = TRUE)
     .c <- rbind(b1, b2, b3)
     # Correct binIDX
     setorderv(.c,

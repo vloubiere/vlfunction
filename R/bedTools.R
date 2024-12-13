@@ -35,6 +35,8 @@ vl_importBed.character <- function(bed)
     if(any(grepl(":.*:", bed$name))) # Check format
       bed[, c("seqnames", "range", "strand"):= tstrsplit(name, ":", type.convert = TRUE)] else
         bed[, c("seqnames", "range"):= tstrsplit(name, ":", type.convert = TRUE)]
+    # Remove potential comas in range (igv)
+    bed[, range:= gsub(",", "", range)]
     # Fix strand when missing
     if("strand" %in% names(bed))
       bed[is.na(strand), strand:= "*"]
@@ -92,14 +94,14 @@ vl_importBed.default <- function(bed)
 
 #' Find closestBed regions
 #'
-#' For each line of a file, returns the closest lines in b.
-#' Similar to bedtools closest -a a.bed -b b.bed -D a
+#' For each line of a file, returns the closest lines in b, similar to bedtools closest -a a.bed -b b.bed -D a
+#' In addition, the distance in respect to a is returned: negative distances will be used if the closest feature in b is upstream of the feature in a, and positive distances if the feature in b is downstream.
 #'
 #' @param a Granges or data.table FOR which closest features have to be found.
 #' @param b Granges or data.table FROM which closest features have to be found. If set to NULL (default), then a is matched to itself.
 #' @param n Number of closest features to be reported. Default to 1
 #' @param min.dist Min distance for closest feature 
-#' @param same.strand Should only the closest region on the same strand be returned? Default= FALSE
+#' @param ignore.strand Should the strand be ignored? Default= TRUE
 #' @examples 
 #' a <- data.table(seqnames= "chr2R",
 #'                 start= c(10000, 20000, 30000),
@@ -116,36 +118,32 @@ vl_importBed.default <- function(bed)
 #' # To find closet yet non touching features
 #' vl_closestBed(vl_STARR_DSCP_top_peaks,
 #'               min.dist = 1)
+#'
 #' # To n closest features
 #' vl_closestBed(vl_STARR_DSCP_top_peaks,
 #'               min.dist = 1,
 #'               n= 2)
 #' 
-#' @return Return "a" coor and closest "b" coordinates and distance in respect to A (When a is on the - strand, “upstream” means b has a higher (start,stop).)
+#' @return A data.table containing a intervals and the closest intervals in b.
 #' @export
 vl_closestBed <- function(a, 
                           b= NULL,
                           n= 1,
                           min.dist= 0,
-                          same.strand= FALSE)
+                          ignore.strand= TRUE)
 {
   # Import
   a <- vl_importBed(a)
   if(is.null(b))
     b <- data.table::copy(a) else
       b <- vl_importBed(b)
-  
-  # Checks
-  if(!"strand" %in% names(a))
-    message("'a' does not contain strand column -> arbitrarily considered as +")else if("*" %in% a$strand)
-      message("'a' strand column contains * -> arbitrarily considered as +!")
 
   # Should strand be considered?
-  .cols <- if(same.strand && "strand" %in% names(a) & "strand" %in% names(b))
+  .cols <- if(!ignore.strand && "strand" %in% names(a) & "strand" %in% names(b))
     c("seqnames", "strand") else
       "seqnames"
   
-  # Comput closest
+  # Compute closest ----
   idx <- b[a, {
     dist <- fcase(x.start>i.end, as.integer(x.start-i.end),
                   x.end<i.start, as.integer(i.start-x.end),
@@ -158,7 +156,7 @@ vl_closestBed <- function(a,
   # idx <- na.omit(idx)
   idx[I==0, c("I", "dist"):= .(NA, NA)]
   
-  # Merge a and b
+  # Merge a and b ----
   setnames(b, paste0(names(b), ".b"))
   res <- data.table(a[eval(get("GRP", idx))],
                     b[eval(get("I", idx))],
@@ -168,9 +166,9 @@ vl_closestBed <- function(a,
     res[strand!="-" & start>end.b, dist:= -dist] # Meaning + or *
     res[strand=="-" & end<start.b, dist:= -dist]
   }else
-    res[start>end.b, dist:= -dist] # In the case were no strand is provided for a, all considered as +
+    res[start>end.b, dist:= -dist] # If no strand in a, considered as +
   
-  # Return
+  # Return ----
   return(res)
 }
 
@@ -187,7 +185,7 @@ vl_closestBed <- function(a,
 #' @examples 
 #' bed <- data.table(seqnames= "chr2L",
 #'                   start= 10000,
-#'                   end= 12000,
+#'                   end= 20000,
 #'                   strand= c("+", "-", "*"))
 #' vl_resizeBed(bed, center= "start", upstream = 0, downstream = 0)[]
 #' vl_resizeBed(bed, center= "end", upstream = 0, downstream = 0)[]
@@ -201,44 +199,43 @@ vl_resizeBed <- function(bed,
                          ignore.strand= FALSE,
                          genome)
 {
-  # Import Bed 
+  # Import Bed ----
   bed <- vl_importBed(bed)
   
-  # Check strand column
-  if(!ignore.strand && "strand" %in% names(bed) && "*" %in% bed$strand)
-    message("Regions with strand '*' will be handled as +!")
+  # Check strand column ----
   ignore.strand <- ignore.strand | (!"strand" %in% names(bed))
   
-  # Resize
+  # Resize ----
   if(center=="center")
   {
-    bed[, start:= round((start+end)/2)] # Start moved to center
+    # Start moved to center
+    bed[, start:= round((start+end)/2)] 
     if(ignore.strand)
     {
       bed[, c("start", "end"):= .(start-upstream, start+downstream)]
     }else
     {
-      bed[strand!="-", c("start", "end"):= .(start-upstream, start+downstream)] # Meaning + or *
+      bed[strand!="-", c("start", "end"):= .(start-upstream, start+downstream)]
       bed[strand=="-", c("start", "end"):= .(start-downstream, start+upstream)]
     }
   }else if(center=="start")
   {
     if(ignore.strand)
     {
-      bed[, c("start", "end"):= .(start-upstream, start+downstream)] # Meaning + or *
+      bed[, c("start", "end"):= .(start-upstream, start+downstream)]
     }else
     {
-      bed[strand!="-", c("start", "end"):= .(start-upstream, start+downstream)] # Meaning + or *
+      bed[strand!="-", c("start", "end"):= .(start-upstream, start+downstream)]
       bed[strand=="-", c("start", "end"):= .(end-downstream, end+upstream)]
     }
   }else if(center=="end")
   {
     if(ignore.strand)
     {
-      bed[, c("start", "end"):= .(end-upstream, end+downstream)] # Meaning + or *
+      bed[, c("start", "end"):= .(end-upstream, end+downstream)]
     }else
     {
-      bed[strand!="-", c("start", "end"):= .(end-upstream, end+downstream)] # Meaning + or *
+      bed[strand!="-", c("start", "end"):= .(end-upstream, end+downstream)]
       bed[strand=="-", c("start", "end"):= .(start-downstream, start+upstream)]
     }
   }else if(center=="region")
@@ -248,13 +245,13 @@ vl_resizeBed <- function(bed,
       bed[, c("start", "end"):= .(start-upstream, end+downstream)]
     }else
     {
-      bed[strand!="-", c("start", "end"):= .(start-upstream, end+downstream)] # Meaning + or *
+      bed[strand!="-", c("start", "end"):= .(start-upstream, end+downstream)]
       bed[strand=="-", c("start", "end"):= .(start-downstream, end+upstream)]
     }
   }else
     stop("center should be one of center, start, end or region")
   
-  # If genome is specified, resize accordingly
+  # If genome is specified, resize accordingly ----
   if(!missing(genome))
   {
     chrSize <- GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome))
@@ -268,7 +265,7 @@ vl_resizeBed <- function(bed,
     bed[chrSize, end:= ifelse(end>i.end, i.end, end), on= "seqnames"]
   }
   
-  # return
+  # return ----
   return(bed)
 }
 
@@ -287,28 +284,31 @@ vl_resizeBed <- function(bed,
 #'                   strand= c("+", "+", "-", "+", "+"))
 #'                   
 #' vl_collapseBed(bed)
+#' 
 #' # Return mergin index only
 #' vl_collapseBed(bed, return.idx.only = T)
+#' 
 #' # Only merge if strand is similar
 #' vl_collapseBed(bed, ignore.strand = F)
+#' 
 #' # Allow a certain gap for merging
 #' vl_collapseBed(bed, ming.gap = 1000)
 #' vl_collapseBed(bed, ming.gap = 10000)
 #' 
-#' @return Collapse bed data.table
+#' @return Collapsed bed data.table
 #' @export
 vl_collapseBed <- function(bed,
                            min.gap= 1,
                            return.idx.only= F,
                            ignore.strand= TRUE)
 {
-  # Hard copy of bed file
+  # Hard copy of bed file ----
   DT <- vl_importBed(bed)
   DT <- DT[, names(DT) %in% c("seqnames", "start", "end", "strand"), with= F]
   DT[, init_ord:= .I]
   setorderv(DT, c("seqnames", "start", "end"))
   
-  # Compute contig idx
+  # Compute overlapping contigs idx ----
   DT[, ord:= .I] 
   DT[, ext_end:= end+min.gap] 
   idx <- DT$ord
@@ -317,7 +317,7 @@ vl_collapseBed <- function(bed,
       DT[DT, {idx[.GRP] <<- min(idx[.I])}, .EACHI, on= c("seqnames", "ext_end>=start", "ord<=ord")]
   DT[, idx:= data.table::rleid(idx)]
 
-  # Collapse
+  # Collapse ----
   if(!return.idx.only)
   {
     if(!ignore.strand && "strand" %in% names(DT))
@@ -336,16 +336,18 @@ vl_collapseBed <- function(bed,
 #'
 #' @param a Granges or data.table from which regions overlapping b have to be returned.
 #' @param b Set of regions of interest.
-#' @param ignore.strand Should strand be ignored? default= TRUE.
+#' @param ignore.strand Should strand be ignored? Default= TRUE.
 #' @param min.overlap A vector integer of length 1 or nrow(a) specifying the minimum overlap (bp) require to count overlaps. Default= 1L.
 #' @param invert If set to true, returns non-overlapping features. Default= FALSE.
 #' @examples 
 #' a <- data.table(seqnames= "chr2L",
-#'                 start= c(1000,2000),
-#'                 end= c(2000, 3000))
+#'                 start= c(1000, 3000, 5000),
+#'                 end= c(2000, 4000, 6000),
+#'                 strand= c("+", "+", "-"))
 #' b <- data.table(seqnames= "chr2L",
-#'                 start= 1500,
-#'                 end= 1600)
+#'                 start= c(1000, 5000),
+#'                 end= c(2000, 6000),
+#'                 strand= c("+", "+"))
 #' vl_intersectBed(a, b)
 #' 
 #' @return Return 'a' ranges that overlap with any range in 'b'
@@ -356,13 +358,18 @@ vl_intersectBed <- function(a,
                             min.overlap= 1L,
                             invert= F)
 {
-  # Import
+  # Check ----
+  if("idx" %in% names(a))
+    stop("idx column in a, which is used internally. Please change.")
+  
+  # Import -----
   bed <- vl_importBed(a)
   a <- vl_importBed(a)
-  a[, idx:= .I]
+  a[, idx:= .I] # Original order
   a[, minOv:= min.overlap]
   b <- vl_importBed(b)
-  # Prepare foverlaps
+  
+  # Prepare foverlaps -----
   if(!ignore.strand && "strand" %in% names(a) && "strand" %in% names(b))
   {
     a <- a[, .(seqnames, start, end, strand, idx, minOv)]
@@ -376,7 +383,8 @@ vl_intersectBed <- function(a,
     setkeyv(a, c("seqnames", "start", "end"))
     setkeyv(b, c("seqnames", "start", "end"))
   }
-  # Intersect
+  
+  # Overlap ----
   inter <- foverlaps(b, a, nomatch= NULL)
   inter[, maxStart:= apply(.SD, 1, max), .SDcols= c("start", "i.start")]
   inter[, minEnd:= apply(.SD, 1, min), .SDcols= c("end", "i.end")]
@@ -384,7 +392,8 @@ vl_intersectBed <- function(a,
   sel <- unique(inter[(V1), idx])
   if(invert)
     sel <- setdiff(a$idx, sel)
-  # Return, preserving original order
+  
+  # Return, preserving original order ----
   sel <- sort(sel)
   return(bed[(sel)])
 }
@@ -394,7 +403,7 @@ vl_intersectBed <- function(a,
 #' For each bin, computes the number of overlapping reads from a bed file
 #' @param a Ranges for which overlaps with b should be counted. Should be a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start', 'end' columns. see ?vl_importBed()
 #' @param b Ranges from which overlaps should be computed.
-#' @param ignore.strand Should strand be ignored? default= TRUE, meaning all overlapping elements in 'b'  will be considered.
+#' @param ignore.strand Should strand be ignored? Default= TRUE, meaning all overlapping elements in 'b'  will be considered.
 #' @param min.overlap A vector integer of length 1 or nrow(a) specifying the minimum overlap (bp) require to count overlaps. Default= 1L.
 #' @examples
 #' a <- data.table(seqnames= "chr2R",
@@ -415,12 +424,17 @@ vl_covBed <- function(a,
                       ignore.strand= TRUE,
                       min.overlap= 1L)
 {
-  # Import
+  # Check ----
+  if("idx" %in% names(a))
+    stop("idx column in a, which is used internally. Please change.")
+  
+  # Import ----
   a <- vl_importBed(a)
   a[, idx:= .I]
   a[, minOv:= min.overlap]
   b <- vl_importBed(b)
-  # Prepare foverlaps
+  
+  # Prepare foverlaps ----
   if(!ignore.strand && "strand" %in% names(a) && "strand" %in% names(b))
   {
     a <- a[, .(seqnames, start, end, strand, idx, minOv)]
@@ -434,11 +448,13 @@ vl_covBed <- function(a,
     setkeyv(a, c("seqnames", "start", "end"))
     setkeyv(b, c("seqnames", "start", "end"))
   }
-  # Intersect
+  
+  # Overlap ----
   inter <- foverlaps(a, b)
   inter[, maxStart:= apply(.SD, 1, max), .SDcols= c("start", "i.start")]
   inter[, minEnd:= apply(.SD, 1, min), .SDcols= c("end", "i.end")]
-  # Return
+  
+  # Return ----
   return(inter[, sum(minEnd-maxStart+1>=minOv, na.rm= T), keyby= idx]$V1)
 }
 
@@ -446,24 +462,23 @@ vl_covBed <- function(a,
 #'
 #' This function bins genomic regions from a BED file based on either a specified number 
 #' of bins or a specified bin width and step size. It supports both fixed-width bins 
-#' and sliding window approaches and allows for handling overhanging bins based on 
-#' a specified fraction of the bin width.
+#' and sliding window approaches.
 #'
 #' @param bed A data.table containing genomic ranges with columns: seqnames, start, end.
 #' @param nbins An integer specifying the number of bins to create for each genomic range. If specified, this takes precedence over bins.width.
-#' @param bins.width An intger specifying the width of each bin. This parameter is used if nbins is not specified.
+#' @param bins.width An integer specifying the width of each bin. This parameter is used if nbins is not specified.
 #' @param steps.width An integer specifying the step size between the start positions of consecutive bins. Default= bins.width.
+#' @param ignore.strand Should the strand be ignored? If TRUE, binning will always start from the leftmost coordinates. Default= FALSE
 #'
+#' @details The function uses either the nbins parameter to divide each genomic region into a fixed number of bins, or the bins.width and steps.width parameters to create bins of a specific width with a defined step size between them. An extra binIDX column contains unique indexes for each bin created, depending on its stran if ignore.strand is set to FALSE (default). If set to TRUE, then the binIDX will increase with start coordinates.
+#' 
 #' @return A data.table containing the binned genomic regions, with an extra column (binIDX) containing bin indexes.
-#'
-#' @details The function uses either the nbins parameter to divide each genomic region into a fixed number of bins, or the bins.width and steps.width parameters to create bins of a specific width with a defined step size between them.
-#'
 #' @examples
 #' # Example BED data
 #' library(data.table)
 #' bed <- data.table(seqnames= "chr2L",
-#' start= 101,
-#' end= c(200, 210))
+#'                   start= 101,
+#'                   end= c(200, 210))
 #'
 #' # Bin using a specified number of bins
 #' vl_binBed(bed, nbins = 5)
@@ -475,62 +490,115 @@ vl_covBed <- function(a,
 vl_binBed <- function(bed,
                       nbins = NULL,
                       bins.width = NULL,
-                      steps.width = bins.width)
+                      steps.width = bins.width,
+                      ignore.strand= FALSE)
 {
-  # Import bed
+  # Import bed ----
   bed <- vl_importBed(bed)
   setnames(bed, c("start", "end"), c("bs", "be"))
   
-  # Checks 
+  # Checks ----
   if(!is.null(bins.width) && round(bins.width)!=bins.width)
     stop("bins.width must be a round number or an integer")
   if(!is.null(steps.width) && round(steps.width)!=steps.width)
     stop("steps.width must be a round number or an integer")
   
   # Determine binning strategy
-  bins <- if(!is.null(nbins))
+  if(!is.null(nbins))
   {
-    # Check regions are bigger then nbins enough
-    if(min(bed[, be-bs+1])>=nbins)
+    if(!ignore.strand && "strand" %in% names(bed)) # ignore.strand= FALSE
     {
-      # Binning
-      bed[, .(start= bs+c(0, round(cumsum(rep((be-bs+1)/nbins, nbins-1L)))),
-              end= bs+round(cumsum(rep((be-bs+1)/nbins, nbins)))-1L), (bed)]
-    }else
+      bed[, c("start", "end"):= {
+        if((be-bs+1)>=nbins) # Bins > 1 nt
+        {
+          if(strand=="-") # Minus strand
+          {
+            .(.(rev(be-round(cumsum(rep((be-bs+1)/nbins, nbins)))+1L)),
+              .(rev(be-c(0, round(cumsum(rep((be-bs+1)/nbins, nbins-1L)))))))
+          }else
+          {
+            .(.(bs+c(0, round(cumsum(rep((be-bs+1)/nbins, nbins-1L))))),
+              .(bs+round(cumsum(rep((be-bs+1)/nbins, nbins)))-1L))
+          }
+        }else # Bins < 1 nt
+        {
+          if(strand=="-") # Minus strand
+          {
+            .(.(sort(rep(be:bs, length.out= nbins))),
+              .(sort(rep(be:bs, length.out= nbins))))
+          }else
+          {
+            .(.(sort(rep(bs:be, length.out= nbins))),
+              .(sort(rep(bs:be, length.out= nbins))))
+          }
+        }
+      }, .(bs, be, strand)]
+    }else # Ignore strand
     {
-      message("Some ranges are shorter than nbins and will contain duplicated ranges")
-      bed[, .(start= sort(rep(bs:be, length.out= nbins))), (bed)][, end:= start]
+      bed[(be-bs+1)>=nbins, c("start", "end"):= {
+        if((be-bs+1)>=nbins) # Bins > 1 nt
+        {
+          .(.(bs+c(0, round(cumsum(rep((be-bs+1)/nbins, nbins-1L))))),
+            .(bs+round(cumsum(rep((be-bs+1)/nbins, nbins)))-1L))
+        }else
+        {
+          .(.(sort(rep(bs:be, length.out= nbins))),
+            .(sort(rep(bs:be, length.out= nbins))))
+        }
+      }, .(bs, be)]
     }
-  }else if(!is.null(bins.width))
+  }else if(!is.null(bins.width)) # Binning strategy
   {
-    bed[, .(start= seq(bs, be, steps.width),
-            end= seq(bs, be, steps.width)+bins.width-1L), (bed)]
+    if(!ignore.strand && "strand" %in% names(bed)) #  ignore.strand= FALSE
+    {
+      bed[, c("start", "end"):= {
+        if(strand=="-") # Minus strand 
+        {
+          .(.(rev(seq(be, bs, -steps.width)-bins.width+1L)),
+            .(rev(seq(be, bs, -steps.width))))
+        }else
+        {
+          .(.(seq(bs, be, steps.width)),
+            .(seq(bs, be, steps.width)+bins.width-1L))
+        }
+      }, .(bs, be, strand)]
+    }else # Ignore strand
+      bed[, c("start", "end"):= .(.(seq(bs, be, steps.width)),
+                                  .(seq(bs, be, steps.width)+bins.width-1L)), .(bs, be)]
   }else
     stop("Either 'nbins' or 'bins.width' must be specified.")
+
+  # Uncompress ----
+  bins <- bed[, lapply(.SD, unlist), setdiff(names(bed), c("start", "end"))]
   
-  # Handle edges
+  # Handle edges ----
   bins[end>be, end:= be]
+  bins[start<bs, start:= bs]
   bins[end<start, end:= start]
   
-  # Reorder columns
+  # Reorder columns ----
   cols <- intersect(c("seqnames", "start", "end", "strand"),
                     names(bins))
-  setcolorder(bins, cols)
+  setcolorder(bins,
+              cols)
   
-  # Add binID and clean
+  # Add binIDX and clean ----
   binIDX <- data.table::last(make.unique(c(names(bed), "binIDX")))
-  bins[, (binIDX):= seq(.N), .(seqnames, bs, be)]
+  if("strand" %in% names(bed))
+    bins[, (binIDX):= if(!ignore.strand && strand=="-") rev(seq(.N)) else seq(.N), .(seqnames, bs, be, strand)] else
+      bins[, (binIDX):= seq(.N), .(seqnames, bs, be)]
   bins$bs <- bins$be <- NULL
   
-  # Return
+  # Return ----
   return(bins)
 }
 
 #' Subtract bed coverage
 #'
-#' For each bin, computes the number of overlapping reads from a bed file
+#' Substracts regions in b to regions in a
 #' @param a Ranges for which overlaps with b have to be removed. 
 #' @param b Regions to subtract from a.
+#' @param ingore.strand Should the strand be ignored? If set to FALSE, only the regions in b with the same strand then a will be sutracted. Default= TRUE
 #' 
 #' @examples
 #' a <- data.table(seqnames= "chr3R", start= 1, end= 1000)
@@ -542,20 +610,48 @@ vl_binBed <- function(bed,
 #' 
 #' @return For each range in 'a', reports the number of overlapping features in 'b'
 #' @export
-vl_subtractBed <- function(a, b)
+vl_subtractBed <- function(a, 
+                           b,
+                           ignore.strand= TRUE)
 {
-  # Import
+  # Check ----
+  if("idx" %in% names(a))
+    stop("idx column in a, which is used internally. Please change.")
+  
+  # Import -----
   a <- vl_importBed(a)
+  a[, idx:= .I] # Original order
   b <- vl_importBed(b)
   
-  # Key
-  setkeyv(a, c("seqnames", "start", "end"))
-  setkeyv(b, c("seqnames", "start", "end"))
+  # Prepare foverlaps -----
+  if(!ignore.strand && "strand" %in% names(a) && "strand" %in% names(b))
+  {
+    a <- a[, .(seqnames, start, end, strand, idx)]
+    b <- b[, .(seqnames, start, end, strand)]
+    setkeyv(a, c("seqnames", "strand", "start", "end"))
+    setkeyv(b, c("seqnames", "strand", "start", "end"))
+  }else
+  {
+    a <- a[, .(seqnames, start, end, idx)]
+    b <- b[, .(seqnames, start, end)]
+    setkeyv(a, c("seqnames", "start", "end"))
+    setkeyv(b, c("seqnames", "start", "end"))
+  }
   
-  # Overlap
-  ov <- foverlaps(a, b)
-  ov <- ov[, .(start= c(i.start, end+1), end= c(start-1, i.end)), .(seqnames, i.start, i.end)]
-  
-  # Return
-  return(ov[, .(seqnames, start, end)])
+  # Overlap ----
+  inter <- foverlaps(a, b, nomatch= NA)
+  sub <- if("strand" %in% names(a))
+  {
+    inter[, .(start= na.omit(c(bs, end+1)),
+              end= na.omit(c(start-1, be))), .(seqnames, bs= i.start, be= i.end, idx, strand)]
+  }else
+  {
+    inter[, .(start= na.omit(c(bs, end+1)),
+              end= na.omit(c(start-1, be))), .(seqnames, bs= i.start, be= i.end, idx)]
+  }
+  sub <- sub[start>=bs & end<=be & end>start]
+  sub$bs <- sub$be <- NULL
+
+  # Return, preserving original order ----
+  return(sub[order(idx, seqnames, start), !"idx"])
 }
