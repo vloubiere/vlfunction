@@ -17,7 +17,7 @@ vl_motif_counts(sequences, ...)
   pwm_log_odds = NULL,
   genome,
   bg = "genome",
-  p.cutoff = 5e-04
+  p.cutoff = 5e-05
 )
 }
 \arguments{
@@ -33,7 +33,7 @@ vl_motif_counts(sequences, ...)
 
 \item{bg}{Background used to find motifs. Possible values include "genome" and "even". Default= "genome"}
 
-\item{p.cutoff}{p.value cutoff used for motif detection. Default= 5e-4.}
+\item{p.cutoff}{p.value cutoff used for motif detection. For enrichment analyses based on presence/absence of a motif, high cutoff might perform better (1e-4 or 5e-5) while for regression analyses, lower cutoffs might be prefered (5e-4). Default= 5e-5 (stringent).}
 
 \item{pwms_log_odds}{A PWMatrixList (in log2 odd ratio format) for which motif matches should be counted. Overrides sel and motifDB arguments (see above).}
 }

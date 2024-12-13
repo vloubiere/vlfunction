@@ -4,7 +4,7 @@
 \alias{vl_closestBed}
 \title{Find closestBed regions}
 \usage{
-vl_closestBed(a, b = NULL, n = 1, min.dist = 0, same.strand = FALSE)
+vl_closestBed(a, b = NULL, n = 1, min.dist = 0, ignore.strand = TRUE)
 }
 \arguments{
 \item{a}{Granges or data.table FOR which closest features have to be found.}
@@ -15,14 +15,14 @@ vl_closestBed(a, b = NULL, n = 1, min.dist = 0, same.strand = FALSE)
 
 \item{min.dist}{Min distance for closest feature}
 
-\item{same.strand}{Should only the closest region on the same strand be returned? Default= FALSE}
+\item{ignore.strand}{Should the strand be ignored? Default= TRUE}
 }
 \value{
-Return "a" coor and closest "b" coordinates and distance in respect to A (When a is on the - strand, “upstream” means b has a higher (start,stop).)
+A data.table containing a intervals and the closest intervals in b.
 }
 \description{
-For each line of a file, returns the closest lines in b.
-Similar to bedtools closest -a a.bed -b b.bed -D a
+For each line of a file, returns the closest lines in b, similar to bedtools closest -a a.bed -b b.bed -D a
+In addition, the distance in respect to a is returned: negative distances will be used if the closest feature in b is upstream of the feature in a, and positive distances if the feature in b is downstream.
 }
 \examples{
 a <- data.table(seqnames= "chr2R",
@@ -40,6 +40,7 @@ vl_closestBed(a, b)[]
 # To find closet yet non touching features
 vl_closestBed(vl_STARR_DSCP_top_peaks,
               min.dist = 1)
+
 # To n closest features
 vl_closestBed(vl_STARR_DSCP_top_peaks,
               min.dist = 1,

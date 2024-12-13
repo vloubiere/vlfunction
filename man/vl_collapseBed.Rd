@@ -16,7 +16,7 @@ vl_collapseBed(bed, min.gap = 1, return.idx.only = F, ignore.strand = TRUE)
 \item{ignore.strand}{Should strand be ignored for collapsing? default= TRUE}
 }
 \value{
-Collapse bed data.table
+Collapsed bed data.table
 }
 \description{
 Collapse ranges with a certain min dist between them
@@ -28,10 +28,13 @@ bed <- data.table(seqnames= "chr3R",
                   strand= c("+", "+", "-", "+", "+"))
                   
 vl_collapseBed(bed)
+
 # Return mergin index only
 vl_collapseBed(bed, return.idx.only = T)
+
 # Only merge if strand is similar
 vl_collapseBed(bed, ignore.strand = F)
+
 # Allow a certain gap for merging
 vl_collapseBed(bed, ming.gap = 1000)
 vl_collapseBed(bed, ming.gap = 10000)

@@ -11,7 +11,7 @@ vl_intersectBed(a, b, ignore.strand = TRUE, min.overlap = 1L, invert = F)
 
 \item{b}{Set of regions of interest.}
 
-\item{ignore.strand}{Should strand be ignored? default= TRUE.}
+\item{ignore.strand}{Should strand be ignored? Default= TRUE.}
 
 \item{min.overlap}{A vector integer of length 1 or nrow(a) specifying the minimum overlap (bp) require to count overlaps. Default= 1L.}
 
@@ -25,11 +25,13 @@ Return regions "a" overlapping with regions "b"
 }
 \examples{
 a <- data.table(seqnames= "chr2L",
-                start= c(1000,2000),
-                end= c(2000, 3000))
+                start= c(1000, 3000, 5000),
+                end= c(2000, 4000, 6000),
+                strand= c("+", "+", "-"))
 b <- data.table(seqnames= "chr2L",
-                start= 1500,
-                end= 1600)
+                start= c(1000, 5000),
+                end= c(2000, 6000),
+                strand= c("+", "+"))
 vl_intersectBed(a, b)
 
 }

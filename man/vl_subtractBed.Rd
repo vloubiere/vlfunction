@@ -4,18 +4,20 @@
 \alias{vl_subtractBed}
 \title{Subtract bed coverage}
 \usage{
-vl_subtractBed(a, b)
+vl_subtractBed(a, b, ignore.strand = TRUE)
 }
 \arguments{
 \item{a}{Ranges for which overlaps with b have to be removed.}
 
 \item{b}{Regions to subtract from a.}
+
+\item{ingore.strand}{Should the strand be ignored? If set to FALSE, only the regions in b with the same strand then a will be sutracted. Default= TRUE}
 }
 \value{
 For each range in 'a', reports the number of overlapping features in 'b'
 }
 \description{
-For each bin, computes the number of overlapping reads from a bed file
+Substracts regions in b to regions in a
 }
 \examples{
 a <- data.table(seqnames= "chr3R", start= 1, end= 1000)

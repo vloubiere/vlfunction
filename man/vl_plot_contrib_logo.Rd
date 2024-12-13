@@ -2,26 +2,33 @@
 % Please edit documentation in R/deepLearning_tools.R
 \name{vl_plot_contrib_logo}
 \alias{vl_plot_contrib_logo}
-\title{Plot contribution scores}
+\title{Plot contribution scores matrix}
 \usage{
 vl_plot_contrib_logo(
   bed,
-  bw,
+  h5,
+  h5.bed = sapply(dirname(h5), function(x) list.files(x, ".bed$", recursive = T,
+    full.names = T)),
   genome,
+  agg.FUN = function(x) mean(x),
   mot,
   mot.name.column = "motif_ID",
   xlab = "nt",
   ylab = "Contribution",
-  xlim = c(0, length(seq)),
-  ylim = range(contrib)
+  xlim,
+  ylim
 )
 }
 \arguments{
 \item{bed}{A bed file containing a unique region for which contrib scores will be plotted.}
 
-\item{bw}{A bw file containing the contribution scores.}
+\item{h5}{Path(s) to h5 files containing the contribution scores.}
+
+\item{h5.bed}{Bed files containing the coordinates of the regions corresponding to provided h5 files.}
 
 \item{genome}{The genome to be used.}
+
+\item{agg.FUN}{In the case were several contribution scores would be found for a single nt, how should they be aggregated? Default= function(x) mean(x)}
 
 \item{mot}{An optional bed file containing motifs to be added.}
 
@@ -39,5 +46,5 @@ vl_plot_contrib_logo(
 contrib plot
 }
 \description{
-Plot contribution scores
+Plot contribution scores matrix
 }

@@ -17,7 +17,7 @@ vl_motif_pos(sequences, ...)
   pwm_log_odds = NULL,
   genome,
   bg = "genome",
-  p.cutoff = 5e-04,
+  p.cutoff = 5e-05,
   collapse.overlapping = TRUE
 )
 }
@@ -34,7 +34,7 @@ vl_motif_pos(sequences, ...)
 
 \item{bg}{Background used to find motifs. Possible values include "genome" and "even". Default= "genome"}
 
-\item{p.cutoff}{p.value cutoff used for motif detection. Default= 5e-4.}
+\item{p.cutoff}{p.value cutoff used for motif detection. For enrichment analyses based on presence/absence of a motif, high cutoff might perform better (1e-4 or 5e-5) while for regression analyses, lower cutoffs might be prefered (5e-4). Default= 5e-5 (stringent).}
 
 \item{collapse.overlapping}{Should overlapping motifs be merged? If TRUE (default), motif instances that overlap more than 70 percent of their width are collapsed.}
 
