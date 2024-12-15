@@ -439,7 +439,7 @@ vl_motif_pos.character <- function(sequences,
                                    p.cutoff= 5e-5,
                                    collapse.overlapping= TRUE)
 {
-  # Checks
+  # Checks ----
   if(is.null(pwm_log_odds) && any(!sel %in% motifDB$motif_ID))
     stop("Some motif_ID(s) provided in 'sel' do not exist in motifDB$motif_ID.")
   if(is.null(pwm_log_odds) && length(sel)!=length(unique(sel)))
@@ -448,43 +448,43 @@ vl_motif_pos.character <- function(sequences,
     pwm_log_odds <- do.call(TFBSTools::PWMatrixList,
                             motifDB[match(sel, motif_ID), pwms_log_odds])
   
-  # Map motifs
-  pos <- motifmatchr::matchMotifs(pwm_log_odds,
-                                  sequences,
-                                  genome= genome,
-                                  p.cutoff= p.cutoff,
-                                  bg= bg,
-                                  out= "positions")
-  # Name
+  # Map motifs ----
+  pos <- parallel::mclapply(pwm_log_odds,
+                            function(x)
+                            {
+                              motifmatchr::matchMotifs(x,
+                                                       sequences,
+                                                       genome= genome,
+                                                       p.cutoff= p.cutoff,
+                                                       bg= bg,
+                                                       out= "positions")[[1]]
+                            },
+                            mc.preschedule = FALSE,
+                            mc.cores = data.table::getDTthreads()-1)
+
+  # Name ----
   names(pos) <- TFBSTools::name(pwm_log_odds)
   
-  # Format and collapse if specified
+  # Format and collapse if specified ----
   pos <- lapply(pos, function(x)
   {
     names(x) <- seq(length(sequences))
     lapply(x, function(y) {
       y <- as.data.table(y)
-      # Collapse motifs that overlap more than 70% -> return merged motifs
+      # Collapse motifs that overlap more than 70% (ignore strand)
       if(collapse.overlapping && nrow(y))
       {
-        # y <- data.table(start=c(1,2,3,4,5), end= c(5,6,7,8,9), score= 1, width= 4)
-        setorderv(y, c("start", "end"))
-        motif_width <- ceiling(y[1, width]*0.7)
-        # Identify overlapping motifs
-        y[, idx:= cumsum(c(1, (start[-.N]+motif_width-1)<=start[-1]))]
-        # Re-split tightly clustered motifs 
-        y[, idx2:= round((start-start[1])/motif_width[1]), idx]
-        y$idx <- rleidv(y, c("idx", "idx2"))
-        # Return motifs
-        y <- y[, .(start= start[1], 
-                   end= end[.N],
-                   score= max(score)), idx]
-        y[, width:= end-start+1]
-        y[, .(start, end, width, score)]
+        y[, seqnames:= "seq"]
+        y <- vl_collapseBed(y,
+                            min.gap = ceiling(y[1, width]*0.7),
+                            ignore.strand = TRUE)
+        y[, .(start, end, width= end-start+1)]
       }
       return(y)
       })
   })
+  
+  # Return ----
   return(pos)
 }
 
