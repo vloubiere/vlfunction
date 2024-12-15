@@ -2,24 +2,24 @@
 % Please edit documentation in R/deepLearning_tools.R
 \name{vl_importContrib}
 \alias{vl_importContrib}
-\title{Title}
+\title{Import contributions object}
 \usage{
 vl_importContrib(
   h5,
   bed = list.files(dirname(h5), ".bed$", full.names = TRUE),
-  selection
+  fa = list.files(dirname(h5), ".fa$", full.names = TRUE)
 )
 }
 \arguments{
-\item{h5}{Path to an h5 file containing the contribution scores.}
+\item{h5}{A vector of paths to h5 file(s) containing the contribution scores.}
 
-\item{bed}{Bed file containing the regions for which contributions were computed. By default, the file is searched in the same folder as the h5 file.}
+\item{bed}{Bed file(s) containing the regions for which contributions were computed. By default, the file is searched in the same folder as the h5 file.}
 
-\item{selection}{An optional bed file containing a selected set of regions. If specified, only the regions in bed overlapping with the selection will be returned}
+\item{fa}{fasta file(s) containing the sequences for which contributions were computed. By default, the file is searched in the same folder as the h5 file.}
 }
 \value{
-A contribution data.table containing, for each nucleotide, the corresponding base and its associated contribution score.
+A contribution data.table containing, for each region, the contribution scores (as list) and the corresponding sequence.
 }
 \description{
-Title
+Import contributions object
 }

@@ -4,41 +4,58 @@
 #'
 #' @param bw A character vector containing the path of bw files to be merged
 #' @param genome BSgenome. "dm3", "dm6", "mm10"
-#' @param bins.width Bin size. default= 25L
+#' @param scoreFUN The function to be apply to scores. Default= mean.
+#' @param bins.width Bin size. Default= 1L
 #' @param output Output bw file path
 #' @param restrict.seqnames If specified, bins are restricted to provided seqnames. Default= NULL
-#' @param scoreFUN A function to be applied to the score column before return
 #' @export
 vl_bw_merge <- function(tracks,
                         genome,
-                        bins.width= 25L,
+                        scoreFUN= function(x) mean(x),
+                        bins.width= 1L,
                         output,
-                        restrict.seqnames= NULL,
-                        scoreFUN= NULL)
+                        restrict.seqnames= NULL)
 {
-  bw <- vl_binBSgenome(genome,
-                       bins.width = bins.width,
-                       restrict.seqnames = restrict.seqnames)
-  bw[, score:= as.numeric(0)]
-  # Compute value
-  for(track in tracks)
-  {
-    bw[, score:= score+vl_bw_coverage(bw, track)]
-    print(track)
-  }
-  # Apply function to score if specified
-  if(!is.null(scoreFUN))
-    bw[, score:= scoreFUN(score)]
-  # Collapse score rle
-  bw <- bw[, .(start= start[1], end= end[.N]), .(seqnames, data.table::rleid(score), score)]
-  # Format GRanges
-  .g <- GenomicRanges::GRanges(bw)
-  BS <- BSgenome::getBSgenome(genome)
-  GenomeInfoDb::seqlevels(.g) <- GenomeInfoDb::seqlevels(BS)
-  GenomeInfoDb::seqlengths(.g) <- GenomeInfoDb::seqlengths(BS)
-  # save
-  rtracklayer::export.bw(.g, 
-                         con= output)
+  # Bin genome ----
+  genome <- BSgenome::getBSgenome(genome, load.only = TRUE)
+  size <- GenomeInfoDb::seqinfo(genome)
+  size <- GenomicRanges::GRanges(size)
+  size <- data.table::as.data.table(size)
+  if(!is.null(restrict.seqnames))
+    size <- size[seqnames %in% restrict.seqnames]
+  
+  # Compute coverage for each chromosome ----
+  cov <- size[, {
+    # Bin chromosome
+    bins <- vl_binBed(data.table(seqnames= seqnames,
+                                 start= start,
+                                 end= end),
+                      bins.width = bins.width,
+                      steps.width = bins.width)
+    # Compute coverage
+    cols <- paste0("score", seq(tracks))
+    bins[, (cols):= lapply(tracks, function(x) vl_bw_coverage(.SD, x))]
+    # Apply function for each unique combination of scores
+    bins[, score:= scoreFUN(unlist(.BY)), c(cols)]
+    # Collapse contiguous bins with similar scores
+    bins[, group:= rleid(score)]
+    bins[, start:= start[1], group]
+    bins[, end:= end[.N], group]
+    # Rerturn unique intervals
+    unique(bins[, .(start, end, score)])
+  }, seqnames]
+  
+  # Format GRanges ----
+  gr <- GenomicRanges::GRanges(cov)
+  # Add Seqlevels and seqLengths
+  seqLength <- GenomeInfoDb::seqlengths(genome)
+  if(!is.null(restrict.seqnames))
+    seqLength <- seqLength[names(seqLength) %in% restrict.seqnames]
+  GenomeInfoDb::seqlevels(gr) <- names(seqLength)
+  GenomeInfoDb::seqlengths(gr) <- seqLength
+  
+  # Save ----
+  rtracklayer::export.bw(gr, con= output)
 }
 
 #' bw coverage

@@ -7,8 +7,8 @@
 vl_plot_contrib_logo(
   bed,
   h5,
-  h5.bed = sapply(dirname(h5), function(x) list.files(x, ".bed$", recursive = T,
-    full.names = T)),
+  h5.bed = list.files(dirname(h5), ".bed$", full.names = TRUE),
+  h5.fa = list.files(dirname(h5), ".fa$", full.names = TRUE),
   genome,
   agg.FUN = function(x) mean(x),
   mot,

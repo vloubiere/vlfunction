@@ -7,22 +7,22 @@
 vl_bw_merge(
   tracks,
   genome,
-  bins.width = 25L,
+  scoreFUN = function(x) mean(x),
+  bins.width = 1L,
   output,
-  restrict.seqnames = NULL,
-  scoreFUN = NULL
+  restrict.seqnames = NULL
 )
 }
 \arguments{
 \item{genome}{BSgenome. "dm3", "dm6", "mm10"}
 
-\item{bins.width}{Bin size. default= 25L}
+\item{scoreFUN}{The function to be apply to scores. Default= mean.}
+
+\item{bins.width}{Bin size. Default= 1L}
 
 \item{output}{Output bw file path}
 
 \item{restrict.seqnames}{If specified, bins are restricted to provided seqnames. Default= NULL}
-
-\item{scoreFUN}{A function to be applied to the score column before return}
 
 \item{bw}{A character vector containing the path of bw files to be merged}
 }
