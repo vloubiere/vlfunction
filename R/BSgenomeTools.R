@@ -125,17 +125,25 @@ vl_random_regions_BSgenome <- function(genome,
 vl_getSequence <- function(bed,
                            genome)
 {
+  # Import ----
   bed <- vl_importBed(bed)
   if(!"strand" %in% names(bed))
   {
     message("'bed' strand set to unstranded (*)")
     bed[, strand:= "*"]
   }
+  # Make sequence names ----
+  names <- if("end" %in% names(bed))
+    bed[, paste0(seqnames, ":", start, "-", end, ":", strand)] else
+      bed[, paste0(seqnames, ":", start, ":", strand)]
+  # Extract ----
   sequences <- BSgenome::getSeq(BSgenome::getBSgenome(genome, load.only = TRUE), 
                                 names= bed$seqnames, 
                                 start= bed$start, 
                                 end= bed$end, 
                                 strand= bed$strand, 
                                 as.character= T)
+  names(sequences) <- names
+  # Return ----
   return(sequences)
 }

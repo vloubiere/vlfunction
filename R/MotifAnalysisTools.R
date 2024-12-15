@@ -447,7 +447,9 @@ vl_motif_pos.character <- function(sequences,
   if(is.null(pwm_log_odds))
     pwm_log_odds <- do.call(TFBSTools::PWMatrixList,
                             motifDB[match(sel, motif_ID), pwms_log_odds])
-  
+  if(is.null(names(sequences)))
+    names(sequences) <- seq(sequences)
+
   # Map motifs ----
   pos <- parallel::mclapply(pwm_log_odds,
                             function(x)
@@ -468,20 +470,23 @@ vl_motif_pos.character <- function(sequences,
   # Format and collapse if specified ----
   pos <- lapply(pos, function(x)
   {
-    names(x) <- seq(length(sequences))
-    lapply(x, function(y) {
-      y <- as.data.table(y)
+    x <- lapply(seq(x), function(i) {
+      y <- as.data.table(x[[i]])
+      y[, seqnames:= names(sequences)[i]]
+      setcolorder(y, "seqnames")
       # Collapse motifs that overlap more than 70% (ignore strand)
       if(collapse.overlapping && nrow(y))
       {
-        y[, seqnames:= "seq"]
         y <- vl_collapseBed(y,
                             min.gap = ceiling(y[1, width]*0.7),
                             ignore.strand = TRUE)
-        y[, .(start, end, width= end-start+1)]
+        y <- y[, .(seqnames, start, end, width= end-start+1)]
       }
       return(y)
       })
+    # Return
+    names(x) <- names(sequences)
+    return(x)
   })
   
   # Return ----
