@@ -12,9 +12,7 @@ vl_motif_counts(sequences, ...)
 
 \method{vl_motif_counts}{default}(
   sequences = NULL,
-  sel = vl_Dmel_motifs_DB_full[collection == "jaspar", motif_ID],
-  motifDB = vl_Dmel_motifs_DB_full,
-  pwm_log_odds = NULL,
+  pwm_log_odds = vl_Dmel_motifs_DB_full[collection == "jaspar", pwms_log_odds],
   genome,
   bg = "genome",
   p.cutoff = 5e-05
@@ -27,13 +25,9 @@ vl_motif_counts(sequences, ...)
 
 \item{genome}{Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome".}
 
-\item{sel}{Vector of motif_ID(s) existing in motifDB (see below) for which motif matches should be counted. Defaults to jaspar PWMs.}
-
-\item{motifDB}{The motifDB to be used (see 'sel' argument; ?vl_Dmel_motifs_DB_full and ?vl_motifs_DB_v2 for details). Default= vl_Dmel_motifs_DB_full.}
-
 \item{bg}{Background used to find motifs. Possible values include "genome" and "even". Default= "genome"}
 
-\item{p.cutoff}{p.value cutoff used for motif detection. For enrichment analyses based on presence/absence of a motif, high cutoff might perform better (1e-4 or 5e-5) while for regression analyses, lower cutoffs might be prefered (5e-4). Default= 5e-5 (stringent).}
+\item{p.cutoff}{p.value cutoff used for motif detection. For enrichment analyses based on presence/absence of a motif, high cutoff might perform better (1e-4 or 5e-5) while for regression analyses, lower cutoffs might be preferred (5e-4). Default= 5e-5 (stringent).}
 
 \item{pwms_log_odds}{A PWMatrixList (in log2 odd ratio format) for which motif matches should be counted. Overrides sel and motifDB arguments (see above).}
 }
@@ -59,14 +53,13 @@ STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, genome = "dm3")
 random <- vl_control_regions_BSgenome(bed= STARR, genome= "dm3")
 
 # Count JAPSPAR motifs (see below to use custom list of PWMs)
-jaspar <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
-suhw <- vl_motif_counts(SUHW, genome= "dm3", sel= jaspar)
-starr <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
-ctl <- vl_motif_counts(random, genome= "dm3", sel= sel)
+suhw <- vl_motif_counts(SUHW, genome= "dm3", pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
+starr <- vl_motif_counts(top_STARR, genome= "dm3", pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
+ctl <- vl_motif_counts(random, genome= "dm3", pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
 
 # Starting from sequence instead of bed file
 seq <- vl_getSequence(SUHW, genome= "dm3")
-seq_suhw <- vl_motif_counts(seq, genome= "dm3", sel= jaspar)
+seq_suhw <- vl_motif_counts(seq, genome= "dm3", pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
 identical(suhw, seq_suhw)
 
 # Motifs can also be counted using a custom PWMatrixList, for example for promoter motifs:

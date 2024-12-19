@@ -59,7 +59,7 @@ Rsubread::align(index= idx,
                 input_format = "gzFASTQ",
                 output_format = "BAM",
                 maxMismatches = 3,
-                nthreads = data.table::getDTthreads(),
+                nthreads = data.table::getDTthreads()-1,
                 unique = T,
                 output_file= bam)
 
@@ -71,7 +71,7 @@ Rsubread::align(index= idx,
                               GTF.attrType= "gene_id",
                               GTF.attrType.extra= "gene_name",
                               isPairedEnd = paired,
-                              nthreads = 8)
+                              nthreads = data.table::getDTthreads()-1)
 
 # Save statistics ----
 aln_stats <- fread(paste0(bam, ".summary"))

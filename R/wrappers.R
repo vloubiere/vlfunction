@@ -167,7 +167,6 @@ vl_Rsub_singularity <- function(R_script,
   return(cmd)
 }
 
-
 #' See most recent error file in a directory
 #' 
 #' @param dir URL where the reports is to be found
@@ -180,4 +179,30 @@ vl_last_err <- function(dir)
   file.show(dat[which.max(mtime), file])
 }
 
-
+#' See most recent error file in a directory
+#' 
+#' @param metadata Path to an excel metadata sheet
+#' @param first.col.name If metadata in in .xlsx format, this character string will be used to detect the starting line. Default= "user".
+#'
+#' @export
+vl_import_metadata_sheet <- function(metadata, start= "user")
+{
+  meta <- if(grepl(".txt$", metadata))
+  {
+    return(fread(metadata))
+  }else if(grepl(".rds$", metadata))
+  {
+    return(readRDS(metadata))
+  }else if(grepl(".xlsx$", metadata))
+  {
+    sheet <- readxl::read_xlsx(metadata)
+    start <- cumsum(sheet[[1]]==start)>0
+    if(sum(start)==0)
+      stop("The 'user' column, which should be the first of the excel sheet, could not be found!")
+    sheet <- sheet[(start),]
+    meta <- as.data.table(sheet[-1,])
+    names(meta) <- unlist(sheet[1,])
+    return(meta)
+  }else
+    stop("metadata file extension should be one of '.txt', '.rds' or '.xlsx'!")
+}

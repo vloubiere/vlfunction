@@ -2,25 +2,16 @@
 % Please edit documentation in R/RNAseq_pipeline.R
 \name{vl_RNAseq_processing}
 \alias{vl_RNAseq_processing}
-\alias{vl_RNAseq_processing.character}
-\alias{vl_RNAseq_processing.default}
 \title{RNA-seq pipeline}
 \usage{
-vl_RNAseq_processing(metadata, ...)
-
-\method{vl_RNAseq_processing}{character}(
-  metadata,
-  processed_metadata_output = gsub(".xlsx$", "_processed.rds", metadata),
-  ...
-)
-
-\method{vl_RNAseq_processing}{default}(
+vl_RNAseq_processing(
   metadata,
   processed_metadata_output,
+  fq_output_folder = "/scratch/stark/vloubiere/fq/RNAseq/",
+  bam_output_folder = "/scratch/stark/vloubiere/bam/RNAseq/",
   alignment_stats_output_folder = "db/alignment_stats/RNAseq/",
   count_table_output_folder = "db/count_tables/RNAseq/",
   bw_output_folder = "db/bw/RNAseq/",
-  tmp_folder = "/scratch/stark/vloubiere",
   Rpath = "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
   cores = 8,
   mem = 64,
@@ -33,18 +24,20 @@ vl_RNAseq_processing(metadata, ...)
 )
 }
 \arguments{
-\item{metadata}{The path to a correctly formatted .xlsx metadata file or a data.table. See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_RNAseq.xlsx'.}
+\item{metadata}{The path to a correctly formatted .xlsx, .txt or .rds file, or a data.table. See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_RNAseq.xlsx'.}
 
 \item{processed_metadata_output}{An .rds path where to save the processed metadata file, which contains the paths of all output files and will be used to manage them.
 By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.}
+
+\item{fq_output_folder}{Output folder for .fq files. Default= "/scratch/stark/vloubiere/fq/RNAseq/".}
+
+\item{bam_output_folder}{Output folder for .bam files. Default= "/scratch/stark/vloubiere/bam/RNAseq/".}
 
 \item{alignment_stats_output_folder}{Output folder for alignment statistics. Default= "db/alignment_stats/RNAseq/".}
 
 \item{count_table_output_folder}{Output folder for count table files. Default= "db/count_tables/RNAseq/".}
 
 \item{bw_output_folder}{Output folder for .bw tracks. Default= "db/bw/RNAseq/".}
-
-\item{tmp_folder}{Output folder for temporary files (.fq, .bam). Default= "/scratch/stark/vloubiere".}
 
 \item{Rpath}{Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript".}
 
@@ -76,8 +69,8 @@ which will be used to submit R sub-scripts.
 \details{
 The pipeline is split into two main functions. The first function vl_RNAseq_processing() demultiplexes tar files, aligns the reads and filters confident alignments.
 It takes as input a (correctly formatted) metadata file, saves the processed_metadata file and returns and/or submit the command lines to: \cr
-1/ extract reads from VBC .tar.gz file. Output .fq.gz files are saved in tmp_folder/fq/ \cr
-2/ trim the reads. Output .fq.gz files are saved in tmp_folder/fq/ \cr
+1/ extract reads from VBC .tar.gz file. Output .fq.gz files are saved in fq_output_folder/ \cr
+2/ trim the reads. Output .fq.gz files are saved in bam_output_folder/ \cr
 3/ align the reads to the provided genome (see 'genome' column of the metadata table, only mm10 is supported for now). Output .bam files are saved in tmp_folder/bam/ and alignment statistics in the alignment_stats_output_folder/ \cr
 4/ compute read counts per exon, and returns the total number of reads per gene_id. Counts statistics will be save in alignment_stats_output_folder/ (together with alignment stats) and count_tables in count_table_output_folder/  \cr
 5/ output .bw tracks that are stored in bw_output_folder/  \cr
@@ -88,36 +81,20 @@ The second function, vl_RNAseq_DESeq2() can be used for differential analysis. I
 3/ A barplot showing the statistics of each dds file, which will be saved in the PDF_output_folder. \cr
 4/ MA plots corresponding to each comparison, which will be saved in the PDF_output_folder. \cr
 }
-\section{Methods (by class)}{
-\itemize{
-\item \code{vl_RNAseq_processing(character)}: for excel files path
-
-\item \code{vl_RNAseq_processing(default)}: default method
-
-}}
 \examples{
-# Before starting:
-# Update the local version of the vlfunctions package
-devtools::install_github("vloubiere/vlfunction")
+library(vlfunctions)
+# Example metadata ----
+metadata <- system.file("RNAseq_pipeline", "metadata_RNAseq.xlsx", package = "vlfunctions")
 
-# Chose which local R executable to use
-localRPath <- "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript"
-# Make sure that the last version of the vlfunctions package is installed
-system(paste(localRPath, system.file("update_package_from_git.R", package = "vlfunctions")))
-
-# Process example dataset ----
-example <- vl_metadata_PROseq
-vl_PROseq_processing(metadata = example,
-                     processed_metadata_output = "Rdata/metadata_PROseq_processed.rds",
-                     Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript", 
-                     cores= 8,
-                     mem= 64,
-                     overwrite= FALSE,
-                     submit= FALSE)
-
-# Once the jobs are finished, you can check the size of output files:
-processed <- readRDS("Rdata/metadata_PROseq_processed.rds")
-file.size(na.omit(unlist(processed[, fq1:bw])))
+# Generate command lines ----
+cmd <- vl_RNAseq_processing(metadata= metadata,
+                            overwrite= TRUE,
+                            submit= FALSE)
+# To actually submit the jobs, switch to submit= TRUE
+vl_RNAseq_processing(metadata= metadata,
+                     processed_metadata_output = "Rdata/metadata_RNAseq_processed.rds",
+                     overwrite= FALSE,  # Existing files will not be processed again
+                     submit= TRUE)
 
 # Differential analysis
 See ?vl_RNAseq_DESeq2()

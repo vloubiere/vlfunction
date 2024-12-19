@@ -4,12 +4,10 @@
 #'
 #' @param sequences Named character vector of sequences to analyse. If provided takes over bed argument (in the case where both are specified)
 #' @param bed Either a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start' and 'end' columns.
-#' @param sel Vector of motif_ID(s) existing in motifDB (see below) for which motif matches should be counted. Defaults to jaspar PWMs.
-#' @param motifDB The motifDB to be used (see 'sel' argument; ?vl_Dmel_motifs_DB_full and ?vl_motifs_DB_v2 for details). Default= vl_Dmel_motifs_DB_full.
 #' @param pwms_log_odds A PWMatrixList (in log2 odd ratio format) for which motif matches should be counted. Overrides sel and motifDB arguments (see above).
 #' @param genome Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome".
 #' @param bg Background used to find motifs. Possible values include "genome" and "even". Default= "genome"
-#' @param p.cutoff p.value cutoff used for motif detection. For enrichment analyses based on presence/absence of a motif, high cutoff might perform better (1e-4 or 5e-5) while for regression analyses, lower cutoffs might be prefered (5e-4). Default= 5e-5 (stringent).
+#' @param p.cutoff p.value cutoff used for motif detection. For enrichment analyses based on presence/absence of a motif, high cutoff might perform better (1e-4 or 5e-5) while for regression analyses, lower cutoffs might be preferred (5e-4). Default= 5e-5 (stringent).
 #' 
 #' @examples
 #' # Resize example peaks
@@ -20,14 +18,13 @@
 #' random <- vl_control_regions_BSgenome(bed= STARR, genome= "dm3")
 #' 
 #' # Count JAPSPAR motifs (see below to use custom list of PWMs)
-#' jaspar <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
-#' suhw <- vl_motif_counts(SUHW, genome= "dm3", sel= jaspar)
-#' starr <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
-#' ctl <- vl_motif_counts(random, genome= "dm3", sel= sel)
+#' suhw <- vl_motif_counts(SUHW, genome= "dm3", pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
+#' starr <- vl_motif_counts(top_STARR, genome= "dm3", pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
+#' ctl <- vl_motif_counts(random, genome= "dm3", pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
 #' 
 #' # Starting from sequence instead of bed file
 #' seq <- vl_getSequence(SUHW, genome= "dm3")
-#' seq_suhw <- vl_motif_counts(seq, genome= "dm3", sel= jaspar)
+#' seq_suhw <- vl_motif_counts(seq, genome= "dm3", pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
 #' identical(suhw, seq_suhw)
 #' 
 #' # Motifs can also be counted using a custom PWMatrixList, for example for promoter motifs:
@@ -59,23 +56,17 @@ vl_motif_counts.data.table <- function(bed,
 #' @describeIn vl_motif_counts Identify motifs in sequences
 #' @export
 vl_motif_counts.default <- function(sequences= NULL,
-                                    sel= vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID],
-                                    motifDB= vl_Dmel_motifs_DB_full,
-                                    pwm_log_odds= NULL,
+                                    pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds],
                                     genome,
                                     bg= "genome",
                                     p.cutoff= 5e-5)
 {
-  # Select motifs
-  if(is.null(pwm_log_odds) && any(!sel %in% motifDB$motif_ID))
-    stop("Some motif_ID(s) provided in 'sel' do not exist in motifDB$motif_ID.")
-  if(is.null(pwm_log_odds) && length(sel)!=length(unique(sel)))
-    stop("Selected motif_ID(s) should be unique.")
-  if(is.null(pwm_log_odds))
+  # Checks ----
+  if(!"PWMatrixList" %in% class(pwm_log_odds))
     pwm_log_odds <- do.call(TFBSTools::PWMatrixList,
-                            motifDB[match(sel, motif_ID), pwms_log_odds])
-
-  # Compute counts
+                            vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
+  
+  # Compute counts ----
   res <- motifmatchr::matchMotifs(pwm_log_odds,
                                   sequences,
                                   genome= genome,
@@ -87,7 +78,7 @@ vl_motif_counts.default <- function(sequences= NULL,
   setnames(res,
            TFBSTools::name(pwm_log_odds))
   
-  # Save
+  # Save ----
   return(res)
 }
 
@@ -119,14 +110,13 @@ vl_motif_counts.default <- function(sequences= NULL,
 #' random <- vl_control_regions_BSgenome(bed= STARR, genome= "dm3")
 #' 
 #' # Count JAPSPAR motifs (see below to use custom list of PWMs)
-#' jaspar <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
-#' suhw <- vl_motif_counts(SUHW, genome= "dm3", sel= jaspar)
-#' starr <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
-#' ctl <- vl_motif_counts(random, genome= "dm3", sel= sel)
+#' suhw <- vl_motif_counts(SUHW, genome= "dm3", pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
+#' starr <- vl_motif_counts(top_STARR, genome= "dm3", pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
+#' ctl <- vl_motif_counts(random, genome= "dm3", pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
 #' 
 #' # Starting from sequence instead of bed file
 #' seq <- vl_getSequence(SUHW, genome= "dm3")
-#' seq_suhw <- vl_motif_counts(seq, genome= "dm3", sel= jaspar)
+#' seq_suhw <- vl_motif_counts(seq, genome= "dm3", pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
 #' identical(suhw, seq_suhw)
 #' 
 #' # Motifs can also be counted using a custom PWMatrixList, for example for promoter motifs:
@@ -279,8 +269,7 @@ vl_motif_enrich <- function(counts,
 #'                       fill = T)
 #' 
 #' # Count JAPSPAR motifs
-#' jaspar <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
-#' counts <- vl_motif_counts(combined, genome= "dm3", sel= jaspar)
+#' counts <- vl_motif_counts(combined, genome= "dm3", sel= pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
 #' 
 #' # Motifs can also be counted using a custom PWMatrixList, for example for promoter motifs:
 #' prom_db <- readRDS("/groups/stark/almeida/data/motifs/CP_motifs/CP_motifs_PWM.rds")
@@ -375,8 +364,6 @@ vl_motif_cl_enrich <- function(counts.list,
 #'
 #' @param sequences Named character vector of sequences to analyse. If provided takes over bed argument (in the case where both are specified).
 #' @param bed Either a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start' and 'end' columns.
-#' @param sel Vector of motif_ID(s) existing in motifDB (see below) and for which motif matches should be mapped Defaults to jaspar PWMs.
-#' @param motifDB The motifDB to be used (see 'sel' argument; ?vl_Dmel_motifs_DB_full and ?vl_motifs_DB_v2 for details). Default= vl_Dmel_motifs_DB_full.
 #' @param pwms_log_odds A PWMatrixList (in log2 odd ratio format) for which motif matches should be mapped. Overrides sel and motifDB arguments (see above).
 #' @param genome Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome".
 #' @param bg Background used to find motifs. Possible values include "genome" and "even". Default= "genome"
@@ -387,16 +374,12 @@ vl_motif_cl_enrich <- function(counts.list,
 #' # Find position of 3 different motifs within two regions
 #' pos <- vl_motif_pos(vl_SUHW_top_peaks[1:2],
 #'                     genome= "dm3",
-#'                     sel= c("cisbp__M2328",
-#'                            "flyfactorsurvey__suHw_FlyReg_FBgn0003567",
-#'                            "jaspar__MA0533.1"))
+#'                     pwm_log_odds= vl_Dmel_motifs_DB_full[c("cisbp__M2328", "flyfactorsurvey__suHw_FlyReg_FBgn0003567", "jaspar__MA0533.1"), pwms_log_odds, on= "motif_ID"])
 #' 
 #' # Starting from sequence
 #' pos <- vl_motif_pos(sequence= "TGAGTTGTGTCTGAAATTGGGATTGCTGTTGCGACAATGCCTGTCTGACAGCATTGTCGATAAGAGCTTGAATCTGATTGGGGTCCATGGTAATATCTACCGTGGCACTATCTAACGGCCGACCTAATGCTTGGCCTACTTGCTCCTCCTCCCAGCTATCCTCGCTTTCGTATTCGACCTTAACCTTTCTGTAGTT#' ATGTGCCCAACTCATTGGTTGTTGGTTGGCACACCACAAATATACTGTTGCCGAGCACAATTGATCGGCTAAATGGTATGGCAAGAAAAGGTATGCAATATAATAATCTTTTATTGGGTATGCAACGAAAATTTGTTTCGTCAACGTATGCAATATTTTTTATTAAAAGAGGGTATGCAATGTATTTTATTAAAAACGGGTATGCAATATAATAATCTTTTATTGGG#' TATGCAACGAAAATTTGTTTCGTCAAAGTATGCAATATTTTTTATTAAAAGAGGGTATGCAATGTATTTTATTAAAAACGGGTATGCAATAAAAAATTATTTGGTTTCTCTAAAAAGTATGCAGCACTTATTTTTTGATAAGGTATGCAACAAAATTTTACTTTGCCGAAAATATGCAATGTTTTTGCGAATAAATTCAACGCACACTTATTACGTGGCCAGATACA#' CAACTTTTTTTTTTTTTTTTCACTCGTAAATTTCTTGATTGCGTCAAAGA",
 #'                     genome= "dm3",
-#'                     sel= c("cisbp__M2328",
-#'                            "flyfactorsurvey__suHw_FlyReg_FBgn0003567",
-#'                            "jaspar__MA0533.1"))
+#'                     pwm_log_odds= vl_Dmel_motifs_DB_full[c("cisbp__M2328", "flyfactorsurvey__suHw_FlyReg_FBgn0003567", "jaspar__MA0533.1"), pwms_log_odds, on= "motif_ID"])
 #' 
 #' # Motifs can also be mapped using a custom PWMatrixList, for example for promoter motifs
 #' prom_db <- readRDS("/groups/stark/almeida/data/motifs/CP_motifs/CP_motifs_PWM.rds")
@@ -431,24 +414,19 @@ vl_motif_pos.data.table <- function(bed, genome, ...)
 #' @describeIn vl_motif_pos Identify motif positions within sequences
 #' @export
 vl_motif_pos.character <- function(sequences,
-                                   sel= vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID],
-                                   motifDB= vl_Dmel_motifs_DB_full,
-                                   pwm_log_odds= NULL,
+                                   pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds],
                                    genome,
                                    bg= "genome",
                                    p.cutoff= 5e-5,
                                    collapse.overlapping= TRUE)
 {
   # Checks ----
-  if(is.null(pwm_log_odds) && any(!sel %in% motifDB$motif_ID))
-    stop("Some motif_ID(s) provided in 'sel' do not exist in motifDB$motif_ID.")
-  if(is.null(pwm_log_odds) && length(sel)!=length(unique(sel)))
-    stop("Selected motif_ID(s) should be unique.")
-  if(is.null(pwm_log_odds))
-    pwm_log_odds <- do.call(TFBSTools::PWMatrixList,
-                            motifDB[match(sel, motif_ID), pwms_log_odds])
+  if(missing(genome))
+    stop("genome is missing with no default")
   if(is.null(names(sequences)))
     names(sequences) <- seq(sequences)
+  if(!"PWMatrixList" %in% class(pwm_log_odds))
+    pwm_log_odds <- do.call(TFBSTools::PWMatrixList, pwms_log_odds)
 
   # Map motifs ----
   pos <- parallel::mclapply(pwm_log_odds,
@@ -478,7 +456,7 @@ vl_motif_pos.character <- function(sequences,
       if(collapse.overlapping && nrow(y))
       {
         y <- vl_collapseBed(y,
-                            min.gap = ceiling(y[1, width]*0.7),
+                            min.gap = ceiling(mean(y$width)*0.7),
                             ignore.strand = TRUE)
         y <- y[, .(seqnames, start, end, width= end-start+1)]
       }
@@ -503,7 +481,6 @@ vl_motif_pos.character <- function(sequences,
 #' @examples
 #' vl_Dmel_motifs_DB_full$pwms_perc[[5]]@profileMatrix
 #' vl_pwm_perc_to_log2(vl_Dmel_motifs_DB_full$pwms_perc[[5]]@profileMatrix)
-#' 
 vl_pwm_perc_to_log2 <- function(perc_pwm)
 {
   log2(perc_pwm/matrix(0.25, nrow= 4, ncol= ncol(perc_pwm))+1e-5)

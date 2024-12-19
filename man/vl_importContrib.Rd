@@ -23,3 +23,7 @@ A contribution data.table containing, for each region, the contribution scores (
 \description{
 Import contributions object
 }
+\examples{
+dat <- vl_importContrib(h5= list.files("db/model_PH18/contributions/", "h5$", recursive = TRUE, full.names = TRUE))
+
+}

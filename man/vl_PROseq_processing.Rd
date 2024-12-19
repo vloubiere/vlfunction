@@ -2,25 +2,16 @@
 % Please edit documentation in R/PROseq_pipeline.R
 \name{vl_PROseq_processing}
 \alias{vl_PROseq_processing}
-\alias{vl_PROseq_processing.character}
-\alias{vl_PROseq_processing.default}
 \title{PRO-seq pipeline}
 \usage{
-vl_PROseq_processing(metadata, ...)
-
-\method{vl_PROseq_processing}{character}(
-  metadata,
-  processed_metadata_output = gsub(".xlsx$", "_processed.rds", metadata),
-  ...
-)
-
-\method{vl_PROseq_processing}{default}(
+vl_PROseq_processing(
   metadata,
   processed_metadata_output,
+  fq_output_folder = "/scratch/stark/vloubiere/fq/PROseq/",
+  bam_output_folder = "/scratch/stark/vloubiere/bam/PROseq/",
   count_output_folder = "db/counts/PROseq/",
   alignment_stats_output_folder = "db/alignment_stats/PROseq/",
   bw_output_folder = "db/bw/PROseq/",
-  tmp_folder = "/scratch/stark/vloubiere",
   Rpath = "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
   cores = 8,
   mem = 64,
@@ -33,18 +24,21 @@ vl_PROseq_processing(metadata, ...)
 )
 }
 \arguments{
-\item{metadata}{The path to a correctly formatted .xlsx metadata file or a data.table. See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_PROseq.xlsx'.}
+\item{metadata}{The path to a correctly formatted .xlsx, .rds or .txt metadata file, or a data.table.
+See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_PROseq.xlsx'.}
 
 \item{processed_metadata_output}{An .rds path where to save the processed metadata file, which contains the paths of all output files and will be used to manage them.
 By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.}
+
+\item{fq_output_folder}{Output folder for .fq files. Default= "/scratch/stark/vloubiere/fq/PROseq/".}
+
+\item{bam_output_folder}{Output folder for aligned .bam files. Default= "/scratch/stark/vloubiere/bam/PROseq/".}
 
 \item{count_output_folder}{Output folder for count files. Default= "db/counts/PROseq/".}
 
 \item{alignment_stats_output_folder}{Output folder for alignment statistics. Default= "db/alignment_stats/PROseq/".}
 
 \item{bw_output_folder}{Output folder for .bw tracks. Default= "db/bw/PROseq/".}
-
-\item{tmp_folder}{Output folder for temporary files (.fq, .bam). Default= "/scratch/stark/vloubiere".}
 
 \item{Rpath}{Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript".}
 
@@ -76,9 +70,9 @@ which will be used to submit R sub-script.
 \details{
 The pipeline is split into two main functions. The first function vl_PROseq_processing() aligns the reads and filters confident alignments.
 It takes as input a (correctly formatted) metadata file, saves the processed_metadata file and returns and/or submit the command lines to: \cr
-1/ extract reads from VBC bam file. Output .fq files are saved in tmp_folder/fq/ \cr
-2/ trim the reads. Output .fq files are saved in tmp_folder/fq/ \cr
-3/ aligns them to mouse/human genome (see 'genome' column of the metadata table). Output .bam files are saved in tmp_folder/bam/ \cr
+1/ extract reads from VBC bam file. Output .fq files are saved in fq_output_folder/ \cr
+2/ trim the reads. Output .fq files are saved in fq_output_folder/ \cr
+3/ aligns them to mouse/human genome (see 'genome' column of the metadata table). Output .bam files are saved in bam_output_folder/ \cr
 4/ store unaligned read into a .fq file. Output .fq files are saved in tmp_folder/fq/ \cr
 5/ align these remaining reads to spike-in genome ('dm3'). Output .bam files are saved in tmp_folder/bam/ \cr
 6/ compute counts and statistics both for the reference genome and for spike-in. Output .txt files are stored in alignment_stats_output_folder/  \cr
@@ -91,36 +85,22 @@ The second function, vl_PROseq_DESeq2() can be used for differential analysis. I
 4/ A barplot showing the statistics of each dds file, which will be saved in the PDF_output_folder. \cr
 5/ MA plots corresponding to each comparison, which will be saved in the PDF_output_folder. \cr
 }
-\section{Methods (by class)}{
-\itemize{
-\item \code{vl_PROseq_processing(character)}: for excel files path
-
-\item \code{vl_PROseq_processing(default)}: default method
-
-}}
 \examples{
-# Before starting:
-# Update the local version of the vlfunctions package
-devtools::install_github("vloubiere/vlfunction")
+library(vlfunctions)
 
-# Chose which local R executable to use
-localRPath <- "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript"
-# Make sure that the last version of the vlfunctions package is installed
-system(paste(localRPath, system.file("update_package_from_git.R", package = "vlfunctions")))
+Example metadata ----
+metadata <- system.file("PROseq_pipeline", "metadata_PROseq.xlsx", package = "vlfunctions")
 
-# Process example dataset ----
-example <- vl_metadata_PROseq
-vl_PROseq_processing(metadata = example,
-                     processed_metadata_output = "Rdata/metadata_PROseq_processed.rds",
-                     Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript", 
-                     cores= 8,
-                     mem= 64,
-                     overwrite= FALSE,
-                     submit= FALSE)
-
-# Once the jobs are finished, you can check the size of output files:
-processed <- readRDS("Rdata/metadata_PROseq_processed.rds")
-file.size(na.omit(unlist(processed[, fq1:bwNS])))
+# Generate command lines ----
+cmd <- vl_PROseq_processing(metadata = metadata,
+                            overwrite= TRUE,
+                            submit= FALSE)
+                          
+# To actually submit the jobs, switch to submit= TRUE ----
+vl_PROseq_processing(metadata = metadata,
+                    processed_metadata_output = "Rdata/metadata_PROseq_processed.rds",
+                    overwrite= FALSE, # Existing files will not be processed again
+                    submit= TRUE)
 
 # Differential analysis
 See ?vl_PROseq_DESeq2()

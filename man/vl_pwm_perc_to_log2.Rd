@@ -18,5 +18,4 @@ PWM perc to log2
 \examples{
 vl_Dmel_motifs_DB_full$pwms_perc[[5]]@profileMatrix
 vl_pwm_perc_to_log2(vl_Dmel_motifs_DB_full$pwms_perc[[5]]@profileMatrix)
-
 }

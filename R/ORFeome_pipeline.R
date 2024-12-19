@@ -17,11 +17,11 @@
 #' 3/ MAGeCK output \cr
 #' 4/ MA plot .pdf \cr
 #'
-#' @param metadata The path to a correctly formatted .xlsx metadata file or a data.table. See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_PROseq.xlsx'.
+#' @param metadata The path to a correctly formatted .xlsx. .rds or .txt metadata file, or a data.table. See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_PROseq.xlsx'.
 #' @param processed_metadata_output An .rds path where to save the processed metadata file, which contains the paths of all output files and will be used to manage them.
 #' By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path. 
-#' @param fq_output_folder Output folder for .fq files. Default= "/scratch/stark/vloubiere/ORFeome/fq/".
-#' @param bam_output_folder Output folder for aligne bam files Default= "/scratch/stark/vloubiere/ORFeome/bam/".
+#' @param fq_output_folder Output folder for .fq files. Default= "/scratch/stark/vloubiere/fq/ORFeome/".
+#' @param bam_output_folder Output folder for aligned bam files Default= "/scratch/stark/vloubiere/bam/ORFeome/".
 #' @param alignment_stats_output_folder Output folder for alignment statistics. Default= "db/alignment_stats/ORFeome/".
 #' @param BC_count_output_folder Output folder for count files. Default= "db/counts/ORFeome/".
 #' @param Rpath Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript".
@@ -38,106 +38,107 @@
 #' These commands can then be submitted either directly via the function, or using vl_bsub()...
 #'
 #' @examples
-#' # Before starting:
-#' # Update the local version of the vlfunctions package
-#' devtools::install_github("vloubiere/vlfunction")
+#' library(vlfunctions)
 #' 
-#' # Chose which local R executable to use
-#' localRPath <- "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript"
-#' # Make sure that the last version of the vlfunctions package is installed
-#' system(paste(localRPath, system.file("update_package_from_git.R", package = "vlfunctions")))
+#' # Example metadata ----
+#' metadata <- system.file("ORFeome_pipeline", "metadata_ORFeome.xlsx", package = "vlfunctions")
 #' 
-#' # Process data ----
-#' vl_ORFeome_processing(metadata = "Rdata/metadata_ORFeome.xlsx",
+#' # Generate command lines ----
+#' cmd <- vl_ORFeome_processing(metadata= metadata,
+#'                              overwrite= TRUE,
+#'                              submit= FALSE)
+#' # To actually submit the jobs, switch to submit= TRUE
+#' vl_ORFeome_processing(metadata= metadata,
 #'                       processed_metadata_output = "Rdata/metadata_ORFeome_processed.rds",
-#'                       Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
-#'                       cores= 8,
-#'                       mem= 64,
-#'                       overwrite= FALSE,
+#'                       overwrite= FALSE,  # Existing files will not be processed again
 #'                       submit= TRUE)
 #' 
 #' # Differential analysis
 #' See ?vl_ORFeome_MAGeCK()
 #' 
 #' @export
-vl_ORFeome_processing <- function(metadata, ...) UseMethod("vl_ORFeome_processing")
-
-#' @describeIn vl_ORFeome_processing for excel files path
-#' @export
-vl_ORFeome_processing.character <- function(metadata,
-                                            processed_metadata_output= gsub(".xlsx$", "_processed.rds", metadata),
-                                            ...)
+vl_ORFeome_processing <- function(metadata,
+                                  processed_metadata_output,
+                                  fq_output_folder= "/scratch/stark/vloubiere/fq/ORFeome/",
+                                  bam_output_folder= "/scratch/stark/vloubiere/bam/ORFeome/",
+                                  alignment_stats_output_folder= "db/alignment_stats/ORFeome/",
+                                  BC_count_output_folder= "db/counts/ORFeome/",
+                                  Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
+                                  cores= 8,
+                                  mem= 64,
+                                  overwrite= FALSE,
+                                  counts.exists= TRUE,
+                                  submit= FALSE,
+                                  wdir= getwd(),
+                                  logs= "db/logs/ORFeome/processing",
+                                  time= '12:00:00')
 {
-  sheet <- readxl::read_xlsx(metadata)
-  start <- cumsum(sheet[[1]]=="user")>0
-  sheet <- sheet[(start),]
-  meta <- as.data.table(sheet[-1,])
-  names(meta) <- unlist(sheet[1,])
-  vl_ORFeome_processing(metadata= meta,
-                        processed_metadata_output= processed_metadata_output,
-                        ...)
-}
-
-#' @describeIn vl_ORFeome_processing default method
-#' @export
-vl_ORFeome_processing.default <- function(metadata,
-                                          processed_metadata_output,
-                                          fq_output_folder= "/scratch/stark/vloubiere/ORFeome/fq/",
-                                          bam_output_folder= "/scratch/stark/vloubiere/ORFeome/bam/",
-                                          alignment_stats_output_folder= "db/alignment_stats/ORFeome/",
-                                          BC_count_output_folder= "db/counts/ORFeome/",
-                                          Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
-                                          cores= 6,
-                                          mem= 32,
-                                          overwrite= FALSE,
-                                          counts.exists= TRUE,
-                                          submit= FALSE,
-                                          wdir= getwd(),
-                                          logs= "db/logs/ORFeome/processing",
-                                          time= '12:00:00')
-{
-  # Import metadata and check format ----
-  meta <- data.table::copy(metadata)
-  cols <- c("user", "batch", "used", "screen", "condition", "sort", "cell_line", "replicate", "sampleID", "dictionary", "MAGeCK_sort", "i7", "layout", "sequencer", "bam_path")
-  if(!all(cols %in% names(meta)))
-    stop(paste("Columns missing ->", paste(cols[!cols %in% names(meta)], collapse = "; ")))
-  if(!all(meta[, sampleID==paste0(screen, "_", condition, "_", sort, "_", cell_line, "_", replicate)]))
-    warning("sampleID should be the concatenation of screen, condition, sort, cell_line and replicate (separated by '_'). Any samples with the same sampleID will be collapsed!")
+  # Import metadata and check layout ----
+  meta <- if(is.data.table(metadata))
+    data.table::copy(metadata) else
+      vl_import_metadata_sheet(metadata)
+  
+  # Check required columns ----
+  # Design
+  required_cols <- c("used", "screen", "condition", "sort", "cell_line", "replicate",
+                     "sampleID", "dictionary", "MAGeCK_sort", "layout", "fq1", "fq2")
+  missing_cols <- setdiff(required_cols, names(meta))
+  if(length(missing_cols))
+    stop(paste("Metadata required columns mising:", paste0(missing_cols, collapse = ", ")))
+  # Check fq files
+  meta[, fq1:= as.character(fq1)]
+  meta[, fq2:= as.character(fq2)]
+  if(nrow(meta[is.na(fq1)]) | nrow(meta[layout=="PAIRED" & is.na(fq2)]))
+  {
+    missing_cols <- setdiff(c("bam_path", "i7"), names(meta))
+    if(length(missing_cols))
+      stop(paste("fq1 files not provided and the metadata is missing the following columns for demultiplexing:",
+                 paste0(missing_cols, collapse = ", ")))
+  }
+  
+  # Check arguments ----
+  # If fq files provided, make sure they exist
+  fqs <- na.omit(unlist(meta[!is.na(fq1)|!is.na(fq2), .(fq1, fq2)]))
+  if(length(fqs))
+  {
+    if(any(!grepl(".fq.gz$", fqs)))
+      stop("Some user-provided .fq files do not have the correct extesion, .fq.gz")
+    if(any(!file.exists(fqs)))
+      stop("Some user-provided .fq files do not exist. Check that the path is correct")
+  }
+  # Check metadata output
+  if(submit && !grepl(".rds$", processed_metadata_output))
+    stop("processed_metadata_output should end up with a .rds extension")
+  # Dictionary alignment indexes
+  if(any(meta$dictionary!="lib200"))
+    stop("For now, only 'lib200' dictionary is supported (see 'dictionary' column of the metadata)")
+  # layout
   if(!all(meta$layout %in% c("SINGLE", "PAIRED")))
     stop("layout column should only contain 'SINGLE' or 'PAIRED'")
-  
   # Check used samples
   meta[, used:= as.logical(used)]
   if(any(!meta$used))
     print(paste(sum(!meta$used), "rows were set to used==FALSE and were removed"))
   meta <- meta[(used)]
-  
-  # Check dictionary ----
-  if(any(meta$dictionary!="lib200"))
-    stop("For now, only 'lib200' dictionary is supported (see 'dictionary' column of the metadata)")
+  # Warning for duplicated sample IDs
+  potential_dup <- meta[, .N, sampleID][N>1]
+  if(nrow(potential_dup))
+    warning(paste("The following sampleIDs were present more than once and will be merged (resequenced)?:",
+                  paste0(potential_dup$sampleID, collapse = ", ")))
   
   # Generate output paths ----
-  meta[, fq1:= paste0(fq_output_folder, "/", gsub(".bam", paste0("_", i7, ifelse(layout=="PAIRED", "_1.fq.gz", ".fq.gz")), basename(bam_path))), .(bam_path, i7, layout)]
-  meta[, fq1_trimmed:= gsub(".fq.gz", "_trimmed.fq.gz", fq1)]
+  # fq files
+  meta[is.na(fq1) & !is.na(bam_path), fq1:= {
+    paste0(fq_output_folder, "/",
+           gsub(".bam", paste0("_", i7, "_1.fq.gz"), basename(bam_path)))
+  }, .(bam_path, i7, layout)]
+  # Trimmed
+  meta[, fq1_trimmed:= paste0(fq_output_folder, "/", gsub(".fq.gz", "_trimmed.fq.gz", basename(fq1)))]
   # re-sequencing are merged from this step on!
   meta[, bam:= paste0(bam_output_folder, "/", sampleID, "_", dictionary, ".bam")]
   meta[, align_stats:= paste0(alignment_stats_output_folder, "/", sampleID, "_", dictionary, "_stats.txt")]
   # UMI-collapsed read counts (total read counts and UMI-collapsed read counts per unique genomic coordinate)
   meta[, count:= paste0(BC_count_output_folder, "/", sampleID, "_", dictionary, "_counts.txt")]
-  # Save processed metadata ----
-  if(!grepl(".rds$", processed_metadata_output))
-    stop("processed_metadata_output should end up with a .rds extension") else
-      saveRDS(meta, processed_metadata_output)
-  
-  # Create output directories ----
-  dirs <- c(logs,
-            na.omit(unique(dirname(unlist(meta[, fq1:count])))))
-  if(any(!dir.exists(dirs)))
-  {
-    sapply(dirs, dir.create, showWarnings = F, recursive = T)
-    outDirs <- paste0(c(fq_output_folder, bam_output_folder, alignment_stats_output_folder, BC_count_output_folder), collapse= ", ")
-    print(paste("Output directories were created in:", outDirs, "!"))
-  }
   
   # Check whether demultiplexing and alignment should be performed ----
   meta[, preProcess:= ifelse(counts.exists, !file.exists(count), TRUE)] # Check if demultiplex/alignment should be performed
@@ -146,7 +147,7 @@ vl_ORFeome_processing.default <- function(metadata,
   meta[, extract_cmd:= {
     if(overwrite | (preProcess & !file.exists(fq1)))
     {
-      fq_prefix <- normalizePath(gsub(ifelse(layout=="PAIRED", "_1.fq.gz$", ".fq.gz$"), "", fq1), mustWork = F)
+      fq_prefix <- normalizePath(gsub("_1.fq.gz$", "", fq1), mustWork = F)
       paste("samtools view -@", cores-1, bam_path,
             # "| head -n 40000", # For tests
             "| perl",
@@ -155,7 +156,7 @@ vl_ORFeome_processing.default <- function(metadata,
             i7,
             fq_prefix)
     }
-  }, .(fq1, bam_path, i7, layout, preProcess)]
+  }, .(layout, fq1, preProcess)]
   
   # Trim fq files ----
   meta[, trim_cmd:= {
@@ -200,8 +201,7 @@ vl_ORFeome_processing.default <- function(metadata,
   }, .(bam, dictionary, align_stats, count)]
   
   # Return commands ----
-  load_cmd <- paste(c(paste("cd", wdir),
-                      "module load build-env/2020",
+  load_cmd <- paste(c("module load build-env/2020",
                       "module load trim_galore/0.6.0-foss-2018b-python-2.7.15",
                       "module load samtools/1.9-foss-2018b",
                       "module load bowtie2/2.3.4.2-foss-2018b"), collapse = "; ")
@@ -209,13 +209,34 @@ vl_ORFeome_processing.default <- function(metadata,
                     names(meta))
   cmd <- if(length(cols))
     meta[, .(cmd= paste0(c(load_cmd, unique(na.omit(unlist(.SD)))),
-                         collapse = "; ")), sampleID, .SDcols= cols] else
+                         collapse = "; ")), sampleID, .SDcols= cols][cmd!=load_cmd] else
                            data.table()
   
-  # Submit commands ----
+  # If commands were generated ----
   if(nrow(cmd))
   {
+    # If commands are to be submitted ----
     if(submit)
+    {
+      # Save processed metadata ----
+      saveRDS(meta[, -c(cols, "preProcess"), with= FALSE],
+              processed_metadata_output)
+      
+      # Create output directories ----
+      dirs <- c(logs,
+                na.omit(unique(dirname(unlist(meta[, fq1:count])))))
+      if(any(!dir.exists(dirs)))
+      {
+        sapply(dirs, dir.create, showWarnings = F, recursive = T)
+        outDirs <- paste0(c(fq_output_folder,
+                            bam_output_folder,
+                            alignment_stats_output_folder,
+                            BC_count_output_folder),
+                          collapse= ", ")
+        print(paste("Output directories were created in:", outDirs, "!"))
+      }
+      
+      # Submit commands ----
       cmd[, {
         vl_bsub(cmd, 
                 cores= cores, 
@@ -223,9 +244,13 @@ vl_ORFeome_processing.default <- function(metadata,
                 name = "ORFeome", 
                 t = time,
                 o= paste0(normalizePath(logs), "/", sampleID),
-                e= paste0(normalizePath(logs), "/", sampleID))
-      }, .(sampleID, cmd)] else
-        return(cmd)
+                e= paste0(normalizePath(logs), "/", sampleID),
+                wdir= wdir)
+      }, .(sampleID, cmd)] 
+    }else
+    {
+      return(cmd)
+    }
   }else
     warning("All output files already existed! No command submitted ;). Consider overwrite= T if convenient.")
 }
@@ -306,14 +331,6 @@ vl_ORFeome_MAGeCK <- function(sample.counts,
   MA_plot_pdf <- gsub(".raw_counts.txt$", ".MA_plot.pdf", raw_counts_table)
   master_table_prefix <- gsub("gene_summary.txt$", "gene_summary_master", FC_table)
   
-  # Create output directories
-  dirs <- c(logs, output_folder)
-  if(any(!dir.exists(dirs)))
-  {
-    print("Output folder were created:")
-    sapply(dirs, dir.create, showWarnings = FALSE, recursive = TRUE)
-  }
-  
   # Generate raw and filtered counts table ----
   cmd <- if(overwrite | !file.exists(raw_counts_table) | !file.exists(filtered_counts_table))
   {
@@ -385,24 +402,39 @@ vl_ORFeome_MAGeCK <- function(sample.counts,
   
   # Return commands and submit ----
   cmd <- paste0(na.omit(cmd), collapse= "; ")
+  
+  # If command had been generated ----
   if(cmd!="")
   {
+    # If command is to be submitted ----
     if(submit)
     {
+      # Create output directories
+      dirs <- c(logs, output_folder)
+      if(any(!dir.exists(dirs)))
+      {
+        print("Output folder were created:")
+        sapply(dirs, dir.create, showWarnings = FALSE, recursive = TRUE)
+      }
+      
+      # Submit commands ----
       vl_bsub(cmd, 
               cores= cores, 
               m = mem, 
               name = "MAGeCK", 
               t = time,
               o= paste0(normalizePath(logs), "/", screen_name, "/", cdition_name),
-              e= paste0(normalizePath(logs), "/", screen_name, "/", cdition_name))
+              e= paste0(normalizePath(logs), "/", screen_name, "/", cdition_name),
+              wdir= wdir)
     }else
+    {
       return(cmd)
+    }
   }else
-    print("All files already exist!")
+    print("Files already existed! No command generated.")
 }
 
-#' Autmoatic wrapper MAGeCK analysis ORFeome screen
+#' Automatic wrapper MAGeCK analysis ORFeome screen
 #'
 #' This function is a wrapper around ?vl_ORFeome_MAGeCK() that used the provided metadata to run all comparisons.
 #' @param processed_metadata Path to the metadata file generated by vl_ORFeome_processing (in .rds or .txt format), or the corresponding data.table.
@@ -428,48 +460,48 @@ vl_ORFeome_MAGeCK <- function(sample.counts,
 #' @param time The time required for the SLURM scheduler. Default= '1:00:00'.
 #'
 #' @return Command lines to run MAGeCK for a single screen.
+#' @examples
+#' # Processed metadata ----
+#' processed <- readRDS("Rdata/metadata_ORFeome_processed.rds")
+#' 
+#' # Call hits for all conditions using MAgECK ----
+#' vl_ORFeome_MAGeCK_auto(processed,
+#'                        #' FC_metadata_output = "Rdata/metadata_ORFeome_FC_tables.rds",
+#'                        overwrite = FALSE, # Do not re-process existing files
+#'                        submit = TRUE)
+#'                        
+#' # FC tables metadata ----
+#' FC_tables <- readRDS("Rdata/metadata_ORFeome_FC_tables.rds")
+#' 
 #' @export
-vl_ORFeome_MAGeCK_auto <- function(processed_metadata, ...) UseMethod("vl_ORFeome_MAGeCK_auto")
-
-#' @describeIn vl_ORFeome_MAGeCK_auto  for processed_metadata file path
-#' @export
-vl_ORFeome_MAGeCK_auto.character <- function(processed_metadata,
-                                             ...)
+vl_ORFeome_MAGeCK_auto <- function(processed_metadata,
+                                   FC_metadata_output= gsub("_processed.rds", "_FC_tables.rds"),
+                                   screen_group_columns= c("screen", "cell_line"),
+                                   condition_group_columns= c("condition", "sort"),
+                                   paired= "auto",
+                                   sort_column= "MAGeCK_sort",
+                                   output_folder= "db/FC_tables/ORFeome/",
+                                   input.cutoff.FUN= function(x) sum(x)>=0,
+                                   sample.cutoff.FUN= function(x) sum(x)>=3,
+                                   row.cutoff.FUN= function(x) sum(x)>=0,
+                                   pseudocount= 0,
+                                   logFC.cutoff= 1,
+                                   FDR.cutoff= 0.05,
+                                   Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
+                                   cores= 2,
+                                   mem= 8,
+                                   overwrite= FALSE,
+                                   submit= FALSE,
+                                   wdir= getwd(),
+                                   logs= "db/logs/ORFeome/MAGeCK",
+                                   time= '01:00:00')
 {
-  meta <- if(grepl(".rds$", processed_metadata))
-    readRDS(processed_metadata) else if(grepl(".txt$", processed_metadata))
-      fread(processed_metadata) else
-        stop("processed_metadata should be in .rds or in .txt format")
-  vl_ORFeome_MAGeCK_auto(processed_metadata= meta,
-                         ...)
-}
-
-#' @describeIn vl_ORFeome_MAGeCK_auto default method
-#' @export
-vl_ORFeome_MAGeCK_auto.default <- function(processed_metadata,
-                                           FC_metadata_output= gsub("_processed.rds", "_FC_tables.rds"),
-                                           screen_group_columns= c("screen", "cell_line"),
-                                           condition_group_columns= c("condition", "sort"),
-                                           paired= "auto",
-                                           sort_column= "MAGeCK_sort",
-                                           output_folder= "db/FC_tables/ORFeome/",
-                                           input.cutoff.FUN= function(x) sum(x)>=0,
-                                           sample.cutoff.FUN= function(x) sum(x)>=3,
-                                           row.cutoff.FUN= function(x) sum(x)>=0,
-                                           pseudocount= 0,
-                                           logFC.cutoff= 1,
-                                           FDR.cutoff= 0.05,
-                                           Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
-                                           cores= 2,
-                                           mem= 8,
-                                           overwrite= FALSE,
-                                           submit= FALSE,
-                                           wdir= getwd(),
-                                           logs= "db/logs/ORFeome/MAGeCK",
-                                           time= '01:00:00')
-{
-  # Hard copy metadata ----
-  meta <- data.table::copy(processed_metadata)
+  # Import metadata and check layout ----
+  meta <- if(is.data.table(processed_metadata))
+    data.table::copy(processed_metadata) else
+      vl_import_metadata_sheet(processed_metadata)
+  
+  # screen_name, cdition_name ----
   meta[, screen_name:= paste0(unlist(.BY), collapse = "_"), screen_group_columns]
   meta[, cdition_name:= paste0(unlist(.BY), collapse = "_"), condition_group_columns]
   
@@ -483,6 +515,10 @@ vl_ORFeome_MAGeCK_auto.default <- function(processed_metadata,
   }
   if(!all(meta[!grepl("input", cdition_name), MAGeCK_sort] %in% c("pos", "neg")))
     stop("For sorted (non-input) samples, 'MAGeCK_sort' column should either be set to 'pos' or 'neg'.")
+  
+  # Check metadata output
+  if(submit && !grepl(".rds$", FC_metadata_output))
+    stop("FC_metadata_output should end up with a .rds extension")
   
   # Make sure that replicates will be in the same order ----
   setorderv(meta, "replicate")
@@ -522,9 +558,8 @@ vl_ORFeome_MAGeCK_auto.default <- function(processed_metadata,
   cmb[, FC_table:= gsub(".raw_counts.txt$", ".gene_summary.txt", raw_counts_table)]
   cmb[, MA_plot_pdf:= gsub(".raw_counts.txt$", ".MA_plot.pdf", raw_counts_table)]
   cmb[, master_table_prefix:= gsub("gene_summary.txt$", "gene_summary_master", FC_table)]
-
+  
   # Save metadata table ----
-  message(paste("Metadata saved in", FC_metadata_output))
   saveRDS(cmb,
           FC_metadata_output)
   

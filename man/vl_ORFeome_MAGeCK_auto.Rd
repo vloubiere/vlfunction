@@ -2,15 +2,9 @@
 % Please edit documentation in R/ORFeome_pipeline.R
 \name{vl_ORFeome_MAGeCK_auto}
 \alias{vl_ORFeome_MAGeCK_auto}
-\alias{vl_ORFeome_MAGeCK_auto.character}
-\alias{vl_ORFeome_MAGeCK_auto.default}
-\title{Autmoatic wrapper MAGeCK analysis ORFeome screen}
+\title{Automatic wrapper MAGeCK analysis ORFeome screen}
 \usage{
-vl_ORFeome_MAGeCK_auto(processed_metadata, ...)
-
-\method{vl_ORFeome_MAGeCK_auto}{character}(processed_metadata, ...)
-
-\method{vl_ORFeome_MAGeCK_auto}{default}(
+vl_ORFeome_MAGeCK_auto(
   processed_metadata,
   FC_metadata_output = gsub("_processed.rds", "_FC_tables.rds"),
   screen_group_columns = c("screen", "cell_line"),
@@ -83,10 +77,17 @@ Command lines to run MAGeCK for a single screen.
 \description{
 This function is a wrapper around ?vl_ORFeome_MAGeCK() that used the provided metadata to run all comparisons.
 }
-\section{Methods (by class)}{
-\itemize{
-\item \code{vl_ORFeome_MAGeCK_auto(character)}: for processed_metadata file path
+\examples{
+# Processed metadata ----
+processed <- readRDS("Rdata/metadata_ORFeome_processed.rds")
 
-\item \code{vl_ORFeome_MAGeCK_auto(default)}: default method
+# Call hits for all conditions using MAgECK ----
+vl_ORFeome_MAGeCK_auto(processed,
+                       #' FC_metadata_output = "Rdata/metadata_ORFeome_FC_tables.rds",
+                       overwrite = FALSE, # Do not re-process existing files
+                       submit = TRUE)
+                       
+# FC tables metadata ----
+FC_tables <- readRDS("Rdata/metadata_ORFeome_FC_tables.rds")
 
-}}
+}

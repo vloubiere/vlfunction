@@ -2,26 +2,15 @@
 % Please edit documentation in R/ChIP_CUT&RUN_pipeline.R
 \name{vl_CUTNRUN_processing}
 \alias{vl_CUTNRUN_processing}
-\alias{vl_CUTNRUN_processing.character}
-\alias{vl_CUTNRUN_processing.default}
-\alias{vl_CUTNRUN_peakCalling.default}
 \title{CUTNRUN pipeline}
 \usage{
-vl_CUTNRUN_processing(metadata, ...)
-
-\method{vl_CUTNRUN_processing}{character}(
-  metadata,
-  processed_metadata_output = gsub(".xlsx$", "_processed.rds", metadata),
-  ...
-)
-
-\method{vl_CUTNRUN_processing}{default}(
+vl_CUTNRUN_processing(
   metadata,
   processed_metadata_output,
+  fq_output_folder = "/scratch/stark/vloubiere/fq/CUTNRUN/",
+  bam_output_folder = "/scratch/stark/vloubiere/bam/CUTNRUN/",
   alignment_stats_output_folder = "db/alignment_stats/CUTNRUN/",
-  peaks_output_folder = "db/peaks/CUTNRUN/",
-  bw_output_folder = "db/bw/CUTNRUN/",
-  tmp_folder = "/scratch/stark/vloubiere",
+  tmp_folder = "/scratch/stark/vloubiere/CUTNRUN/tmp/sort/",
   cores = 8,
   mem = 64,
   overwrite = FALSE,
@@ -30,33 +19,21 @@ vl_CUTNRUN_processing(metadata, ...)
   logs = "db/logs/CUTNRUN/processing",
   time = "1-00:00:00"
 )
-
-\method{vl_CUTNRUN_peakCalling}{default}(
-  processed_metadata,
-  Rpath = "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
-  extsize = 300,
-  cores = 8,
-  mem = 64,
-  overwrite = FALSE,
-  submit = FALSE,
-  wdir = getwd(),
-  logs = "db/logs/CUTNRUN/peak_calling",
-  time = "1-00:00:00"
-)
 }
 \arguments{
-\item{metadata}{The path to a correctly formatted .xlsx metadata file or a data.table. See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_CutNRun.xlsx'.}
+\item{metadata}{The path to a correctly formatted .xlsx. .rds or .txt metadata file, or a data.table.
+See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_CutNRun.xlsx'.}
 
 \item{processed_metadata_output}{An .rds path where to save the processed metadata file, which contains the paths of all output files and will be used to manage them.
 By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.}
 
+\item{fq_output_folder}{Output folder for .fq files. Default= "/scratch/stark/vloubiere/fq/CUTNRUN/".}
+
+\item{bam_output_folder}{Output folder for .bam aligned files. Default= "/scratch/stark/vloubiere/bam/CUTNRUN/".}
+
 \item{alignment_stats_output_folder}{Output folder for alignment statistics. Default= "db/alignment_stats/CUTNRUN/".}
 
-\item{peaks_output_folder}{Output folder for peak files. Default= "db/peaks/CUTNRUN/".}
-
-\item{bw_output_folder}{Output folder for .bw tracks. Default= "db/bw/CUTNRUN/".}
-
-\item{tmp_folder}{Output folder for temporary files (.fq, .bam). Default= "/scratch/stark/vloubiere/ORFtag".}
+\item{tmp_folder}{Temporary folder to store bam files during sorting. Default= "/scratch/star/vloubiere/CUTNRUN/tmp/sort/"}
 
 \item{cores}{Number of cores per job. Default= 8.}
 
@@ -97,39 +74,25 @@ The second function, vl_CUTNRUN_peakCalling(), takes care of the peak calling, a
 4/ .bw tracks using merged replicates. Output .bw files are saved in bw_output_folder/ \cr
 5/ Confident peaks that are detected using merged reads but also each individual replicate. Output .narrowpeak files are saved in peaks_output_folder/ \cr
 }
-\section{Methods (by class)}{
-\itemize{
-\item \code{vl_CUTNRUN_processing(character)}: for excel files path
-
-\item \code{vl_CUTNRUN_processing(default)}: default method
-
-}}
-\section{Functions}{
-\itemize{
-\item \code{vl_CUTNRUN_peakCalling(default)}: default method
-
-}}
 \examples{
 # Process example dataset ----
 library(vlfunctions)
-meta <- vl_metadata_CUTNRUN
-vl_CUTNRUN_processing(metadata = meta,
+
+# Example metadata ----
+metadata <- system.file("CUTNRUN_pipeline", "metadata_CutNRun.xlsx", package = "vlfunctions")
+
+# Generate commands ----
+cmd <- vl_CUTNRUN_processing(metadata = metadata,
+                             overwrite= TRUE,
+                             submit= FALSE)
+                             
+# To submit, switch to submit= TRUE ----
+vl_CUTNRUN_processing(metadata = metadata,
                       processed_metadata_output = "Rdata/metadata_CutNRun_processed.rds",
-                      cores= 8,
-                      mem= 64,
-                      overwrite= FALSE,
+                      overwrite= FALSE, # Existing files will not be processed again
                       submit= TRUE)
                       
-# Once the jobs have finished to work, you can check the size of output files:
-processed <- readRDS("Rdata/metadata_CutNRun_processed.rds")
-file.size(unlist(unique(processed[, fq1:mapq30_stats])))
-
-# Peak calling (see ?vl_CUTNRUN_peakCalling)----
-vl_CUTNRUN_peakCalling(processed_metadata = processed, # You can also provide the path to the file.
-                       extsize = 300,
-                       cores = 8,
-                       mem = 64,
-                       overwrite = FALSE,
-                       submit = TRUE)
+# Peak calling 
+see ?vl_CUTNRUN_peakCalling()
 
 }

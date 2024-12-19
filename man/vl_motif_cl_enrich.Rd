@@ -102,8 +102,7 @@ combined <- rbindlist(list(SUHW= SUHW,
                       fill = T)
 
 # Count JAPSPAR motifs
-jaspar <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
-counts <- vl_motif_counts(combined, genome= "dm3", sel= jaspar)
+counts <- vl_motif_counts(combined, genome= "dm3", sel= pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
 
 # Motifs can also be counted using a custom PWMatrixList, for example for promoter motifs:
 prom_db <- readRDS("/groups/stark/almeida/data/motifs/CP_motifs/CP_motifs_PWM.rds")

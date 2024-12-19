@@ -13,7 +13,7 @@ my $i7_index = $ARGV[1];
 my $output_prefix = $ARGV[2];
 
 # Open the output file
-open(my $out, '>', "${output_prefix}.fq") or die "Cannot open output file: $!";
+open(my $out, '>', "${output_prefix}_1.fq") or die "Cannot open output file: $!";
 
 # Process the SAM file from standard input
 while (my $line = <STDIN>) {

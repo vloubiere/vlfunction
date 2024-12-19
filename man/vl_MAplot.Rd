@@ -22,6 +22,6 @@ MA plot
 Plots a nice MA plot
 }
 \examples{
-vl_MAplot(fread("/groups/stark/vloubiere/projects/epigenetic_cancer/db/FC_tables/RNA/epiCancer_GFP_PH29_vs_W29.txt"),
+vl_MAplot(DESeq2_dat= fread("/groups/stark/vloubiere/projects/epigenetic_cancer/db/FC_tables/RNA/epiCancer_GFP_PH29_vs_W29.txt"),
           main= "PH29")
 }

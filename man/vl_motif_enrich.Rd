@@ -85,14 +85,13 @@ STARR <- vl_resizeBed(vl_STARR_DSCP_top_peaks, genome = "dm3")
 random <- vl_control_regions_BSgenome(bed= STARR, genome= "dm3")
 
 # Count JAPSPAR motifs (see below to use custom list of PWMs)
-jaspar <- vl_Dmel_motifs_DB_full[collection=="jaspar", motif_ID]
-suhw <- vl_motif_counts(SUHW, genome= "dm3", sel= jaspar)
-starr <- vl_motif_counts(top_STARR, genome= "dm3", sel= sel)
-ctl <- vl_motif_counts(random, genome= "dm3", sel= sel)
+suhw <- vl_motif_counts(SUHW, genome= "dm3", pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
+starr <- vl_motif_counts(top_STARR, genome= "dm3", pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
+ctl <- vl_motif_counts(random, genome= "dm3", pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
 
 # Starting from sequence instead of bed file
 seq <- vl_getSequence(SUHW, genome= "dm3")
-seq_suhw <- vl_motif_counts(seq, genome= "dm3", sel= jaspar)
+seq_suhw <- vl_motif_counts(seq, genome= "dm3", pwm_log_odds= vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
 identical(suhw, seq_suhw)
 
 # Motifs can also be counted using a custom PWMatrixList, for example for promoter motifs:

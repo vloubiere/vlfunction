@@ -2,28 +2,18 @@
 % Please edit documentation in R/ORFeome_pipeline.R
 \name{vl_ORFeome_processing}
 \alias{vl_ORFeome_processing}
-\alias{vl_ORFeome_processing.character}
-\alias{vl_ORFeome_processing.default}
 \title{ORFeome pipeline}
 \usage{
-vl_ORFeome_processing(metadata, ...)
-
-\method{vl_ORFeome_processing}{character}(
-  metadata,
-  processed_metadata_output = gsub(".xlsx$", "_processed.rds", metadata),
-  ...
-)
-
-\method{vl_ORFeome_processing}{default}(
+vl_ORFeome_processing(
   metadata,
   processed_metadata_output,
-  fq_output_folder = "/scratch/stark/vloubiere/ORFeome/fq/",
-  bam_output_folder = "/scratch/stark/vloubiere/ORFeome/bam/",
+  fq_output_folder = "/scratch/stark/vloubiere/fq/ORFeome/",
+  bam_output_folder = "/scratch/stark/vloubiere/bam/ORFeome/",
   alignment_stats_output_folder = "db/alignment_stats/ORFeome/",
   BC_count_output_folder = "db/counts/ORFeome/",
   Rpath = "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
-  cores = 6,
-  mem = 32,
+  cores = 8,
+  mem = 64,
   overwrite = FALSE,
   counts.exists = TRUE,
   submit = FALSE,
@@ -33,14 +23,14 @@ vl_ORFeome_processing(metadata, ...)
 )
 }
 \arguments{
-\item{metadata}{The path to a correctly formatted .xlsx metadata file or a data.table. See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_PROseq.xlsx'.}
+\item{metadata}{The path to a correctly formatted .xlsx. .rds or .txt metadata file, or a data.table. See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_PROseq.xlsx'.}
 
 \item{processed_metadata_output}{An .rds path where to save the processed metadata file, which contains the paths of all output files and will be used to manage them.
 By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.}
 
-\item{fq_output_folder}{Output folder for .fq files. Default= "/scratch/stark/vloubiere/ORFeome/fq/".}
+\item{fq_output_folder}{Output folder for .fq files. Default= "/scratch/stark/vloubiere/fq/ORFeome/".}
 
-\item{bam_output_folder}{Output folder for aligne bam files Default= "/scratch/stark/vloubiere/ORFeome/bam/".}
+\item{bam_output_folder}{Output folder for aligned bam files Default= "/scratch/stark/vloubiere/bam/ORFeome/".}
 
 \item{alignment_stats_output_folder}{Output folder for alignment statistics. Default= "db/alignment_stats/ORFeome/".}
 
@@ -87,30 +77,20 @@ The second function, ?vl_ORFeome_MAGeCK() can be used for differential analysis.
 3/ MAGeCK output \cr
 4/ MA plot .pdf \cr
 }
-\section{Methods (by class)}{
-\itemize{
-\item \code{vl_ORFeome_processing(character)}: for excel files path
-
-\item \code{vl_ORFeome_processing(default)}: default method
-
-}}
 \examples{
-# Before starting:
-# Update the local version of the vlfunctions package
-devtools::install_github("vloubiere/vlfunction")
+library(vlfunctions)
 
-# Chose which local R executable to use
-localRPath <- "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript"
-# Make sure that the last version of the vlfunctions package is installed
-system(paste(localRPath, system.file("update_package_from_git.R", package = "vlfunctions")))
+# Example metadata ----
+metadata <- system.file("ORFeome_pipeline", "metadata_ORFeome.xlsx", package = "vlfunctions")
 
-# Process data ----
-vl_ORFeome_processing(metadata = "Rdata/metadata_ORFeome.xlsx",
+# Generate command lines ----
+cmd <- vl_ORFeome_processing(metadata= metadata,
+                             overwrite= TRUE,
+                             submit= FALSE)
+# To actually submit the jobs, switch to submit= TRUE
+vl_ORFeome_processing(metadata= metadata,
                       processed_metadata_output = "Rdata/metadata_ORFeome_processed.rds",
-                      Rpath= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript",
-                      cores= 8,
-                      mem= 64,
-                      overwrite= FALSE,
+                      overwrite= FALSE,  # Existing files will not be processed again
                       submit= TRUE)
 
 # Differential analysis

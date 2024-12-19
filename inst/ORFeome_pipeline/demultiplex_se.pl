@@ -11,7 +11,7 @@ if (@ARGV != 2) {
 # Parse arguments
 my $i7_index = $ARGV[0];
 my $output_prefix = $ARGV[1];
-my $output_file = "${output_prefix}.fq.gz";
+my $output_file = "${output_prefix}_1.fq.gz";
 
 # Quick check to ensure the SAM file contains single-end reads
 my $contains_single_end = 0;

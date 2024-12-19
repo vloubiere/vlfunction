@@ -12,9 +12,7 @@ vl_motif_pos(sequences, ...)
 
 \method{vl_motif_pos}{character}(
   sequences,
-  sel = vl_Dmel_motifs_DB_full[collection == "jaspar", motif_ID],
-  motifDB = vl_Dmel_motifs_DB_full,
-  pwm_log_odds = NULL,
+  pwm_log_odds = vl_Dmel_motifs_DB_full[collection == "jaspar", pwms_log_odds],
   genome,
   bg = "genome",
   p.cutoff = 5e-05,
@@ -27,10 +25,6 @@ vl_motif_pos(sequences, ...)
 \item{bed}{Either a vector of bed file paths, a GRange object or a data.table containing 'seqnames', 'start' and 'end' columns.}
 
 \item{genome}{Genome to be used for coordinates ("dm6, "dm3") and as background for counting motifs when bg= "genome".}
-
-\item{sel}{Vector of motif_ID(s) existing in motifDB (see below) and for which motif matches should be mapped Defaults to jaspar PWMs.}
-
-\item{motifDB}{The motifDB to be used (see 'sel' argument; ?vl_Dmel_motifs_DB_full and ?vl_motifs_DB_v2 for details). Default= vl_Dmel_motifs_DB_full.}
 
 \item{bg}{Background used to find motifs. Possible values include "genome" and "even". Default= "genome"}
 
@@ -57,16 +51,12 @@ Compute motif positions
 # Find position of 3 different motifs within two regions
 pos <- vl_motif_pos(vl_SUHW_top_peaks[1:2],
                     genome= "dm3",
-                    sel= c("cisbp__M2328",
-                           "flyfactorsurvey__suHw_FlyReg_FBgn0003567",
-                           "jaspar__MA0533.1"))
+                    pwm_log_odds= vl_Dmel_motifs_DB_full[c("cisbp__M2328", "flyfactorsurvey__suHw_FlyReg_FBgn0003567", "jaspar__MA0533.1"), pwms_log_odds, on= "motif_ID"])
 
 # Starting from sequence
 pos <- vl_motif_pos(sequence= "TGAGTTGTGTCTGAAATTGGGATTGCTGTTGCGACAATGCCTGTCTGACAGCATTGTCGATAAGAGCTTGAATCTGATTGGGGTCCATGGTAATATCTACCGTGGCACTATCTAACGGCCGACCTAATGCTTGGCCTACTTGCTCCTCCTCCCAGCTATCCTCGCTTTCGTATTCGACCTTAACCTTTCTGTAGTT#' ATGTGCCCAACTCATTGGTTGTTGGTTGGCACACCACAAATATACTGTTGCCGAGCACAATTGATCGGCTAAATGGTATGGCAAGAAAAGGTATGCAATATAATAATCTTTTATTGGGTATGCAACGAAAATTTGTTTCGTCAACGTATGCAATATTTTTTATTAAAAGAGGGTATGCAATGTATTTTATTAAAAACGGGTATGCAATATAATAATCTTTTATTGGG#' TATGCAACGAAAATTTGTTTCGTCAAAGTATGCAATATTTTTTATTAAAAGAGGGTATGCAATGTATTTTATTAAAAACGGGTATGCAATAAAAAATTATTTGGTTTCTCTAAAAAGTATGCAGCACTTATTTTTTGATAAGGTATGCAACAAAATTTTACTTTGCCGAAAATATGCAATGTTTTTGCGAATAAATTCAACGCACACTTATTACGTGGCCAGATACA#' CAACTTTTTTTTTTTTTTTTCACTCGTAAATTTCTTGATTGCGTCAAAGA",
                     genome= "dm3",
-                    sel= c("cisbp__M2328",
-                           "flyfactorsurvey__suHw_FlyReg_FBgn0003567",
-                           "jaspar__MA0533.1"))
+                    pwm_log_odds= vl_Dmel_motifs_DB_full[c("cisbp__M2328", "flyfactorsurvey__suHw_FlyReg_FBgn0003567", "jaspar__MA0533.1"), pwms_log_odds, on= "motif_ID"])
 
 # Motifs can also be mapped using a custom PWMatrixList, for example for promoter motifs
 prom_db <- readRDS("/groups/stark/almeida/data/motifs/CP_motifs/CP_motifs_PWM.rds")
