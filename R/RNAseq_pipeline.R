@@ -81,21 +81,13 @@ vl_RNAseq_processing <- function(metadata,
       vl_import_metadata_sheet(metadata)
   
   # Check required columns ----
-  # Design
   missing_cols <- setdiff(c("sampleID", "genome", "layout", "fq1", "fq2"), names(meta))
   if(length(missing_cols))
     stop(paste("Metadata required columns mising:", paste0(missing_cols, collapse = ", ")))
-  # Check fq files
+  
+  # Check fq files ----
   meta[, fq1:= as.character(fq1)]
   meta[, fq2:= as.character(fq2)]
-  if(nrow(meta[is.na(fq1)]) | nrow(meta[layout=="PAIRED" & is.na(fq2)]))
-  {
-    missing_cols <- setdiff(c("bam_path", "barcode", "i5"), names(meta))
-    if(length(missing_cols))
-      stop(paste("fq1 files not provided and the metadata is missing the following columns for demultiplexing:", paste0(missing_cols, collapse = ", ")))
-  }
-  
-  # Check arguments ----
   # If fq files provided, make sure they exist
   fqs <- na.omit(unlist(meta[!is.na(fq1)|!is.na(fq2), .(fq1, fq2)]))
   if(length(fqs))
@@ -105,7 +97,23 @@ vl_RNAseq_processing <- function(metadata,
     if(any(!file.exists(fqs)))
       stop("Some user-provided .fq files do not exist. Check that the path is correct")
   }
-  # Check metadata output ----
+  # If missing fq files, extract them
+  if(nrow(meta[is.na(fq1)]) | nrow(meta[layout=="PAIRED" & is.na(fq2)]))
+  {
+    # Check columns
+    missing_cols <- setdiff(c("bam_path", "barcode", "i5"), names(meta))
+    if(length(missing_cols))
+      stop(paste("fq1 files not provided and the metadata is missing the following columns for demultiplexing:",
+                 paste0(missing_cols, collapse = ", ")))
+    # Should fq1 be extracted from .fq.tar.gz?
+    meta[is.na(fq1) & !is.na(fastq_path), fq1:= {
+      paste0(fq_output_folder, "/", gsub(".tar.gz", paste0("_", barcode, "_", i5, "_1.fq.gz"), basename(fastq_path)))
+    }, .(fastq_path, barcode, i5)]
+    meta[is.na(fq2) & layout=="PAIRED", fq2:= gsub("_1.fq.gz$", "_2.fq.gz", fq1)]
+  }
+  
+  # Check arguments ----
+  # Metadata output
   if(submit && !grepl(".rds$", processed_metadata_output))
     stop("processed_metadata_output should end up with a .rds extension")
   # alignment indexes 
@@ -123,10 +131,6 @@ vl_RNAseq_processing <- function(metadata,
                   paste0(potential_dup$sampleID, collapse = ", ")))
   
   # Generate output paths ----
-  # Should fq1 be extracted from .fq.tar.gz?
-  meta[is.na(fq1) & !is.na(fastq_path), 
-       fq1:= paste0(fq_output_folder, "/", gsub(".tar.gz", paste0("_", barcode, "_", i5, "_1.fq.gz"), basename(fastq_path))), .(fastq_path, barcode, i5)]
-  meta[is.na(fq2) & layout=="PAIRED", fq2:= gsub("_1.fq.gz$", "_2.fq.gz", fq1)]
   # Trimmed .fq
   meta[, fq1_trim:= paste0(fq_output_folder, "/", gsub(".fq.gz$", fifelse(layout=="PAIRED", "_val_1.fq.gz", "_trimmed.fq.gz"), basename(fq1))), layout]
   meta[layout=="PAIRED", fq2_trim:= gsub(".fq.gz$", "_val_2.fq.gz", fq2)]
@@ -238,7 +242,7 @@ vl_RNAseq_processing <- function(metadata,
     if(submit)
     {
       # Save processed metadata ----
-      saveRDS(meta[, -c(cols, "preProcess")],
+      saveRDS(meta[, -c(cols, "preProcess"), with= FALSE],
               processed_metadata_output)
       
       # Create output directories ----
@@ -247,9 +251,12 @@ vl_RNAseq_processing <- function(metadata,
       if(any(!dir.exists(dirs)))
       {
         sapply(dirs, dir.create, showWarnings = F, recursive = T)
-        outDirs <- paste0(c(count_table_output_folder,
+        outDirs <- paste0(c(fq_output_folder,
+                            bam_output_folder,
+                            alignment_stats_output_folder,
+                            count_table_output_folder,
                             bw_output_folder,
-                            tmp_folder),
+                            logs),
                           collapse= ", ")
         print(paste("Output directories were created in:", outDirs, "!"))
       }
@@ -436,7 +443,10 @@ vl_RNAseq_DESeq2 <- function(processed_metadata,
     if(any(!dir.exists(dirs)))
     {
       sapply(dirs, dir.create, showWarnings = F, recursive = T)
-      outDirs <- paste0(c(dds_output_folder, FC_output_folder, PDF_output_folder, logs), collapse= ", ")
+      outDirs <- paste0(c(dds_output_folder,
+                          FC_output_folder,
+                          PDF_output_folder,
+                          logs), collapse= ", ")
       print(paste("Output directories were created in:", outDirs, "!"))
     }
     

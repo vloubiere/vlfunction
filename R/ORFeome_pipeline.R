@@ -79,24 +79,15 @@ vl_ORFeome_processing <- function(metadata,
       vl_import_metadata_sheet(metadata)
   
   # Check required columns ----
-  # Design
   required_cols <- c("used", "screen", "condition", "sort", "cell_line", "replicate",
                      "sampleID", "dictionary", "MAGeCK_sort", "layout", "fq1", "fq2")
   missing_cols <- setdiff(required_cols, names(meta))
   if(length(missing_cols))
     stop(paste("Metadata required columns mising:", paste0(missing_cols, collapse = ", ")))
-  # Check fq files
+  
+  # Check fq files ----
   meta[, fq1:= as.character(fq1)]
   meta[, fq2:= as.character(fq2)]
-  if(nrow(meta[is.na(fq1)]) | nrow(meta[layout=="PAIRED" & is.na(fq2)]))
-  {
-    missing_cols <- setdiff(c("bam_path", "i7"), names(meta))
-    if(length(missing_cols))
-      stop(paste("fq1 files not provided and the metadata is missing the following columns for demultiplexing:",
-                 paste0(missing_cols, collapse = ", ")))
-  }
-  
-  # Check arguments ----
   # If fq files provided, make sure they exist
   fqs <- na.omit(unlist(meta[!is.na(fq1)|!is.na(fq2), .(fq1, fq2)]))
   if(length(fqs))
@@ -106,7 +97,22 @@ vl_ORFeome_processing <- function(metadata,
     if(any(!file.exists(fqs)))
       stop("Some user-provided .fq files do not exist. Check that the path is correct")
   }
-  # Check metadata output
+  # If missing fq files, extract them
+  if(nrow(meta[is.na(fq1)]) | nrow(meta[layout=="PAIRED" & is.na(fq2)]))
+  {
+    missing_cols <- setdiff(c("bam_path", "i7"), names(meta))
+    if(length(missing_cols))
+      stop(paste("fq1 files not provided and the metadata is missing the following columns for demultiplexing:",
+                 paste0(missing_cols, collapse = ", ")))
+    # Shoud fq1 be extracted from VBC bam file?
+    meta[is.na(fq1) & !is.na(bam_path), fq1:= {
+      paste0(fq_output_folder, "/",
+             gsub(".bam", paste0("_", i7, "_1.fq.gz"), basename(bam_path)))
+    }, .(bam_path, i7, layout)]
+  }
+  
+  # Check arguments ----
+  # Metadata output
   if(submit && !grepl(".rds$", processed_metadata_output))
     stop("processed_metadata_output should end up with a .rds extension")
   # Dictionary alignment indexes
@@ -127,11 +133,6 @@ vl_ORFeome_processing <- function(metadata,
                   paste0(potential_dup$sampleID, collapse = ", ")))
   
   # Generate output paths ----
-  # fq files
-  meta[is.na(fq1) & !is.na(bam_path), fq1:= {
-    paste0(fq_output_folder, "/",
-           gsub(".bam", paste0("_", i7, "_1.fq.gz"), basename(bam_path)))
-  }, .(bam_path, i7, layout)]
   # Trimmed
   meta[, fq1_trimmed:= paste0(fq_output_folder, "/", gsub(".fq.gz", "_trimmed.fq.gz", basename(fq1)))]
   # re-sequencing are merged from this step on!
@@ -231,7 +232,8 @@ vl_ORFeome_processing <- function(metadata,
         outDirs <- paste0(c(fq_output_folder,
                             bam_output_folder,
                             alignment_stats_output_folder,
-                            BC_count_output_folder),
+                            BC_count_output_folder,
+                            logs),
                           collapse= ", ")
         print(paste("Output directories were created in:", outDirs, "!"))
       }

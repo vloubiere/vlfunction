@@ -80,22 +80,13 @@ vl_CUTNRUN_processing <- function(metadata,
       vl_import_metadata_sheet(metadata)
   
   # Check required columns ----
-  # Design
   missing_cols <- setdiff(c("sampleID", "genome", "layout", "fq1", "fq2"), names(meta))
   if(length(missing_cols))
     stop(paste("Metadata required columns mising:", paste0(missing_cols, collapse = ", ")))
-  # Check fq files
+  
+  # Check fq files ----
   meta[, fq1:= as.character(fq1)]
   meta[, fq2:= as.character(fq2)]
-  if(nrow(meta[is.na(fq1)]) | nrow(meta[layout=="PAIRED" & is.na(fq2)]))
-  {
-    missing_cols <- setdiff(c("bam_path", "barcode", "i5"), names(meta))
-    if(length(missing_cols))
-      stop(paste("fq1 files not provided and the metadata is missing the following columns for demultiplexing:",
-                 paste0(missing_cols, collapse = ", ")))
-  }
-  
-  # Check arguments ----
   # If fq files provided, make sure they exist
   fqs <- na.omit(unlist(meta[!is.na(fq1)|!is.na(fq2), .(fq1, fq2)]))
   if(length(fqs))
@@ -105,7 +96,23 @@ vl_CUTNRUN_processing <- function(metadata,
     if(any(!file.exists(fqs)))
       stop("Some user-provided .fq files do not exist. Check that the path is correct")
   }
-  # Check metadata output
+  # If missing fq files, extract them
+  if(nrow(meta[is.na(fq1)]) | nrow(meta[layout=="PAIRED" & is.na(fq2)]))
+  {
+    missing_cols <- setdiff(c("bam_path", "barcode", "i5"), names(meta))
+    if(length(missing_cols))
+      stop(paste("fq1 files not provided and the metadata is missing the following columns for demultiplexing:",
+                 paste0(missing_cols, collapse = ", ")))
+    # Should fq1 be extracted from bam?
+    meta[is.na(fq1) & !is.na(bam_path), fq1:= {
+      paste0(fq_output_folder, "/",
+             gsub(".bam", paste0("_", barcode, "_", i5, "_1.fq.gz"), basename(bam_path)))
+    }, .(barcode, i5, bam_path)]
+    meta[is.na(fq2) & layout=="PAIRED", fq2:= gsub("_1.fq.gz$", "_2.fq.gz", fq1)]
+  }
+  
+  # Check arguments ----
+  # Metadata output
   if(submit && !grepl(".rds$", processed_metadata_output))
     stop("processed_metadata_output should end up with a .rds extension")
   # Alignment indexes
@@ -123,12 +130,6 @@ vl_CUTNRUN_processing <- function(metadata,
                   paste0(potential_dup$sampleID, collapse = ", ")))
   
   # Generate output paths ----
-  # Should fq1 be extracted from bam?
-  meta[is.na(fq1) & !is.na(bam_path), fq1:= {
-    paste0(fq_output_folder, "/",
-           gsub(".bam", paste0("_", barcode, "_", i5, "_1.fq.gz"), basename(bam_path)))
-  }, .(barcode, i5, bam_path)]
-  meta[is.na(fq2) & layout=="PAIRED", fq2:= gsub("_1.fq.gz$", "_2.fq.gz", fq1)]
   # Trimmed fq
   meta[, fq1_trim:= {
     paste0(fq_output_folder, "/",
@@ -314,7 +315,7 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
   if(length(missing_cols))
     stop(paste("Metadata required columns mising:", paste0(missing_cols, collapse = ", ")))
   
-  # Check metadata output
+  # Check metadata output ----
   if(submit && !grepl(".rds$", peaks_metadata_output))
     stop("peaks_metadata_output should end up with a .rds extension")
   
@@ -452,7 +453,9 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
       if(any(!dir.exists(dirs)))
       {
         sapply(dirs, dir.create, showWarnings = F, recursive = T)
-        outDirs <- paste0(c(peaks_output_folder, bw_output_folder , logs), collapse= ", ")
+        outDirs <- paste0(c(peaks_output_folder,
+                            bw_output_folder,
+                            logs), collapse= ", ")
         print(paste("Output directories were created in:", outDirs, "!"))
       }
       
