@@ -99,6 +99,7 @@ vl_CUTNRUN_processing <- function(metadata,
   # If missing fq files, extract them
   if(nrow(meta[is.na(fq1)]) | nrow(meta[layout=="PAIRED" & is.na(fq2)]))
   {
+    # Check columns
     missing_cols <- setdiff(c("bam_path", "barcode", "i5"), names(meta))
     if(length(missing_cols))
       stop(paste("fq1 files not provided and the metadata is missing the following columns for demultiplexing:",

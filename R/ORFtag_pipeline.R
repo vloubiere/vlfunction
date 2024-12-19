@@ -116,13 +116,15 @@ vl_ORFtag_pipeline <- function(metadata,
     if(any(!file.exists(fqs)))
       stop("Some user-provided .fq files do not exist. Check that the path is correct")
   }
-  # Shoud fq1 be extracted from VBC bam file?
+  # If missing fq files, extract them
   if(nrow(meta[is.na(fq1)]) | nrow(meta[layout=="PAIRED" & is.na(fq2)]))
   {
+    # Check columns
     missing_cols <- setdiff(c("bam_path", "barcodes"), names(meta))
     if(length(missing_cols))
       stop(paste("fq1 files not provided and the metadata is missing the following columns for demultiplexing:",
                  paste0(missing_cols, collapse = ", ")))
+    # Shoud fq1 be extracted from VBC bam file?
     meta[is.na(fq1) & !is.na(bam_path), fq1:= {
       paste0(fq_output_folder, "/",
              gsub(".bam", paste0("_", gsub("|", "_", barcodes, fixed = T), "_1.fq.gz"), basename(bam_path)))
