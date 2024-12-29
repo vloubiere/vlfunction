@@ -16,7 +16,10 @@ vl_motif_pos(sequences, ...)
   genome,
   bg = "genome",
   p.cutoff = 5e-05,
-  collapse.overlapping = TRUE
+  collapse.overlapping = TRUE,
+  scratch = "/scratch/stark/vloubiere/",
+  sub.folder = tempdir(),
+  overwrite = FALSE
 )
 }
 \arguments{
@@ -31,6 +34,12 @@ vl_motif_pos(sequences, ...)
 \item{p.cutoff}{p.value cutoff used for motif detection. For enrichment analyses based on presence/absence of a motif, high cutoff might perform better (1e-4 or 5e-5) while for regression analyses, lower cutoffs might be prefered (5e-4). Default= 5e-5 (stringent).}
 
 \item{collapse.overlapping}{Should overlapping motifs be merged? If TRUE (default), motif instances that overlap more than 70 percent of their width are collapsed.}
+
+\item{scratch}{Temp folder where temporary files will be saved. Useful to resume long jobs, see next argument}
+
+\item{sub.folder}{Temp sub-folder where temporary files will be saved. Explicitly setting a sub.folder will allow the function to resume where it stoped at previous iteration. By default, sub.folder= tempdir().}
+
+\item{overwrite}{If set to FALSE (default), motifs for which positions have already been computed and saved will be skipped.}
 
 \item{pwms_log_odds}{A PWMatrixList (in log2 odd ratio format) for which motif matches should be mapped. Overrides sel and motifDB arguments (see above).}
 }

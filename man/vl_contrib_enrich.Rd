@@ -4,11 +4,40 @@
 \alias{vl_contrib_enrich}
 \title{Compute enrichment for each motif instance}
 \usage{
-vl_contrib_enrich(obj = vl_PH18_contrib, mot_columns = NULL)
+vl_contrib_enrich(mot, contrib.score, seq.length = 1001L)
 }
 \arguments{
-\item{obj}{}
+\item{mot}{A list of motif created with !vl_motif_pos()}
+
+\item{contrib.score}{A list of contribution scores, as in ?vl_importContrib() output}
+
+\item{seq.length}{The length of the tiles used in the model. Default= 1001L.}
+}
+\value{
+A data.table with the first columns corresponding to sequence levels (factor) and each column to the matches for the corresponding motif.
 }
 \description{
 Compute enrichment for each motif instance
+}
+\examples{
+# Contrib oject ----
+files <- list.files(paste0("db/", model, "/contributions/"),
+                    ".h5$",
+                    recursive = T,
+                    full.names = T)
+contrib <- vl_importContrib(h5 = files)
+
+# Find motifs ----
+mot <- vl_motif_pos(sequences = contrib,
+                    pwm_log_odds = vl_motifs_DB_v2[collection=="flyfactorsurvey" & !is.na(Dmel), pwms_log_odds],
+                    bg = "genome",
+                    genome = "dm6",
+                    p.cutoff = 1e-4,
+                    collapse.overlapping = TRUE)
+
+# Motif enrichment ----
+enr <- vl_contrib_enrich(mot = mot,
+                         contrib.score = contrib$score,
+                         seq.length = 1001L)
+
 }

@@ -71,7 +71,7 @@ vl_importContrib <- function(h5,
 #'                          contrib.score = contrib$score,
 #'                          seq.length = 1001L)
 #' 
-#' @return
+#' @return A data.table with the first columns corresponding to sequence levels (factor) and each column to the matches for the corresponding motif.
 #' @export
 vl_contrib_enrich <- function(mot,
                               contrib.score,
