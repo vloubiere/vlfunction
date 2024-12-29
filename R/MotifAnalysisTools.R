@@ -63,8 +63,7 @@ vl_motif_counts.default <- function(sequences= NULL,
 {
   # Checks ----
   if(!"PWMatrixList" %in% class(pwm_log_odds))
-    pwm_log_odds <- do.call(TFBSTools::PWMatrixList,
-                            vl_Dmel_motifs_DB_full[collection=="jaspar", pwms_log_odds])
+    pwm_log_odds <- do.call(TFBSTools::PWMatrixList, pwm_log_odds)
   
   # Compute counts ----
   res <- motifmatchr::matchMotifs(pwm_log_odds,
@@ -369,6 +368,9 @@ vl_motif_cl_enrich <- function(counts.list,
 #' @param bg Background used to find motifs. Possible values include "genome" and "even". Default= "genome"
 #' @param p.cutoff p.value cutoff used for motif detection. For enrichment analyses based on presence/absence of a motif, high cutoff might perform better (1e-4 or 5e-5) while for regression analyses, lower cutoffs might be prefered (5e-4). Default= 5e-5 (stringent).
 #' @param collapse.overlapping Should overlapping motifs be merged? If TRUE (default), motif instances that overlap more than 70 percent of their width are collapsed.
+#' @param scratch Temp folder where temporary files will be saved. Useful to resume long jobs, see next argument
+#' @param sub.folder Temp sub-folder where temporary files will be saved. Explicitly setting a sub.folder will allow the function to resume where it stoped at previous iteration. By default, sub.folder= tempdir().
+#' @param overwrite If set to FALSE (default), motifs for which positions have already been computed and saved will be skipped.
 #' 
 #' @examples
 #' # Find position of 3 different motifs within two regions
@@ -418,7 +420,10 @@ vl_motif_pos.character <- function(sequences,
                                    genome,
                                    bg= "genome",
                                    p.cutoff= 5e-5,
-                                   collapse.overlapping= TRUE)
+                                   collapse.overlapping= TRUE,
+                                   scratch= "/scratch/stark/vloubiere/",
+                                   sub.folder= tempdir(),
+                                   overwrite= FALSE)
 {
   # Checks ----
   if(missing(genome))
@@ -426,49 +431,81 @@ vl_motif_pos.character <- function(sequences,
   if(is.null(names(sequences)))
     names(sequences) <- seq(sequences)
   if(!"PWMatrixList" %in% class(pwm_log_odds))
-    pwm_log_odds <- do.call(TFBSTools::PWMatrixList, pwms_log_odds)
+    pwm_log_odds <- do.call(TFBSTools::PWMatrixList, pwm_log_odds)
+  
+  # Create tmp output folder ----
+  tmp.folder <- paste0(scratch, "/", sub.folder, "/")
+  print(paste0("Temp files will be stored in '", tmp.folder, "'"))
+  dir.create(tmp.folder, showWarnings = FALSE, recursive = TRUE)
+  
+  # Temp output files ----
+  mot.names <- sapply(pwm_log_odds, TFBSTools::name)
+  mot.names <- make.unique(mot.names)
+  # File names cant handle '/'
+  output <- paste0(tmp.folder, "/", gsub("/", "__", mot.names), ".rds") 
+  existing.files <- if(overwrite)
+    rep(FALSE, length(output)) else
+      file.exists(output)
+  if(sum(existing.files))
+  {
+    print(paste0(sum(existing.files), "/", length(pwm_log_odds), " motif files already existed!"))
+  }
 
   # Map motifs ----
-  pos <- parallel::mclapply(pwm_log_odds,
-                            function(x)
-                            {
-                              motifmatchr::matchMotifs(x,
-                                                       sequences,
-                                                       genome= genome,
-                                                       p.cutoff= p.cutoff,
-                                                       bg= bg,
-                                                       out= "positions")[[1]]
-                            },
-                            mc.preschedule = FALSE,
-                            mc.cores = data.table::getDTthreads()-1)
-
-  # Name ----
-  names(pos) <- TFBSTools::name(pwm_log_odds)
-  
-  # Format and collapse if specified ----
-  pos <- lapply(pos, function(x)
+  if(any(!existing.files))
   {
-    x <- lapply(seq(x), function(i) {
-      y <- as.data.table(x[[i]])
-      y[, seqnames:= names(sequences)[i]]
-      setcolorder(y, "seqnames")
-      # Collapse motifs that overlap more than 70% (ignore strand)
-      if(collapse.overlapping && nrow(y))
-      {
-        y <- vl_collapseBed(y,
-                            min.gap = ceiling(mean(y$width)*0.7),
-                            ignore.strand = TRUE)
-        y <- y[, .(seqnames, start, end, width= end-start+1)]
-      }
-      return(y)
-      })
+    parallel::mcmapply(function(mot, output.file)
+    {
+      res <- motifmatchr::matchMotifs(mot,
+                                      sequences,
+                                      genome= genome,
+                                      p.cutoff= p.cutoff,
+                                      bg= bg,
+                                      out= "positions")[[1]]
+      saveRDS(res, output.file)
+    },
+    mot= pwm_log_odds[!existing.files],
+    output.file= output[!existing.files],
+    mc.preschedule = TRUE,
+    mc.cores = data.table::getDTthreads()-1)
+  }
+
+  # Processing ----
+  pos <- lapply(output, function(x) {
+    # Import
+    .c <- readRDS(x)
+    mot <- as.data.table(.c)
+    # Add seqnames and clean
+    mot[, seqnames:= names(sequences)[group]]
+    mot$group <- mot$group_name <- NULL
+    # If specified, collapsed motifs that overlap >70%, ignore.strand
+    if(collapse.overlapping)
+    {
+      min.gap <- ifelse(nrow(mot), -ceiling(mean(mot$width)*0.7), 0)
+      mot <-  vl_collapseBed(mot,
+                             min.gap = min.gap,
+                             ignore.strand = TRUE)
+      mot <- mot[, .(seqnames, start, end, width= end-start+1)]
+    }
     # Return
-    names(x) <- names(sequences)
-    return(x)
+    return(mot)
   })
+  names(pos) <- mot.names
+  
+  # Collapse ----
+  res <- rbindlist(pos, idcol = "motif")
+  res[, seqlvls:= factor(seqnames, names(sequences))]
+  coll <- res[, .(ir= .(.SD)), .(motif, seqlvls)]
+  
+  # Final format ----
+  empty <- list(coll[1, ir][[1]][0])
+  final <- dcast(coll,
+                 seqlvls~motif,
+                 value.var = "ir",
+                 fill = empty)
   
   # Return ----
-  return(pos)
+  return(final)
 }
 
 #' PWM perc to log2

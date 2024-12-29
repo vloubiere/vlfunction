@@ -89,7 +89,7 @@ vl_ORFeome_processing <- function(metadata,
   meta[, fq1:= as.character(fq1)]
   meta[, fq2:= as.character(fq2)]
   # If fq files provided, make sure they exist
-  fqs <- na.omit(unlist(meta[!is.na(fq1)|!is.na(fq2), .(fq1, fq2)]))
+  fqs <- na.omit(meta$fq1)
   if(length(fqs))
   {
     if(any(!grepl(".fq.gz$", fqs)))
@@ -98,7 +98,7 @@ vl_ORFeome_processing <- function(metadata,
       stop("Some user-provided .fq files do not exist. Check that the path is correct")
   }
   # If missing fq files, extract them
-  if(nrow(meta[is.na(fq1)]) | nrow(meta[layout=="PAIRED" & is.na(fq2)]))
+  if(anyNA(meta$fq1))
   {
     # Check columns
     missing_cols <- setdiff(c("bam_path", "i7"), names(meta))

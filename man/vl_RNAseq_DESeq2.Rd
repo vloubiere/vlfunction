@@ -27,11 +27,11 @@ By default, when the processed_metadata is a path to a processed_metadata files,
 
 \item{Rpath}{Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript".}
 
-\item{dds_output_folder}{Output folder for .dds files (DESeq2 objects). Default= "db/dds/PROseq/".}
+\item{dds_output_folder}{Output folder for .dds files (DESeq2 objects). Default= "db/dds/RNAseq/".}
 
-\item{FC_output_folder}{Output folder for FC tables. Default= "db/FC_tables/PROseq/".}
+\item{FC_output_folder}{Output folder for FC tables. Default= "db/FC_tables/RNAseq/".}
 
-\item{PDF_output_folder}{Output folder for .pdf files of MA plots and statistics. Default= "pdf/PROseq/".}
+\item{PDF_output_folder}{Output folder for .pdf files of MA plots and statistics. Default= "pdf/RNAseq/".}
 
 \item{cores}{Number of cores per job. Default= 4.}
 

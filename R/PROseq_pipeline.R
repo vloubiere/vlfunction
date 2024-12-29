@@ -95,7 +95,7 @@ vl_PROseq_processing <- function(metadata,
   meta[, fq1:= as.character(fq1)]
   meta[, fq2:= as.character(fq2)]
   # If fq files provided, make sure they exist
-  fqs <- na.omit(unlist(meta[!is.na(fq1)|!is.na(fq2), .(fq1, fq2)]))
+  fqs <- na.omit(meta$fq1)
   if(length(fqs))
   {
     if(any(!grepl(".fq.gz$", fqs)))
@@ -104,7 +104,7 @@ vl_PROseq_processing <- function(metadata,
       stop("Some user-provided .fq files do not exist. Check that the path is correct")
   }
   # If missing fq files, extract them
-  if(nrow(meta[is.na(fq1)]) | nrow(meta[layout=="PAIRED" & is.na(fq2)]))
+  if(anyNA(meta$fq1))
   {
     # Check columns
     missing_cols <- setdiff(c("bam_path", "barcode", "eBC"), names(meta))
@@ -543,7 +543,7 @@ vl_PROseq_DESeq2 <- function(processed_metadata,
   cols <- intersect(c("count_tables_cmd", "DESeq2_cmd"),
                     names(meta))
   # In this function, DESeq2 commands will always be generated (no need to check)
-  cmd <- meta[, .(cmd= paste0(c(load_cmd, unique(na.omit(unlist(.SD)))),
+  cmd <- meta[, .(cmd= paste0(unique(na.omit(unlist(.SD))),
                               collapse = "; ")), .(experiment, feature), .SDcols= cols]
   
   # If commands are to be submitted ----

@@ -89,7 +89,7 @@ vl_RNAseq_processing <- function(metadata,
   meta[, fq1:= as.character(fq1)]
   meta[, fq2:= as.character(fq2)]
   # If fq files provided, make sure they exist
-  fqs <- na.omit(unlist(meta[!is.na(fq1)|!is.na(fq2), .(fq1, fq2)]))
+  fqs <- na.omit(meta[, c(fq1, fq2)])
   if(length(fqs))
   {
     if(any(!grepl(".fq.gz$", fqs)))
@@ -98,7 +98,7 @@ vl_RNAseq_processing <- function(metadata,
       stop("Some user-provided .fq files do not exist. Check that the path is correct")
   }
   # If missing fq files, extract them
-  if(nrow(meta[is.na(fq1)]) | nrow(meta[layout=="PAIRED" & is.na(fq2)]))
+  if(nrow(meta[is.na(fq1) | (layout=="PAIRED" & is.na(fq2))]))
   {
     # Check columns
     missing_cols <- setdiff(c("bam_path", "barcode", "i5"), names(meta))
@@ -133,7 +133,7 @@ vl_RNAseq_processing <- function(metadata,
   # Generate output paths ----
   # Trimmed .fq
   meta[, fq1_trim:= paste0(fq_output_folder, "/", gsub(".fq.gz$", fifelse(layout=="PAIRED", "_val_1.fq.gz", "_trimmed.fq.gz"), basename(fq1))), layout]
-  meta[layout=="PAIRED", fq2_trim:= gsub(".fq.gz$", "_val_2.fq.gz", fq2)]
+  meta[layout=="PAIRED", fq2_trim:= paste0(fq_output_folder, "/", gsub(".fq.gz$", "_val_2.fq.gz", basename(fq2)))]
   # re-sequencing are merged from this step on!
   meta[, bam:= paste0(bam_output_folder, "/", sampleID, "_", genome, ".bam")]
   # reads statistics
@@ -148,7 +148,7 @@ vl_RNAseq_processing <- function(metadata,
   
   # Extract fastq files ----
   meta[, extract_cmd:= {
-    if(overwrite | (preProcess & any(!file.exists(c(fq1, fq2)))))
+    if(overwrite | (preProcess & any(!file.exists(na.omit(c(fq1, fq2))))))
     {
       fq_prefix <- normalizePath(gsub("_1.fq.gz$", "", fq1), mustWork = F)
       paste("perl",
@@ -181,14 +181,16 @@ vl_RNAseq_processing <- function(metadata,
   
   # UMI counts ----
   meta[, align_count_cmd:= {
-    # [required] 1/ A comma-separated list of fq1 files \n
-    # [required] 2/ A comma-separated list of fq2 files \n
+    # [required] 1/ A comma-separated list of fq1 files
+    # [required] 2/ A comma-separated list of fq2 files
     # [required] 3/ Is the data paired-end?
-    # [required] 4/ subreadr index prefix \n
-    # [required] 5/ Output bam path \n
-    # [required] 6/ Path to the gtf file that was used to generate the subreadr index \n
-    # [required] 7/ Output statistics file \n
-    # [required] 8/ Output count table file \n"
+    # [required] 4/ subreadr index prefix
+    # [required] 5/ Output bam path
+    # [required] 6/ Path to the gtf file that was used to generate the subreadr index
+    # [required] 7/ The name of the column containing gene symbols in the gtf file
+    # [required] 8/ Output statistics file
+    # [required] 9/ Output count file
+    # [required] 10/ Should existing .bam files be overwritten?
     if(overwrite | !file.exists(count_table))
     {
       idx <- switch(genome,
@@ -197,6 +199,9 @@ vl_RNAseq_processing <- function(metadata,
       gtf <- switch(genome,
                     "mm10"= "/groups/stark/vloubiere/projects/ORFTRAP_1/db/gtf/gencode.vM25.basic.annotation.gtf.gz",
                     "dm6"= "/groups/stark/vloubiere/genomes/Drosophila_melanogaster/flybase/dm6/dmel-all-r6.36.gtf")
+      gtf.symbol.col <- switch(genome,
+                               "mm10"= "gene_name",
+                               "dm6"= "gene_symbol")
       paste(Rpath,
             system.file("RNAseq_pipeline", "align_and_count.R", package = "vlfunctions"),
             paste0(fq1, collapse = ","),
@@ -205,8 +210,10 @@ vl_RNAseq_processing <- function(metadata,
             idx,
             bam,
             gtf,
+            gtf.symbol.col,
             read_stats,
-            count_table)
+            count_table,
+            overwrite)
     }
   }, .(genome, layout, bam, read_stats, count_table)]
   
@@ -288,9 +295,9 @@ vl_RNAseq_processing <- function(metadata,
 #' @param FC_metadata_output An .rds path where to save the metadata file, which contains the directories containing .dds (DESeq2 objects) and FC table files and will be used to manage them.
 #' By default, when the processed_metadata is a path to a processed_metadata files, "_FC_tables.rds" will be appended to the processed_metadata file path. 
 #' @param Rpath Path to an Rscript executable. Default= "/software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript".
-#' @param dds_output_folder Output folder for .dds files (DESeq2 objects). Default= "db/dds/PROseq/".
-#' @param FC_output_folder Output folder for FC tables. Default= "db/FC_tables/PROseq/".
-#' @param PDF_output_folder Output folder for .pdf files of MA plots and statistics. Default= "pdf/PROseq/".
+#' @param dds_output_folder Output folder for .dds files (DESeq2 objects). Default= "db/dds/RNAseq/".
+#' @param FC_output_folder Output folder for FC tables. Default= "db/FC_tables/RNAseq/".
+#' @param PDF_output_folder Output folder for .pdf files of MA plots and statistics. Default= "pdf/RNAseq/".
 #' @param cores Number of cores per job. Default= 4.
 #' @param mem Memory per job (in Go). Default= 16.
 #' @param submit Should the command be submitted? Default= FALSE.
@@ -428,14 +435,14 @@ vl_RNAseq_DESeq2 <- function(processed_metadata,
   
   # Return commands ----
   # In this function, DESeq2 commands will always be generated (no need to check)
-  cmd <- meta[, .(cmd= paste0(c(load_cmd, unique(na.omit(unlist(.SD)))),
-                              collapse = "; ")), .(experiment, feature), .SDcols= "DESeq2_cmd"]
+  cmd <- meta[, .(cmd= paste0(unique(na.omit(unlist(.SD))),
+                              collapse = "; ")), .(experiment), .SDcols= "DESeq2_cmd"]
   
   # If commands are to be submitted ----
   if(submit)
   {
     # Save processed FC metadata ----
-    saveRDS(unique(meta[, -c(cols, "count_table", "DESeq2_name"), with= FALSE]),
+    saveRDS(unique(meta[, -c("DESeq2_cmd", "count_table", "DESeq2_name"), with= FALSE]),
             FC_metadata_output)
     
     # Create directories ----

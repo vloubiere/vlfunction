@@ -88,7 +88,7 @@ vl_CUTNRUN_processing <- function(metadata,
   meta[, fq1:= as.character(fq1)]
   meta[, fq2:= as.character(fq2)]
   # If fq files provided, make sure they exist
-  fqs <- na.omit(unlist(meta[!is.na(fq1)|!is.na(fq2), .(fq1, fq2)]))
+  fqs <- na.omit(meta[, c(fq1, fq2)])
   if(length(fqs))
   {
     if(any(!grepl(".fq.gz$", fqs)))
@@ -97,7 +97,7 @@ vl_CUTNRUN_processing <- function(metadata,
       stop("Some user-provided .fq files do not exist. Check that the path is correct")
   }
   # If missing fq files, extract them
-  if(nrow(meta[is.na(fq1)]) | nrow(meta[layout=="PAIRED" & is.na(fq2)]))
+  if(nrow(meta[is.na(fq1) | (layout=="PAIRED" & is.na(fq2))]))
   {
     # Check columns
     missing_cols <- setdiff(c("bam_path", "barcode", "i5"), names(meta))
@@ -136,7 +136,7 @@ vl_CUTNRUN_processing <- function(metadata,
     paste0(fq_output_folder, "/",
            gsub(".fq.gz$", fifelse(layout=="PAIRED", "_val_1.fq.gz", "_trimmed.fq.gz"), basename(fq1))) 
   }, layout]
-  meta[layout=="PAIRED", fq2_trim:= gsub(".fq.gz$", "_val_2.fq.gz", fq2)]
+  meta[layout=="PAIRED", fq2_trim:= paste0(fq_output_folder, "/", gsub(".fq.gz$", "_val_2.fq.gz", basename(fq2)))]
   # re-sequencing are merged from this step on!
   meta[, bam:= paste0(bam_output_folder, "/", sampleID, "_", genome, ".bam")]
   # Join to retrieve input bam
@@ -170,7 +170,7 @@ vl_CUTNRUN_processing <- function(metadata,
   
   # Trim illumina adapters ----
   meta[, trim_cmd:= {
-    if(overwrite | !file.exists(fq1_trim) | (!is.na(fq2_trim)  && !file.exists(fq2_trim)))
+    if(overwrite | any(!file.exists(na.omit(c(fq1_trim, fq2_trim)))))
     {
       if(layout=="SINGLE")
         paste0("trim_galore --gzip -o ", dirname(fq1_trim), "/ ", fq1) else if(layout=="PAIRED")

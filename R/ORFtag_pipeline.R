@@ -108,7 +108,7 @@ vl_ORFtag_pipeline <- function(metadata,
   meta[, fq1:= as.character(fq1)]
   meta[, fq2:= as.character(fq2)]
   # If fq files provided, make sure they exist
-  fqs <- na.omit(unlist(meta[!is.na(fq1)|!is.na(fq2), .(fq1, fq2)]))
+  fqs <- na.omit(meta[, c(fq1, fq2)])
   if(length(fqs))
   {
     if(any(!grepl(".fq.gz$", fqs)))
@@ -117,7 +117,7 @@ vl_ORFtag_pipeline <- function(metadata,
       stop("Some user-provided .fq files do not exist. Check that the path is correct")
   }
   # If missing fq files, extract them
-  if(nrow(meta[is.na(fq1)]) | nrow(meta[layout=="PAIRED" & is.na(fq2)]))
+  if(nrow(meta[is.na(fq1) | (layout=="PAIRED" & is.na(fq2))]))
   {
     # Check columns
     missing_cols <- setdiff(c("bam_path", "barcodes"), names(meta))

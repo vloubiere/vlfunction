@@ -176,7 +176,9 @@ vl_last_err <- function(dir)
 {
   dat <- data.table(file= list.files(dir, ".err$", full.names = T))
   dat[, mtime:= file.info(file)$mtime]
-  file.show(dat[which.max(mtime), file])
+  last <- dat[which.max(mtime)]
+  print(paste("Printed on:", last$mtime))
+  file.show(last$file)
 }
 
 #' See most recent error file in a directory
