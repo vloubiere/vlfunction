@@ -137,6 +137,7 @@ vl_seqlogo <- function(pwm,
 #' @export
 vl_plotLetter <- function(letter, xleft, ytop, width, height)
 {
+  letter <- toupper(letter)
   if(letter=="T")
   {
     x <- c(0, 10, 10, 6, 6, 4, 4, 0) * 0.1
@@ -206,8 +207,9 @@ vl_plotLetter <- function(letter, xleft, ytop, width, height)
     x <- c(rev(x), x.add)
     y <- c(rev(y), y.add)
     col <- "goldenrod1"
-  }
-  polygon(xleft+x*width, 
+  }else
+    stop("DNA letter not recognized. Other than ATCG?")
+  polygon(x = xleft+x*width, 
           ytop-(1-y)*height, 
           col= col,
           border= NA,

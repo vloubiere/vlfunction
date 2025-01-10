@@ -15,7 +15,9 @@ vl_importContrib <- function(h5,
                              fa= list.files(dirname(h5), ".fa$", full.names = TRUE))
 {
   # Metadata ----
-  meta <- data.table(h5= h5, bed= bed, fa= fa)
+  meta <- data.table(h5= h5,
+                     bed= bed,
+                     fa= fa)
   
   # Import ----
   dat <- meta[, {
@@ -77,6 +79,11 @@ vl_contrib_enrich <- function(mot,
                               contrib.score,
                               seq.length= 1001L)
 {
+  # Remove unused levels if any ----
+  mot[, seqlvls:= factor(seqlvls, unique(seqlvls))]
+  if(length(levels(mot$seqlvls))!=length(contrib.score))
+    stop("The number of levels in seqlevels in mot should matche the length(contrib.score)")
+  
   # Scale score from 0 to 1 and compute means ----
   min.score <- min(unlist(contrib.score), na.rm = TRUE)
   range.score <- diff(range(unlist(contrib.score), na.rm = TRUE))
@@ -84,185 +91,175 @@ vl_contrib_enrich <- function(mot,
   mean.scaled.score <- sapply(scaled.score, mean)
   
   # Retrieve regions for rdm controls ----
-  regions <- mot[, .(seqnames= seqlvls, start= 1, end= seq.length)]
+  regions <- mot[, .(seqnames= levels(seqlvls), start= 1, end= seq.length)]
+  mot.widths <- mot[!is.na(mot.count), round(mean(rbindlist(ir)$width)), motif]
+  mot[mot.widths, bins.width:= i.V1, on= "motif"]
   
   # Loop over motifs and compute enrichment ----
-  motifs <- names(mot)[-1]
-  res <- lapply(seq(motifs), function(i){
-    # Import motif positions
-    .c <- rbindlist(mot[, motifs[i], with= FALSE][[1]])
-    .c[, width:= as.integer(width)]
-    .c[, group:= "motif"]
+  res <- mot[!is.na(bins.width), {
     # Bin all sequences
-    bins.width <- round(mean(.c$width))
     bins <- vl_binBed(bed = regions,
                       bins.width = bins.width)
     # Select bins with correct width
     bins[, width:= end-start+1]
     bins <- bins[width==bins.width]
-    bins <- bins[end-start+1==bins.width]
-    # 2X random sampling
-    sel <- nrow(.c)*2
-    set.seed(i)
-    rdm <- bins[sample(.N, sel, replace = sel>.N)]
-    rdm[, group:= "rdm"]
-    # Combine
-    cmb <- rbind(.c, rdm[, !"binIDX"])
-    cmb[, seqlvls:= factor(seqnames, levels(mot$seqlvls))]
-    # Extract motif scores
-    cmb[, scores:= .(scaled.score[seqlvls])]
-    cmb[, mot.scores:= .(.(scaled.score[[seqlvls]][start:end])), .(seqlvls, start, end)]
-    # Compute enrichment
-    cmb[, mean.mot.score:= sapply(mot.scores, mean)]
-    cmb[, log2OR.inst:= log2(mean.mot.score/mean.scaled.score[seqlvls])]
-    # Compute OR and pval for each motif instance
-    cmb[, pval.inst:= {
-      wilcox.test(mot.scores[[1]],
-                  scores[[1]],
-                  alternative= "greater")$p.value
-    }, .(seqnames, start, end)]
-    cmb[, padj.inst:= p.adjust(pval.inst, method = "fdr")]
-    cmb$pval.inst <- NULL
-    # Fisher test
-    .t <- table(motif= factor(cmb$group=="motif", c(TRUE, FALSE)),
-                signif= factor(cmb$padj.inst<0.05, c(TRUE, FALSE)))
-    cmb$OR.motif <- fisher.test(.t+1,
-                                alternative = "greater")$estimate
-    cmb$pval.motif <- fisher.test(.t,
-                                  alternative = "greater")$p.value
-    cmb[, sig.inst:= .t[1,1]]
-    cmb[, tot.inst:= sum(.t[1,])]
-    cmb[, sig.rdm:= .t[2,1]]
-    cmb[, tot.rdm:= sum(.t[2,])]
-    
-    # Return
-    if(i==1 | i%%10==0)
-      print(paste0(i, "/", length(motifs), " motifs processed."))
-    return(cmb[group=="motif" & padj.inst<0.05])
-  })
+    bins[, seqlvls:= factor(seqnames, levels(seqlvls))]
+    # Clean and add group
+    bins$seqnames <- bins$binIDX <- NULL
+    # For each motif
+    .SD[, {
+      # 2X random sampling
+      sel <- sum(mot.count, na.rm= TRUE)*2
+      set.seed(.GRP*sel)
+      rdm <- bins[sample(.N, sel, replace = sel>.N)]
+      # Motif instances
+      mot <- .SD[!is.na(mot.count), ir[[1]], seqlvls]
+      # Combine
+      cmb <- list(motif= mot, rdm= rdm)
+      cmb <- rbindlist(cmb, fill= TRUE, idcol = "group")
+      # Extract motif scores
+      cmb[, scores:= .(scaled.score[seqlvls])]
+      cmb[, mot.scores:= .(.(scaled.score[[seqlvls]][start:end])), .(seqlvls, start, end)]
+      # Compute enrichment
+      cmb[, mean.score:= sapply(mot.scores, mean)]
+      cmb[, log2OR:= log2(mean.score/mean.scaled.score[seqlvls])]
+      # Compute OR and pval for each motif instance
+      cmb[, pval:= {
+        wilcox.test(mot.scores[[1]],
+                    scores[[1]],
+                    alternative= "greater")$p.value
+      }, .(seqlvls, start, end)]
+      cmb[, padj:= p.adjust(pval, method = "fdr")]
+      # Fisher test
+      .t <- table(motif= factor(cmb$group=="motif", c(TRUE, FALSE)),
+                  signif= factor(cmb$padj<0.05, c(TRUE, FALSE)))
+      OR.motif <- fisher.test(.t+1,
+                              alternative = "greater")$estimate
+      pval.motif <- fisher.test(.t,
+                                alternative = "greater")$p.value
+      # Select significant motifs coordinates
+      sig.mot.coor <- cmb[group=="motif" & padj<0.05]
+      sig.mot.coor <- sig.mot.coor[, .(seqlvls, start, end, width, mean.score, log2OR, padj)]
+      # Return
+      .(log2OR= log2(OR.motif),
+        pval= pval.motif,
+        sig.inst= .t[1,1],
+        tot.inst= sum(.t[1,]),
+        sig.rdm= .t[2,1],
+        tot.rdm= sum(.t[2,]),
+        sig.mot.coor= .(sig.mot.coor))
+    }, motif]
+  }, bins.width]
+  # ADjusted p values
+  res[, padj:= p.adjust(pval, "fdr")]
   
-  # Compute padj per motif----
-  names(res) <- motifs
-  final <- rbindlist(res, idcol = "motif")
-  final[, log2OR.motif:= log2(OR.motif)]
-  padj <- unique(final[, .(motif, pval.motif)])
-  padj[, padj.motif:= p.adjust(pval.motif, "fdr")]
-  final[padj, padj.motif:= i.padj.motif, on= "motif"]
+  # Clean ----
+  clean <- res[, .(motif, log2OR, padj, 
+                   sig.inst, tot.inst, sig.rdm, tot.rdm,
+                   sig.mot.coor)]
   
-  # Clean and return ----
-  clean <- final[, .(motif, log2OR.motif, padj.motif,
-                     seqnames, start, end,
-                     log2OR.inst, padj.inst,
-                     sig.inst, tot.inst, sig.rdm, tot.rdm)]
-  return(clean)
+  # Add missing values ----
+  all <- data.table(motif= unique(mot$motif))
+  final <- merge(all, clean, by= "motif", all.x= TRUE, sort= FALSE)
+  
+  # Return ----
+  return(final)
 }
 
 #' Plot contribution scores matrix
 #'
-#' @param bed A bed file containing a unique region for which contrib scores will be plotted.
-#' @param h5 Path(s) to h5 files containing the contribution scores.
-#' @param h5.bed Bed files containing the coordinates of the regions corresponding to provided h5 files.
-#' @param genome The genome to be used.
-#' @param agg.FUN In the case were several contribution scores would be found for a single nt, how should they be aggregated? Default= function(x) mean(x)
-#' @param mot An optional bed file containing motifs to be added.
-#' @param mot.name.column Name of the column containing the motif name.
+#' @param contrib.object A contribution object, as outputed by ?vl_importContrib()
+#' @param enr And enrichment object, as outputed by ?vl_contrib_enrich() on the sequences of the contrib.object.
+#' @param seqlvl A seqlvl present in in enr$sig.mot.coor$seqlvls.
+#' @param min.count The minimum number of significant instances across (see enr$sig.inst). Default= 3L
+#' @param best.by The group.by column for which only the instance with the best padjust should be returned.
+#' @param sel If specified, only the motifs for which best.by %in% sel will be plotted.
 #' @param xlab Default= "nt"
 #' @param ylab Default= "Contribution"
-#' @param xlim Default= sequence length
-#' @param ylim Default= range(contrib)
+#' @param xlim Default= sequence length.
+#' @param ylim Default= range(contrib).
 #'
 #' @export
-#' 
-#' @return contrib plot
-#' 
-vl_plot_contrib_logo <- function(bed,
-                                 h5,
-                                 h5.bed= list.files(dirname(h5), ".bed$", full.names = TRUE),
-                                 h5.fa= list.files(dirname(h5), ".fa$", full.names = TRUE),
-                                 genome,
-                                 agg.FUN= function(x) mean(x),
-                                 mot,
-                                 mot.name.column= "motif_ID",
-                                 xlab= "nt",
-                                 ylab= "Contribution",
+vl_plot_contrib_logo <- function(contrib.object,
+                                 enr,
+                                 seqlvl,
+                                 min.count= 3L,
+                                 best.by= "motif",
+                                 sel,
                                  xlim,
-                                 ylim)
+                                 ylim,
+                                 xlab= "nt",
+                                 ylab= "Contribution")
 {
-  # Import Bed
-  bed <- vl_importBed(bed) # Very important!
-  if(nrow(bed)>1)
-    stop("Unique region should be specified")
+  # Retrieve enriched motifs ----
+  all.mots <- data.table::copy(enr)
+  setnames(all.mots,
+           old= best.by,
+           new= "best.by")
+  all.mots <- all.mots[, sig.mot.coor[[1]], .(best.by, sig.inst, log2OR, padj)]
   
-  browser()
-  # Metadata ----
-  dat <- vl_importContrib(h5,
-                          bed= h5.bed,
-                          fa= h5.fa)
+  # Checks ----
+  if(is.numeric(seqlvl) || length(seqlvl)>1)
+    stop("seqlvl should be a character or a factor vector of length 1.")
+  if(length(levels(all.mots$seqlvls)) != nrow(contrib.object))
+    stop("The number of seqlvls in enr$sig.mot.coor should match the number of rows in contrib.object.")
+  if(!seqlvl %in% levels(all.mots$seqlvls))
+    stop("The seqlvl should be one of levels(enr$sig.mot.coor$seqlvls)")
   
-  # Intersect ----
-  region <- dat[bed, on= c("seqnames", "start<=end", "end>=start")]
+  # Select sequence of interest ----
+  mots <- all.mots[seqlvls==seqlvl & sig.inst>min.count, .SD[which.min(padj)], best.by]
+  if(missing(sel))
+    sel <- unique(mots$best.by)
+  contrib <- contrib.object[which(levels(mots$seqlvls)==seqlvl)]
+  contrib <- contrib[, .(base= unlist(tstrsplit(toupper(seq[[1]]), "")),
+                         score= unlist(score))]
   
+  # Plotting vars ----
+  if(missing(xlim))
+    xlim <- c(0, nrow(contrib))
+  if(missing(ylim))
+    ylim <- range(contrib$score)
   
-  # # Import contribution scores ----
-  # dat <- meta[, {
-  #   vl_importContrib(h5,
-  #                    bed = h5.bed,
-  #                    selection= bed)
-  # }, .(h5, h5.bed)]
-  # 
-  # # Aggregate if necessary ----
-  # if(uniqueN(dat[, .(seqnames, start)]) != nrow(dat))
-  # {
-  #   message("Some nucleotides had >1 contribution score assigned to it, which will be aggregated using agg.FUN")
-  #   dat <- dat[, .(score= agg.FUN(score)), .(seqnames, start, end)]
-  # }
-  # 
-  # # Get sequence ----
-  # dat$base <- strsplit(vl_getSequence(bed, genome), "")[[1]]
-  # 
-  # # Plotting vars ----
-  # dat[, xleft:= .I-1]
-  # if(missing(xlim))
-  #   xlim <- c(0, nrow(dat))
-  # if(missing(ylim))
-  #   ylim <- range(dat$score)
-  # 
-  # # Plotting ----
-  # plot(NA,
-  #      xlim= xlim,
-  #      ylim= ylim,
-  #      xlab= xlab,
-  #      ylab= ylab,
-  #      frame= FALSE)
-  # 
-  # dat[, {
-  #   vl_plotLetter(base,
-  #                 xleft = xleft,
-  #                 ytop= score,
-  #                 width = 1,
-  #                 height = score)
-  # }, (dat)]
-  # 
-  # # Add motif boxes ----
-  # if(!missing(mot))
-  # {
-  #   mot <- vl_importBed(mot)
-  #   mot <- vl_intersectBed(mot, bed, ignore.strand= TRUE)
-  #   if(nrow(mot))
-  #     mot[, {
-  #       xl <- start-bed$start
-  #       xr <- end-bed$start
-  #       rect(xleft = xl,
-  #            ybottom = ylim[1],
-  #            xright = xr,
-  #            ytop = ylim[2])
-  #       text((xl+xr)/2,
-  #            ylim[2],
-  #            get(mot.name.column)[1],
-  #            pos= 3,
-  #            xpd= T)
-  #     }, (mot)]
-  # }
+  # Remove features outside xlim ----
+  contrib[, xleft:= .I-1]
+  contrib <- contrib[between(xleft, xlim[1], xlim[2])]
+  mots <- mots[(start-1)<xlim[2] & end>xlim[1]]
+  mots[(start-1)<xlim[1], start:= xlim[1]+1]
+  mots[end>xlim[2], end:= xlim[2]]
+
+  # Plotting ----
+  plot(NA,
+       xlim= xlim,
+       ylim= ylim,
+       xlab= xlab,
+       ylab= ylab,
+       frame= FALSE)
+  contrib[, {
+    vl_plotLetter(letter = base,
+                  xleft = xleft,
+                  ytop= score,
+                  width = 1,
+                  height = score)
+  }, (contrib)]
+
+  # Add motif boxes ----
+  mots[best.by %in% sel, {
+    if(.N)
+    {
+      rect(xleft = start-1,
+           ybottom = ylim[1],
+           xright = end,
+           ytop = ylim[2])
+      text((start-1+end)/2,
+           ylim[2],
+           best.by,
+           pos= 3,
+           xpd= T)
+    }
+  }]
+  
+  # Return motifs
+  return(mots)
 }
 
 

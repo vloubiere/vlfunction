@@ -5,45 +5,38 @@
 \title{Plot contribution scores matrix}
 \usage{
 vl_plot_contrib_logo(
-  bed,
-  h5,
-  h5.bed = list.files(dirname(h5), ".bed$", full.names = TRUE),
-  h5.fa = list.files(dirname(h5), ".fa$", full.names = TRUE),
-  genome,
-  agg.FUN = function(x) mean(x),
-  mot,
-  mot.name.column = "motif_ID",
-  xlab = "nt",
-  ylab = "Contribution",
+  contrib.object,
+  enr,
+  seqlvl,
+  min.count = 3L,
+  best.by = "motif",
+  sel,
   xlim,
-  ylim
+  ylim,
+  xlab = "nt",
+  ylab = "Contribution"
 )
 }
 \arguments{
-\item{bed}{A bed file containing a unique region for which contrib scores will be plotted.}
+\item{contrib.object}{A contribution object, as outputed by ?vl_importContrib()}
 
-\item{h5}{Path(s) to h5 files containing the contribution scores.}
+\item{enr}{And enrichment object, as outputed by ?vl_contrib_enrich() on the sequences of the contrib.object.}
 
-\item{h5.bed}{Bed files containing the coordinates of the regions corresponding to provided h5 files.}
+\item{seqlvl}{A seqlvl present in in enr$sig.mot.coor$seqlvls.}
 
-\item{genome}{The genome to be used.}
+\item{min.count}{The minimum number of significant instances across (see enr$sig.inst). Default= 3L}
 
-\item{agg.FUN}{In the case were several contribution scores would be found for a single nt, how should they be aggregated? Default= function(x) mean(x)}
+\item{best.by}{The group.by column for which only the instance with the best padjust should be returned.}
 
-\item{mot}{An optional bed file containing motifs to be added.}
+\item{sel}{If specified, only the motifs for which best.by %in% sel will be plotted.}
 
-\item{mot.name.column}{Name of the column containing the motif name.}
+\item{xlim}{Default= sequence length.}
+
+\item{ylim}{Default= range(contrib).}
 
 \item{xlab}{Default= "nt"}
 
 \item{ylab}{Default= "Contribution"}
-
-\item{xlim}{Default= sequence length}
-
-\item{ylim}{Default= range(contrib)}
-}
-\value{
-contrib plot
 }
 \description{
 Plot contribution scores matrix

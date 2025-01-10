@@ -4,10 +4,18 @@
 \alias{vl_pwm_perc_to_log2}
 \title{PWM perc to log2}
 \usage{
-vl_pwm_perc_to_log2(perc_pwm)
+vl_pwm_perc_to_log2(
+  perc_pwm,
+  pseudocount = 1e-05,
+  bg = c(A = 0.25, C = 0.25, G = 0.25, T = 0.25)
+)
 }
 \arguments{
 \item{perc_pwm}{A percentage PWM, where all columns sum to 1}
+
+\item{pseudocount}{Pseudocount. Default= 1e-5}
+
+\item{bg}{Background probabilities. Default= c("A"= .25, "C"= .25, "G"= .25, "T"= .25).}
 }
 \value{
 Returns a log2 odd ratio pwm

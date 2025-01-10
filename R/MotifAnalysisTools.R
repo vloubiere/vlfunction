@@ -428,8 +428,8 @@ vl_motif_pos.character <- function(sequences,
   # Checks ----
   if(missing(genome))
     stop("genome is missing with no default")
-  if(is.null(names(sequences)))
-    names(sequences) <- seq(sequences)
+  if(is.null(names(sequences)) || anyDuplicated(names(sequences)))
+    stop("All sequences should have a unique name!")
   if(!"PWMatrixList" %in% class(pwm_log_odds))
     pwm_log_odds <- do.call(TFBSTools::PWMatrixList, pwm_log_odds)
   
@@ -438,7 +438,7 @@ vl_motif_pos.character <- function(sequences,
   print(paste0("Temp files will be stored in '", tmp.folder, "'"))
   dir.create(tmp.folder, showWarnings = FALSE, recursive = TRUE)
   
-  # Temp output files ----
+  # Metadata ----
   mot.names <- sapply(pwm_log_odds, TFBSTools::name)
   mot.names <- make.unique(mot.names)
   # File names cant handle '/'
@@ -471,38 +471,39 @@ vl_motif_pos.character <- function(sequences,
   }
 
   # Processing ----
-  pos <- lapply(output, function(x) {
+  pos <- data.table(motif= mot.names,
+                    file= output)
+  final <- pos[, {
     # Import
-    .c <- readRDS(x)
-    mot <- as.data.table(.c)
-    # Add seqnames and clean
-    mot[, seqnames:= names(sequences)[group]]
-    mot$group <- mot$group_name <- NULL
+    .c <- readRDS(file)
+    .c <- as.data.table(.c)
+    # Add seqnames 
+    .c[, seqnames:= names(sequences)[group]]
     # If specified, collapsed motifs that overlap >70%, ignore.strand
-    if(collapse.overlapping)
+    if(collapse.overlapping & nrow(.c))
     {
-      min.gap <- ifelse(nrow(mot), -ceiling(mean(mot$width)*0.7), 0)
-      mot <-  vl_collapseBed(mot,
-                             min.gap = min.gap,
-                             ignore.strand = TRUE)
-      mot <- mot[, .(seqnames, start, end, width= end-start+1)]
+      min.gap <- -ceiling(mean(.c$width)*0.7)
+      .c$idx <-  vl_collapseBed(.c,
+                                min.gap = min.gap,
+                                ignore.strand = TRUE,
+                                return.idx.only = TRUE)
+      .c <- .c[, {
+        .(start= min(start),
+          end= max(end),
+          score= max(score, na.rm = TRUE))
+      }, .(seqnames, idx)]
+      .c[, width:= end-start+1]
     }
+    # Simplify
+    .c[, seqlvls:= seqnames]
+    cols <- intersect(names(.c), c("start", "end", "strand", "width", "score"))
+    .c <- .c[, .(mot.count= .N, ir= .(.SD)), seqlvls, .SDcols= cols]
+    # Add missing levels
+    all <- data.table(seqlvls= names(sequences))
+    res <- merge(all, .c, by= "seqlvls", all.x= TRUE, sort= FALSE)
     # Return
-    return(mot)
-  })
-  names(pos) <- mot.names
-  
-  # Collapse ----
-  res <- rbindlist(pos, idcol = "motif")
-  res[, seqlvls:= factor(seqnames, names(sequences))]
-  coll <- res[, .(ir= .(.SD)), .(motif, seqlvls)]
-  
-  # Final format ----
-  empty <- list(coll[1, ir][[1]][0])
-  final <- dcast(coll,
-                 seqlvls~motif,
-                 value.var = "ir",
-                 fill = empty)
+    res
+  }, motif]
   
   # Return ----
   return(final)
@@ -511,6 +512,8 @@ vl_motif_pos.character <- function(sequences,
 #' PWM perc to log2
 #'
 #' @param perc_pwm A percentage PWM, where all columns sum to 1
+#' @param pseudocount Pseudocount. Default= 1e-5
+#' @param bg Background probabilities. Default= c("A"= .25, "C"= .25, "G"= .25, "T"= .25).
 #'
 #' @return Returns a log2 odd ratio pwm
 #' @export
@@ -518,7 +521,13 @@ vl_motif_pos.character <- function(sequences,
 #' @examples
 #' vl_Dmel_motifs_DB_full$pwms_perc[[5]]@profileMatrix
 #' vl_pwm_perc_to_log2(vl_Dmel_motifs_DB_full$pwms_perc[[5]]@profileMatrix)
-vl_pwm_perc_to_log2 <- function(perc_pwm)
+vl_pwm_perc_to_log2 <- function(perc_pwm,
+                                pseudocount= 1e-5,
+                                bg= c("A"= .25, "C"= .25, "G"= .25, "T"= .25))
 {
-  log2(perc_pwm/matrix(0.25, nrow= 4, ncol= ncol(perc_pwm))+1e-5)
+  bg <- as.matrix(bg)
+  bg <- lapply(seq(ncol(perc_pwm)), function(x) bg)
+  bg <- do.call(cbind, bg)
+  bg <- bg[c("A", "C", "G", "T"),]
+  log2(perc_pwm/bg+pseudocount)
 }
