@@ -187,7 +187,7 @@ vl_last_err <- function(dir)
 #' @param first.col.name If metadata in in .xlsx format, this character string will be used to detect the starting line. Default= "user".
 #'
 #' @export
-vl_import_metadata_sheet <- function(metadata, start= "user")
+vl_import_metadata_sheet <- function(metadata, first.col.name= "user")
 {
   meta <- if(grepl(".txt$", metadata))
   {
@@ -198,10 +198,11 @@ vl_import_metadata_sheet <- function(metadata, start= "user")
   }else if(grepl(".xlsx$", metadata))
   {
     sheet <- readxl::read_xlsx(metadata)
-    start <- cumsum(sheet[[1]]==start)>0
-    if(sum(start)==0)
+    # Slip lines before first column names
+    sel.rows <- cumsum(c(sheet[[1]]==first.col.name, NA))>0
+    if(sum(sel.rows, na.rm= TRUE)==0)
       stop("The 'user' column, which should be the first of the excel sheet, could not be found!")
-    sheet <- sheet[(start),]
+    sheet <- sheet[(sel.rows),]
     meta <- as.data.table(sheet[-1,])
     names(meta) <- unlist(sheet[1,])
     return(meta)

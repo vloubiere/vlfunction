@@ -306,7 +306,9 @@ vl_collapseBed <- function(bed,
   DT <- vl_importBed(bed)
   DT <- DT[, names(DT) %in% c("seqnames", "start", "end", "strand"), with= F]
   DT[, init_ord:= .I]
-  setorderv(DT, c("seqnames", "start", "end"))
+  if(!ignore.strand && "strand" %in% names(DT))
+    setorderv(DT, c("seqnames", "strand", "start", "end")) else
+      setorderv(DT, c("seqnames", "start", "end"))
   
   # Compute overlapping contigs idx ----
   DT[, ord:= .I] 
@@ -509,7 +511,6 @@ vl_binBed <- function(bed,
     if(!ignore.strand && "strand" %in% names(bed)) # ignore.strand= FALSE
     {
       bed[, c("start", "end"):= {
-        browser()
         if((be-bs+1)>=nbins) # Bins > 1 nt
         {
           if(strand=="-") # Minus strand
