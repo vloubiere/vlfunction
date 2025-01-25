@@ -1,9 +1,9 @@
 #' CUTNRUN pipeline
-#' 
+#'
 #' To use this this pipeline, please install the vl_function package using install_github("vloubiere/vlfunction")
-#' in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R') 
+#' in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R')
 #' which will be used to submit R sub-script.
-#' 
+#'
 #' The pipeline is split into two main functions. The first vl_CUTNRUN_processing() function aligns the reads and filters confident alignments.
 #' It takes as input a (correctly formatted) metadata file, saves the processed metadata file and returns and/or submit the command lines to: \cr
 #' 1/ extract reads from VBC .bam file. Output .fq files are saved tmp_folder/fq/\cr
@@ -11,7 +11,7 @@
 #' 3/ aligns them to mouse/human genome (see 'genome' column of the metadata table). Output .bam files are saved in tmp_folder/bam/ \cr
 #' 4/ return alignment statistics. Output .txt files are saved in alignment_stats_output_folder/ \cr
 #' 5/ return mapq30_statistics (confidently aligned reads). Output .txt files are saved in alignment_stats_output_folder/ \cr
-#' 
+#'
 #' The second function, vl_CUTNRUN_peakCalling(), takes care of the peak calling, and returns and/or submit the command lines to: \cr
 #' 1/ peaks for each replicate. Output .narrowpeak files are saved in peaks_output_folder/ \cr
 #' 2/ .bw tracks for each replicate. Output .bw files are saved in bw_output_folder/ \cr
@@ -22,7 +22,7 @@
 #' @param metadata The path to a correctly formatted .xlsx. .rds or .txt metadata file, or a data.table.
 #' See the template at '/groups/stark/vloubiere/projects/vl_pipelines/Rdata/metadata_CutNRun.xlsx'.
 #' @param processed_metadata_output An .rds path where to save the processed metadata file, which contains the paths of all output files and will be used to manage them.
-#' By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path. 
+#' By default, when importing the metadata from an excel sheet, "_processed.rds" will be appended to the excel file path.
 #' @param fq_output_folder Output folder for .fq files. Default= "/scratch/stark/vloubiere/fq/CUTNRUN/".
 #' @param bam_output_folder Output folder for .bam aligned files. Default= "/scratch/stark/vloubiere/bam/CUTNRUN/".
 #' @param alignment_stats_output_folder Output folder for alignment statistics. Default= "db/alignment_stats/CUTNRUN/".
@@ -41,7 +41,7 @@
 #' @examples
 #' # Process example dataset ----
 #' library(vlfunctions)
-#' 
+#'
 #' # Example metadata ----
 #' metadata <- system.file("CUTNRUN_pipeline", "metadata_CutNRun.xlsx", package = "vlfunctions")
 #'
@@ -49,14 +49,14 @@
 #' cmd <- vl_CUTNRUN_processing(metadata = metadata,
 #'                              overwrite= TRUE,
 #'                              submit= FALSE)
-#'                              
+#'
 #' # To submit, switch to submit= TRUE ----
 #' vl_CUTNRUN_processing(metadata = metadata,
 #'                       processed_metadata_output = "Rdata/metadata_CutNRun_processed.rds",
 #'                       overwrite= FALSE, # Existing files will not be processed again
 #'                       submit= TRUE)
-#'                       
-#' # Peak calling 
+#'
+#' # Peak calling
 #' see ?vl_CUTNRUN_peakCalling()
 #'
 #' @export
@@ -78,12 +78,12 @@ vl_CUTNRUN_processing <- function(metadata,
   meta <- if(is.data.table(metadata))
     data.table::copy(metadata) else
       vl_import_metadata_sheet(metadata)
-  
+
   # Check required columns ----
   missing_cols <- setdiff(c("sampleID", "genome", "layout", "fq1", "fq2"), names(meta))
   if(length(missing_cols))
     stop(paste("Metadata required columns mising:", paste0(missing_cols, collapse = ", ")))
-  
+
   # Check fq files ----
   meta[, fq1:= as.character(fq1)]
   meta[, fq2:= as.character(fq2)]
@@ -111,7 +111,7 @@ vl_CUTNRUN_processing <- function(metadata,
     }, .(barcode, i5, bam_path)]
     meta[is.na(fq2) & layout=="PAIRED", fq2:= gsub("_1.fq.gz$", "_2.fq.gz", fq1)]
   }
-  
+
   # Check arguments ----
   # Metadata output
   if(submit && !grepl(".rds$", processed_metadata_output))
@@ -129,12 +129,12 @@ vl_CUTNRUN_processing <- function(metadata,
   if(nrow(potential_dup))
     warning(paste("The following sampleIDs were present more than once and will be merged (resequenced)?:",
                   paste0(potential_dup$sampleID, collapse = ", ")))
-  
+
   # Generate output paths ----
   # Trimmed fq
   meta[, fq1_trim:= {
     paste0(fq_output_folder, "/",
-           gsub(".fq.gz$", fifelse(layout=="PAIRED", "_val_1.fq.gz", "_trimmed.fq.gz"), basename(fq1))) 
+           gsub(".fq.gz$", fifelse(layout=="PAIRED", "_val_1.fq.gz", "_trimmed.fq.gz"), basename(fq1)))
   }, layout]
   meta[layout=="PAIRED", fq2_trim:= paste0(fq_output_folder, "/", gsub(".fq.gz$", "_val_2.fq.gz", basename(fq2)))]
   # re-sequencing are merged from this step on!
@@ -144,7 +144,7 @@ vl_CUTNRUN_processing <- function(metadata,
   # Statistics
   meta[, alignment_stats:= paste0(alignment_stats_output_folder, gsub(".bam$", "_stats.txt", basename(bam)))]
   meta[, mapq30_stats:= gsub("_stats.txt$", "_mapq30_stats.txt", alignment_stats)]
-  
+
   # Demultiplex VBC bam file ----
   meta[, demultiplex_cmd:= {
     if(.N!=1)
@@ -167,7 +167,7 @@ vl_CUTNRUN_processing <- function(metadata,
       cmd
     }
   }, .(layout, fq1, fq2)]
-  
+
   # Trim illumina adapters ----
   meta[, trim_cmd:= {
     if(overwrite | any(!file.exists(na.omit(c(fq1_trim, fq2_trim)))))
@@ -177,7 +177,7 @@ vl_CUTNRUN_processing <- function(metadata,
           paste0("trim_galore --gzip --paired -o ", dirname(fq1_trim), "/ ", fq1, " ", fq2)
     }
   }, .(layout, fq1, fq1_trim, fq2, fq2_trim)]
-  
+
   # Alignment ----
   meta[, aln_cmd:= {
     if(overwrite | !file.exists(bam))
@@ -199,7 +199,7 @@ vl_CUTNRUN_processing <- function(metadata,
             "; samtools stats", bam, "-@", cores-1, "| grep ^SN>", mapq30_stats) # Add filtering statistics
     }
   }, .(layout, bam, genome, alignment_stats, mapq30_stats)]
-  
+
   # Return commands ----
   load_cmd <- paste(c("module load build-env/2020",
                       "module load trim_galore/0.6.0-foss-2018b-python-2.7.15",
@@ -211,7 +211,7 @@ vl_CUTNRUN_processing <- function(metadata,
     meta[, .(cmd= paste0(c(load_cmd, unique(na.omit(unlist(.SD)))),
                          collapse = "; ")), sampleID, .SDcols= cols][cmd!=load_cmd] else
                            data.table()
-  
+
   # If commands were generated ----
   if(nrow(cmd))
   {
@@ -221,7 +221,7 @@ vl_CUTNRUN_processing <- function(metadata,
       # Save processed metadata ----
       saveRDS(meta[, -c(cols), with= FALSE],
               processed_metadata_output)
-      
+
       # Create output directories ----
       dirs <- c(logs,
                 tmp_folder,
@@ -236,18 +236,18 @@ vl_CUTNRUN_processing <- function(metadata,
                           collapse= ", ")
         print(paste("Output directories were created in:", outDirs, "!"))
       }
-      
+
       # Submit commands ----
       cmd[, {
-        vl_bsub(cmd, 
-                cores= cores, 
-                m = mem, 
-                name = "CUTNRUN", 
+        vl_bsub(cmd,
+                cores= cores,
+                m = mem,
+                name = "CUTNRUN",
                 t = time,
                 o= paste0(normalizePath(logs), "/", sampleID),
                 e= paste0(normalizePath(logs), "/", sampleID),
                 wdir = wdir)
-      }, .(sampleID, cmd)] 
+      }, .(sampleID, cmd)]
     }else
     {
       return(cmd)
@@ -259,11 +259,11 @@ vl_CUTNRUN_processing <- function(metadata,
 #' Function to call peaks and compute bw tracks from CUTNRUN/CHIP data
 #'
 #' @param processed_metadata Path to the metadata file generated by vl_CUTNRUN_processing, or the corresponding data.table.
-#' @param peaks_metadata_output An .rds path where to save the metadata file, which contains the directories containing peaks filesand will be used to manage them. By default, when the processed_metadata is a path to a processed_metadata files, "_peaks_files.rds" will be appended to the processed_metadata file path. 
+#' @param peaks_metadata_output An .rds path where to save the metadata file, which contains the directories containing peaks filesand will be used to manage them. By default, when the processed_metadata is a path to a processed_metadata files, "_peaks_files.rds" will be appended to the processed_metadata file path.
 #' @param peaks_output_folder Output folder for peak files. Default= "db/peaks/CUTNRUN/".
 #' @param bw_output_folder Output folder for bw files. Default= "db/bw/CUTNRUN/".
 #' @param Rpath The path to the Rscript executable to use, on which the latest version of the vlfunction package should be installed. Default= /software/f2022/software/r/4.3.0-foss-2022b/bin/Rscript
-#' @param extsise The extsize to be used, meaning that the building of the peak model will be skipped (--nomodel). To build the model, set extsize= NA. Default= 300. 
+#' @param extsise The extsize to be used, meaning that the building of the peak model will be skipped (--nomodel). To build the model, set extsize= NA. Default= 300.
 #' @param cores Number of cores per job. Default= 8.
 #' @param mem Memory per job (in Go). Default= 32.
 #' @param overwrite Should existing files be overwritten?
@@ -277,10 +277,10 @@ vl_CUTNRUN_processing <- function(metadata,
 #' @examples
 #' # Peak calling example dataset ----
 #' library(vlfunctions)
-#' 
+#'
 #' # Processed metadata ----
 #' processed <- readRDS("Rdata/metadata_CutNRun_processed.rds")
-#' 
+#'
 #' # Peak calling ----
 #' vl_CUTNRUN_peakCalling(processed_metadata = processed,
 #'                        extsize = 300,
@@ -290,7 +290,7 @@ vl_CUTNRUN_processing <- function(metadata,
 #'                        submit = TRUE)
 #' # Peaks metadata ----
 #' peaks <- readRDS("Rdata/metadata_CutNRun_peaks_files.rds")
-#' 
+#'
 #' @export
 vl_CUTNRUN_peakCalling <- function(processed_metadata,
                                    peaks_metadata_output,
@@ -310,26 +310,26 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
   meta <- if(is.data.table(processed_metadata))
     data.table::copy(processed_metadata) else
       vl_import_metadata_sheet(processed_metadata)
-  
+
   # Check condition columns ----
   missing_cols <- setdiff(c("condition", "sampleID", "input", "layout", "genome", "bam", "bam_input"), names(meta))
   if(length(missing_cols))
     stop(paste("Metadata required columns mising:", paste0(missing_cols, collapse = ", ")))
-  
+
   # Check metadata output ----
   if(submit && !grepl(".rds$", peaks_metadata_output))
     stop("peaks_metadata_output should end up with a .rds extension")
-  
+
   # Grouping per condition to check N replicates ----
-  meta[, twoReps:= length(unique(bam))>1, condition] 
-  
+  meta[, twoReps:= length(unique(bam))>1, condition]
+
   # Create output files ----
   meta[(twoReps), merged_peaks_file:= paste0(peaks_output_folder, "merge/", condition, "_merged_peaks.narrowPeak")]
   meta[(twoReps), merged_bw_file:= paste0(bw_output_folder, "merge/", condition, "_merged.bw")]
   meta[(twoReps), confident_peaks_file:= paste0(peaks_output_folder, "confident/", condition, "_confident_peaks.narrowPeak")]
   meta[, peaks_file:= paste0(peaks_output_folder, "replicates/", sampleID, "_peaks.narrowPeak")]
   meta[, bw_file:= paste0(bw_output_folder, "replicates/", sampleID, ".bw")]
-  
+
   # Print conditions ----
   if(any(meta$twoReps)) # With at least two reps
   {
@@ -343,13 +343,13 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
   }
   if(any(!na.omit(meta$input) %in% meta$sampleID))
     stop("Some input(s) have no correspondence in the sampleID(s) column!")
-  
+
   # Check if at least two replicates and input specified ----
   if(any(is.na(meta$input)))
     meta[is.na(input), print(paste("No input found for", sampleID, "-> peak calling without input")), sampleID]
   if(any(!meta$twoReps))
     meta[(!twoReps), print(paste("No replicates found for", sampleID, "-> confident peaks calling skipped")), sampleID]
-  
+
   # Peak calling on individual replicates ----
   meta[, peak_cmd:= {
     if(overwrite | !file.exists(peaks_file))
@@ -360,7 +360,7 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
       # Check input
       .input <- ifelse(is.na(bam_input), "", paste("-c", bam_input))
       # Command
-      paste("macs2 callpeak -B --SPMR --keep-dup 1 -g", gAbb, 
+      paste("macs2 callpeak -B --SPMR --keep-dup 1 -g", gAbb,
             ifelse(layout=="PAIRED", "-f BAMPE", ""),
             ifelse(is.na(extsize), "", paste("--nomodel --extsize", extsize)),
             "--outdir", paste0(dirname(peaks_file), "/"),
@@ -371,7 +371,7 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
       #   cmd <- paste0(cmd, " --broad")
     }
   }, .(layout, genome, bam, bam_input, peaks_file)]
-  
+
   # Bedgraph to bigwig individual rep ----
   meta[, bw_cmd:= {
     if(overwrite | !file.exists(bw_file))
@@ -383,7 +383,7 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
             genome)
     }
   }, .(genome, bam, bam_input, peaks_file, bw_file)]
-  
+
   # Merged peaks ----
   meta[(twoReps), merged_peak_cmd:= {
     if(overwrite | !file.exists(merged_peaks_file))
@@ -404,7 +404,7 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
             "-n", gsub("_peaks.narrowPeak", "", basename(merged_peaks_file)))
     }
   }, .(genome, condition, merged_peaks_file)]
-  
+
   # Merged bigwig ----
   meta[(twoReps), merged_bw_cmd:= {
     if(overwrite | !file.exists(merged_bw_file))
@@ -416,7 +416,7 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
             genome)
     }
   }, .(genome, condition, merged_peaks_file, merged_bw_file)]
-  
+
   # Confident peaks ----
   meta[(twoReps), conf_peak_cmd:= {
     if(overwrite | !file.exists(confident_peaks_file))
@@ -427,7 +427,7 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
             confident_peaks_file)
     }
   }, .(condition, merged_peaks_file, confident_peaks_file)]
-  
+
   # Return commands ----
   load_cmd <- paste(c("module load build-env/2020",
                       "module load macs2/2.1.2.1-foss-2018b-python-2.7.15"),
@@ -438,7 +438,7 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
     meta[, .(cmd= paste0(c(load_cmd, unique(na.omit(unlist(.SD)))),
                          collapse = "; ")), condition, .SDcols= cols][cmd!=load_cmd] else
                            data.table()
-  
+
   # If commands were generated ----
   if(nrow(cmd))
   {
@@ -448,7 +448,7 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
       # Save peaks metadata ----
       saveRDS(meta[, -c(cols), with= FALSE],
               peaks_metadata_output)
-      
+
       # Create directories ----
       dirs <- c(unique(dirname(na.omit(unlist(meta[, merged_peaks_file:bw_file])))), logs)
       if(any(!dir.exists(dirs)))
@@ -459,13 +459,13 @@ vl_CUTNRUN_peakCalling <- function(processed_metadata,
                             logs), collapse= ", ")
         print(paste("Output directories were created in:", outDirs, "!"))
       }
-      
+
       # Submit commands ----
       cmd[, {
-        vl_bsub(cmd, 
-                cores= cores, 
-                m = mem, 
-                name = "CUTNRUN", 
+        vl_bsub(cmd,
+                cores= cores,
+                m = mem,
+                name = "CUTNRUN",
                 t = time,
                 o= paste0(normalizePath(logs), "/", condition),
                 e= paste0(normalizePath(logs), "/", condition),
