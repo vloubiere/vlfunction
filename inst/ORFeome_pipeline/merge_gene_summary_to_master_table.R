@@ -20,7 +20,8 @@ require(data.table)
 gene_summary <- args[1]
 output_prefix <- args[2]
 sort <- args[3]
-master_table <- "/groups/stark/pachano/projects/eORFeome/Rdata/Master_eORFeome_Mar24.csv"
+# master_table <- "/groups/stark/pachano/projects/eORFeome/Rdata/Master_eORFeome_Mar24.csv"
+master_table <- "/groups/stark/pachano/projects/eORFeome_new/Rdata/Master_eORFeome_clean.csv"
 
 # Checks ----
 if(!grepl(".txt$", gene_summary))
@@ -35,9 +36,12 @@ master <- fread(master_table)
 master <- as.data.table(master)
 master[, id:= as.character(id)]
 # Columns of interest
-master.columns <- c("id", "Effector class", "RefSeq protein", "UniProt", "Gene",
-                    "Description", "Species", "DNA sequence", "size", "Amino acid sequence",
-                    "Size (aa)", "Uniprot", "Protein names", "Function")
+# master.columns <- c("id", "Effector class", "RefSeq protein", "UniProt", "Gene",
+#                     "Description", "Species", "DNA sequence", "size", "Amino acid sequence",
+#                     "Size (aa)", "Uniprot", "Protein names", "Function")
+master.columns <- c("id", "Class", "sp_abb", "Species", "seq",
+                    "size", "Uniprot", "Family", "Group", "Group",
+                    "genome")
 master <- master[, (master.columns), with= F]
 
 # Import FC table ----

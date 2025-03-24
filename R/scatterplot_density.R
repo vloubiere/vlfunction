@@ -89,30 +89,34 @@ vl_densScatterplot <- function(x,
            frame= frame,
            ...)
     }
-    # Densities
-    xlim <- par("usr")[1:2]
-    ylim <- par("usr")[3:4]
-    densities <- .SD[, .(dx= .(density(x, from= xlim[1], to= xlim[2], na.rm= TRUE)),
-                         dy= .(density(y, from= ylim[1], to= ylim[2], na.rm= TRUE))), .(label, Cc)]
     
-    densities[, {
-      # x
-      .c <- dx[[1]]
-      .c$y <- .c$y/max(.c$y)
-      lines(.c$x,
-            ylim[2]+(.c$y*strheight("M")*5*dens.lw),
-            col= Cc[1],
-            xpd= T)
-      # y
-      .c <- dy[[1]]
-      .c$y <- .c$y/max(.c$y)
-      lines(xlim[2]+(.c$y*strwidth("M")*5*dens.lw),
-            .c$x,
-            col= Cc[1],
-            xpd= T)
-      .SD
-    }, .(Cc, label)]
+    if(length(x)>1 && !is.na(dens.lw)) {
+      # Densities
+      xlim <- par("usr")[1:2]
+      ylim <- par("usr")[3:4]
+      densities <- .SD[, .(dx= .(density(x, from= xlim[1], to= xlim[2], na.rm= TRUE)),
+                           dy= .(density(y, from= ylim[1], to= ylim[2], na.rm= TRUE))), .(label, Cc)]
+      
+      densities[, {
+        # x
+        .c <- dx[[1]]
+        .c$y <- .c$y/max(.c$y)
+        lines(.c$x,
+              ylim[2]+(.c$y*strheight("M")*5*dens.lw),
+              col= Cc[1],
+              xpd= T)
+        # y
+        .c <- dy[[1]]
+        .c$y <- .c$y/max(.c$y)
+        lines(xlim[2]+(.c$y*strwidth("M")*5*dens.lw),
+              .c$x,
+              col= Cc[1],
+              xpd= T)
+        .SD
+      }, .(Cc, label)]
+    }
   }, ]
+  
   # Legend
   if(plot.legend)
     legend(par("usr")[2],

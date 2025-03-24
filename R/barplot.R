@@ -54,8 +54,9 @@ vl_barplot <- function(height,
     stop("horiz not supported yet ;)")
   
   # Compute sd if necessary ----
-  if(show.sd && !is.null(individual.var))
-    sd <- sapply(individual.var, sd, na.rm= T)
+  sd <- if(show.sd && !is.null(individual.var))
+    sapply(individual.var, sd, na.rm= T) else
+      rep(0, length(height))
   
   # Create data table to keep track of all values ----
   dat <- data.table(height= height,

@@ -17,6 +17,9 @@
 #' @export
 vl_alluvial_plot <- function(dat,
                              col= rainbow(length(unique(unlist(dat)))),
+                             show.bar.labels= TRUE,
+                             labels.cex= 1,
+                             show.legend= FALSE,
                              alpha.f= 0.5,
                              space= 1,
                              width= 0.5,
@@ -25,10 +28,14 @@ vl_alluvial_plot <- function(dat,
   # Make object ----
   DT <- melt(dat, 
              measure.vars = names(dat))
-  
+
   # Bars ----
   setorderv(DT, c("variable", "value"))
-  mat <- as.matrix(dcast(DT, value~variable, fun.aggregate = length), 1)
+  DT[, variable:= factor(variable, unique(variable))]
+  DT[, value:= factor(value, unique(value))]
+  mat <- dcast(DT, value~variable, fun.aggregate = length)
+  mat <- as.matrix(mat, 1)
+  mat <- mat[nrow(mat):1, , drop= FALSE]
   pl <- barplot(mat,
                 col= col,
                 space= space,
@@ -45,16 +52,32 @@ vl_alluvial_plot <- function(dat,
     setorderv(pols, c("V2", "V1"))
     pols[, c("y3", "y4"):= as.list(rev(range(.I))), .(V2, V1)]
     pols[, col:= adjustcolor(col[.GRP], alpha.f = alpha.f), V1]
+    browser()
     pols[, polygon(c(pl[i]+width/2, pl[i]+width/2, pl[i+1]-width/2, pl[i+1]-width/2), 
-                   c(y1-1, y2, y3, y4-1),
+                   c(y1[1]-1, y2[1], y3[1], y4[1]-1),
                    col= col[1]), .(y1, y2, y3, y4, col)]
   }
-  legend(par("usr")[2],
-         par("usr")[4],
-         fill= col,
-         legend = rownames(mat),
-         bty= "n",
-         xpd= T)
+  
+  # Print names
+  if(show.bar.labels) {
+    for(i in seq(ncol(mat))) {
+      .c <- na.omit(mat[mat[,i]>0, i])
+      text(pl[i],
+           cumsum(.c)-.c/2,
+           names(.c),
+           cex= labels.cex)
+    }
+  }
+
+  # Print legend ----
+  if(show.legend) {
+    legend(par("usr")[2],
+           par("usr")[4],
+           fill= col,
+           legend = rownames(mat),
+           bty= "n",
+           xpd= T)
+  }
   
   # Return ----
   invisible(pl)
