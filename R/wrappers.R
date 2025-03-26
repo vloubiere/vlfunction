@@ -199,7 +199,7 @@ vl_import_metadata_sheet <- function(metadata, first.col.name= "user")
   {
     sheet <- readxl::read_xlsx(metadata)
     # Slip lines before first column names
-    sel.rows <- cumsum(c(sheet[[1]]==first.col.name, NA))>0
+    sel.rows <- cumsum(c(sheet[[1]]==first.col.name))>0
     if(sum(sel.rows, na.rm= TRUE)==0)
       stop("The 'user' column, which should be the first of the excel sheet, could not be found!")
     sheet <- sheet[(sel.rows),]
