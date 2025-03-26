@@ -11,7 +11,7 @@ vl_motif_cl_enrich(
   control.cl = NULL,
   names = vl_Dmel_motifs_DB_full[colnames(counts), motif_cluster, on = "motif_ID"],
   plot = F,
-  padj.cutoff = 1e-05,
+  padj.cutoff = 0.00001,
   top.enrich = Inf,
   min.counts = 3L,
   order = "padj",

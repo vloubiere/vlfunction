@@ -6,7 +6,7 @@
 \usage{
 vl_pwm_perc_to_log2(
   perc_pwm,
-  pseudocount = 1e-05,
+  pseudocount = 0.00001,
   bg = c(A = 0.25, C = 0.25, G = 0.25, T = 0.25)
 )
 }

@@ -15,7 +15,7 @@ vl_motif_pos(sequences, ...)
   pwm_log_odds = vl_Dmel_motifs_DB_full[collection == "jaspar", pwms_log_odds],
   genome,
   bg = "genome",
-  p.cutoff = 5e-05,
+  p.cutoff = 0.00005,
   collapse.overlapping = TRUE,
   scratch = "/scratch/stark/vloubiere/",
   sub.folder = tempdir(),

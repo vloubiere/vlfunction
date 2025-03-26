@@ -55,7 +55,7 @@ These commands can then be submitted either directly via the function, or using 
 }
 \description{
 To use this this pipeline, please install the vl_function package using install_github("vloubiere/vlfunction")
-in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R') 
+in your interactive Rstudio session AND in the local installation of R 4.3.0 ('/software/f2022/software/r/4.3.0-foss-2022b/bin/R')
 which will be used to submit R sub-script.
 }
 \details{
@@ -85,14 +85,14 @@ metadata <- system.file("CUTNRUN_pipeline", "metadata_CutNRun.xlsx", package = "
 cmd <- vl_CUTNRUN_processing(metadata = metadata,
                              overwrite= TRUE,
                              submit= FALSE)
-                             
+
 # To submit, switch to submit= TRUE ----
 vl_CUTNRUN_processing(metadata = metadata,
                       processed_metadata_output = "Rdata/metadata_CutNRun_processed.rds",
                       overwrite= FALSE, # Existing files will not be processed again
                       submit= TRUE)
-                      
-# Peak calling 
+
+# Peak calling
 see ?vl_CUTNRUN_peakCalling()
 
 }

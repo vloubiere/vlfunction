@@ -4,7 +4,7 @@
 \alias{vl_import_metadata_sheet}
 \title{See most recent error file in a directory}
 \usage{
-vl_import_metadata_sheet(metadata, start = "user")
+vl_import_metadata_sheet(metadata, first.col.name = "user")
 }
 \arguments{
 \item{metadata}{Path to an excel metadata sheet}

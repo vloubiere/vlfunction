@@ -7,6 +7,9 @@
 vl_alluvial_plot(
   dat,
   col = rainbow(length(unique(unlist(dat)))),
+  show.bar.labels = TRUE,
+  labels.cex = 1,
+  show.legend = FALSE,
   alpha.f = 0.5,
   space = 1,
   width = 0.5,
