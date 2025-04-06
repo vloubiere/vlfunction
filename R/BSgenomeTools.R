@@ -54,8 +54,11 @@ vl_control_regions_BSgenome <- function(bed, genome, no.overlap= F)
   # Format
   regions <- data.table::copy(bed)
   regions[, width:= end-start+1]
+  # Import seqLenghts
   BS <- data.table::as.data.table(GenomicRanges::GRanges(GenomeInfoDb::seqinfo(BSgenome::getBSgenome(genome, load.only = TRUE))))
   regions[BS, seqlength:= i.width, on= "seqnames"]
+  if(anyNA(regions$seqlength))
+    stop("Some of the seqnames within bed could not be found in the BSgenome")
   # Random sampling
   regions[, start:= sample(seqlength-width, .N), .(seqlength, width)]
   regions[, end:= start+width-1]

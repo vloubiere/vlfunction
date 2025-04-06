@@ -1,5 +1,4 @@
-
-#' Title
+#' Clean pie chart
 #'
 #' @param x Variable to be summarized
 #' @param col colors to be used

@@ -1,6 +1,3 @@
-require(data.table)
-
-
 #' Scatterplot with density lines on top and on the right
 #'
 #' @param x x variable
@@ -32,7 +29,7 @@ require(data.table)
 #' mgp= c(2, .5, 0),
 #' las= 1)
 #' vl_densScatterplot(dat$x, dat$y, dat$label)
-#' 
+#'
 vl_densScatterplot <- function(x,
                                y,
                                label,
@@ -58,7 +55,7 @@ vl_densScatterplot <- function(x,
   }
   if(length(col)==length(levels(label)))
     col <- col[label]
-  
+
   # Make data.table
   dat <- data.table(x= x,
                     y= y,
@@ -89,14 +86,14 @@ vl_densScatterplot <- function(x,
            frame= frame,
            ...)
     }
-    
+
     if(length(x)>1 && !is.na(dens.lw)) {
       # Densities
       xlim <- par("usr")[1:2]
       ylim <- par("usr")[3:4]
       densities <- .SD[, .(dx= .(density(x, from= xlim[1], to= xlim[2], na.rm= TRUE)),
                            dy= .(density(y, from= ylim[1], to= ylim[2], na.rm= TRUE))), .(label, Cc)]
-      
+
       densities[, {
         # x
         .c <- dx[[1]]
@@ -116,7 +113,7 @@ vl_densScatterplot <- function(x,
       }, .(Cc, label)]
     }
   }, ]
-  
+
   # Legend
   if(plot.legend)
     legend(par("usr")[2],
